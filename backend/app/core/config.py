@@ -3,7 +3,7 @@ import json
 import os
 
 from dotenv import load_dotenv
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 load_dotenv()
@@ -50,17 +50,6 @@ class Settings(BaseSettings):
             return value.replace("postgresql://", "postgresql+psycopg://", 1)
         return value
 
-    @model_validator(mode="after")
-    def validate_production_secrets(self):
-        if not self.database_url:
-            raise ValueError("DATABASE_URL missing at runtime")
-        if not self.jwt_secret:
-            raise ValueError("JWT_SECRET missing at runtime")
-        if self.environment.lower() == "production":
-            if "localhost" in self.database_url or "127.0.0.1" in self.database_url:
-                raise ValueError("DATABASE_URL must point to production PostgreSQL in production")
-        return self
-
     @property
     def allowed_origins(self) -> list[str]:
         origins = self.cors_origins or [self.frontend_url]
@@ -75,3 +64,21 @@ def get_settings() -> Settings:
     print("DATABASE_URL from os:", "EXISTS" if os.getenv("DATABASE_URL") else "EMPTY")
     print("JWT_SECRET from os:", "EXISTS" if os.getenv("JWT_SECRET") else "EMPTY")
     return Settings()
+
+
+def require_database_url(settings: Settings | None = None) -> str:
+    resolved = settings or get_settings()
+    if not resolved.database_url:
+        raise RuntimeError("DATABASE_URL missing at runtime")
+    if resolved.environment.lower() == "production" and (
+        "localhost" in resolved.database_url or "127.0.0.1" in resolved.database_url
+    ):
+        raise RuntimeError("DATABASE_URL must point to production PostgreSQL in production")
+    return resolved.database_url
+
+
+def require_jwt_secret(settings: Settings | None = None) -> str:
+    resolved = settings or get_settings()
+    if not resolved.jwt_secret:
+        raise RuntimeError("JWT_SECRET missing at runtime")
+    return resolved.jwt_secret

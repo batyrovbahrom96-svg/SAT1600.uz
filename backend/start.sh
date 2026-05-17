@@ -6,21 +6,23 @@ echo "=== ENV CHECK ==="
 echo "PORT=${PORT:-}"
 
 if [ -z "${DATABASE_URL:-}" ]; then
-  echo "FATAL: DATABASE_URL missing"
-  exit 1
+  echo "WARNING: DATABASE_URL missing; DB-backed endpoints will fail until Railway variables are fixed"
 else
   echo "DATABASE_URL EXISTS"
 fi
 
 if [ -z "${JWT_SECRET:-}" ]; then
-  echo "FATAL: JWT_SECRET missing"
-  exit 1
+  echo "WARNING: JWT_SECRET missing; auth endpoints will fail until Railway variables are fixed"
 else
   echo "JWT_SECRET EXISTS"
 fi
 
-echo "Running migrations..."
-# python scripts/run_migrations.py
+if [ -n "${DATABASE_URL:-}" ]; then
+  echo "Running migrations..."
+  # python scripts/run_migrations.py
+else
+  echo "Skipping migrations because DATABASE_URL is missing"
+fi
 
 exec gunicorn app.main:app \
   -k uvicorn.workers.UvicornWorker \

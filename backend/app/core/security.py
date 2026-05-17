@@ -4,7 +4,7 @@ from uuid import UUID
 from jose import jwt
 from passlib.context import CryptContext
 
-from app.core.config import get_settings
+from app.core.config import get_settings, require_jwt_secret
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -21,4 +21,4 @@ def create_access_token(user_id: UUID, role: str) -> str:
     settings = get_settings()
     expires = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_minutes)
     payload = {"sub": str(user_id), "role": role, "exp": expires}
-    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    return jwt.encode(payload, require_jwt_secret(settings), algorithm=settings.jwt_algorithm)

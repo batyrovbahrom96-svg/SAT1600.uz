@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
+from app.core.config import get_settings, require_jwt_secret
 from app.db.session import get_db
 from app.models import User
 
@@ -18,7 +18,7 @@ def get_current_user(
 ) -> User:
     settings = get_settings()
     try:
-        payload = jwt.decode(credentials.credentials, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(credentials.credentials, require_jwt_secret(settings), algorithms=[settings.jwt_algorithm])
         user_id = UUID(payload["sub"])
     except (JWTError, KeyError, ValueError) as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
