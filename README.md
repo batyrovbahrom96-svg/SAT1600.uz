@@ -36,7 +36,7 @@ Backend, Railway service:
 
 ```bash
 ENVIRONMENT=production
-DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require
+DATABASE_URL=${{Postgres.DATABASE_URL}}
 JWT_SECRET=<at least 32 random characters>
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_MINUTES=1440
@@ -104,12 +104,15 @@ The system can be deployed and validated on temporary Railway/Vercel URLs before
 2. Select the SATTEST.UZ repo.
 3. Use Dockerfile deployment. The root `railway.toml` points to `backend/Dockerfile`.
 4. Add a Railway PostgreSQL plugin.
-5. Copy PostgreSQL connection URL into `DATABASE_URL`.
-6. Set all backend environment variables above.
-7. Deploy.
-8. Open backend logs and verify:
+5. Open Backend Service -> Variables.
+6. Add `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
+7. Alternatively, manually paste the full Railway PostgreSQL URL into `DATABASE_URL`.
+8. Set all backend environment variables above.
+9. Deploy.
+10. Open backend logs and verify:
    - migrations complete
    - Gunicorn starts
+   - database log shows `exists=True`, a Railway host, and driver `postgresql+psycopg`
    - `/api/health` returns `{"status":"ok"}`
    - `/api/ready` returns `{"status":"ready"}`
 
@@ -235,9 +238,11 @@ Product flow:
 Backend cannot connect to database:
 
 - Confirm `DATABASE_URL` is set in Railway.
-- Use `postgresql+psycopg://...`.
+- Recommended Railway value: `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
+- Manual URL format: `postgresql+psycopg://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require`.
 - Include `?sslmode=require` for Railway PostgreSQL when required.
 - Check `/api/ready` logs for connection errors.
+- If logs show `127.0.0.1` or `localhost`, the Railway backend service is missing `DATABASE_URL`.
 
 JWT startup error:
 

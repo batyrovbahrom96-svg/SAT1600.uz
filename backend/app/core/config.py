@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "SATTEST.UZ API"
     environment: str = "development"
-    database_url: str = "postgresql+psycopg://sat1600:sat1600@localhost:5432/sat1600"
+    database_url: str | None = None
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 60 * 24
@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def normalize_database_url(cls, value):
+        if value is None or value == "":
+            return None
         if isinstance(value, str) and value.startswith("postgres://"):
             return value.replace("postgres://", "postgresql+psycopg://", 1)
         if isinstance(value, str) and value.startswith("postgresql://"):
@@ -39,12 +41,14 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_secrets(self):
+        if not self.database_url:
+            raise ValueError("DATABASE_URL is required. Attach Railway PostgreSQL and set DATABASE_URL=${{Postgres.DATABASE_URL}}.")
         if self.environment.lower() == "production":
             if self.jwt_secret in {"change-me-in-production", "replace-this-secret-before-production"}:
                 raise ValueError("JWT_SECRET must be set to a strong production secret")
             if len(self.jwt_secret) < 32:
                 raise ValueError("JWT_SECRET must be at least 32 characters in production")
-            if "localhost" in self.database_url:
+            if "localhost" in self.database_url or "127.0.0.1" in self.database_url:
                 raise ValueError("DATABASE_URL must point to production PostgreSQL in production")
         return self
 

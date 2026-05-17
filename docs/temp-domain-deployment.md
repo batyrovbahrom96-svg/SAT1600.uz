@@ -10,7 +10,7 @@ Set Railway variables:
 
 ```bash
 ENVIRONMENT=production
-DATABASE_URL=<Railway PostgreSQL URL>
+DATABASE_URL=${{Postgres.DATABASE_URL}}
 JWT_SECRET=<32+ random chars>
 FRONTEND_URL=https://YOUR-VERCEL-PROJECT.vercel.app
 CORS_ORIGINS=https://YOUR-VERCEL-PROJECT.vercel.app,https://sattest.uz,https://www.sattest.uz
@@ -22,6 +22,18 @@ LOG_LEVEL=INFO
 WEB_CONCURRENCY=2
 WEB_TIMEOUT=120
 ```
+
+Railway PostgreSQL setup:
+
+1. Railway project -> New -> Database -> PostgreSQL.
+2. Open Backend Service -> Variables.
+3. Add:
+
+```bash
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+```
+
+Alternative: manually paste the full Railway PostgreSQL URL into `DATABASE_URL`.
 
 After Railway deploys, copy the temporary backend URL:
 
