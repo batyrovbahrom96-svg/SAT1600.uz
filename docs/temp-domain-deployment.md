@@ -26,8 +26,10 @@ WEB_TIMEOUT=120
 Railway PostgreSQL setup:
 
 1. Railway project -> New -> Database -> PostgreSQL.
-2. Open Backend Service -> Variables.
-3. Add:
+2. Confirm PostgreSQL service name is `Postgres`.
+3. Confirm backend service name is `SAT1600.uz`.
+4. Open Backend Service -> Variables.
+5. Add:
 
 ```bash
 DATABASE_URL=${{Postgres.DATABASE_URL}}

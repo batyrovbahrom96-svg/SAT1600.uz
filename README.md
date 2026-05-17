@@ -102,16 +102,18 @@ The system can be deployed and validated on temporary Railway/Vercel URLs before
 
 1. Railway -> New Project -> Deploy from GitHub repo.
 2. Select the SATTEST.UZ repo.
-3. Use Dockerfile deployment. The root `railway.toml` points to `backend/Dockerfile`.
-4. Add a Railway PostgreSQL plugin.
-5. Open Backend Service -> Variables.
-6. Add `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
-7. Alternatively, manually paste the full Railway PostgreSQL URL into `DATABASE_URL`.
-8. Set all backend environment variables above.
-9. Deploy.
-10. Open backend logs and verify:
+3. Backend service name should be `SAT1600.uz`.
+4. Use Dockerfile deployment. The root `railway.toml` points to `backend/Dockerfile`.
+5. Add a Railway PostgreSQL service named `Postgres`.
+6. Open Backend Service -> Variables.
+7. Add `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
+8. Alternatively, manually paste the full Railway PostgreSQL URL into `DATABASE_URL`.
+9. Set all backend environment variables above.
+10. Deploy.
+11. Open backend logs and verify:
    - migrations complete
    - Gunicorn starts
+   - startup logs show `DATABASE_URL exists`
    - database log shows `exists=True`, a Railway host, and driver `postgresql+psycopg`
    - `/api/health` returns `{"status":"ok"}`
    - `/api/ready` returns `{"status":"ready"}`
