@@ -13,9 +13,7 @@ ENVIRONMENT=production
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 JWT_SECRET=<32+ random chars>
 FRONTEND_URL=https://YOUR-VERCEL-PROJECT.vercel.app
-CORS_ORIGINS=https://YOUR-VERCEL-PROJECT.vercel.app,https://sattest.uz,https://www.sattest.uz
-# JSON array format is also supported:
-# CORS_ORIGINS=["https://YOUR-VERCEL-PROJECT.vercel.app","https://sattest.uz","https://www.sattest.uz"]
+CORS_ORIGINS=["https://YOUR-VERCEL-PROJECT.vercel.app","https://sattest.uz","https://www.sattest.uz"]
 # Optional only while validating Vercel previews:
 # CORS_ORIGIN_REGEX=https://.*\\.vercel\\.app
 GRAPH_OUTPUT_DIR=static/graphs
@@ -116,7 +114,7 @@ Backend Railway env:
 
 ```bash
 FRONTEND_URL=https://sattest.uz
-CORS_ORIGINS=https://sattest.uz,https://www.sattest.uz
+CORS_ORIGINS=["https://sattest.uz","https://www.sattest.uz"]
 ```
 
 Frontend Vercel env:

@@ -41,9 +41,7 @@ JWT_SECRET=<random secret; 32+ characters recommended>
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_MINUTES=1440
 FRONTEND_URL=https://sattest.uz
-CORS_ORIGINS=https://sattest.uz,https://www.sattest.uz
-# JSON array format is also supported:
-# CORS_ORIGINS=["https://sattest.uz","https://www.sattest.uz"]
+CORS_ORIGINS=["https://sattest.uz","https://www.sattest.uz"]
 GRAPH_OUTPUT_DIR=static/graphs
 RATE_LIMIT_PER_MINUTE=120
 LOG_LEVEL=INFO
@@ -108,11 +106,13 @@ The system can be deployed and validated on temporary Railway/Vercel URLs before
 4. Use Dockerfile deployment. The root `railway.toml` points to `backend/Dockerfile`.
 5. Add a Railway PostgreSQL service named `Postgres`.
 6. Open Backend Service -> Variables.
-7. Add `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
-8. Alternatively, manually paste the full Railway PostgreSQL URL into `DATABASE_URL`.
-9. Set all backend environment variables above.
-10. Deploy.
-11. Open backend logs and verify:
+7. Delete any broken `DATABASE_URL` value.
+8. Create `DATABASE_URL` with Railway's Add Reference UI: select `Postgres` -> `DATABASE_URL`.
+9. Click the eye icon and confirm the resolved value starts with `postgresql://` or `postgresql+psycopg://`, not `${{...}}`.
+10. Alternatively, manually paste the full Railway PostgreSQL URL into `DATABASE_URL`.
+11. Set all backend environment variables above.
+12. Deploy.
+13. Open backend logs and verify:
    - migrations complete
    - Gunicorn starts
    - startup logs show `DATABASE_URL EXISTS`
@@ -160,6 +160,12 @@ Proxy: DNS only if using Cloudflare
 ```
 
 For Railway backend:
+
+1. Railway -> `SAT1600.uz` -> Settings -> Networking.
+2. Generate a Railway public domain if one does not exist.
+3. Verify `https://<generated-domain>/api/health` returns `{"status":"ok"}`.
+4. Add custom domain `api.sattest.uz`.
+5. Use the DNS target Railway shows for the CNAME record.
 
 ```text
 Type: CNAME
@@ -260,7 +266,7 @@ CORS errors:
 - Confirm backend has:
 
 ```bash
-CORS_ORIGINS=https://sattest.uz,https://www.sattest.uz
+CORS_ORIGINS=["https://sattest.uz","https://www.sattest.uz"]
 FRONTEND_URL=https://sattest.uz
 ```
 
