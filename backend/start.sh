@@ -6,19 +6,21 @@ echo "=== ENV CHECK ==="
 echo "PORT=${PORT:-}"
 
 if [ -z "${DATABASE_URL:-}" ]; then
-  echo "DATABASE_URL EMPTY"
+  echo "FATAL: DATABASE_URL missing"
+  exit 1
 else
   echo "DATABASE_URL EXISTS"
 fi
 
 if [ -z "${JWT_SECRET:-}" ]; then
-  echo "JWT_SECRET EMPTY"
+  echo "FATAL: JWT_SECRET missing"
+  exit 1
 else
   echo "JWT_SECRET EXISTS"
 fi
 
-echo "Starting migrations..."
-python scripts/run_migrations.py
+echo "Running migrations..."
+# python scripts/run_migrations.py
 
 exec gunicorn app.main:app \
   -k uvicorn.workers.UvicornWorker \

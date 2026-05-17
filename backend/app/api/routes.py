@@ -32,8 +32,7 @@ def health() -> dict:
 
 
 @router.get("/ready")
-def ready(db: Session = Depends(get_db)) -> dict:
-    db.execute(select(1))
+def ready() -> dict:
     return {"status": "ready"}
 
 

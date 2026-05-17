@@ -1,8 +1,12 @@
 from functools import lru_cache
 import json
+import os
 
+from dotenv import load_dotenv
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -49,9 +53,9 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_secrets(self):
         if not self.database_url:
-            raise ValueError("DATABASE_URL is required. Attach Railway PostgreSQL and set DATABASE_URL=${{Postgres.DATABASE_URL}}.")
+            raise ValueError("DATABASE_URL missing at runtime")
         if not self.jwt_secret:
-            raise ValueError("JWT_SECRET is required.")
+            raise ValueError("JWT_SECRET missing at runtime")
         if self.environment.lower() == "production":
             if "localhost" in self.database_url or "127.0.0.1" in self.database_url:
                 raise ValueError("DATABASE_URL must point to production PostgreSQL in production")
@@ -67,4 +71,7 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
+    print("=== SETTINGS DEBUG ===")
+    print("DATABASE_URL from os:", "EXISTS" if os.getenv("DATABASE_URL") else "EMPTY")
+    print("JWT_SECRET from os:", "EXISTS" if os.getenv("JWT_SECRET") else "EMPTY")
     return Settings()
