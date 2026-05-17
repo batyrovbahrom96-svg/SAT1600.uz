@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+export PYTHONPATH=/app
 set -eu
 
 python scripts/run_migrations.py
