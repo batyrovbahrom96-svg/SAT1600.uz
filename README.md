@@ -37,11 +37,13 @@ Backend, Railway service:
 ```bash
 ENVIRONMENT=production
 DATABASE_URL=${{Postgres.DATABASE_URL}}
-JWT_SECRET=<at least 32 random characters>
+JWT_SECRET=<random secret; 32+ characters recommended>
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_MINUTES=1440
 FRONTEND_URL=https://sattest.uz
 CORS_ORIGINS=https://sattest.uz,https://www.sattest.uz
+# JSON array format is also supported:
+# CORS_ORIGINS=["https://sattest.uz","https://www.sattest.uz"]
 GRAPH_OUTPUT_DIR=static/graphs
 RATE_LIMIT_PER_MINUTE=120
 LOG_LEVEL=INFO
@@ -113,7 +115,8 @@ The system can be deployed and validated on temporary Railway/Vercel URLs before
 11. Open backend logs and verify:
    - migrations complete
    - Gunicorn starts
-   - startup logs show `DATABASE_URL exists`
+   - startup logs show `DATABASE_URL EXISTS`
+   - startup logs show `JWT_SECRET EXISTS`
    - database log shows `exists=True`, a Railway host, and driver `postgresql+psycopg`
    - `/api/health` returns `{"status":"ok"}`
    - `/api/ready` returns `{"status":"ready"}`
@@ -248,7 +251,8 @@ Backend cannot connect to database:
 
 JWT startup error:
 
-- In production, `JWT_SECRET` must be at least 32 characters.
+- `JWT_SECRET` must be present.
+- Use at least 32 random characters for production security.
 - Do not use `change-me-in-production`.
 
 CORS errors:

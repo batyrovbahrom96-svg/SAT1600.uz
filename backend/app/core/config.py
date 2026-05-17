@@ -1,4 +1,5 @@
 from functools import lru_cache
+import json
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -8,7 +9,7 @@ class Settings(BaseSettings):
     app_name: str = "SATTEST.UZ API"
     environment: str = "development"
     database_url: str | None = None
-    jwt_secret: str = "change-me-in-production"
+    jwt_secret: str | None = None
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 60 * 24
     frontend_url: str = "http://localhost:3000"
@@ -25,6 +26,12 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, value):
         if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith("["):
+                parsed = json.loads(stripped)
+                if not isinstance(parsed, list):
+                    raise ValueError("CORS_ORIGINS JSON value must be an array")
+                return [str(origin).strip() for origin in parsed if str(origin).strip()]
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 
@@ -43,11 +50,9 @@ class Settings(BaseSettings):
     def validate_production_secrets(self):
         if not self.database_url:
             raise ValueError("DATABASE_URL is required. Attach Railway PostgreSQL and set DATABASE_URL=${{Postgres.DATABASE_URL}}.")
+        if not self.jwt_secret:
+            raise ValueError("JWT_SECRET is required.")
         if self.environment.lower() == "production":
-            if self.jwt_secret in {"change-me-in-production", "replace-this-secret-before-production"}:
-                raise ValueError("JWT_SECRET must be set to a strong production secret")
-            if len(self.jwt_secret) < 32:
-                raise ValueError("JWT_SECRET must be at least 32 characters in production")
             if "localhost" in self.database_url or "127.0.0.1" in self.database_url:
                 raise ValueError("DATABASE_URL must point to production PostgreSQL in production")
         return self
