@@ -4,6 +4,7 @@ set -eu
 
 echo "=== ENV CHECK ==="
 echo "PORT=${PORT:-}"
+echo "ENVIRONMENT=${ENVIRONMENT:-production}"
 
 if [ -z "${DATABASE_URL:-}" ]; then
   echo "WARNING: DATABASE_URL missing; DB-backed endpoints will fail until Railway variables are fixed"
