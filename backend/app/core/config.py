@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 60 * 24
     frontend_url: str = "http://localhost:3000"
-    cors_origins: list[str] = Field(default_factory=list)
+    cors_origins: str | list[str] = Field(default="")
     cors_origin_regex: str | None = None
     graph_output_dir: str = "static/graphs"
     rate_limit_per_minute: int = 120
@@ -28,15 +28,17 @@ class Settings(BaseSettings):
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value):
-        if isinstance(value, str):
-            stripped = value.strip()
-            if stripped.startswith("["):
-                parsed = json.loads(stripped)
-                if not isinstance(parsed, list):
-                    raise ValueError("CORS_ORIGINS JSON value must be an array")
-                return [str(origin).strip() for origin in parsed if str(origin).strip()]
-            return [origin.strip() for origin in value.split(",") if origin.strip()]
-        return value
+        if isinstance(value, list):
+            return value
+        if not isinstance(value, str) or not value.strip():
+            return []
+        stripped = value.strip()
+        if stripped.startswith("["):
+            parsed = json.loads(stripped)
+            if not isinstance(parsed, list):
+                raise ValueError("CORS_ORIGINS JSON value must be an array")
+            return [str(origin).strip() for origin in parsed if str(origin).strip()]
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
 
     @field_validator("database_url", mode="before")
     @classmethod
