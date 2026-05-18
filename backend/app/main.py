@@ -15,11 +15,6 @@ app = FastAPI(
     redoc_url="/redoc" if settings.environment.lower() != "production" else None,
 )
 
-
-@app.get("/api/health")
-def health() -> dict:
-    return {"status": "ok"}
-
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(SecureHeadersMiddleware)
