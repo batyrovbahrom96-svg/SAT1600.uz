@@ -161,6 +161,7 @@ def save_answer(db: Session, attempt: TestAttempt, answer) -> QuestionResult:
     if not result:
         result = QuestionResult(attempt_id=attempt.id, question_id=question.id, module_snapshot=attempt.current_module)
         db.add(result)
+    result.question = question
     result.selected_answer = selected or None
     result.is_correct = correct
     result.marked_for_review = answer.marked_for_review
@@ -223,6 +224,9 @@ def advance_module(db: Session, attempt: TestAttempt) -> TestAttempt:
 
 
 def finalize_attempt(db: Session, attempt: TestAttempt) -> TestAttempt:
+    if attempt.status == AttemptStatus.completed and attempt.score_total is not None:
+        return attempt
+
     rw_correct, rw_total = _section_score(db, attempt.id, SATSection.reading_writing)
     math_correct, math_total = _section_score(db, attempt.id, SATSection.math)
     attempt.score_reading_writing = _scaled_score(rw_correct, rw_total)
@@ -301,7 +305,16 @@ def build_analytics(db: Session, attempt: TestAttempt) -> Analytics:
 
 
 def results_payload(db: Session, attempt: TestAttempt) -> dict:
-    analytics = db.execute(select(Analytics).where(Analytics.attempt_id == attempt.id)).scalar_one_or_none()
+    analytics = (
+        db.execute(
+            select(Analytics)
+            .where(Analytics.attempt_id == attempt.id)
+            .order_by(Analytics.created_at.desc())
+            .limit(1)
+        )
+        .scalars()
+        .one_or_none()
+    )
     rows = (
         db.execute(
             select(QuestionResult)
