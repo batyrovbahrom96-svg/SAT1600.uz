@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Nav } from "@/components/Nav";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 
 type Results = {
   score_total: number;
@@ -34,7 +34,13 @@ export default function ResultsPage() {
 
   useEffect(() => {
     if (attemptId === "demo") return;
-    api<Results>(`/api/attempts/${attemptId}/results`).then(setResults).catch(() => router.push("/dashboard"));
+    api<Results>(`/api/attempts/${attemptId}/results`).then(setResults).catch((error) => {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403 || error.status === 404)) {
+        router.push("/dashboard");
+        return;
+      }
+      console.log("API unavailable, continue");
+    });
   }, [attemptId, router]);
 
   const data = results ? Object.entries(results.topic_accuracy).map(([topic, accuracy]) => ({ topic, accuracy: Math.round(accuracy * 100) })) : [];

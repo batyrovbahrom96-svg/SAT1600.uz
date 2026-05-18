@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Crown, LineChart } from "lucide-react";
 import { Nav } from "@/components/Nav";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 
 type Test = { id: string; title: string; description: string; is_premium: boolean };
 
@@ -12,15 +12,30 @@ export default function DashboardPage() {
   const router = useRouter();
   const [tests, setTests] = useState<Test[]>([]);
   const [history, setHistory] = useState<{ score_history: { score: number; date: string }[]; attempts: number } | null>(null);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    api<Test[]>("/api/tests").then(setTests).catch(() => router.push("/login"));
-    api<{ score_history: { score: number; date: string }[]; attempts: number }>("/api/analytics/me").then(setHistory).catch(() => null);
+    api<Test[]>("/api/tests").then(setTests).catch((error) => {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        router.push("/login");
+        return;
+      }
+      console.log("API unavailable, continue");
+      setMessage("Practice tests are temporarily unavailable.");
+    });
+    api<{ score_history: { score: number; date: string }[]; attempts: number }>("/api/analytics/me").then(setHistory).catch(() => {
+      console.log("API unavailable, continue");
+    });
   }, [router]);
 
   async function start(testId: string) {
-    const result = await api<{ attempt_id: string }>(`/api/tests/${testId}/attempts`, { method: "POST" });
-    router.push(`/test/${result.attempt_id}`);
+    try {
+      const result = await api<{ attempt_id: string }>(`/api/tests/${testId}/attempts`, { method: "POST" });
+      router.push(`/test/${result.attempt_id}`);
+    } catch (error) {
+      console.log("API unavailable, continue");
+      setMessage(error instanceof Error ? error.message : "Unable to start test.");
+    }
   }
 
   return (
@@ -38,6 +53,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
+          {message ? <p className="rounded-md bg-yellow-50 p-3 font-semibold text-yellow-700 lg:col-span-3">{message}</p> : null}
           {tests.map((test) => (
             <article key={test.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">

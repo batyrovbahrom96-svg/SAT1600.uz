@@ -60,12 +60,17 @@ export default function AdminPage() {
 
   async function updateQuestion(patch: Partial<Pick<QualityQuestion, "difficulty" | "is_active" | "validation_status" | "validation_notes">>) {
     if (!selected) return;
-    const result = await api<Partial<QualityQuestion>>(`/api/admin/questions/${selected.id}/validation`, {
-      method: "PATCH",
-      body: JSON.stringify(patch)
-    });
-    setQuestions((current) => current.map((question) => question.id === selected.id ? { ...question, ...result } : question));
-    setMessage("Question updated.");
+    try {
+      const result = await api<Partial<QualityQuestion>>(`/api/admin/questions/${selected.id}/validation`, {
+        method: "PATCH",
+        body: JSON.stringify(patch)
+      });
+      setQuestions((current) => current.map((question) => question.id === selected.id ? { ...question, ...result } : question));
+      setMessage("Question updated.");
+    } catch (error) {
+      console.log("API unavailable, continue");
+      setMessage(error instanceof Error ? error.message : "Unable to update question.");
+    }
   }
 
   return (
@@ -78,7 +83,10 @@ export default function AdminPage() {
             <p className="mt-1 text-slate-600">Review telemetry, distractor effectiveness, manual difficulty, and weak item status before public launch.</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => api("/api/admin/graphs/sat-set", { method: "POST" }).then(() => setMessage("SAT graph set generated."))} className="rounded-md border border-slate-300 bg-white px-4 py-3 font-bold text-ink">
+            <button onClick={() => api("/api/admin/graphs/sat-set", { method: "POST" }).then(() => setMessage("SAT graph set generated.")).catch((error) => {
+              console.log("API unavailable, continue");
+              setMessage(error instanceof Error ? error.message : "Unable to generate graphs.");
+            })} className="rounded-md border border-slate-300 bg-white px-4 py-3 font-bold text-ink">
               Generate graphs
             </button>
             <button onClick={load} className="flex items-center gap-2 rounded-md bg-brand px-4 py-3 font-bold text-white">

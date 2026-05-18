@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Bookmark, Calculator, ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
-import { API_URL, Question, api } from "@/lib/api";
+import { API_URL, ApiError, Question, api } from "@/lib/api";
 
 type ModulePayload = {
   attempt: { id: string; current_section: string; current_module: number; status: string; route: Record<string, unknown> };
@@ -37,7 +37,13 @@ export default function TestPage() {
       spentByQuestion.current = Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
       firstInteractionByQuestion.current = {};
       interactionCountByQuestion.current = {};
-    }).catch(() => router.push("/login"));
+    }).catch((error) => {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        router.push("/login");
+        return;
+      }
+      console.log("API unavailable, continue");
+    });
   }, [attemptId, router]);
 
   useEffect(() => {
@@ -77,19 +83,23 @@ export default function TestPage() {
     spentByQuestion.current[questionId] = totalSpent;
     questionStartedAt.current = Date.now();
     setAnswers((current) => ({ ...current, [questionId]: value }));
-    await api(`/api/attempts/${attemptId}/answers`, {
-      method: "POST",
-      body: JSON.stringify({
-        question_id: questionId,
-        selected_answer: value,
-        previous_answer: previousAnswer || null,
-        answer_changed: Boolean(previousAnswer && previousAnswer !== value),
-        marked_for_review: review,
-        hesitation_seconds: hesitationSeconds,
-        time_spent_seconds: totalSpent,
-        interaction_count: interactionCountByQuestion.current[questionId]
-      })
-    });
+    try {
+      await api(`/api/attempts/${attemptId}/answers`, {
+        method: "POST",
+        body: JSON.stringify({
+          question_id: questionId,
+          selected_answer: value,
+          previous_answer: previousAnswer || null,
+          answer_changed: Boolean(previousAnswer && previousAnswer !== value),
+          marked_for_review: review,
+          hesitation_seconds: hesitationSeconds,
+          time_spent_seconds: totalSpent,
+          interaction_count: interactionCountByQuestion.current[questionId]
+        })
+      });
+    } catch {
+      console.log("API unavailable, continue");
+    }
   }
 
   async function toggleMark(questionId: string) {
@@ -99,20 +109,24 @@ export default function TestPage() {
   }
 
   async function advance() {
-    const result = await api<{ status: string; current_section: string; current_module: number }>(`/api/attempts/${attemptId}/advance`, { method: "POST" });
-    if (result.status === "completed") {
-      router.push(`/results/${attemptId}`);
-      return;
+    try {
+      const result = await api<{ status: string; current_section: string; current_module: number }>(`/api/attempts/${attemptId}/advance`, { method: "POST" });
+      if (result.status === "completed") {
+        router.push(`/results/${attemptId}`);
+        return;
+      }
+      const data = await api<ModulePayload>(`/api/attempts/${attemptId}/module`);
+      setModuleData(data);
+      setSecondsLeft(data.duration_seconds);
+      setIndex(0);
+      setAnswers(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
+      setMarked(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.marked_for_review])));
+      spentByQuestion.current = Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
+      firstInteractionByQuestion.current = {};
+      interactionCountByQuestion.current = {};
+    } catch {
+      console.log("API unavailable, continue");
     }
-    const data = await api<ModulePayload>(`/api/attempts/${attemptId}/module`);
-    setModuleData(data);
-    setSecondsLeft(data.duration_seconds);
-    setIndex(0);
-    setAnswers(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
-    setMarked(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.marked_for_review])));
-    spentByQuestion.current = Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
-    firstInteractionByQuestion.current = {};
-    interactionCountByQuestion.current = {};
   }
 
   if (!moduleData || !question) {

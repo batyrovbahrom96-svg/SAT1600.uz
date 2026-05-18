@@ -22,19 +22,36 @@ export function getToken() {
   return localStorage.getItem("sat1600_token");
 }
 
+export class ApiError extends Error {
+  status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers
-    }
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers
+      }
+    });
+  } catch (error) {
+    console.log("API unavailable, continue");
+    throw new ApiError("API unavailable", undefined);
+  }
+
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.detail || "Request failed");
+    throw new ApiError(body.detail || "Request failed", response.status);
   }
   return response.json();
 }
