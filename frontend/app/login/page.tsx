@@ -28,7 +28,7 @@ export default function LoginPage() {
     <main className="grid min-h-screen place-items-center bg-paper px-4">
       <form onSubmit={onSubmit} className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-3xl font-black text-ink">Login</h1>
-        <p className="mt-2 text-sm text-slate-600">Demo student: student@sat1600.uz / student123</p>
+        <p className="mt-2 text-sm text-slate-600">Use the account you created to continue your SAT practice.</p>
         <label className="mt-6 block text-sm font-bold">Email</label>
         <input className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2" name="email" type="email" required />
         <label className="mt-4 block text-sm font-bold">Password</label>

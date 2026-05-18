@@ -21,6 +21,8 @@ fi
 if [ -n "${DATABASE_URL:-}" ]; then
   echo "Running migrations..."
   python scripts/run_migrations.py
+  echo "Ensuring baseline SAT content..."
+  python scripts/seed_demo.py
 else
   echo "Skipping migrations because DATABASE_URL is missing"
 fi

@@ -1,6 +1,9 @@
-from app.core.security import hash_password
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+
 from app.db.session import get_session_local
-from app.models import ChoiceTrapRole, Question, QuestionChoice, QuestionFormat, QuestionSource, SATSection, Test, User
+from app.models import ChoiceTrapRole, Question, QuestionChoice, QuestionFormat, QuestionSource, SATSection, Test
 
 RW_TYPES = [
     ("Reading comprehension", "Reading comprehension", "Main idea"),
@@ -27,10 +30,9 @@ def seed() -> None:
             print("Seed data already exists.")
             return
 
-        admin = User(email="admin@sat1600.uz", full_name="SAT1600 Admin", password_hash=hash_password("admin123"), role="admin")
-        student = User(email="student@sat1600.uz", full_name="Demo Student", password_hash=hash_password("student123"))
+        create_sample_graph()
         test = Test(title="SAT1600 Diagnostic Mock 1", description="Database-driven adaptive Digital SAT diagnostic.", is_active=True)
-        db.add_all([admin, student, test])
+        db.add(test)
         db.flush()
 
         for module in (1, 2):
@@ -119,9 +121,29 @@ def seed() -> None:
                     ]:
                         db.add(QuestionChoice(question_id=q.id, label=label, text=text, trap_role=role, error_basis=basis))
         db.commit()
-        print("Seeded admin@sat1600.uz/admin123 and student@sat1600.uz/student123.")
+        print("Seeded baseline SAT diagnostic content.")
     finally:
         db.close()
+
+
+def create_sample_graph() -> None:
+    output_dir = Path("static/graphs")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "sample-linear.png"
+    if output_path.exists():
+        return
+
+    x_values = [0, 1, 2, 3, 4, 5]
+    y_values = [2 + 3 * x for x in x_values]
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.plot(x_values, y_values, marker="o", linewidth=2.5, color="#1d4ed8")
+    ax.set_title("Linear Growth")
+    ax.set_xlabel("Hours")
+    ax.set_ylabel("Total")
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=160)
+    plt.close(fig)
 
 
 if __name__ == "__main__":
