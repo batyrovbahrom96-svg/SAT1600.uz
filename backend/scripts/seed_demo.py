@@ -26,11 +26,11 @@ MATH_TYPES = [
 def seed() -> None:
     db = get_session_local()()
     try:
+        create_sample_graph()
         if db.query(Test).count():
             print("Seed data already exists.")
             return
 
-        create_sample_graph()
         test = Test(title="SAT1600 Diagnostic Mock 1", description="Database-driven adaptive Digital SAT diagnostic.", is_active=True)
         db.add(test)
         db.flush()
