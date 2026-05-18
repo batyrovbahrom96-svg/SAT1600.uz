@@ -27,10 +27,4 @@ else
   echo "Skipping migrations because DATABASE_URL is missing"
 fi
 
-exec gunicorn app.main:app \
-  -k uvicorn.workers.UvicornWorker \
-  --workers "${WEB_CONCURRENCY:-2}" \
-  --bind "0.0.0.0:${PORT:-8000}" \
-  --timeout "${WEB_TIMEOUT:-120}" \
-  --access-logfile "-" \
-  --error-logfile "-"
+exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8080}"
