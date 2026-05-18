@@ -36,6 +36,13 @@ def ready() -> dict:
     try:
         with get_engine().connect() as connection:
             connection.execute(text("SELECT 1"))
+            missing_tables = [
+                table
+                for table in ("users", "tests", "questions", "test_attempts", "question_results")
+                if connection.execute(text("SELECT to_regclass(:table_name)"), {"table_name": table}).scalar_one() is None
+            ]
+            if missing_tables:
+                raise RuntimeError(f"Missing tables: {', '.join(missing_tables)}")
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Database not ready") from exc
     return {"status": "ready"}

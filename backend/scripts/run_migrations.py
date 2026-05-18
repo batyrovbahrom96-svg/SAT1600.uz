@@ -41,12 +41,15 @@ def main() -> None:
         for migration in migrations:
             version = migration.name
             if version in applied:
-                print(f"Skipping {version}")
-                continue
-            print(f"Applying {version}")
+                print(f"Replaying idempotent migration {version}")
+            else:
+                print(f"Applying {version}")
             for statement in split_sql_statements(migration.read_text()):
                 connection.exec_driver_sql(statement)
-            connection.execute(text("INSERT INTO schema_migrations (version) VALUES (:version)"), {"version": version})
+            connection.execute(
+                text("INSERT INTO schema_migrations (version) VALUES (:version) ON CONFLICT (version) DO NOTHING"),
+                {"version": version},
+            )
     print("Migrations complete.")
 
 
