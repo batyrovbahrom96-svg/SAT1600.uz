@@ -1,5 +1,5 @@
 from app.core.security import hash_password
-from app.db.session import SessionLocal
+from app.db.session import get_session_local
 from app.models import ChoiceTrapRole, Question, QuestionChoice, QuestionFormat, QuestionSource, SATSection, Test, User
 
 RW_TYPES = [
@@ -21,7 +21,7 @@ MATH_TYPES = [
 
 
 def seed() -> None:
-    db = SessionLocal()
+    db = get_session_local()()
     try:
         if db.query(Test).count():
             print("Seed data already exists.")

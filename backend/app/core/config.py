@@ -1,6 +1,5 @@
 from functools import lru_cache
 import json
-import os
 
 from dotenv import load_dotenv
 from pydantic import Field, field_validator
@@ -60,9 +59,6 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    print("=== SETTINGS DEBUG ===")
-    print("DATABASE_URL from os:", "EXISTS" if os.getenv("DATABASE_URL") else "EMPTY")
-    print("JWT_SECRET from os:", "EXISTS" if os.getenv("JWT_SECRET") else "EMPTY")
     return Settings()
 
 

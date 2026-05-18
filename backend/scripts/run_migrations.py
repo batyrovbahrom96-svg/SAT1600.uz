@@ -2,7 +2,7 @@ from pathlib import Path
 
 from sqlalchemy import text
 
-from app.db.session import engine
+from app.db.session import get_engine
 
 
 def migrations_dir() -> Path:
@@ -23,7 +23,7 @@ def main() -> None:
     if not migrations:
         raise SystemExit(f"No migrations found in {directory}")
 
-    with engine.begin() as connection:
+    with get_engine().begin() as connection:
         connection.execute(
             text(
                 """

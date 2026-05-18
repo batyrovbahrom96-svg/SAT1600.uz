@@ -3,12 +3,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from collections import Counter, defaultdict
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_user, require_admin
 from app.core.security import create_access_token, hash_password, verify_password
-from app.db.session import get_db
+from app.db.session import get_db, get_engine
 from app.models import Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, Test, TestAttempt, TestTelemetrySummary, User
 from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, ResultsOut, TokenResponse
 from app.services.graph_engine import generate_linear_graph, generate_sat_graph_set
@@ -33,6 +33,11 @@ def health() -> dict:
 
 @router.get("/ready")
 def ready() -> dict:
+    try:
+        with get_engine().connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Database not ready") from exc
     return {"status": "ready"}
 
 

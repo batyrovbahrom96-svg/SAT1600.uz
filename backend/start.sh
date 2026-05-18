@@ -19,7 +19,7 @@ fi
 
 if [ -n "${DATABASE_URL:-}" ]; then
   echo "Running migrations..."
-  # python scripts/run_migrations.py
+  python scripts/run_migrations.py
 else
   echo "Skipping migrations because DATABASE_URL is missing"
 fi
