@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Bookmark, ChevronLeft, ChevronRight } from "lucide-react";
@@ -62,8 +62,6 @@ export default function TestPage() {
   }, [secondsLeft]);
 
   const question = moduleData?.questions[index];
-  const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
-
   useEffect(() => {
     questionStartedAt.current = Date.now();
   }, [question?.id]);
@@ -134,26 +132,42 @@ export default function TestPage() {
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
   const sectionTitle = moduleData.attempt.current_section === "reading_writing" ? "Reading and Writing" : "Math";
+  const sectionNumber = moduleData.attempt.current_section === "reading_writing" ? 1 : 2;
+  const fullSectionTitle = `Section ${sectionNumber}, Module ${moduleData.attempt.current_module}: ${sectionTitle}`;
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
-      <header className="sticky top-0 z-20 border-b border-[#e5e7eb] bg-white">
-        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center px-5">
-          <div className="min-w-0 text-sm font-semibold text-slate-700">
-            {sectionTitle}, Module {moduleData.attempt.current_module}
+      <header className="sticky top-0 z-20 bg-white">
+        <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-[#e5e7eb] px-5">
+          <div className="flex min-w-0 items-center gap-5">
+            <div className="truncate text-sm font-semibold text-slate-900">{fullSectionTitle}</div>
+            <details className="relative">
+              <summary className="cursor-pointer list-none text-sm font-semibold text-slate-700 hover:text-slate-950">
+                Directions
+              </summary>
+              <div className="absolute left-0 top-7 z-30 w-80 border border-[#d1d5db] bg-white p-4 text-sm leading-6 text-slate-800">
+                Answer each question in this module. You may move among questions in this module until time expires.
+              </div>
+            </details>
           </div>
-          <div className="rounded px-5 py-2 text-center text-lg font-bold tabular-nums text-slate-950" aria-label="Time remaining">
+          <div className="px-5 py-2 text-center text-base font-bold tabular-nums text-slate-950" aria-label="Time remaining">
             {minutes}:{seconds}
           </div>
-          <div />
+          <div className="flex justify-end gap-5 text-sm font-semibold text-slate-700">
+            <button className="hover:text-slate-950" type="button">Highlights & Notes</button>
+            <button className="hover:text-slate-950" type="button">More</button>
+          </div>
+        </div>
+        <div className="bg-[#10294f] px-5 py-2 text-center text-xs font-bold tracking-wide text-white">
+          THIS IS A PRACTICE TEST
         </div>
       </header>
 
-      <section className="mx-auto grid min-h-[calc(100vh-8rem)] max-w-[1280px] bg-white lg:grid-cols-[minmax(0,3fr)_1px_minmax(0,2fr)]">
+      <section className="mx-auto grid min-h-[calc(100vh-8.5rem)] max-w-[1280px] bg-white lg:grid-cols-[minmax(0,3fr)_1px_minmax(0,2fr)]">
         <article className="bg-white p-10">
           <div className="mx-auto max-w-[600px]">
             {question.passage ? (
-              <p className="text-[17px] leading-[1.75] text-slate-950">{question.passage}</p>
+              <p className="text-[16px] leading-[1.65] text-slate-950">{question.passage}</p>
             ) : null}
             {question.graph_path ? (
               <Image
@@ -167,35 +181,48 @@ export default function TestPage() {
           </div>
         </article>
 
-        <div className="hidden w-px bg-[#e5e7eb] lg:block" aria-hidden="true" />
+        <div className="relative hidden w-px bg-[#e5e7eb] lg:block" aria-hidden="true">
+          <div className="absolute left-1/2 top-1/2 h-12 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#d1d5db] bg-white" />
+        </div>
 
         <aside className="bg-white p-10">
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <div className="mb-2 text-sm font-semibold text-slate-600">Question {index + 1} of {moduleData.questions.length}</div>
-              <h1 className="text-[21px] font-bold leading-[1.45] text-slate-950">{question.prompt}</h1>
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-9 min-w-9 items-center justify-center border border-slate-900 text-base font-bold text-slate-950">
+              {index + 1}
             </div>
             <button
               onClick={() => toggleMark(question.id)}
-              className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white hover:bg-slate-100 ${marked[question.id] ? "text-blue-700" : "text-slate-800"}`}
+              className={`inline-flex items-center gap-2 text-sm font-semibold hover:text-blue-800 ${marked[question.id] ? "text-blue-700" : "text-slate-700"}`}
               title="Mark for review"
             >
-              <Bookmark size={18} fill={marked[question.id] ? "currentColor" : "none"} />
+              <Bookmark size={17} fill={marked[question.id] ? "currentColor" : "none"} /> Mark for Review
             </button>
           </div>
+          <div className="mb-6 border-t border-dashed border-slate-300" />
+          <h1 className="mb-6 text-[20px] font-semibold leading-[1.45] text-slate-950">{question.prompt}</h1>
 
-          <div className="grid gap-3">
+          <div className="grid gap-4">
             {question.format === "multiple_choice" ? question.choices.map((choice) => (
               <button
                 key={choice.label}
                 onClick={() => save(question.id, choice.label)}
-                className={`flex w-full items-start gap-4 rounded-[10px] border px-5 py-4 text-left text-[16px] leading-6 transition-colors hover:bg-slate-100 ${
+                className={`flex w-full items-start gap-4 rounded-md border px-4 py-4 text-left text-[16px] leading-6 transition-colors hover:bg-slate-50 ${
                   answers[question.id] === choice.label
                     ? "border-blue-700 bg-blue-50"
                     : "border-slate-300"
                 }`}
+                role="radio"
+                aria-checked={answers[question.id] === choice.label}
               >
-                <span className="min-w-6 font-bold text-slate-950">{choice.label}</span>
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
+                    answers[question.id] === choice.label
+                      ? "border-blue-700 bg-blue-700 text-white"
+                      : "border-slate-500 bg-white text-slate-950"
+                  }`}
+                >
+                  {choice.label}
+                </span>
                 <span className="text-slate-950">{choice.text}</span>
               </button>
             )) : (
@@ -211,43 +238,26 @@ export default function TestPage() {
       </section>
 
       <footer className="sticky bottom-0 z-20 border-t border-[#e5e7eb] bg-white">
-        <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-5 py-3">
-          <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
-            {moduleData.questions.map((item, itemIndex) => (
-              <button
-                key={item.id}
-                onClick={() => setIndex(itemIndex)}
-                className={`h-9 min-w-9 rounded-md border text-sm font-bold ${
-                  index === itemIndex
-                    ? "border-blue-700 bg-blue-700 text-white"
-                    : marked[item.id]
-                      ? "border-slate-400 bg-white text-blue-700"
-                      : answers[item.id]
-                        ? "border-slate-400 bg-slate-100 text-slate-950"
-                        : "border-slate-300 bg-white text-slate-950"
-                }`}
-              >
-                {itemIndex + 1}
-              </button>
-            ))}
-          </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <span className="hidden text-sm font-semibold text-slate-600 sm:inline">{answeredCount}/{moduleData.questions.length} answered</span>
+        <div className="mx-auto grid h-14 max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5">
+          <div>
             <button
               disabled={index === 0}
               onClick={() => setIndex((value) => Math.max(0, value - 1))}
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 font-bold text-slate-950 hover:bg-slate-100 disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40"
             >
               <ChevronLeft size={18} /> Back
             </button>
+          </div>
+          <div className="text-sm font-semibold text-slate-700">Question {index + 1} of {moduleData.questions.length}</div>
+          <div className="flex justify-end">
             {index === moduleData.questions.length - 1 ? (
-              <button onClick={advance} className="rounded-md bg-blue-700 px-5 py-2 font-bold text-white hover:bg-blue-800">
+              <button onClick={advance} className="rounded bg-blue-700 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800">
                 Submit
               </button>
             ) : (
               <button
                 onClick={() => setIndex((value) => Math.min(moduleData.questions.length - 1, value + 1))}
-                className="inline-flex items-center gap-2 rounded-md bg-blue-700 px-5 py-2 font-bold text-white hover:bg-blue-800"
+                className="inline-flex items-center gap-2 rounded bg-blue-700 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800"
               >
                 Next <ChevronRight size={18} />
               </button>
