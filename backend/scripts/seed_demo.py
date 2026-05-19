@@ -70,6 +70,12 @@ def seed() -> None:
             .all()
         )
         by_slot = {(question.section, question.module, question.order_index): question for question in existing_questions}
+        wanted_slots = {(spec.section, spec.module, spec.order_index) for spec in specs}
+        for question in existing_questions:
+            if (question.section, question.module, question.order_index) not in wanted_slots:
+                question.is_active = False
+                question.validation_status = "disabled"
+                question.validation_notes = "Disabled by seed refresh because it is outside the current SAT module blueprint."
         for spec in specs:
             question = by_slot.get((spec.section, spec.module, spec.order_index))
             if not question:

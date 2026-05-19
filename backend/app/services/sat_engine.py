@@ -108,6 +108,7 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
     enforce_deadline(db, attempt)
     section = attempt.current_section
     module = attempt.current_module
+    required_count = MODULE_RULES[(section, module)]["count"]
     query = (
         select(Question)
         .where(
@@ -122,24 +123,24 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
     if module == 2:
         adaptive_level = choose_adaptive_level(db, attempt, section)
         module_two_results = _current_module_results(db, attempt)
+        module_questions = list(db.execute(query).scalars().unique())
         selected = _select_hybrid_questions(
-            _filter_deliverable(list(db.execute(query.where(Question.adaptive_level.in_([adaptive_level, "standard"]))).scalars().unique())),
-            MODULE_RULES[(section, module)]["count"],
+            _filter_deliverable([question for question in module_questions if question.adaptive_level in {adaptive_level, "standard"}]),
+            required_count,
             adaptive_level,
             module_two_results,
         )
-        if len(selected) < MODULE_RULES[(section, module)]["count"]:
-            fallback = _filter_deliverable(list(db.execute(query).scalars().unique()))
-            seen = {question.id for question in selected}
-            selected.extend(question for question in fallback if question.id not in seen)
-        return _avoid_adjacent_repetition(_sort_module_progression(selected, adaptive_level, module_two_results))[: MODULE_RULES[(section, module)]["count"]]
+        selected = _fill_required_count(selected, module_questions, required_count)
+        return _avoid_adjacent_repetition(_sort_module_progression(selected, adaptive_level, module_two_results))[:required_count]
+    module_questions = list(db.execute(query).scalars().unique())
     questions = _select_hybrid_questions(
-        _filter_deliverable(list(db.execute(query).scalars().unique())),
-        MODULE_RULES[(section, module)]["count"],
+        _filter_deliverable(module_questions),
+        required_count,
         "medium",
         [],
     )
-    return _avoid_adjacent_repetition(_sort_module_progression(questions, "medium", []))[: MODULE_RULES[(section, module)]["count"]]
+    questions = _fill_required_count(questions, module_questions, required_count)
+    return _avoid_adjacent_repetition(_sort_module_progression(questions, "medium", []))[:required_count]
 
 
 def save_answer(db: Session, attempt: TestAttempt, answer) -> QuestionResult:
@@ -403,6 +404,19 @@ def _select_hybrid_questions(
         seen = {question.id for question in selected}
         selected.extend(question for question in questions if question.id not in seen)
     return _sort_module_progression(selected[:count], adaptive_level, current_module_results)
+
+
+def _fill_required_count(selected: list[Question], fallback_pool: list[Question], count: int) -> list[Question]:
+    if len(selected) >= count:
+        return selected[:count]
+    seen = {question.id for question in selected}
+    for question in fallback_pool:
+        if question.id not in seen:
+            selected.append(question)
+            seen.add(question.id)
+        if len(selected) >= count:
+            break
+    return selected
 
 
 def _sort_module_progression(
