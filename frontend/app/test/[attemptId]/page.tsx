@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -20,6 +20,7 @@ type PassageHighlight = {
   id: string;
   startOffset: number;
   endOffset: number;
+  textContent: string;
   type: HighlightType;
 };
 
@@ -51,7 +52,8 @@ export default function TestPage() {
   const passageRef = useRef<HTMLParagraphElement | null>(null);
   const highlightToolbarRef = useRef<HTMLDivElement | null>(null);
   const selectedPassageRange = useRef<Range | null>(null);
-  const selectedPassageOffsets = useRef<{ startOffset: number; endOffset: number } | null>(null);
+  const selectedPassageOffsets = useRef<{ startOffset: number; endOffset: number; highlightId?: string } | null>(null);
+  const toolbarAnchorRect = useRef<DOMRect | null>(null);
   const resizingDivider = useRef(false);
   const questionStartedAt = useRef(Date.now());
   const spentByQuestion = useRef<Record<string, number>>({});
@@ -169,6 +171,24 @@ export default function TestPage() {
     return () => window.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const refreshToolbarPosition = () => {
+      if (!highlightToolbar.visible || !toolbarAnchorRect.current) return;
+      const rect = selectedPassageRange.current?.getBoundingClientRect();
+      if (rect && (rect.width > 0 || rect.height > 0)) {
+        toolbarAnchorRect.current = rect;
+      }
+      positionHighlightToolbar(toolbarAnchorRect.current);
+    };
+
+    window.addEventListener("scroll", refreshToolbarPosition, true);
+    window.addEventListener("resize", refreshToolbarPosition);
+    return () => {
+      window.removeEventListener("scroll", refreshToolbarPosition, true);
+      window.removeEventListener("resize", refreshToolbarPosition);
+    };
+  }, [highlightToolbar.visible]);
+
   function highlightStorageKey(questionId = question?.id) {
     return `sat1600_highlights:${attemptId}:${questionId}`;
   }
@@ -177,7 +197,8 @@ export default function TestPage() {
     if (!questionId || typeof window === "undefined") return [];
     try {
       const raw = window.localStorage.getItem(highlightStorageKey(questionId));
-      return raw ? JSON.parse(raw) : [];
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
@@ -199,7 +220,8 @@ export default function TestPage() {
 
   function renderPassageHtml(text: string, highlights: PassageHighlight[]) {
     const ordered = [...highlights]
-      .filter((highlight) => highlight.startOffset >= 0 && highlight.endOffset > highlight.startOffset && highlight.endOffset <= text.length)
+      .map((highlight) => reconcileHighlight(text, highlight))
+      .filter((highlight): highlight is PassageHighlight => Boolean(highlight))
       .sort((a, b) => a.startOffset - b.startOffset || a.endOffset - b.endOffset);
     let cursor = 0;
     let html = "";
@@ -207,7 +229,7 @@ export default function TestPage() {
     for (const highlight of ordered) {
       if (highlight.startOffset < cursor) continue;
       html += escapeHtml(text.slice(cursor, highlight.startOffset));
-      html += `<span data-passage-highlight="${highlight.id}" style="${highlightStyles[highlight.type]}">${escapeHtml(text.slice(highlight.startOffset, highlight.endOffset))}</span>`;
+      html += `<span class="passage-highlight" data-passage-highlight="${highlight.id}" style="${highlightStyles[highlight.type]} border-radius: 2px; cursor: pointer;">${escapeHtml(text.slice(highlight.startOffset, highlight.endOffset))}</span>`;
       cursor = highlight.endOffset;
     }
 
@@ -216,7 +238,46 @@ export default function TestPage() {
 
   function restorePassageHighlights(highlights = loadPassageHighlights()) {
     if (!passageRef.current || !question?.passage) return;
+    unwrapHighlightSpans();
     passageRef.current.innerHTML = renderPassageHtml(question.passage, highlights);
+    passageRef.current.normalize();
+  }
+
+  function reconcileHighlight(text: string, highlight: PassageHighlight) {
+    const directSnippet = text.slice(highlight.startOffset, highlight.endOffset);
+    if (!highlight.textContent || directSnippet === highlight.textContent) return highlight;
+
+    const nearbyStart = Math.max(0, highlight.startOffset - 40);
+    const nearbyEnd = Math.min(text.length, highlight.endOffset + 40);
+    const nearbyIndex = text.slice(nearbyStart, nearbyEnd).indexOf(highlight.textContent);
+    if (nearbyIndex >= 0) {
+      const startOffset = nearbyStart + nearbyIndex;
+      return {
+        ...highlight,
+        startOffset,
+        endOffset: startOffset + highlight.textContent.length
+      };
+    }
+
+    const fallbackIndex = text.indexOf(highlight.textContent);
+    if (fallbackIndex >= 0) {
+      return {
+        ...highlight,
+        startOffset: fallbackIndex,
+        endOffset: fallbackIndex + highlight.textContent.length
+      };
+    }
+
+    if (highlight.endOffset <= text.length) return highlight;
+    return null;
+  }
+
+  function unwrapHighlightSpans() {
+    if (!passageRef.current) return;
+    passageRef.current.querySelectorAll("[data-passage-highlight]").forEach((span) => {
+      span.replaceWith(document.createTextNode(span.textContent || ""));
+    });
+    passageRef.current.normalize();
   }
 
   function selectionOffsets(range: Range) {
@@ -253,47 +314,108 @@ export default function TestPage() {
     const rect = range.getBoundingClientRect();
     selectedPassageRange.current = range.cloneRange();
     selectedPassageOffsets.current = offsets;
+    toolbarAnchorRect.current = rect;
+    positionHighlightToolbar(rect);
+  }
+
+  function handlePassageClick(event: ReactMouseEvent<HTMLParagraphElement>) {
+    const target = event.target as HTMLElement | null;
+    const highlightElement = target?.closest<HTMLElement>("[data-passage-highlight]");
+    if (!highlightElement || !passageRef.current || !question) return;
+
+    const highlightId = highlightElement.dataset.passageHighlight;
+    const highlight = loadPassageHighlights(question.id).find((item) => item.id === highlightId);
+    if (!highlight) return;
+
+    const range = document.createRange();
+    range.selectNodeContents(highlightElement);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    selectedPassageRange.current = range.cloneRange();
+    selectedPassageOffsets.current = {
+      startOffset: highlight.startOffset,
+      endOffset: highlight.endOffset,
+      highlightId: highlight.id
+    };
+    toolbarAnchorRect.current = highlightElement.getBoundingClientRect();
+    positionHighlightToolbar(toolbarAnchorRect.current);
+  }
+
+  function positionHighlightToolbar(rect: DOMRect) {
     setHighlightToolbar({
       visible: true,
-      x: Math.min(window.innerWidth - 240, Math.max(12, rect.right - 210)),
+      x: Math.min(window.innerWidth - 244, Math.max(12, rect.right - 214)),
       y: Math.max(72, rect.top - 48)
     });
   }
 
-  function wrapSelectedPassageRange(type: HighlightType, id: string) {
-    const range = selectedPassageRange.current;
-    if (!range || !passageRef.current) return false;
-    const span = document.createElement("span");
-    span.dataset.passageHighlight = id;
-    span.setAttribute("style", highlightStyles[type]);
+  function replaceOverlappingHighlights(highlights: PassageHighlight[], startOffset: number, endOffset: number) {
+    return highlights.filter((highlight) => (
+      highlight.endOffset <= startOffset || highlight.startOffset >= endOffset
+    ));
+  }
 
-    try {
-      span.appendChild(range.extractContents());
-      range.insertNode(span);
-      window.getSelection()?.removeAllRanges();
-      return true;
-    } catch {
-      return false;
+  function restoreSelectionFromOffsets(startOffset: number, endOffset: number) {
+    if (!passageRef.current) return;
+    const range = rangeFromOffsets(passageRef.current, startOffset, endOffset);
+    if (!range) return;
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    selectedPassageRange.current = range.cloneRange();
+    toolbarAnchorRect.current = range.getBoundingClientRect();
+    positionHighlightToolbar(toolbarAnchorRect.current);
+  }
+
+  function rangeFromOffsets(root: HTMLElement, startOffset: number, endOffset: number) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let currentOffset = 0;
+    let startNode: Text | null = null;
+    let endNode: Text | null = null;
+    let startNodeOffset = 0;
+    let endNodeOffset = 0;
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      const nextOffset = currentOffset + node.data.length;
+      if (!startNode && startOffset >= currentOffset && startOffset <= nextOffset) {
+        startNode = node;
+        startNodeOffset = startOffset - currentOffset;
+      }
+      if (!endNode && endOffset >= currentOffset && endOffset <= nextOffset) {
+        endNode = node;
+        endNodeOffset = endOffset - currentOffset;
+        break;
+      }
+      currentOffset = nextOffset;
     }
+
+    if (!startNode || !endNode) return null;
+    const range = document.createRange();
+    range.setStart(startNode, startNodeOffset);
+    range.setEnd(endNode, endNodeOffset);
+    return range;
   }
 
   function applyPassageHighlight(type: HighlightType) {
     const offsets = selectedPassageOffsets.current;
-    if (!question || !offsets) return;
+    if (!question || !question.passage || !offsets) return;
+    const textContent = question.passage.slice(offsets.startOffset, offsets.endOffset);
+    if (!textContent.trim()) return;
 
     const highlight: PassageHighlight = {
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      id: offsets.highlightId || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       startOffset: offsets.startOffset,
       endOffset: offsets.endOffset,
+      textContent,
       type
     };
-    const nextHighlights = [...loadPassageHighlights(question.id), highlight];
+    const nextHighlights = [...replaceOverlappingHighlights(loadPassageHighlights(question.id), offsets.startOffset, offsets.endOffset), highlight];
     savePassageHighlights(nextHighlights, question.id);
-
-    if (!wrapSelectedPassageRange(type, highlight.id)) {
-      restorePassageHighlights(nextHighlights);
-    }
-    setHighlightToolbar((current) => ({ ...current, visible: false }));
+    restorePassageHighlights(nextHighlights);
+    window.requestAnimationFrame(() => restoreSelectionFromOffsets(offsets.startOffset, offsets.endOffset));
   }
 
   function deleteSelectedPassageHighlights() {
@@ -304,7 +426,6 @@ export default function TestPage() {
     ));
     savePassageHighlights(nextHighlights, question.id);
     restorePassageHighlights(nextHighlights);
-    window.getSelection()?.removeAllRanges();
     setHighlightToolbar((current) => ({ ...current, visible: false }));
   }
 
@@ -426,6 +547,7 @@ export default function TestPage() {
                 ref={passageRef}
                 aria-label="Passage text"
                 className="max-w-[58ch] select-text text-[16px] leading-[1.62] text-slate-950 [text-wrap:pretty]"
+                onClick={handlePassageClick}
                 onMouseUp={handlePassageMouseUp}
               />
             ) : null}
