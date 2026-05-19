@@ -4,7 +4,7 @@ import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Ban, Bookmark, ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
+import { Ban, Bookmark, ChevronLeft, ChevronRight, X, Undo2 } from "lucide-react";
 import { API_URL, ApiError, Question, api } from "@/lib/api";
 
 type ModulePayload = {
@@ -40,6 +40,8 @@ type StoredAnswerState = {
   eliminatedAnswers: string[];
 };
 
+type TestModal = "shortcuts" | "help" | null;
+
 const highlightStyles: Record<HighlightType, string> = {
   yellow: "background-color: #fde68a;",
   blue: "background-color: #bfdbfe;",
@@ -58,12 +60,20 @@ export default function TestPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<string>>(new Set());
   const [actionHistory, setActionHistory] = useState<AnswerAction[]>([]);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<TestModal>(null);
+  const [lineReaderEnabled, setLineReaderEnabled] = useState(false);
+  const [lineReaderY, setLineReaderY] = useState(120);
+  const [largeFontMode, setLargeFontMode] = useState(false);
+  const [highlightModeEnabled, setHighlightModeEnabled] = useState(true);
   const [focusedChoiceIndex, setFocusedChoiceIndex] = useState(0);
   const [leftPanelPercent, setLeftPanelPercent] = useState(60);
   const [highlightToolbar, setHighlightToolbar] = useState<HighlightToolbar>({ visible: false, x: 0, y: 0 });
   const testBodyRef = useRef<HTMLElement | null>(null);
   const passageRef = useRef<HTMLParagraphElement | null>(null);
+  const passagePanelRef = useRef<HTMLElement | null>(null);
   const highlightToolbarRef = useRef<HTMLDivElement | null>(null);
+  const moreMenuRef = useRef<HTMLDivElement | null>(null);
   const selectedPassageRange = useRef<Range | null>(null);
   const selectedPassageOffsets = useRef<{ startOffset: number; endOffset: number; highlightId?: string } | null>(null);
   const toolbarAnchorRect = useRef<DOMRect | null>(null);
@@ -126,6 +136,7 @@ export default function TestPage() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (activeModal || isMoreOpen) return;
       if (!question || question.format !== "multiple_choice" || !question.choices.length) return;
       const target = event.target as HTMLElement | null;
       const tagName = target?.tagName.toLowerCase();
@@ -149,6 +160,11 @@ export default function TestPage() {
         }
       }
 
+      if (!event.shiftKey && event.key.toLowerCase() === "h") {
+        event.preventDefault();
+        setHighlightModeEnabled((enabled) => !enabled);
+      }
+
       if (event.key === "Enter") {
         event.preventDefault();
         const choice = question.choices[focusedChoiceIndex];
@@ -158,7 +174,36 @@ export default function TestPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [question, focusedChoiceIndex, answers, marked, selectedAnswer, eliminatedAnswers, actionHistory]);
+  }, [question, focusedChoiceIndex, answers, marked, selectedAnswer, eliminatedAnswers, actionHistory, activeModal, isMoreOpen]);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsMoreOpen(false);
+      setActiveModal(null);
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (target && moreMenuRef.current?.contains(target)) return;
+      setIsMoreOpen(false);
+    };
+
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.fontSize = largeFontMode ? "18px" : "";
+    return () => {
+      document.body.style.fontSize = "";
+    };
+  }, [largeFontMode]);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -319,7 +364,7 @@ export default function TestPage() {
   }
 
   function handlePassageMouseUp() {
-    if (!passageRef.current) return;
+    if (!passageRef.current || !highlightModeEnabled) return;
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
       setHighlightToolbar((current) => ({ ...current, visible: false }));
@@ -449,6 +494,28 @@ export default function TestPage() {
     savePassageHighlights(nextHighlights, question.id);
     restorePassageHighlights(nextHighlights);
     setHighlightToolbar((current) => ({ ...current, visible: false }));
+  }
+
+  function openTestModal(modal: Exclude<TestModal, null>) {
+    setActiveModal(modal);
+    setIsMoreOpen(false);
+  }
+
+  function toggleLineReader() {
+    setLineReaderEnabled((enabled) => !enabled);
+    setIsMoreOpen(false);
+  }
+
+  function toggleLargeFontMode() {
+    setLargeFontMode((enabled) => !enabled);
+    setIsMoreOpen(false);
+  }
+
+  function saveAndExit() {
+    setIsMoreOpen(false);
+    if (window.confirm("Are you sure you want to exit?")) {
+      router.push("/dashboard");
+    }
   }
 
   function answerStorageKey(questionId = question?.id) {
@@ -637,7 +704,39 @@ export default function TestPage() {
           </div>
           <div className="flex justify-end gap-6 text-sm font-semibold text-slate-700">
             <button className="hover:text-slate-950" type="button">Highlights & Notes</button>
-            <button className="hover:text-slate-950" type="button">More</button>
+            <div className="relative" ref={moreMenuRef}>
+              <button
+                aria-expanded={isMoreOpen}
+                aria-haspopup="menu"
+                className="hover:text-slate-950"
+                onClick={() => setIsMoreOpen((open) => !open)}
+                type="button"
+              >
+                More
+              </button>
+              {isMoreOpen ? (
+                <div
+                  className="absolute right-0 top-7 z-40 w-56 rounded-md border border-[#d1d5db] bg-white py-2 text-sm font-semibold text-slate-800 shadow-lg"
+                  role="menu"
+                >
+                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={() => openTestModal("shortcuts")} role="menuitem" type="button">
+                    Shortcuts
+                  </button>
+                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={toggleLineReader} role="menuitem" type="button">
+                    {lineReaderEnabled ? "Hide Line Reader" : "Line Reader"}
+                  </button>
+                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={saveAndExit} role="menuitem" type="button">
+                    Save and Exit
+                  </button>
+                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={() => openTestModal("help")} role="menuitem" type="button">
+                    Help
+                  </button>
+                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={toggleLargeFontMode} role="menuitem" type="button">
+                    {largeFontMode ? "Standard Text" : "Assistive Technology"}
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
         <div className="bg-[#10294f] px-5 py-2 text-center text-xs font-bold tracking-wide text-white">
@@ -650,7 +749,15 @@ export default function TestPage() {
         style={panelStyle}
         className="mx-auto grid min-h-[calc(100vh-8.5rem)] max-w-[1280px] bg-white lg:grid-cols-[minmax(0,var(--left-panel))_1px_minmax(0,var(--right-panel))]"
       >
-        <article className="bg-white px-10 py-9">
+        <article
+          className="relative bg-white px-10 py-9"
+          onMouseMove={(event) => {
+            if (!lineReaderEnabled || !passagePanelRef.current) return;
+            const rect = passagePanelRef.current.getBoundingClientRect();
+            setLineReaderY(Math.min(rect.height - 40, Math.max(0, event.clientY - rect.top - 20)));
+          }}
+          ref={passagePanelRef}
+        >
           <div className="mx-auto max-w-[560px]">
             {question.passage ? (
               <p
@@ -671,6 +778,13 @@ export default function TestPage() {
               />
             ) : null}
           </div>
+          {lineReaderEnabled ? (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-0 right-0 z-10 h-10 bg-slate-950/10"
+              style={{ top: lineReaderY }}
+            />
+          ) : null}
         </article>
 
         <div
@@ -820,6 +934,46 @@ export default function TestPage() {
           >
             Delete
           </button>
+        </div>
+      ) : null}
+
+      {activeModal ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/30 px-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-md border border-[#d1d5db] bg-white p-5 text-slate-950 shadow-xl">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <h2 className="text-lg font-bold">{activeModal === "shortcuts" ? "Keyboard Shortcuts" : "Help"}</h2>
+              <button
+                aria-label="Close"
+                className="rounded p-1 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+                onClick={() => setActiveModal(null)}
+                type="button"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            {activeModal === "shortcuts" ? (
+              <dl className="grid gap-3 text-sm">
+                <div className="grid grid-cols-[160px_1fr] gap-4">
+                  <dt className="font-bold">ArrowUp / ArrowDown</dt>
+                  <dd>navigate answers</dd>
+                </div>
+                <div className="grid grid-cols-[160px_1fr] gap-4">
+                  <dt className="font-bold">Enter</dt>
+                  <dd>select answer</dd>
+                </div>
+                <div className="grid grid-cols-[160px_1fr] gap-4">
+                  <dt className="font-bold">Shift + A/B/C/D</dt>
+                  <dd>eliminate answer</dd>
+                </div>
+                <div className="grid grid-cols-[160px_1fr] gap-4">
+                  <dt className="font-bold">H</dt>
+                  <dd>toggle highlight mode</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="text-sm leading-6">This is a practice SAT Bluebook simulation.</p>
+            )}
+          </div>
         </div>
       ) : null}
 
