@@ -4,7 +4,7 @@ import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Bookmark, ChevronLeft, ChevronRight } from "lucide-react";
+import { Ban, Bookmark, ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
 import { API_URL, ApiError, Question, api } from "@/lib/api";
 
 type ModulePayload = {
@@ -30,6 +30,16 @@ type HighlightToolbar = {
   y: number;
 };
 
+type AnswerAction = {
+  type: "select" | "eliminate";
+  value: string;
+};
+
+type StoredAnswerState = {
+  selectedAnswer: string | null;
+  eliminatedAnswers: string[];
+};
+
 const highlightStyles: Record<HighlightType, string> = {
   yellow: "background-color: #fde68a;",
   blue: "background-color: #bfdbfe;",
@@ -45,6 +55,9 @@ export default function TestPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [marked, setMarked] = useState<Record<string, boolean>>({});
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<string>>(new Set());
+  const [actionHistory, setActionHistory] = useState<AnswerAction[]>([]);
   const [focusedChoiceIndex, setFocusedChoiceIndex] = useState(0);
   const [leftPanelPercent, setLeftPanelPercent] = useState(60);
   const [highlightToolbar, setHighlightToolbar] = useState<HighlightToolbar>({ visible: false, x: 0, y: 0 });
@@ -106,7 +119,8 @@ export default function TestPage() {
 
   useEffect(() => {
     questionStartedAt.current = Date.now();
-    const selectedIndex = question?.choices.findIndex((choice) => choice.label === answers[question.id]) ?? -1;
+    if (question) loadStoredAnswerState(question);
+    const selectedIndex = question?.choices.findIndex((choice) => choice.label === (selectedAnswer || answers[question.id])) ?? -1;
     setFocusedChoiceIndex(selectedIndex >= 0 ? selectedIndex : 0);
   }, [question?.id]);
 
@@ -127,16 +141,24 @@ export default function TestPage() {
         });
       }
 
+      if (event.shiftKey && /^[a-d]$/i.test(event.key)) {
+        event.preventDefault();
+        const label = event.key.toUpperCase();
+        if (question.choices.some((choice) => choice.label === label)) {
+          toggleEliminate(label);
+        }
+      }
+
       if (event.key === "Enter") {
         event.preventDefault();
         const choice = question.choices[focusedChoiceIndex];
-        if (choice) void save(question.id, choice.label);
+        if (choice) selectAnswer(choice.label);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [question, focusedChoiceIndex, answers, marked]);
+  }, [question, focusedChoiceIndex, answers, marked, selectedAnswer, eliminatedAnswers, actionHistory]);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -429,6 +451,94 @@ export default function TestPage() {
     setHighlightToolbar((current) => ({ ...current, visible: false }));
   }
 
+  function answerStorageKey(questionId = question?.id) {
+    return `sat1600_answer_state:${attemptId}:${questionId}`;
+  }
+
+  function loadStoredAnswerState(currentQuestion: Question) {
+    let stored: StoredAnswerState | null = null;
+    try {
+      const raw = window.localStorage.getItem(answerStorageKey(currentQuestion.id));
+      stored = raw ? JSON.parse(raw) : null;
+    } catch {
+      stored = null;
+    }
+
+    const eliminated = new Set(stored?.eliminatedAnswers || []);
+    const storedSelected = stored?.selectedAnswer || answers[currentQuestion.id] || null;
+    const nextSelected = storedSelected && !eliminated.has(storedSelected) ? storedSelected : null;
+    setSelectedAnswer(nextSelected);
+    setEliminatedAnswers(eliminated);
+    setActionHistory([]);
+  }
+
+  function persistAnswerState(nextSelected: string | null, nextEliminated: Set<string>, questionId = question?.id) {
+    if (!questionId || typeof window === "undefined") return;
+    const payload: StoredAnswerState = {
+      selectedAnswer: nextSelected,
+      eliminatedAnswers: [...nextEliminated]
+    };
+    window.localStorage.setItem(answerStorageKey(questionId), JSON.stringify(payload));
+  }
+
+  function selectAnswer(value: string, trackAction = true) {
+    if (!question || eliminatedAnswers.has(value)) return;
+    setSelectedAnswer(value);
+    persistAnswerState(value, eliminatedAnswers, question.id);
+    if (trackAction) setActionHistory((history) => [...history, { type: "select", value }]);
+    void save(question.id, value);
+  }
+
+  function toggleEliminate(value: string, trackAction = true) {
+    if (!question) return;
+    const nextEliminated = new Set(eliminatedAnswers);
+    if (nextEliminated.has(value)) {
+      nextEliminated.delete(value);
+    } else {
+      nextEliminated.add(value);
+    }
+    const nextSelected = nextEliminated.has(selectedAnswer || "") ? null : selectedAnswer;
+    setEliminatedAnswers(nextEliminated);
+    setSelectedAnswer(nextSelected);
+    persistAnswerState(nextSelected, nextEliminated, question.id);
+    if (trackAction) setActionHistory((history) => [...history, { type: "eliminate", value }]);
+    if (selectedAnswer && nextSelected !== selectedAnswer) void save(question.id, "");
+  }
+
+  function undoLastAnswerAction() {
+    if (!question || actionHistory.length === 0) return;
+    const lastAction = actionHistory[actionHistory.length - 1];
+    const remainingHistory = actionHistory.slice(0, -1);
+
+    if (lastAction.type === "eliminate") {
+      const nextEliminated = new Set(eliminatedAnswers);
+      if (nextEliminated.has(lastAction.value)) {
+        nextEliminated.delete(lastAction.value);
+      } else {
+        nextEliminated.add(lastAction.value);
+      }
+      const previousSelection = [...remainingHistory].reverse().find((action) => (
+        action.type === "select" && !nextEliminated.has(action.value)
+      ));
+      const nextSelected = selectedAnswer || previousSelection?.value || null;
+      setActionHistory(remainingHistory);
+      setEliminatedAnswers(nextEliminated);
+      setSelectedAnswer(nextSelected);
+      persistAnswerState(nextSelected, nextEliminated, question.id);
+      if (nextSelected && nextSelected !== selectedAnswer) void save(question.id, nextSelected);
+      return;
+    }
+
+    const previousSelection = [...remainingHistory].reverse().find((action) => (
+      action.type === "select" && !eliminatedAnswers.has(action.value)
+    ));
+    const nextSelected = previousSelection?.value || null;
+    setActionHistory(remainingHistory);
+    setSelectedAnswer(nextSelected);
+    persistAnswerState(nextSelected, eliminatedAnswers, question.id);
+    void save(question.id, nextSelected || "");
+  }
+
   async function save(questionId: string, value: string, review = marked[questionId] || false) {
     const previousAnswer = answers[questionId] || "";
     const firstInteraction = firstInteractionByQuestion.current[questionId] || Date.now();
@@ -580,16 +690,26 @@ export default function TestPage() {
         </div>
 
         <aside className="bg-white px-10 py-9">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-9 min-w-9 items-center justify-center bg-slate-950 text-base font-bold text-white">
-              {index + 1}
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 min-w-9 items-center justify-center bg-slate-950 text-base font-bold text-white">
+                {index + 1}
+              </div>
+              <button
+                onClick={() => toggleMark(question.id)}
+                className={`inline-flex items-center gap-2 text-sm font-semibold hover:text-blue-800 ${marked[question.id] ? "text-blue-700" : "text-slate-700"}`}
+                title="Mark for review"
+              >
+                <Bookmark size={17} fill={marked[question.id] ? "currentColor" : "none"} /> Mark for Review
+              </button>
             </div>
             <button
-              onClick={() => toggleMark(question.id)}
-              className={`inline-flex items-center gap-2 text-sm font-semibold hover:text-blue-800 ${marked[question.id] ? "text-blue-700" : "text-slate-700"}`}
-              title="Mark for review"
+              className="inline-flex items-center gap-2 rounded px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950 disabled:opacity-40"
+              disabled={actionHistory.length === 0}
+              onClick={undoLastAnswerAction}
+              type="button"
             >
-              <Bookmark size={17} fill={marked[question.id] ? "currentColor" : "none"} /> Mark for Review
+              <Undo2 size={16} /> Undo
             </button>
           </div>
           <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
@@ -597,34 +717,58 @@ export default function TestPage() {
 
           <div className="grid gap-4">
             {question.format === "multiple_choice" ? question.choices.map((choice, choiceIndex) => (
-              <button
+              <div
                 key={choice.label}
-                data-choice-index={choiceIndex}
-                onClick={() => {
-                  setFocusedChoiceIndex(choiceIndex);
-                  void save(question.id, choice.label);
-                }}
-                onFocus={() => setFocusedChoiceIndex(choiceIndex)}
-                className={`flex w-full items-start gap-4 rounded-md border px-4 py-4 text-left text-[16px] leading-6 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
-                  answers[question.id] === choice.label
+                className={`flex w-full items-stretch rounded-md border text-left text-[16px] leading-6 transition-colors hover:bg-slate-50 ${
+                  selectedAnswer === choice.label
                     ? "border-blue-700 bg-blue-50"
                     : "border-[#e5e7eb]"
                 }`}
                 role="radio"
-                aria-checked={answers[question.id] === choice.label}
-                tabIndex={choiceIndex === focusedChoiceIndex ? 0 : -1}
+                aria-checked={selectedAnswer === choice.label}
+                aria-disabled={eliminatedAnswers.has(choice.label)}
               >
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
-                    answers[question.id] === choice.label
-                      ? "border-blue-700 bg-blue-700 text-white"
-                      : "border-slate-500 bg-white text-slate-950"
+                <button
+                  className={`flex min-w-0 flex-1 items-start gap-4 px-4 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
+                    eliminatedAnswers.has(choice.label) ? "cursor-not-allowed text-slate-400 opacity-60" : "text-slate-950"
                   }`}
+                  data-choice-index={choiceIndex}
+                  disabled={eliminatedAnswers.has(choice.label)}
+                  onClick={() => {
+                    setFocusedChoiceIndex(choiceIndex);
+                    selectAnswer(choice.label);
+                  }}
+                  onFocus={() => setFocusedChoiceIndex(choiceIndex)}
+                  tabIndex={choiceIndex === focusedChoiceIndex ? 0 : -1}
+                  type="button"
                 >
-                  {choice.label}
-                </span>
-                <span className="text-slate-950">{choice.text}</span>
-              </button>
+                  <span
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
+                      selectedAnswer === choice.label
+                        ? "border-blue-700 bg-blue-700 text-white"
+                        : eliminatedAnswers.has(choice.label)
+                          ? "border-slate-400 bg-white text-slate-400"
+                          : "border-slate-500 bg-white text-slate-950"
+                    }`}
+                  >
+                    {choice.label}
+                  </span>
+                  <span className={eliminatedAnswers.has(choice.label) ? "text-slate-500 line-through decoration-slate-500 decoration-2" : "text-slate-950"}>
+                    {choice.text}
+                  </span>
+                </button>
+                <button
+                  aria-pressed={eliminatedAnswers.has(choice.label)}
+                  className={`m-3 ml-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-white hover:border-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
+                    eliminatedAnswers.has(choice.label) ? "border-slate-700 text-slate-800" : "border-[#e5e7eb] text-slate-500"
+                  }`}
+                  onClick={() => toggleEliminate(choice.label)}
+                  title={eliminatedAnswers.has(choice.label) ? `Undo elimination for ${choice.label}` : `Eliminate ${choice.label}`}
+                  type="button"
+                >
+                  <Ban size={17} />
+                </button>
+              </div>
             )) : (
               <input
                 value={answers[question.id] || ""}
