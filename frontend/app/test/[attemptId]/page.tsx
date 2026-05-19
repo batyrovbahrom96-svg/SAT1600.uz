@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -21,6 +22,10 @@ export default function TestPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [marked, setMarked] = useState<Record<string, boolean>>({});
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [focusedChoiceIndex, setFocusedChoiceIndex] = useState(0);
+  const [leftPanelPercent, setLeftPanelPercent] = useState(60);
+  const testBodyRef = useRef<HTMLElement | null>(null);
+  const resizingDivider = useRef(false);
   const questionStartedAt = useRef(Date.now());
   const spentByQuestion = useRef<Record<string, number>>({});
   const firstInteractionByQuestion = useRef<Record<string, number>>({});
@@ -64,7 +69,58 @@ export default function TestPage() {
   const question = moduleData?.questions[index];
   useEffect(() => {
     questionStartedAt.current = Date.now();
+    const selectedIndex = question?.choices.findIndex((choice) => choice.label === answers[question.id]) ?? -1;
+    setFocusedChoiceIndex(selectedIndex >= 0 ? selectedIndex : 0);
   }, [question?.id]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!question || question.format !== "multiple_choice" || !question.choices.length) return;
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName.toLowerCase();
+      if (tagName === "input" || tagName === "textarea" || tagName === "select" || target?.isContentEditable) return;
+
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        const direction = event.key === "ArrowDown" ? 1 : -1;
+        const nextIndex = (focusedChoiceIndex + direction + question.choices.length) % question.choices.length;
+        setFocusedChoiceIndex(nextIndex);
+        window.requestAnimationFrame(() => {
+          document.querySelector<HTMLElement>(`[data-choice-index="${nextIndex}"]`)?.focus();
+        });
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const choice = question.choices[focusedChoiceIndex];
+        if (choice) void save(question.id, choice.label);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [question, focusedChoiceIndex, answers, marked]);
+
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!resizingDivider.current || !testBodyRef.current) return;
+      const rect = testBodyRef.current.getBoundingClientRect();
+      const nextPercent = ((event.clientX - rect.left) / rect.width) * 100;
+      setLeftPanelPercent(Math.min(68, Math.max(48, nextPercent)));
+    };
+    const stopResizing = () => {
+      resizingDivider.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", stopResizing);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", stopResizing);
+    };
+  }, []);
 
   async function save(questionId: string, value: string, review = marked[questionId] || false) {
     const previousAnswer = answers[questionId] || "";
@@ -134,12 +190,16 @@ export default function TestPage() {
   const sectionTitle = moduleData.attempt.current_section === "reading_writing" ? "Reading and Writing" : "Math";
   const sectionNumber = moduleData.attempt.current_section === "reading_writing" ? 1 : 2;
   const fullSectionTitle = `Section ${sectionNumber}, Module ${moduleData.attempt.current_module}: ${sectionTitle}`;
+  const panelStyle = {
+    "--left-panel": `${leftPanelPercent}%`,
+    "--right-panel": `${100 - leftPanelPercent}%`
+  } as CSSProperties;
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
       <header className="sticky top-0 z-20 bg-white">
         <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-[#e5e7eb] px-5">
-          <div className="flex min-w-0 items-center gap-5">
+          <div className="flex min-w-0 items-center gap-6">
             <div className="truncate text-sm font-semibold text-slate-900">{fullSectionTitle}</div>
             <details className="relative">
               <summary className="cursor-pointer list-none text-sm font-semibold text-slate-700 hover:text-slate-950">
@@ -150,10 +210,15 @@ export default function TestPage() {
               </div>
             </details>
           </div>
-          <div className="px-5 py-2 text-center text-base font-bold tabular-nums text-slate-950" aria-label="Time remaining">
-            {minutes}:{seconds}
+          <div className="flex items-center justify-center gap-3">
+            <div className="px-3 py-2 text-center text-base font-bold tabular-nums text-slate-950" aria-label="Time remaining">
+              {minutes}:{seconds}
+            </div>
+            <button className="rounded px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950" type="button">
+              Hide
+            </button>
           </div>
-          <div className="flex justify-end gap-5 text-sm font-semibold text-slate-700">
+          <div className="flex justify-end gap-6 text-sm font-semibold text-slate-700">
             <button className="hover:text-slate-950" type="button">Highlights & Notes</button>
             <button className="hover:text-slate-950" type="button">More</button>
           </div>
@@ -163,11 +228,15 @@ export default function TestPage() {
         </div>
       </header>
 
-      <section className="mx-auto grid min-h-[calc(100vh-8.5rem)] max-w-[1280px] bg-white lg:grid-cols-[minmax(0,3fr)_1px_minmax(0,2fr)]">
-        <article className="bg-white p-10">
-          <div className="mx-auto max-w-[600px]">
+      <section
+        ref={testBodyRef}
+        style={panelStyle}
+        className="mx-auto grid min-h-[calc(100vh-8.5rem)] max-w-[1280px] bg-white lg:grid-cols-[minmax(0,var(--left-panel))_1px_minmax(0,var(--right-panel))]"
+      >
+        <article className="bg-white px-10 py-9">
+          <div className="mx-auto max-w-[560px]">
             {question.passage ? (
-              <p className="text-[16px] leading-[1.65] text-slate-950">{question.passage}</p>
+              <p className="max-w-[58ch] text-[16px] leading-[1.62] text-slate-950 [text-wrap:pretty]">{question.passage}</p>
             ) : null}
             {question.graph_path ? (
               <Image
@@ -181,13 +250,25 @@ export default function TestPage() {
           </div>
         </article>
 
-        <div className="relative hidden w-px bg-[#e5e7eb] lg:block" aria-hidden="true">
-          <div className="absolute left-1/2 top-1/2 h-12 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#d1d5db] bg-white" />
+        <div
+          className="relative hidden w-px cursor-col-resize bg-[#e5e7eb] lg:block"
+          onMouseDown={() => {
+            resizingDivider.current = true;
+            document.body.style.cursor = "col-resize";
+            document.body.style.userSelect = "none";
+          }}
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuemin={48}
+          aria-valuemax={68}
+          aria-valuenow={Math.round(leftPanelPercent)}
+        >
+          <div className="absolute left-1/2 top-1/2 h-12 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e5e7eb] bg-white hover:border-slate-400" />
         </div>
 
-        <aside className="bg-white p-10">
-          <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-9 min-w-9 items-center justify-center border border-slate-900 text-base font-bold text-slate-950">
+        <aside className="bg-white px-10 py-9">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-9 min-w-9 items-center justify-center bg-slate-950 text-base font-bold text-white">
               {index + 1}
             </div>
             <button
@@ -198,21 +279,27 @@ export default function TestPage() {
               <Bookmark size={17} fill={marked[question.id] ? "currentColor" : "none"} /> Mark for Review
             </button>
           </div>
-          <div className="mb-6 border-t border-dashed border-slate-300" />
+          <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
           <h1 className="mb-6 text-[20px] font-semibold leading-[1.45] text-slate-950">{question.prompt}</h1>
 
           <div className="grid gap-4">
-            {question.format === "multiple_choice" ? question.choices.map((choice) => (
+            {question.format === "multiple_choice" ? question.choices.map((choice, choiceIndex) => (
               <button
                 key={choice.label}
-                onClick={() => save(question.id, choice.label)}
-                className={`flex w-full items-start gap-4 rounded-md border px-4 py-4 text-left text-[16px] leading-6 transition-colors hover:bg-slate-50 ${
+                data-choice-index={choiceIndex}
+                onClick={() => {
+                  setFocusedChoiceIndex(choiceIndex);
+                  void save(question.id, choice.label);
+                }}
+                onFocus={() => setFocusedChoiceIndex(choiceIndex)}
+                className={`flex w-full items-start gap-4 rounded-md border px-4 py-4 text-left text-[16px] leading-6 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
                   answers[question.id] === choice.label
                     ? "border-blue-700 bg-blue-50"
-                    : "border-slate-300"
+                    : "border-[#e5e7eb]"
                 }`}
                 role="radio"
                 aria-checked={answers[question.id] === choice.label}
+                tabIndex={choiceIndex === focusedChoiceIndex ? 0 : -1}
               >
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
@@ -229,7 +316,7 @@ export default function TestPage() {
               <input
                 value={answers[question.id] || ""}
                 onChange={(event) => save(question.id, event.target.value)}
-                className="w-full rounded-[10px] border border-slate-300 px-5 py-4 text-[16px] text-slate-950 outline-blue-700"
+                className="w-full rounded-[10px] border border-[#e5e7eb] px-5 py-4 text-[16px] text-slate-950 outline-blue-700"
                 placeholder="Enter answer"
               />
             )}
