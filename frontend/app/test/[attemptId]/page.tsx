@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Bookmark, Calculator, ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
+import { Bookmark, Calculator, ChevronLeft, ChevronRight } from "lucide-react";
 import { API_URL, ApiError, Question, api } from "@/lib/api";
 
 type ModulePayload = {
@@ -21,7 +21,6 @@ export default function TestPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [marked, setMarked] = useState<Record<string, boolean>>({});
   const [secondsLeft, setSecondsLeft] = useState(0);
-  const [dark, setDark] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const questionStartedAt = useRef(Date.now());
   const spentByQuestion = useRef<Record<string, number>>({});
@@ -130,93 +129,145 @@ export default function TestPage() {
   }
 
   if (!moduleData || !question) {
-    return <main className="grid min-h-screen place-items-center bg-paper font-bold text-ink">Loading test...</main>;
+    return <main className="grid min-h-screen place-items-center bg-white font-bold text-slate-900">Loading test...</main>;
   }
 
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
-  const shell = dark ? "bg-slate-950 text-white" : "bg-paper text-ink";
-  const panel = dark ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-white";
+  const sectionTitle = moduleData.attempt.current_section === "reading_writing" ? "Reading and Writing" : "Math";
 
   return (
-    <main className={`min-h-screen ${shell}`}>
-      <header className={`sticky top-0 z-10 border-b ${panel}`}>
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <div>
-            <div className="text-sm font-black uppercase tracking-wide">{moduleData.attempt.current_section.replace("_", " & ")}</div>
-            <div className="text-xs opacity-70">Module {moduleData.attempt.current_module} locked test mode</div>
+    <main className="min-h-screen bg-white text-slate-950">
+      <header className="sticky top-0 z-20 border-b border-slate-300 bg-white">
+        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center px-5">
+          <div className="min-w-0 text-sm font-semibold text-slate-700">
+            {sectionTitle}, Module {moduleData.attempt.current_module}
           </div>
-          <div className="rounded-md border border-slate-300 px-4 py-2 text-lg font-black tabular-nums">{minutes}:{seconds}</div>
-          <div className="flex items-center gap-2">
-            <button title="Calculator" onClick={() => setCalculatorOpen((value) => !value)} className="rounded-md border border-slate-300 p-2"><Calculator size={18} /></button>
-            <button title="Theme" onClick={() => setDark((value) => !value)} className="rounded-md border border-slate-300 p-2">{dark ? <Sun size={18} /> : <Moon size={18} />}</button>
+          <div className="rounded px-5 py-2 text-center text-lg font-bold tabular-nums text-slate-950" aria-label="Time remaining">
+            {minutes}:{seconds}
+          </div>
+          <div className="flex justify-end">
+            <button
+              title="Calculator"
+              onClick={() => setCalculatorOpen((value) => !value)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-800 hover:bg-slate-100"
+            >
+              <Calculator size={19} />
+            </button>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-5 lg:grid-cols-[260px_1fr]">
-        <aside className={`rounded-lg border p-4 ${panel}`}>
-          <div className="mb-3 text-sm font-black">Question navigator</div>
-          <div className="grid grid-cols-5 gap-2">
-            {moduleData.questions.map((item, itemIndex) => (
-              <button
-                key={item.id}
-                onClick={() => setIndex(itemIndex)}
-                className={`aspect-square rounded-md border text-sm font-black ${index === itemIndex ? "border-brand bg-brand text-white" : marked[item.id] ? "border-warning bg-yellow-50 text-ink" : answers[item.id] ? "border-mint bg-emerald-50 text-ink" : "border-slate-300"}`}
-              >
-                {itemIndex + 1}
-              </button>
-            ))}
-          </div>
-          <div className="mt-4 text-sm opacity-70">{answeredCount}/{moduleData.questions.length} answered</div>
-          <button onClick={advance} className="mt-4 w-full rounded-md bg-ink px-4 py-3 font-bold text-white">Submit module</button>
-        </aside>
-
-        <article className={`rounded-lg border ${panel}`}>
-          <div className="grid min-h-[620px] lg:grid-cols-2">
-            <div className="border-b border-slate-200 p-6 lg:border-b-0 lg:border-r">
-              {question.passage ? <p className="leading-8">{question.passage}</p> : null}
+      <section className="mx-auto grid min-h-[calc(100vh-8rem)] max-w-[1280px] bg-white px-5 py-8 lg:grid-cols-[60%_40%] lg:gap-10">
+        <article className="bg-white pr-0 lg:border-r lg:border-slate-300 lg:pr-10">
+          <div className="mx-auto max-w-[600px]">
+            {question.passage ? (
+              <p className="text-[17px] leading-[1.75] text-slate-950">{question.passage}</p>
+            ) : null}
               {question.graph_path ? (
                 <Image
                   alt="SAT graph"
-                  className="mt-4 h-auto max-h-80 rounded-md border border-slate-200 bg-white object-contain"
+                  className="mt-8 h-auto max-h-[420px] w-full object-contain"
                   height={480}
                   src={`${API_URL}${question.graph_path}`}
                   width={640}
                 />
               ) : null}
               {calculatorOpen ? (
-                <div className="mt-4 rounded-md border border-slate-300 p-4">
-                  <div className="mb-2 text-sm font-black">Calculator</div>
-                  <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-ink" placeholder="Use your device calculator logic here" />
+                <div className="mt-8 max-w-sm border border-slate-300 bg-white p-4">
+                  <div className="mb-2 text-sm font-bold text-slate-800">Calculator</div>
+                  <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-950" placeholder="Enter calculation" />
                 </div>
               ) : null}
-            </div>
-            <div className="p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="rounded-md bg-blue-50 px-3 py-1 text-sm font-bold text-brand">{question.topic} · L{question.difficulty}</span>
-                <button onClick={() => toggleMark(question.id)} className="flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-bold">
-                  <Bookmark size={16} fill={marked[question.id] ? "currentColor" : "none"} /> Review
-                </button>
-              </div>
-              <h1 className="text-xl font-black leading-8">{question.prompt}</h1>
-              <div className="mt-6 grid gap-3">
-                {question.format === "multiple_choice" ? question.choices.map((choice) => (
-                  <button key={choice.label} onClick={() => save(question.id, choice.label)} className={`rounded-md border p-4 text-left font-semibold ${answers[question.id] === choice.label ? "border-brand bg-blue-50 text-ink" : "border-slate-300"}`}>
-                    <span className="mr-3 font-black">{choice.label}</span>{choice.text}
-                  </button>
-                )) : (
-                  <input value={answers[question.id] || ""} onChange={(event) => save(question.id, event.target.value)} className="rounded-md border border-slate-300 px-4 py-3 text-ink" placeholder="Enter answer" />
-                )}
-              </div>
-              <div className="mt-8 flex justify-between">
-                <button disabled={index === 0} onClick={() => setIndex((value) => Math.max(0, value - 1))} className="flex items-center gap-2 rounded-md border border-slate-300 px-4 py-2 font-bold disabled:opacity-40"><ChevronLeft size={18} /> Back</button>
-                <button disabled={index === moduleData.questions.length - 1} onClick={() => setIndex((value) => Math.min(moduleData.questions.length - 1, value + 1))} className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 font-bold text-white disabled:opacity-40">Next <ChevronRight size={18} /></button>
-              </div>
-            </div>
           </div>
         </article>
+
+        <aside className="mt-8 bg-white lg:mt-0 lg:pl-2">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <div className="mb-2 text-sm font-semibold text-slate-600">Question {index + 1} of {moduleData.questions.length}</div>
+              <h1 className="text-[21px] font-bold leading-[1.45] text-slate-950">{question.prompt}</h1>
+            </div>
+            <button
+              onClick={() => toggleMark(question.id)}
+              className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white hover:bg-slate-100 ${marked[question.id] ? "text-blue-700" : "text-slate-800"}`}
+              title="Mark for review"
+            >
+              <Bookmark size={18} fill={marked[question.id] ? "currentColor" : "none"} />
+            </button>
+          </div>
+
+          <div className="grid gap-3">
+            {question.format === "multiple_choice" ? question.choices.map((choice) => (
+              <button
+                key={choice.label}
+                onClick={() => save(question.id, choice.label)}
+                className={`flex w-full items-start gap-4 rounded-[10px] border px-5 py-4 text-left text-[16px] leading-6 transition-colors hover:bg-slate-100 ${
+                  answers[question.id] === choice.label
+                    ? "border-blue-700 outline outline-2 outline-blue-700"
+                    : "border-slate-300"
+                }`}
+              >
+                <span className="min-w-6 font-bold text-slate-950">{choice.label}</span>
+                <span className="text-slate-950">{choice.text}</span>
+              </button>
+            )) : (
+              <input
+                value={answers[question.id] || ""}
+                onChange={(event) => save(question.id, event.target.value)}
+                className="w-full rounded-[10px] border border-slate-300 px-5 py-4 text-[16px] text-slate-950 outline-blue-700"
+                placeholder="Enter answer"
+              />
+            )}
+          </div>
+        </aside>
       </section>
+
+      <footer className="sticky bottom-0 z-20 border-t border-slate-300 bg-white">
+        <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-5 py-3">
+          <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
+            {moduleData.questions.map((item, itemIndex) => (
+              <button
+                key={item.id}
+                onClick={() => setIndex(itemIndex)}
+                className={`h-9 min-w-9 rounded-md border text-sm font-bold ${
+                  index === itemIndex
+                    ? "border-blue-700 bg-blue-700 text-white"
+                    : marked[item.id]
+                      ? "border-slate-400 bg-white text-blue-700"
+                      : answers[item.id]
+                        ? "border-slate-400 bg-slate-100 text-slate-950"
+                        : "border-slate-300 bg-white text-slate-950"
+                }`}
+              >
+                {itemIndex + 1}
+              </button>
+            ))}
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="hidden text-sm font-semibold text-slate-600 sm:inline">{answeredCount}/{moduleData.questions.length} answered</span>
+            <button
+              disabled={index === 0}
+              onClick={() => setIndex((value) => Math.max(0, value - 1))}
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 font-bold text-slate-950 hover:bg-slate-100 disabled:opacity-40"
+            >
+              <ChevronLeft size={18} /> Back
+            </button>
+            {index === moduleData.questions.length - 1 ? (
+              <button onClick={advance} className="rounded-md bg-blue-700 px-5 py-2 font-bold text-white hover:bg-blue-800">
+                Submit
+              </button>
+            ) : (
+              <button
+                onClick={() => setIndex((value) => Math.min(moduleData.questions.length - 1, value + 1))}
+                className="inline-flex items-center gap-2 rounded-md bg-blue-700 px-5 py-2 font-bold text-white hover:bg-blue-800"
+              >
+                Next <ChevronRight size={18} />
+              </button>
+            )}
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
