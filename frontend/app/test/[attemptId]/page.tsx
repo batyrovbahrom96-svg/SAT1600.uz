@@ -14,6 +14,28 @@ type ModulePayload = {
   answers: Record<string, { selected_answer: string | null; marked_for_review: boolean; time_spent_seconds: number }>;
 };
 
+type HighlightType = "yellow" | "blue" | "pink" | "underline";
+
+type PassageHighlight = {
+  id: string;
+  startOffset: number;
+  endOffset: number;
+  type: HighlightType;
+};
+
+type HighlightToolbar = {
+  visible: boolean;
+  x: number;
+  y: number;
+};
+
+const highlightStyles: Record<HighlightType, string> = {
+  yellow: "background-color: #fde68a;",
+  blue: "background-color: #bfdbfe;",
+  pink: "background-color: #fbcfe8;",
+  underline: "text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 2px;"
+};
+
 export default function TestPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const router = useRouter();
@@ -24,7 +46,12 @@ export default function TestPage() {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [focusedChoiceIndex, setFocusedChoiceIndex] = useState(0);
   const [leftPanelPercent, setLeftPanelPercent] = useState(60);
+  const [highlightToolbar, setHighlightToolbar] = useState<HighlightToolbar>({ visible: false, x: 0, y: 0 });
   const testBodyRef = useRef<HTMLElement | null>(null);
+  const passageRef = useRef<HTMLParagraphElement | null>(null);
+  const highlightToolbarRef = useRef<HTMLDivElement | null>(null);
+  const selectedPassageRange = useRef<Range | null>(null);
+  const selectedPassageOffsets = useRef<{ startOffset: number; endOffset: number } | null>(null);
   const resizingDivider = useRef(false);
   const questionStartedAt = useRef(Date.now());
   const spentByQuestion = useRef<Record<string, number>>({});
@@ -67,6 +94,14 @@ export default function TestPage() {
   }, [secondsLeft]);
 
   const question = moduleData?.questions[index];
+
+  useEffect(() => {
+    restorePassageHighlights();
+    selectedPassageRange.current = null;
+    selectedPassageOffsets.current = null;
+    setHighlightToolbar({ visible: false, x: 0, y: 0 });
+  }, [question?.id, question?.passage]);
+
   useEffect(() => {
     questionStartedAt.current = Date.now();
     const selectedIndex = question?.choices.findIndex((choice) => choice.label === answers[question.id]) ?? -1;
@@ -121,6 +156,157 @@ export default function TestPage() {
       window.removeEventListener("mouseup", stopResizing);
     };
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (target && highlightToolbarRef.current?.contains(target)) return;
+      if (target && passageRef.current?.contains(target)) return;
+      setHighlightToolbar((current) => ({ ...current, visible: false }));
+    };
+
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function highlightStorageKey(questionId = question?.id) {
+    return `sat1600_highlights:${attemptId}:${questionId}`;
+  }
+
+  function loadPassageHighlights(questionId = question?.id): PassageHighlight[] {
+    if (!questionId || typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem(highlightStorageKey(questionId));
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function savePassageHighlights(highlights: PassageHighlight[], questionId = question?.id) {
+    if (!questionId || typeof window === "undefined") return;
+    window.localStorage.setItem(highlightStorageKey(questionId), JSON.stringify(highlights));
+  }
+
+  function escapeHtml(value: string) {
+    return value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderPassageHtml(text: string, highlights: PassageHighlight[]) {
+    const ordered = [...highlights]
+      .filter((highlight) => highlight.startOffset >= 0 && highlight.endOffset > highlight.startOffset && highlight.endOffset <= text.length)
+      .sort((a, b) => a.startOffset - b.startOffset || a.endOffset - b.endOffset);
+    let cursor = 0;
+    let html = "";
+
+    for (const highlight of ordered) {
+      if (highlight.startOffset < cursor) continue;
+      html += escapeHtml(text.slice(cursor, highlight.startOffset));
+      html += `<span data-passage-highlight="${highlight.id}" style="${highlightStyles[highlight.type]}">${escapeHtml(text.slice(highlight.startOffset, highlight.endOffset))}</span>`;
+      cursor = highlight.endOffset;
+    }
+
+    return html + escapeHtml(text.slice(cursor));
+  }
+
+  function restorePassageHighlights(highlights = loadPassageHighlights()) {
+    if (!passageRef.current || !question?.passage) return;
+    passageRef.current.innerHTML = renderPassageHtml(question.passage, highlights);
+  }
+
+  function selectionOffsets(range: Range) {
+    if (!passageRef.current) return null;
+    const startRange = document.createRange();
+    startRange.selectNodeContents(passageRef.current);
+    startRange.setEnd(range.startContainer, range.startOffset);
+
+    const endRange = document.createRange();
+    endRange.selectNodeContents(passageRef.current);
+    endRange.setEnd(range.endContainer, range.endOffset);
+
+    return {
+      startOffset: startRange.toString().length,
+      endOffset: endRange.toString().length
+    };
+  }
+
+  function handlePassageMouseUp() {
+    if (!passageRef.current) return;
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+      setHighlightToolbar((current) => ({ ...current, visible: false }));
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const commonNode = range.commonAncestorContainer.nodeType === Node.TEXT_NODE ? range.commonAncestorContainer.parentNode : range.commonAncestorContainer;
+    if (!commonNode || !passageRef.current.contains(commonNode)) return;
+
+    const offsets = selectionOffsets(range);
+    if (!offsets || offsets.endOffset <= offsets.startOffset) return;
+
+    const rect = range.getBoundingClientRect();
+    selectedPassageRange.current = range.cloneRange();
+    selectedPassageOffsets.current = offsets;
+    setHighlightToolbar({
+      visible: true,
+      x: Math.min(window.innerWidth - 240, Math.max(12, rect.right - 210)),
+      y: Math.max(72, rect.top - 48)
+    });
+  }
+
+  function wrapSelectedPassageRange(type: HighlightType, id: string) {
+    const range = selectedPassageRange.current;
+    if (!range || !passageRef.current) return false;
+    const span = document.createElement("span");
+    span.dataset.passageHighlight = id;
+    span.setAttribute("style", highlightStyles[type]);
+
+    try {
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+      window.getSelection()?.removeAllRanges();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function applyPassageHighlight(type: HighlightType) {
+    const offsets = selectedPassageOffsets.current;
+    if (!question || !offsets) return;
+
+    const highlight: PassageHighlight = {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      startOffset: offsets.startOffset,
+      endOffset: offsets.endOffset,
+      type
+    };
+    const nextHighlights = [...loadPassageHighlights(question.id), highlight];
+    savePassageHighlights(nextHighlights, question.id);
+
+    if (!wrapSelectedPassageRange(type, highlight.id)) {
+      restorePassageHighlights(nextHighlights);
+    }
+    setHighlightToolbar((current) => ({ ...current, visible: false }));
+  }
+
+  function deleteSelectedPassageHighlights() {
+    if (!question || !selectedPassageOffsets.current) return;
+    const { startOffset, endOffset } = selectedPassageOffsets.current;
+    const nextHighlights = loadPassageHighlights(question.id).filter((highlight) => (
+      highlight.endOffset <= startOffset || highlight.startOffset >= endOffset
+    ));
+    savePassageHighlights(nextHighlights, question.id);
+    restorePassageHighlights(nextHighlights);
+    window.getSelection()?.removeAllRanges();
+    setHighlightToolbar((current) => ({ ...current, visible: false }));
+  }
 
   async function save(questionId: string, value: string, review = marked[questionId] || false) {
     const previousAnswer = answers[questionId] || "";
@@ -236,7 +422,12 @@ export default function TestPage() {
         <article className="bg-white px-10 py-9">
           <div className="mx-auto max-w-[560px]">
             {question.passage ? (
-              <p className="max-w-[58ch] text-[16px] leading-[1.62] text-slate-950 [text-wrap:pretty]">{question.passage}</p>
+              <p
+                ref={passageRef}
+                aria-label="Passage text"
+                className="max-w-[58ch] select-text text-[16px] leading-[1.62] text-slate-950 [text-wrap:pretty]"
+                onMouseUp={handlePassageMouseUp}
+              />
             ) : null}
             {question.graph_path ? (
               <Image
@@ -323,6 +514,48 @@ export default function TestPage() {
           </div>
         </aside>
       </section>
+
+      {highlightToolbar.visible ? (
+        <div
+          ref={highlightToolbarRef}
+          className="fixed z-40 flex items-center gap-1 rounded-md border border-[#d1d5db] bg-white px-2 py-1"
+          onMouseDown={(event) => event.preventDefault()}
+          style={{ left: highlightToolbar.x, top: highlightToolbar.y }}
+        >
+          <button
+            aria-label="Yellow highlight"
+            className="h-7 w-7 rounded border border-[#e5e7eb] bg-[#fde68a] hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+            onClick={() => applyPassageHighlight("yellow")}
+            type="button"
+          />
+          <button
+            aria-label="Blue highlight"
+            className="h-7 w-7 rounded border border-[#e5e7eb] bg-[#bfdbfe] hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+            onClick={() => applyPassageHighlight("blue")}
+            type="button"
+          />
+          <button
+            aria-label="Pink highlight"
+            className="h-7 w-7 rounded border border-[#e5e7eb] bg-[#fbcfe8] hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+            onClick={() => applyPassageHighlight("pink")}
+            type="button"
+          />
+          <button
+            className="h-7 rounded border border-[#e5e7eb] px-2 text-sm font-semibold underline underline-offset-2 hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+            onClick={() => applyPassageHighlight("underline")}
+            type="button"
+          >
+            U
+          </button>
+          <button
+            className="h-7 rounded border border-[#e5e7eb] px-2 text-sm font-semibold text-slate-700 hover:border-slate-500 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+            onClick={deleteSelectedPassageHighlights}
+            type="button"
+          >
+            Delete
+          </button>
+        </div>
+      ) : null}
 
       <footer className="sticky bottom-0 z-20 border-t border-[#e5e7eb] bg-white">
         <div className="mx-auto grid h-14 max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5">
