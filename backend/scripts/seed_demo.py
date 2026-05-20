@@ -160,26 +160,29 @@ def source_for(index: int) -> QuestionSource:
 
 def reading_writing_question(module: int, index: int) -> QuestionSpec:
     templates = [
-        rw_main_idea,
         rw_vocabulary,
-        rw_boundaries,
         rw_transition,
-        rw_rhetoric,
+        rw_command_of_evidence,
+        rw_inference,
+        rw_rhetorical_synthesis,
     ]
-    return templates[index % len(templates)](module, index)
+    spec = templates[index % len(templates)](module, index)
+    validate_reading_writing_spec(spec)
+    return spec
 
 
 def rw_base(module: int, index: int, *, topic: str, subtopic: str, question_type: str, passage: str, prompt: str, correct: str, choices: tuple[ChoiceSpec, ...], explanation: str, trap_type: str) -> QuestionSpec:
+    difficulty = difficulty_for(module, index)
     return QuestionSpec(
         section=SATSection.reading_writing,
         module=module,
         order_index=index,
-        difficulty=difficulty_for(module, index),
+        difficulty=difficulty,
         adaptive_level=adaptive_level(module, index),
         source=source_for(index),
         topic=topic,
         subtopic=subtopic,
-        structure_key=f"rw-{question_type.lower().replace(' ', '-')}-{index % 4}",
+        structure_key=f"rw-{question_type.lower().replace(' ', '-')}-{difficulty_band(difficulty)}-{index % 6}",
         passage=passage,
         prompt=prompt,
         correct_answer=correct,
@@ -193,132 +196,327 @@ def rw_base(module: int, index: int, *, topic: str, subtopic: str, question_type
     )
 
 
-def rw_main_idea(module: int, index: int) -> QuestionSpec:
-    subject = ("urban tree canopies", "ocean sediment cores", "bilingual classrooms", "public transit maps")[index % 4]
-    passage = (
-        f"Researchers studying {subject} found that small, repeated measurements often revealed patterns that a single broad survey missed. "
-        "The team argued that the value of the method was not its speed but its ability to show gradual change over time."
-    )
-    return rw_base(
-        module,
-        index,
-        topic="Reading comprehension",
-        subtopic="Central idea",
-        question_type="Reading comprehension",
-        passage=passage,
-        prompt="Which choice best states the main idea of the text?",
-        correct="B",
-        explanation="Choice B captures both the repeated-measurement method and the reason the researchers valued it.",
-        trap_type="overgeneralization",
-        choices=(
-            choice("A", "A single broad survey is usually more accurate than repeated measurements.", ChoiceTrapRole.extreme_wrong_logic, "This reverses the contrast in the text."),
-            choice("B", "Repeated measurements can reveal gradual patterns that broad surveys may overlook.", ChoiceTrapRole.correct, "This matches the text's central claim."),
-            choice("C", "Researchers prefer fast methods even when those methods miss long-term change.", ChoiceTrapRole.common_mistake, "This latches onto method choice but contradicts the stated reason."),
-            choice("D", "The study showed that gradual change is impossible to measure reliably.", ChoiceTrapRole.conceptual_misunderstanding, "This misreads the purpose of the repeated measurements."),
-        ),
-    )
-
-
 def rw_vocabulary(module: int, index: int) -> QuestionSpec:
-    word = ("subtle", "robust", "novel", "constrained")[index % 4]
-    passage = (
-        f"The historian called the archive's influence {word}: it did not immediately overturn existing interpretations, "
-        "but it slowly changed which questions scholars considered worth asking."
+    records = (
+        {
+            "word": "clear",
+            "passage": (
+                "The astronomer's first images were blurred by dust on the lens. "
+                "After the instrument was cleaned, the outline of the distant moon became clear enough for the team to map its ridges, although several shadows still required cautious interpretation."
+            ),
+            "correct": "easy to see",
+            "too_broad": "successful",
+            "too_narrow": "transparent like glass",
+            "context_mismatch": "free from obstruction",
+        },
+        {
+            "word": "marked",
+            "passage": (
+                "In early trials, the new coating changed the metal's temperature only slightly. "
+                "When the researchers added a thin mineral layer, however, the difference became marked, forcing them to revise their explanation of how heat moved through the sample."
+            ),
+            "correct": "noticeable",
+            "too_broad": "important",
+            "too_narrow": "labeled with a symbol",
+            "context_mismatch": "damaged by scratches",
+        },
+        {
+            "word": "fine",
+            "passage": (
+                "The curator first thought the woven cloth was plain because its colors had faded. "
+                "Under angled light, however, fine threads of silver appeared between the darker fibers, revealing a workmanship more delicate than bold."
+            ),
+            "correct": "delicate and precise",
+            "too_broad": "acceptable",
+            "too_narrow": "very thin",
+            "context_mismatch": "requiring payment as punishment",
+        },
+        {
+            "word": "temper",
+            "passage": (
+                "The critic praised the novelist's anger at injustice but noted that the final chapter tempers that anger with sympathy for characters who had made harmful choices under pressure. "
+                "This shift does not excuse them; instead, it makes the judgment less severe."
+            ),
+            "correct": "softens or moderates",
+            "too_broad": "changes",
+            "too_narrow": "heats and hardens metal",
+            "context_mismatch": "loses emotional control",
+        },
+        {
+            "word": "register",
+            "passage": (
+                "Sensors placed near the wetland did not register the brief afternoon shower because the rain evaporated before reaching the lower leaves. "
+                "By contrast, the slower overnight storm produced a signal across nearly every device."
+            ),
+            "correct": "detect or record",
+            "too_broad": "respond to",
+            "too_narrow": "enroll officially",
+            "context_mismatch": "speak in a particular tone",
+        },
     )
-    answers = {
-        "subtle": ("not immediately obvious", "decorative", "fragile", "unusually loud"),
-        "robust": ("strong and reliable", "physically large", "brief", "confusing"),
-        "novel": ("new or original", "fictional", "ordinary", "unproven"),
-        "constrained": ("limited by conditions", "careless", "expanded without limit", "certain"),
-    }
-    correct_text, trap_a, trap_c, trap_d = answers[word]
+    record = records[index % len(records)]
     return rw_base(
         module,
         index,
-        topic="Vocabulary in context",
+        topic="Vocabulary in Context",
         subtopic="Words in context",
-        question_type="Vocabulary in context",
-        passage=passage,
-        prompt=f"As used in the text, what does \"{word}\" most nearly mean?",
-        correct="B",
-        explanation=f"In context, \"{word}\" means {correct_text}; the surrounding sentence explains the intended sense.",
-        trap_type="wrong sense of word",
-        choices=(
-            choice("A", trap_a, ChoiceTrapRole.common_mistake, "This is another possible sense or association, but not the contextual meaning."),
-            choice("B", correct_text, ChoiceTrapRole.correct, "This meaning fits the sentence's logic."),
-            choice("C", trap_c, ChoiceTrapRole.conceptual_misunderstanding, "This conflicts with the described effect."),
-            choice("D", trap_d, ChoiceTrapRole.extreme_wrong_logic, "This is too extreme or opposite in meaning."),
-        ),
-    )
-
-
-def rw_boundaries(module: int, index: int) -> QuestionSpec:
-    noun = ("the enzyme", "the mural", "the satellite", "the committee")[index % 4]
-    passage = f"While reviewing the data, the researchers noticed that {noun} had produced an unexpected result ___ they repeated the trial to confirm it."
-    return rw_base(
-        module,
-        index,
-        topic="Grammar and sentence correction",
-        subtopic="Sentence boundaries",
-        question_type="Grammar and sentence correction",
-        passage=passage,
-        prompt="Which choice completes the text so that it conforms to the conventions of Standard English?",
+        question_type="Vocabulary in Context",
+        passage=record["passage"],
+        prompt=f"As used in the text, what does \"{record['word']}\" most nearly mean?",
         correct="C",
-        explanation="A semicolon correctly joins two closely related independent clauses.",
-        trap_type="comma splice",
+        explanation=f"The context selects the sense \"{record['correct']}\" and rules out other common meanings of \"{record['word']}\".",
+        trap_type="context-controlled vocabulary meaning",
         choices=(
-            choice("A", "result, they", ChoiceTrapRole.common_mistake, "A comma alone creates a comma splice."),
-            choice("B", "result they", ChoiceTrapRole.conceptual_misunderstanding, "This run-on lacks needed punctuation."),
-            choice("C", "result; they", ChoiceTrapRole.correct, "The semicolon correctly separates independent clauses."),
-            choice("D", "result, which they", ChoiceTrapRole.extreme_wrong_logic, "This creates an illogical modifier and incomplete idea."),
+            rw_choice("A", record["too_broad"], "TOO BROAD", ChoiceTrapRole.common_mistake),
+            rw_choice("B", record["too_narrow"], "TOO NARROW", ChoiceTrapRole.conceptual_misunderstanding),
+            rw_choice("C", record["correct"], "CORRECT", ChoiceTrapRole.correct),
+            rw_choice("D", record["context_mismatch"], "CONTEXT MISMATCH", ChoiceTrapRole.extreme_wrong_logic),
         ),
     )
 
 
 def rw_transition(module: int, index: int) -> QuestionSpec:
-    context = ("city planners expected bike traffic to fall", "the first model predicted a weaker signal", "critics assumed attendance would decline", "the initial survey suggested little interest")[index % 4]
-    passage = f"{context}. The updated data showed the opposite pattern, with participation increasing for three consecutive months. ___ the team revised its explanation."
+    records = (
+        (
+            "The first climate model predicted that the algae would decline as the water warmed. The follow-up samples showed the opposite pattern, with the population increasing near the heated vents. ___ the team revised its account of the algae's nutrient source.",
+            "therefore",
+            "cause-effect after contrast",
+        ),
+        (
+            "The museum expected visitors to spend less time in the smaller photography exhibit. The gallery's quiet layout encouraged longer conversations and repeat viewing. ___ attendance surveys showed that visitors described the exhibit as unusually absorbing.",
+            "however",
+            "contrast with expectation",
+        ),
+        (
+            "The first poem presents the city as a place shaped by memory rather than by maps. The second poem also treats streets as emotional landmarks. ___ both poems connect geography with personal history.",
+            "similarly",
+            "parallel relationship",
+        ),
+        (
+            "The engineer knew the prototype used more expensive materials than the older model. The new design reduced maintenance costs so sharply that the total five-year expense was lower. ___ she recommended the prototype for the transit project.",
+            "nevertheless",
+            "concession followed by decision",
+        ),
+    )
+    passage, correct_word, relationship = records[index % len(records)]
+    choices = {
+        "A": "However,",
+        "B": "Therefore,",
+        "C": "Similarly,",
+        "D": "Nevertheless,",
+    }
+    correct_label = {"however": "A", "therefore": "B", "similarly": "C", "nevertheless": "D"}[correct_word]
+    transition_traps = {
+        "A": "CONTEXT MISMATCH",
+        "B": "TOO BROAD",
+        "C": "TOO NARROW",
+        "D": "CONTEXT MISMATCH",
+    }
+    if correct_label == "B":
+        transition_traps["D"] = "TOO BROAD"
+    elif correct_label == "C":
+        transition_traps["D"] = "TOO NARROW"
+    transition_traps[correct_label] = "CORRECT"
+    trap_roles = {
+        "CORRECT": ChoiceTrapRole.correct,
+        "TOO BROAD": ChoiceTrapRole.common_mistake,
+        "TOO NARROW": ChoiceTrapRole.conceptual_misunderstanding,
+        "CONTEXT MISMATCH": ChoiceTrapRole.extreme_wrong_logic,
+    }
     return rw_base(
         module,
         index,
-        topic="Transitions and logical connections",
+        topic="Transitions",
         subtopic="Logical transitions",
-        question_type="Transitions and logical connections",
+        question_type="Transitions",
         passage=passage,
         prompt="Which choice completes the text with the most logical transition?",
-        correct="D",
-        explanation="The second sentence contrasts with the expectation, and the final sentence gives the result of that contrast.",
-        trap_type="transition mismatch",
+        correct=correct_label,
+        explanation=f"The sentence relationship is {relationship}, so {choices[correct_label].strip(',')} is the only transition that fits.",
+        trap_type="logical transition mismatch",
         choices=(
-            choice("A", "For example,", ChoiceTrapRole.common_mistake, "The final sentence is not an example of the previous claim."),
-            choice("B", "Similarly,", ChoiceTrapRole.conceptual_misunderstanding, "The ideas contrast rather than match."),
-            choice("C", "Nevertheless,", ChoiceTrapRole.extreme_wrong_logic, "This implies resistance to the data rather than a response to it."),
-            choice("D", "Consequently,", ChoiceTrapRole.correct, "This shows that the revision followed from the new data."),
+            rw_choice("A", choices["A"], transition_traps["A"], trap_roles[transition_traps["A"]]),
+            rw_choice("B", choices["B"], transition_traps["B"], trap_roles[transition_traps["B"]]),
+            rw_choice("C", choices["C"], transition_traps["C"], trap_roles[transition_traps["C"]]),
+            rw_choice("D", choices["D"], transition_traps["D"], trap_roles[transition_traps["D"]]),
         ),
     )
 
 
-def rw_rhetoric(module: int, index: int) -> QuestionSpec:
-    topic = ("a local wetland", "a robotics club", "an oral-history project", "a school garden")[index % 4]
-    passage = f"A student wants to emphasize that {topic} benefits the wider community, not just the students who work on it."
+def rw_command_of_evidence(module: int, index: int) -> QuestionSpec:
+    records = (
+        (
+            "A botanist studying desert flowers found that one species opened later in the day during unusually dry weeks. This delay reduced water loss, but it also meant fewer visits from morning pollinators. The finding suggests that the plant's response to drought involves a trade-off rather than a simple improvement.",
+            "The plant conserves water in dry conditions but may receive fewer pollinator visits.",
+            "Plants in deserts always benefit when flowers open later.",
+            "The species opened later during unusually dry weeks.",
+            "Morning pollinators stopped visiting desert flowers because temperatures were too high.",
+        ),
+        (
+            "A literary scholar argues that the narrator's brief jokes do not make the novel lighthearted. Instead, they interrupt scenes of grief in a way that makes the grief feel more controlled and, therefore, more intense. The humor functions as restraint, not escape.",
+            "The jokes intensify grief by briefly containing it rather than replacing it.",
+            "Humor in novels usually makes painful scenes easier to read.",
+            "The narrator includes brief jokes during scenes of grief.",
+            "The novel is mainly a comedy that avoids serious emotion.",
+        ),
+        (
+            "An economist compared neighborhoods with identical transit access but different street designs. Shops on narrower streets received more foot traffic, even when rent and population density were similar. The result points to street design as a factor in local commerce.",
+            "Street design may influence local shopping activity even when transit access is the same.",
+            "Transit access is the main cause of commercial growth in every neighborhood.",
+            "The comparison used neighborhoods with identical transit access.",
+            "Narrow streets increase rent, which then produces more foot traffic.",
+        ),
+    )
+    passage, correct_text, too_broad, too_narrow, mismatch = records[index % len(records)]
     return rw_base(
         module,
         index,
-        topic="Rhetorical effectiveness",
-        subtopic="Purpose and support",
-        question_type="Rhetorical effectiveness",
+        topic="Command of Evidence",
+        subtopic="Evidence-based conclusion",
+        question_type="Command of Evidence",
         passage=passage,
-        prompt="Which choice best accomplishes the student's goal?",
+        prompt="Which choice best describes the conclusion that is most strongly supported by the text?",
         correct="A",
-        explanation="Choice A directly connects the project to a community-level benefit.",
-        trap_type="goal mismatch",
+        explanation="Choice A follows from the specific evidence without overstating or narrowing the claim.",
+        trap_type="evidence scope mismatch",
         choices=(
-            choice("A", "Residents also use the project as a resource for learning, volunteering, and local planning.", ChoiceTrapRole.correct, "This addresses the wider community."),
-            choice("B", "The students meet twice each week and keep detailed notes about their progress.", ChoiceTrapRole.common_mistake, "This focuses on student activity, not community impact."),
-            choice("C", "Several participants said the project was more difficult than they first expected.", ChoiceTrapRole.conceptual_misunderstanding, "This addresses difficulty rather than purpose."),
-            choice("D", "The project replaced every other extracurricular activity at the school.", ChoiceTrapRole.extreme_wrong_logic, "This unsupported claim is too broad and off purpose."),
+            rw_choice("A", correct_text, "CORRECT", ChoiceTrapRole.correct),
+            rw_choice("B", too_broad, "TOO BROAD", ChoiceTrapRole.common_mistake),
+            rw_choice("C", too_narrow, "TOO NARROW", ChoiceTrapRole.conceptual_misunderstanding),
+            rw_choice("D", mismatch, "CONTEXT MISMATCH", ChoiceTrapRole.extreme_wrong_logic),
         ),
     )
+
+
+def rw_inference(module: int, index: int) -> QuestionSpec:
+    records = (
+        (
+            "During rehearsals, the orchestra's conductor asked the percussionists to play more softly, even though reviewers had praised their energy. She wanted the audience to notice a quiet flute melody that returns near the end of the piece. Her request suggests that the performance's effect depended on balance rather than force.",
+            "The conductor believed a less forceful percussion part would help listeners hear an important melody.",
+            "The conductor thought every energetic performance prevents audiences from hearing melodies.",
+            "The flute melody appears near the end of the piece.",
+            "Reviewers caused the conductor to remove the percussion section from the performance.",
+        ),
+        (
+            "A marine biologist expected young fish to avoid artificial reefs because the structures lacked mature coral. Yet many young fish gathered there when nearby grasses were dense enough to hide them from predators. The observation suggests that shelter can partly compensate for the absence of coral.",
+            "For young fish, protection from predators may matter as much as the reef material itself.",
+            "Artificial reefs are always better habitats than natural coral reefs.",
+            "Young fish gathered near artificial reefs with dense grasses.",
+            "The fish preferred artificial reefs because mature coral is dangerous.",
+        ),
+        (
+            "The novelist describes a village festival through smells from kitchens and fragments of overheard songs rather than through a full explanation of the event. This technique gives the scene an unfinished quality. Readers must assemble the festival from partial impressions, much as a visitor would.",
+            "The description is designed to make readers experience the festival indirectly and piece by piece.",
+            "Novels should explain public events through complete historical summaries.",
+            "The passage mentions smells from kitchens and fragments of songs.",
+            "The narrator cannot understand the festival's meaning at all.",
+        ),
+    )
+    passage, correct_text, too_broad, too_narrow, mismatch = records[index % len(records)]
+    return rw_base(
+        module,
+        index,
+        topic="Inference",
+        subtopic="Reasonable inference",
+        question_type="Inference",
+        passage=passage,
+        prompt="Which choice is the most reasonable inference from the text?",
+        correct="D",
+        explanation="Choice D connects the text's details to a supported implication without adding an unsupported claim.",
+        trap_type="unsupported inference",
+        choices=(
+            rw_choice("A", too_broad, "TOO BROAD", ChoiceTrapRole.common_mistake),
+            rw_choice("B", too_narrow, "TOO NARROW", ChoiceTrapRole.conceptual_misunderstanding),
+            rw_choice("C", mismatch, "CONTEXT MISMATCH", ChoiceTrapRole.extreme_wrong_logic),
+            rw_choice("D", correct_text, "CORRECT", ChoiceTrapRole.correct),
+        ),
+    )
+
+
+def rw_rhetorical_synthesis(module: int, index: int) -> QuestionSpec:
+    records = (
+        (
+            "A student is writing about architect Lina Bo Bardi. The notes say that Bo Bardi designed buildings in Brazil, often reused industrial materials, wanted public spaces to feel informal and welcoming, and placed theaters, walkways, and gathering areas inside a former factory.",
+            "To emphasize Bo Bardi's goal of making public spaces welcoming, which choice best uses relevant information from the notes?",
+            "By turning a former factory into a cultural center with theaters, walkways, and gathering areas, Bo Bardi showed how reused industrial spaces could invite public use.",
+            "Lina Bo Bardi designed several buildings after moving to Brazil.",
+            "Bo Bardi reused industrial materials in some projects.",
+            "The cultural center included theaters, so it was more important than her other buildings.",
+        ),
+        (
+            "A student is writing about a citizen-science bird survey. The notes say that volunteers counted birds each spring, professional ornithologists checked unusual reports, the project lasted twelve years, and the data helped reveal a northward shift in two species' nesting ranges.",
+            "To show why the survey's design made its findings credible, which choice best uses relevant information from the notes?",
+            "Because volunteers collected observations for twelve years and ornithologists checked unusual reports, the survey produced evidence strong enough to reveal nesting-range shifts.",
+            "The survey was about birds that nested farther north over time.",
+            "Volunteers counted birds each spring for more than a decade.",
+            "Citizen-science surveys prove that professional ornithologists are unnecessary.",
+        ),
+        (
+            "A student is writing about chemist Alice Ball. The notes say that Ball developed an injectable treatment from chaulmoogra oil, earlier forms of the oil were difficult for patients to absorb, her method was used to treat Hansen's disease, and she died before her work received full public credit.",
+            "To emphasize the practical importance of Ball's method, which choice best uses relevant information from the notes?",
+            "Ball's injectable treatment made chaulmoogra oil easier for patients to absorb, allowing the method to be used in treating Hansen's disease.",
+            "Alice Ball died before her work received full public credit.",
+            "Chaulmoogra oil existed before Ball developed her method.",
+            "Because Ball was not fully credited, her treatment could not have helped patients.",
+        ),
+    )
+    passage, prompt, correct_text, too_broad, too_narrow, mismatch = records[index % len(records)]
+    return rw_base(
+        module,
+        index,
+        topic="Rhetorical Synthesis",
+        subtopic="Use notes to meet a goal",
+        question_type="Rhetorical Synthesis",
+        passage=passage,
+        prompt=prompt,
+        correct="B",
+        explanation="Choice B selects the notes that directly accomplish the stated rhetorical goal and avoids irrelevant or exaggerated claims.",
+        trap_type="rhetorical goal mismatch",
+        choices=(
+            rw_choice("A", too_broad, "TOO BROAD", ChoiceTrapRole.common_mistake),
+            rw_choice("B", correct_text, "CORRECT", ChoiceTrapRole.correct),
+            rw_choice("C", too_narrow, "TOO NARROW", ChoiceTrapRole.conceptual_misunderstanding),
+            rw_choice("D", mismatch, "CONTEXT MISMATCH", ChoiceTrapRole.extreme_wrong_logic),
+        ),
+    )
+
+
+def difficulty_band(difficulty: int) -> str:
+    if difficulty <= 4:
+        return "easy"
+    if difficulty <= 7:
+        return "medium"
+    return "hard"
+
+
+def rw_choice(label: str, text: str, pattern: str, role: ChoiceTrapRole) -> ChoiceSpec:
+    explanations = {
+        "CORRECT": "CORRECT: fully answers the question using the passage's exact logic.",
+        "TOO BROAD": "TOO BROAD: plausible language, but the claim goes beyond what the passage supports.",
+        "TOO NARROW": "TOO NARROW: true or plausible detail, but it is too limited to answer the question.",
+        "CONTEXT MISMATCH": "CONTEXT MISMATCH: plausible in isolation, but it conflicts with the passage's context, tone, or logic.",
+    }
+    return choice(label, text, role, explanations[pattern])
+
+
+def validate_reading_writing_spec(spec: QuestionSpec) -> None:
+    allowed_types = {"Vocabulary in Context", "Transitions", "Command of Evidence", "Inference", "Rhetorical Synthesis"}
+    if spec.question_type not in allowed_types:
+        raise ValueError(f"Unsupported Reading & Writing question type: {spec.question_type}")
+    if not spec.passage:
+        raise ValueError("Reading & Writing questions require a passage.")
+    sentence_count = sum(spec.passage.count(mark) for mark in ".!?")
+    if sentence_count < 2 or sentence_count > 4:
+        raise ValueError(f"Passage must be 2-4 sentences: {spec.passage}")
+    if len(spec.choices) != 4:
+        raise ValueError("Reading & Writing questions must have exactly four choices.")
+    correct_choices = [item for item in spec.choices if item.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1 or correct_choices[0].label != spec.correct_answer:
+        raise ValueError("Reading & Writing questions must have exactly one correct answer matching correct_answer.")
+    bases = " ".join(choice_spec.basis or "" for choice_spec in spec.choices)
+    for required in ("TOO BROAD", "TOO NARROW", "CONTEXT MISMATCH", "CORRECT"):
+        if required not in bases:
+            raise ValueError(f"Missing distractor pattern {required} for {spec.question_type}.")
 
 
 def math_question(module: int, index: int) -> QuestionSpec:
