@@ -12,11 +12,71 @@ TEST_TITLE = "SAT1600 Diagnostic Mock 1"
 RW_DISTRACTOR_TAXONOMY = {"semantic_twin", "scope_error", "logic_flip"}
 RW_HIGH_PLAUSIBILITY_TAXONOMY = {"semantic_twin", "scope_error"}
 RW_GENERATION_PATTERNS = {
-    "Vocabulary in Context": {"literal_vs_abstract", "functional_precision", "tone_alignment"},
-    "Function": {"setup_refutation", "local_explanation", "evidence_support"},
-    "Main Idea": {"example_vs_general", "study_vs_conclusion"},
-    "Cross-Text Connections": {"claim_vs_evidence", "agreement_shift"},
-    "Inference": {"expectation_violation", "causal_gap"},
+    "Data Analysis": {"ranking_flip_threshold", "data_mapping_table"},
+    "Command of Evidence": {"causal_chain_support", "weaken_origin_claim"},
+    "Inference": {"contradiction_inference"},
+    "Standard English Conventions": {
+        "grammar_subject_verb",
+        "grammar_clause_boundary",
+        "grammar_modifier",
+        "grammar_pronoun_reference",
+    },
+}
+RW_PATTERN_REGISTRY = {
+    "ranking_flip_threshold": {
+        "passage_template": "ranked evidence with a threshold that flips the apparent winner",
+        "logic_rule": "choose the claim that accounts for the threshold, not the surface ranking",
+        "correct_answer_rule": "must mention the post-threshold reversal",
+        "distractor_generators": ("surface_rank", "pre_threshold_scope", "logic_flip"),
+    },
+    "causal_chain_support": {
+        "passage_template": "cause chain with one delayed support link",
+        "logic_rule": "identify the link that supports the final causal claim",
+        "correct_answer_rule": "must preserve the full cause-to-effect sequence",
+        "distractor_generators": ("missing_link", "reverse_cause", "overbroad_cause"),
+    },
+    "contradiction_inference": {
+        "passage_template": "expectation followed by contrasting result",
+        "logic_rule": "infer the limited conclusion created by the contradiction",
+        "correct_answer_rule": "must explain the contradiction without overgeneralizing",
+        "distractor_generators": ("denies_result", "restates_expectation", "extreme_inference"),
+    },
+    "data_mapping_table": {
+        "passage_template": "compact data table described in prose with irrelevant detail",
+        "logic_rule": "map the correct row and column before drawing a claim",
+        "correct_answer_rule": "must use the matching data point and qualifier",
+        "distractor_generators": ("wrong_row", "wrong_column", "unqualified_data_claim"),
+    },
+    "weaken_origin_claim": {
+        "passage_template": "origin claim weakened by earlier or alternative evidence",
+        "logic_rule": "select the evidence that weakens an origin explanation",
+        "correct_answer_rule": "must introduce earlier or competing origin evidence",
+        "distractor_generators": ("supports_origin", "irrelevant_detail", "too_broad_history"),
+    },
+    "grammar_subject_verb": {
+        "passage_template": "one sentence with intervening phrase between subject and verb",
+        "logic_rule": "match the verb to the grammatical subject only",
+        "correct_answer_rule": "must use correct subject-verb agreement",
+        "distractor_generators": ("attraction_error", "tense_drift", "number_flip"),
+    },
+    "grammar_clause_boundary": {
+        "passage_template": "one boundary between two clauses",
+        "logic_rule": "choose punctuation that joins or separates clauses correctly",
+        "correct_answer_rule": "must fix only the clause boundary",
+        "distractor_generators": ("comma_splice", "fragment", "run_on"),
+    },
+    "grammar_modifier": {
+        "passage_template": "one opening modifier with one intended noun",
+        "logic_rule": "place the modified noun immediately after the modifier",
+        "correct_answer_rule": "must avoid a dangling or misplaced modifier",
+        "distractor_generators": ("dangling_modifier", "misplaced_modifier", "illogical_subject"),
+    },
+    "grammar_pronoun_reference": {
+        "passage_template": "one pronoun with two possible antecedents",
+        "logic_rule": "choose the pronoun/reference that removes ambiguity",
+        "correct_answer_rule": "must identify the intended antecedent clearly",
+        "distractor_generators": ("ambiguous_pronoun", "wrong_antecedent", "number_mismatch"),
+    },
 }
 
 
@@ -77,33 +137,33 @@ class RWModuleSlot:
 
 
 RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
-    RWModuleSlot("Vocabulary in Context", "literal_vs_abstract", 3),
-    RWModuleSlot("Function", "setup_refutation", 3),
-    RWModuleSlot("Main Idea", "example_vs_general", 4),
-    RWModuleSlot("Inference", "expectation_violation", 4),
-    RWModuleSlot("Cross-Text Connections", "claim_vs_evidence", 4),
-    RWModuleSlot("Vocabulary in Context", "functional_precision", 4),
-    RWModuleSlot("Function", "local_explanation", 4),
-    RWModuleSlot("Main Idea", "study_vs_conclusion", 4),
-    RWModuleSlot("Inference", "causal_gap", 4),
-    RWModuleSlot("Cross-Text Connections", "agreement_shift", 5),
-    RWModuleSlot("Vocabulary in Context", "tone_alignment", 5),
-    RWModuleSlot("Function", "evidence_support", 5),
-    RWModuleSlot("Main Idea", "example_vs_general", 6),
-    RWModuleSlot("Inference", "expectation_violation", 6),
-    RWModuleSlot("Cross-Text Connections", "claim_vs_evidence", 6),
-    RWModuleSlot("Vocabulary in Context", "literal_vs_abstract", 7),
-    RWModuleSlot("Function", "setup_refutation", 7),
-    RWModuleSlot("Main Idea", "study_vs_conclusion", 7),
-    RWModuleSlot("Inference", "causal_gap", 8),
-    RWModuleSlot("Cross-Text Connections", "agreement_shift", 8),
-    RWModuleSlot("Vocabulary in Context", "functional_precision", 8),
-    RWModuleSlot("Function", "local_explanation", 8),
-    RWModuleSlot("Main Idea", "example_vs_general", 9),
-    RWModuleSlot("Inference", "expectation_violation", 9),
-    RWModuleSlot("Cross-Text Connections", "claim_vs_evidence", 9),
-    RWModuleSlot("Vocabulary in Context", "tone_alignment", 10),
-    RWModuleSlot("Function", "evidence_support", 10),
+    RWModuleSlot("Data Analysis", "ranking_flip_threshold", 3),
+    RWModuleSlot("Command of Evidence", "causal_chain_support", 3),
+    RWModuleSlot("Inference", "contradiction_inference", 4),
+    RWModuleSlot("Data Analysis", "data_mapping_table", 4),
+    RWModuleSlot("Standard English Conventions", "grammar_subject_verb", 4),
+    RWModuleSlot("Command of Evidence", "weaken_origin_claim", 4),
+    RWModuleSlot("Standard English Conventions", "grammar_clause_boundary", 4),
+    RWModuleSlot("Data Analysis", "ranking_flip_threshold", 4),
+    RWModuleSlot("Standard English Conventions", "grammar_modifier", 4),
+    RWModuleSlot("Inference", "contradiction_inference", 5),
+    RWModuleSlot("Standard English Conventions", "grammar_pronoun_reference", 5),
+    RWModuleSlot("Command of Evidence", "causal_chain_support", 5),
+    RWModuleSlot("Data Analysis", "data_mapping_table", 6),
+    RWModuleSlot("Standard English Conventions", "grammar_subject_verb", 6),
+    RWModuleSlot("Command of Evidence", "weaken_origin_claim", 6),
+    RWModuleSlot("Standard English Conventions", "grammar_clause_boundary", 7),
+    RWModuleSlot("Inference", "contradiction_inference", 7),
+    RWModuleSlot("Standard English Conventions", "grammar_modifier", 7),
+    RWModuleSlot("Data Analysis", "ranking_flip_threshold", 8),
+    RWModuleSlot("Command of Evidence", "causal_chain_support", 8),
+    RWModuleSlot("Standard English Conventions", "grammar_pronoun_reference", 8),
+    RWModuleSlot("Data Analysis", "data_mapping_table", 8),
+    RWModuleSlot("Command of Evidence", "weaken_origin_claim", 9),
+    RWModuleSlot("Inference", "contradiction_inference", 9),
+    RWModuleSlot("Standard English Conventions", "grammar_clause_boundary", 9),
+    RWModuleSlot("Data Analysis", "ranking_flip_threshold", 10),
+    RWModuleSlot("Standard English Conventions", "grammar_modifier", 10),
 )
 
 
@@ -194,6 +254,7 @@ def sync_choices(db, question: Question, specs: tuple[ChoiceSpec, ...]) -> None:
 
 
 def build_question_bank() -> list[QuestionSpec]:
+    validate_rw_pattern_registry()
     validate_rw_module_blueprint()
     questions: list[QuestionSpec] = []
     for module in (1, 2):
@@ -430,6 +491,141 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             question_type="Inference",
             trap_type="causal gap trap",
             explanation="The timing invites a price-cause answer, but the actor creates a causal gap requiring caution.",
+        ),
+        ("Data Analysis", "ranking_flip_threshold"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A student compared three plant-growth trials. At first, Trial A seemed strongest because it had the highest average height, while Trial B often stayed close behind and Trial C had more uneven results."
+            ),
+            constraint_sentence="However, after applying the lab's reliability threshold of at least 90% survival, only Trial B kept enough plants alive to support a recommendation.",
+            prompt="Which claim is best supported by the data described in the text?",
+            answer_options=("Trial A should be recommended because it had the highest average height.", "Trial B was close to Trial A in height and met the survival threshold.", "Trial C is best because uneven results can indicate rapid growth.", "The reliability threshold changes the ranking, making Trial B the supported recommendation."),
+            correct_index=3,
+            topic="Data Analysis",
+            subtopic="Pattern: ranking_flip_threshold",
+            question_type="Data Analysis",
+            trap_type="surface ranking trap",
+            explanation="The surface ranking points to Trial A, but the threshold flips the supported choice to Trial B.",
+        ),
+        ("Command of Evidence", "causal_chain_support"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Several researchers thought the stream's clearer water came directly from lower rainfall. At first, that explanation seemed plausible because dry months often leave less runoff."
+            ),
+            constraint_sentence="However, the report shows that lower rainfall reduced runoff, reduced runoff carried less soil into the stream, and the reduced soil load made the water clearer.",
+            prompt="Which choice best supports the report's causal claim?",
+            answer_options=("Rainfall was lower during several months of the study.", "Runoff may affect how much soil enters a stream.", "Clearer water can occur in streams for many different reasons.", "Lower rainfall reduced runoff, which reduced soil entering the stream and made the water clearer."),
+            correct_index=3,
+            topic="Command of Evidence",
+            subtopic="Pattern: causal_chain_support",
+            question_type="Command of Evidence",
+            trap_type="missing causal link trap",
+            explanation="The correct answer preserves the complete rainfall-to-runoff-to-soil-to-clarity chain.",
+        ),
+        ("Inference", "contradiction_inference"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Researchers expected a quieter classroom to improve recall on every task. At first, that prediction seemed reasonable because students often report fewer distractions in quiet rooms."
+            ),
+            constraint_sentence="However, students in moderately noisy rooms remembered spoken examples nearly as well as students in quiet rooms, though they did worse on silent reading tasks.",
+            prompt="Which inference is best supported by the text?",
+            answer_options=("Quiet rooms are never useful for recall tasks.", "Moderate noise may not affect all kinds of recall in the same way.", "Students prefer noisy rooms for spoken examples.", "The results contradict the prediction only for spoken examples, not for every task."),
+            correct_index=3,
+            topic="Inference",
+            subtopic="Pattern: contradiction_inference",
+            question_type="Inference",
+            trap_type="contradiction scope trap",
+            explanation="The result contradicts the broad prediction only in a limited part of the task set.",
+        ),
+        ("Data Analysis", "data_mapping_table"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A table lists survey results for three museums: East had 42 repeat visitors, North had 38, and West had 42. Several unrelated details about exhibit size may seem relevant at first."
+            ),
+            constraint_sentence="However, when only weekend responses are considered, West had the highest satisfaction rating, while East led only in total repeat visitors.",
+            prompt="Which statement correctly maps the data in the table?",
+            answer_options=("East had the highest weekend satisfaction rating.", "West and East had the same total repeat visitors.", "North led both repeat visitors and weekend satisfaction.", "West led weekend satisfaction, while East led total repeat visitors."),
+            correct_index=3,
+            topic="Data Analysis",
+            subtopic="Pattern: data_mapping_table",
+            question_type="Data Analysis",
+            trap_type="wrong row or column trap",
+            explanation="The answer must use the weekend satisfaction column and the total repeat visitor column separately.",
+        ),
+        ("Command of Evidence", "weaken_origin_claim"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A historian proposed that a weaving style originated in Harbor City. At first, the claim seemed likely because Harbor City records often mention that style in trade inventories."
+            ),
+            constraint_sentence="However, a dated village fragment using the same pattern was found from fifty years before the earliest Harbor City inventory.",
+            prompt="Which choice would most weaken the historian's origin claim?",
+            answer_options=("Harbor City traded woven goods with several villages.", "Inventories often preserve commercial names rather than makers' names.", "Some Harbor City records mention expensive dyes.", "A village fragment with the same pattern predates the earliest Harbor City record by fifty years."),
+            correct_index=3,
+            topic="Command of Evidence",
+            subtopic="Pattern: weaken_origin_claim",
+            question_type="Command of Evidence",
+            trap_type="origin evidence trap",
+            explanation="Earlier matching evidence from elsewhere weakens the proposed origin more directly than trade details do.",
+        ),
+        ("Standard English Conventions", "grammar_subject_verb"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The collection of field notes, along with several sketches from the trip, ___ often stored in the archive's climate-controlled room. The extra phrase may distract readers at first."
+            ),
+            constraint_sentence="However, the grammatical subject is collection, not sketches.",
+            prompt="Which choice completes the text so that it conforms to Standard English?",
+            answer_options=("are", "were", "have been", "is"),
+            correct_index=3,
+            topic="Standard English Conventions",
+            subtopic="Pattern: grammar_subject_verb",
+            question_type="Standard English Conventions",
+            trap_type="subject-verb agreement trap",
+            explanation="This pattern tests only subject-verb agreement; the singular subject collection requires is.",
+        ),
+        ("Standard English Conventions", "grammar_clause_boundary"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The prototype seemed simple at first ___ however, its internal sensors often required careful calibration. Only the boundary between the two clauses is being tested."
+            ),
+            constraint_sentence="However, both sides of the boundary are independent clauses.",
+            prompt="Which choice completes the text so that it conforms to Standard English?",
+            answer_options=(",", "and", "which", ";"),
+            correct_index=3,
+            topic="Standard English Conventions",
+            subtopic="Pattern: grammar_clause_boundary",
+            question_type="Standard English Conventions",
+            trap_type="clause boundary trap",
+            explanation="This pattern tests only clause boundaries; a semicolon correctly separates two independent clauses before however.",
+        ),
+        ("Standard English Conventions", "grammar_modifier"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "After often comparing the fossil under angled light, ___ noticed a faint ridge along its edge. At first, several nouns could seem available after the modifier."
+            ),
+            constraint_sentence="However, the opening modifier must describe the person doing the comparing.",
+            prompt="Which choice completes the text so that it conforms to Standard English?",
+            answer_options=("a faint ridge was noticed by the researcher", "the fossil's edge became visible", "the ridge along the fossil appeared", "the researcher noticed a faint ridge"),
+            correct_index=3,
+            topic="Standard English Conventions",
+            subtopic="Pattern: grammar_modifier",
+            question_type="Standard English Conventions",
+            trap_type="modifier placement trap",
+            explanation="This pattern tests only modifier placement; the noun after the modifier must be the researcher.",
+        ),
+        ("Standard English Conventions", "grammar_pronoun_reference"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Maya told Lina that the archive's map was missing a label, and ___ often made the catalog confusing. At first, either person might seem connected to the problem."
+            ),
+            constraint_sentence="However, the intended antecedent is the missing label, not either researcher.",
+            prompt="Which choice completes the text so that it conforms to Standard English and makes the reference clear?",
+            answer_options=("she", "they", "this", "the missing label"),
+            correct_index=3,
+            topic="Standard English Conventions",
+            subtopic="Pattern: grammar_pronoun_reference",
+            question_type="Standard English Conventions",
+            trap_type="pronoun reference trap",
+            explanation="This pattern tests only pronoun reference; repeating the noun removes the ambiguous pronoun.",
         ),
     }
     try:
@@ -921,6 +1117,32 @@ def validate_rw_module_blueprint() -> None:
             raise ValueError("Hard-zone Reading & Writing slots cannot contain easy or medium questions.")
 
 
+def validate_rw_pattern_registry() -> None:
+    expected_patterns = {
+        "ranking_flip_threshold",
+        "causal_chain_support",
+        "contradiction_inference",
+        "data_mapping_table",
+        "weaken_origin_claim",
+        "grammar_subject_verb",
+        "grammar_clause_boundary",
+        "grammar_modifier",
+        "grammar_pronoun_reference",
+    }
+    registered_patterns = set().union(*RW_GENERATION_PATTERNS.values())
+    if registered_patterns != expected_patterns:
+        raise ValueError(f"RW pattern registry mismatch: {sorted(registered_patterns)}")
+    for pattern in expected_patterns:
+        registry_entry = RW_PATTERN_REGISTRY.get(pattern)
+        if not registry_entry:
+            raise ValueError(f"Missing registry entry for {pattern}.")
+        for required_key in ("passage_template", "logic_rule", "correct_answer_rule", "distractor_generators"):
+            if required_key not in registry_entry:
+                raise ValueError(f"Pattern {pattern} missing {required_key}.")
+        if len(registry_entry["distractor_generators"]) < 3:
+            raise ValueError(f"Pattern {pattern} needs at least three distractor generators.")
+
+
 def validate_reading_writing_slot(spec: QuestionSpec, slot: RWModuleSlot, index: int) -> None:
     if spec.question_type != slot.question_type:
         raise ValueError(f"RW slot {index + 1} expected {slot.question_type}, got {spec.question_type}.")
@@ -948,6 +1170,8 @@ def validate_reading_writing_slot(spec: QuestionSpec, slot: RWModuleSlot, index:
         raise ValueError(f"RW slot {index + 1} medium question must require inference from constrained context.")
     if spec.difficulty >= 8 and "subtle" not in spec.explanation.lower() and spec.question_type != "Transitions":
         raise ValueError(f"RW slot {index + 1} hard question must depend on a subtle distinction among plausible answers.")
+    if spec.question_type == "Standard English Conventions":
+        validate_single_grammar_rule(spec, slot.pattern)
 
 
 def validate_reading_writing_spec(spec: QuestionSpec) -> None:
@@ -985,6 +1209,23 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
     weak_phrases = ("the finding suggests", "the observation suggests", "the result points to", "therefore, the answer")
     if any(phrase in spec.passage.lower() for phrase in weak_phrases):
         raise ValueError(f"Passage contains a direct conclusion cue that makes the answer too obvious: {spec.question_type}.")
+
+
+def validate_single_grammar_rule(spec: QuestionSpec, pattern: str) -> None:
+    grammar_rules = {
+        "grammar_subject_verb": "subject-verb agreement",
+        "grammar_clause_boundary": "clause boundaries",
+        "grammar_modifier": "modifier placement",
+        "grammar_pronoun_reference": "pronoun reference",
+    }
+    expected_rule = grammar_rules.get(pattern)
+    if expected_rule is None:
+        raise ValueError(f"Unknown grammar pattern: {pattern}.")
+    if f"tests only {expected_rule}" not in spec.explanation:
+        raise ValueError(f"Grammar question {pattern} must test only {expected_rule}.")
+    other_rules = [rule for key, rule in grammar_rules.items() if key != pattern]
+    if any(f"tests only {rule}" in spec.explanation for rule in other_rules):
+        raise ValueError(f"Grammar question {pattern} mixes multiple grammar rules.")
 
 
 def validate_pattern_based_generation(spec: QuestionSpec) -> None:
