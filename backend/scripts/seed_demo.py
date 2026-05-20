@@ -13,14 +13,44 @@ RW_DISTRACTOR_TAXONOMY = {"semantic_twin", "scope_error", "logic_flip"}
 RW_HIGH_PLAUSIBILITY_TAXONOMY = {"semantic_twin", "scope_error"}
 RW_GENERATION_PATTERNS = {
     "Data Analysis": {"ranking_flip_threshold", "data_mapping_table"},
-    "Command of Evidence": {"causal_chain_support", "weaken_origin_claim"},
+    "Command of Evidence": {"causal_chain_support", "weaken_origin_claim", "textual_claim_strength", "quantitative_trend_value"},
     "Inference": {"contradiction_inference"},
+    "Transitions": {"reinforcement", "clarification", "concession", "conclusion"},
+    "Rhetorical Synthesis": {"compare", "present_conclusion"},
     "Standard English Conventions": {
         "grammar_subject_verb",
         "grammar_clause_boundary",
         "grammar_modifier",
         "grammar_pronoun_reference",
+        "referent_precision",
+        "sentence_boundary_resolution",
+        "appositive_structure",
+        "modifier_attachment",
+        "clause_integration",
+        "punctuation_flow",
+        "subject_reference_alignment",
     },
+}
+TRANSITION_TYPES = {
+    "addition": ("moreover", "furthermore"),
+    "contrast": ("however", "by contrast"),
+    "cause_effect": ("therefore", "as a result", "hence"),
+    "reinforcement": ("indeed", "in fact"),
+    "clarification": ("specifically", "namely"),
+    "example": ("for example", "for instance"),
+    "concession": ("admittedly", "granted"),
+    "sequence": ("then", "subsequently"),
+    "conclusion": ("ultimately", "in conclusion"),
+}
+RHETORICAL_TASK_TYPES = {
+    "compare",
+    "contrast",
+    "similarity",
+    "summarize",
+    "support_claim",
+    "present_conclusion",
+    "emphasize_difference",
+    "emphasize_similarity",
 }
 RW_PATTERN_REGISTRY = {
     "ranking_flip_threshold": {
@@ -53,6 +83,54 @@ RW_PATTERN_REGISTRY = {
         "correct_answer_rule": "must introduce earlier or competing origin evidence",
         "distractor_generators": ("supports_origin", "irrelevant_detail", "too_broad_history"),
     },
+    "textual_claim_strength": {
+        "passage_template": "compressed scholarly claim with related but nondecisive evidence",
+        "logic_rule": "match evidence to the precise strength of the claim",
+        "correct_answer_rule": "must support the qualified claim without overextending it",
+        "distractor_generators": ("merely_related", "overstrong_claim", "wrong_relevance"),
+    },
+    "quantitative_trend_value": {
+        "passage_template": "small table with trend and value both available",
+        "logic_rule": "distinguish trend direction from individual values",
+        "correct_answer_rule": "must use exact data relationship and variable direction",
+        "distractor_generators": ("wrong_variable", "trend_value_confusion", "inverted_direction"),
+    },
+    "reinforcement": {
+        "passage_template": "second sentence strengthens an already stated claim",
+        "logic_rule": "choose a transition that reinforces rather than merely adds or concludes",
+        "correct_answer_rule": "must preserve discourse reinforcement",
+        "distractor_generators": ("addition_valid_syntax", "cause_effect_valid_syntax", "concession_valid_syntax"),
+    },
+    "clarification": {
+        "passage_template": "second sentence narrows a broad claim with a specific restatement",
+        "logic_rule": "choose a transition that clarifies, not contrasts or exemplifies loosely",
+        "correct_answer_rule": "must signal clarification",
+        "distractor_generators": ("example_valid_syntax", "reinforcement_valid_syntax", "sequence_valid_syntax"),
+    },
+    "concession": {
+        "passage_template": "first clause admits a limitation before preserving the claim",
+        "logic_rule": "choose a concession marker that fits the limited admission",
+        "correct_answer_rule": "must mark concession without reversing the argument",
+        "distractor_generators": ("contrast_valid_syntax", "cause_effect_valid_syntax", "conclusion_valid_syntax"),
+    },
+    "conclusion": {
+        "passage_template": "final sentence compresses prior evidence into a cautious conclusion",
+        "logic_rule": "choose a conclusion marker, not cause or clarification",
+        "correct_answer_rule": "must signal summary conclusion",
+        "distractor_generators": ("clarification_valid_syntax", "reinforcement_valid_syntax", "sequence_valid_syntax"),
+    },
+    "compare": {
+        "passage_template": "notes about two subjects with overlap and difference",
+        "logic_rule": "select and compress relationship-relevant notes",
+        "correct_answer_rule": "must compare both subjects on the stated dimension",
+        "distractor_generators": ("single_subject_true_note", "wrong_relationship", "irrelevant_true_detail"),
+    },
+    "present_conclusion": {
+        "passage_template": "notes requiring filtering before a conclusion",
+        "logic_rule": "combine only notes that support the intended conclusion",
+        "correct_answer_rule": "must state a concise conclusion from relevant notes",
+        "distractor_generators": ("true_but_background", "unsupported_generalization", "wrong_note_combination"),
+    },
     "grammar_subject_verb": {
         "passage_template": "one sentence with intervening phrase between subject and verb",
         "logic_rule": "match the verb to the grammatical subject only",
@@ -76,6 +154,48 @@ RW_PATTERN_REGISTRY = {
         "logic_rule": "choose the pronoun/reference that removes ambiguity",
         "correct_answer_rule": "must identify the intended antecedent clearly",
         "distractor_generators": ("ambiguous_pronoun", "wrong_antecedent", "number_mismatch"),
+    },
+    "referent_precision": {
+        "passage_template": "two plausible referents with one intended entity",
+        "logic_rule": "choose wording that preserves the intended referent",
+        "correct_answer_rule": "must resolve reference without changing meaning",
+        "distractor_generators": ("ambiguous_referent", "wrong_referent", "overexplicit_shift"),
+    },
+    "sentence_boundary_resolution": {
+        "passage_template": "adjacent clauses with a hidden boundary relationship",
+        "logic_rule": "choose punctuation that resolves clause structure only",
+        "correct_answer_rule": "must preserve both clauses without splice or fragment",
+        "distractor_generators": ("comma_splice_natural", "fragment_natural", "overjoined_clause"),
+    },
+    "appositive_structure": {
+        "passage_template": "nonessential identifying phrase embedded in a sentence",
+        "logic_rule": "choose punctuation that marks an appositive and preserves flow",
+        "correct_answer_rule": "must set off nonessential appositive only",
+        "distractor_generators": ("missing_comma", "restrictive_shift", "flow_break"),
+    },
+    "modifier_attachment": {
+        "passage_template": "opening modifier with two plausible nouns",
+        "logic_rule": "attach modifier to the intended noun without changing tense or meaning",
+        "correct_answer_rule": "must place intended noun next to modifier",
+        "distractor_generators": ("nearby_wrong_noun", "dangling_but_smooth", "meaning_preserving_misattach"),
+    },
+    "clause_integration": {
+        "passage_template": "one dependent idea must be integrated into an independent clause",
+        "logic_rule": "choose structure that integrates the clause without creating a fragment",
+        "correct_answer_rule": "must subordinate or coordinate exactly one relationship",
+        "distractor_generators": ("fragment_smooth", "run_on_smooth", "relationship_shift"),
+    },
+    "punctuation_flow": {
+        "passage_template": "sentence with one punctuation choice affecting reading flow",
+        "logic_rule": "choose punctuation that preserves intended emphasis and grammar",
+        "correct_answer_rule": "must maintain flow without over-separating",
+        "distractor_generators": ("overpause", "underpause", "meaning_shift"),
+    },
+    "subject_reference_alignment": {
+        "passage_template": "subject reference delayed by an interrupting phrase",
+        "logic_rule": "align the subject reference with the intended actor",
+        "correct_answer_rule": "must preserve actor-action alignment",
+        "distractor_generators": ("actor_swap", "passive_ambiguity", "reference_drift"),
     },
 }
 
@@ -127,6 +247,7 @@ class AmbiguityFirstItem:
     question_type: str
     trap_type: str
     explanation: str
+    constraints_required: int = 1
 
 
 @dataclass(frozen=True)
@@ -155,15 +276,15 @@ RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("Standard English Conventions", "grammar_clause_boundary", 7),
     RWModuleSlot("Inference", "contradiction_inference", 7),
     RWModuleSlot("Standard English Conventions", "grammar_modifier", 7),
-    RWModuleSlot("Data Analysis", "ranking_flip_threshold", 8),
-    RWModuleSlot("Command of Evidence", "causal_chain_support", 8),
-    RWModuleSlot("Standard English Conventions", "grammar_pronoun_reference", 8),
-    RWModuleSlot("Data Analysis", "data_mapping_table", 8),
-    RWModuleSlot("Command of Evidence", "weaken_origin_claim", 9),
-    RWModuleSlot("Inference", "contradiction_inference", 9),
-    RWModuleSlot("Standard English Conventions", "grammar_clause_boundary", 9),
-    RWModuleSlot("Data Analysis", "ranking_flip_threshold", 10),
-    RWModuleSlot("Standard English Conventions", "grammar_modifier", 10),
+    RWModuleSlot("Transitions", "reinforcement", 8),
+    RWModuleSlot("Standard English Conventions", "referent_precision", 8),
+    RWModuleSlot("Rhetorical Synthesis", "compare", 8),
+    RWModuleSlot("Command of Evidence", "quantitative_trend_value", 8),
+    RWModuleSlot("Standard English Conventions", "clause_integration", 9),
+    RWModuleSlot("Rhetorical Synthesis", "present_conclusion", 9),
+    RWModuleSlot("Transitions", "concession", 9),
+    RWModuleSlot("Command of Evidence", "textual_claim_strength", 10),
+    RWModuleSlot("Standard English Conventions", "modifier_attachment", 10),
 )
 
 
@@ -627,6 +748,150 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             trap_type="pronoun reference trap",
             explanation="This pattern tests only pronoun reference; repeating the noun removes the ambiguous pronoun.",
         ),
+        ("Transitions", "reinforcement"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A survey of migratory birds found that several species often paused near small urban wetlands, although the sites were omitted from regional conservation maps. The researchers also recorded repeated overnight stays at those same wetlands."
+            ),
+            constraint_sentence="___, the team found that the birds returned to the sites even when larger marshes nearby were available.",
+            prompt="Which choice completes the text with the most logical transition?",
+            answer_options=("Moreover,", "Therefore,", "Admittedly,", "Indeed,"),
+            correct_index=3,
+            topic="Transitions",
+            subtopic="Pattern: reinforcement",
+            question_type="Transitions",
+            trap_type="fine-grained transition trap",
+            explanation="Hard transition category=reinforcement; the second finding strengthens the first rather than merely adding, conceding, or concluding from it.",
+            constraints_required=2,
+        ),
+        ("Transitions", "concession"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The ceramic coating was costly to apply and, at first, several engineers questioned whether the added step would be practical. The coating often reduced heat loss, however, even on older equipment with uneven surfaces."
+            ),
+            constraint_sentence="___, the team recommended testing the coating in a small set of factories before rejecting it.",
+            prompt="Which choice completes the text with the most logical transition?",
+            answer_options=("Therefore,", "Specifically,", "In fact,", "Admittedly,"),
+            correct_index=3,
+            topic="Transitions",
+            subtopic="Pattern: concession",
+            question_type="Transitions",
+            trap_type="fine-grained transition trap",
+            explanation="Hard transition category=concession; the sentence admits a limitation before preserving the recommendation.",
+            constraints_required=2,
+        ),
+        ("Standard English Conventions", "referent_precision"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "When Dr. Mensah gave Rivera the revised catalog entry, ___ often still contained an unclear date range. At first, either the person or the entry could seem to be the focus."
+            ),
+            constraint_sentence="However, the sentence must refer precisely to the catalog entry, not to either researcher.",
+            prompt="Which choice completes the text so that it conforms to Standard English and resolves the reference?",
+            answer_options=("she", "they", "that", "the entry"),
+            correct_index=3,
+            topic="Standard English Conventions",
+            subtopic="Pattern: referent_precision",
+            question_type="Standard English Conventions",
+            trap_type="referent precision trap",
+            explanation="This pattern tests only referent_precision; the answer must preserve the intended referent while avoiding an ambiguous pronoun.",
+            constraints_required=2,
+        ),
+        ("Standard English Conventions", "clause_integration"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The satellite detected a faint heat signal over the ridge ___ the research team often treated the result cautiously because cloud cover can distort readings. At first, the relationship between the clauses may seem merely sequential."
+            ),
+            constraint_sentence="However, the second clause explains why the team qualified the first observation.",
+            prompt="Which choice completes the text so that it conforms to Standard English?",
+            answer_options=(", the research team", "; although the research team", "which the research team", ", but the research team"),
+            correct_index=3,
+            topic="Standard English Conventions",
+            subtopic="Pattern: clause_integration",
+            question_type="Standard English Conventions",
+            trap_type="clause integration trap",
+            explanation="This pattern tests only clause_integration; the correct structure integrates two independent clauses while preserving the contrast in caution.",
+            constraints_required=2,
+        ),
+        ("Standard English Conventions", "modifier_attachment"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "After often comparing the restored panels with older photographs, ___ noticed that the border had been repainted in a slightly different blue. At first, both the panels and the conservator seem nearby enough to attract the modifier."
+            ),
+            constraint_sentence="However, only the conservator can logically perform the comparison.",
+            prompt="Which choice completes the text so that it conforms to Standard English?",
+            answer_options=("the restored panels revealed that the conservator", "the older photographs led the conservator to notice", "a different blue was noticed by the conservator, who", "the conservator"),
+            correct_index=3,
+            topic="Standard English Conventions",
+            subtopic="Pattern: modifier_attachment",
+            question_type="Standard English Conventions",
+            trap_type="modifier attachment trap",
+            explanation="This pattern tests only modifier_attachment; the intended noun must immediately follow the opening modifier.",
+            constraints_required=2,
+        ),
+        ("Rhetorical Synthesis", "compare"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A student is comparing two restoration projects. Notes: Project A often reused original stone but required longer closures; Project B used newer stone and reopened sooner; both projects preserved the buildings' original outlines; several notes about budgets are available but not relevant."
+            ),
+            constraint_sentence="However, the student's goal is to compare the projects' preservation approaches while acknowledging one shared outcome.",
+            prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
+            answer_options=("Project A took longer than Project B, and both had budget records.", "Project B reopened sooner because it used newer stone.", "Both projects involved historic buildings, although Project A took longer.", "Project A reused original stone, Project B used newer stone, and both preserved the buildings' outlines."),
+            correct_index=3,
+            topic="Rhetorical Synthesis",
+            subtopic="Pattern: compare",
+            question_type="Rhetorical Synthesis",
+            trap_type="rhetorical task filtering trap",
+            explanation="Hard synthesis task=compare; the answer filters irrelevant budget detail, recognizes the difference in approach, and compresses the shared outcome.",
+            constraints_required=3,
+        ),
+        ("Rhetorical Synthesis", "present_conclusion"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A student is reviewing notes about a school garden. Notes: pollinator counts often rose near native flowers; vegetable yields changed little; maintenance took fewer hours after paths were redesigned; a local newspaper praised the garden's appearance."
+            ),
+            constraint_sentence="However, the student's goal is to present a conclusion about ecological impact, not appearance or labor.",
+            prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
+            answer_options=("The garden became easier to maintain after its paths were redesigned.", "A local newspaper praised the garden's appearance.", "Vegetable yields changed little after the redesign.", "The increase in pollinator counts near native flowers suggests that the garden improved habitat conditions."),
+            correct_index=3,
+            topic="Rhetorical Synthesis",
+            subtopic="Pattern: present_conclusion",
+            question_type="Rhetorical Synthesis",
+            trap_type="rhetorical task filtering trap",
+            explanation="Hard synthesis task=present_conclusion; the answer filters true but irrelevant notes and compresses the ecological evidence into a conclusion.",
+            constraints_required=3,
+        ),
+        ("Command of Evidence", "quantitative_trend_value"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A table compares two bus routes. Route L had 1,200 riders in April and 1,260 in May; Route M had 900 riders in April and 1,050 in May. Several scheduling notes appear beside the table, although they are not needed."
+            ),
+            constraint_sentence="However, the claim being evaluated is that Route M showed the larger percentage increase, not the larger final ridership value.",
+            prompt="Which choice best evaluates the claim using the data?",
+            answer_options=("Route L had more riders in May, so it showed the larger increase.", "Route M had fewer riders in April, so its increase is irrelevant.", "Both routes gained riders, so the claim cannot be evaluated.", "Route M supports the claim because its increase from 900 to 1,050 is a larger percentage change than Route L's increase from 1,200 to 1,260."),
+            correct_index=3,
+            topic="Command of Evidence",
+            subtopic="Pattern: quantitative_trend_value",
+            question_type="Command of Evidence",
+            trap_type="trend versus value trap",
+            explanation="Hard evidence type=quantitative; the answer separates final value from percentage trend and uses the exact data direction.",
+            constraints_required=2,
+        ),
+        ("Command of Evidence", "textual_claim_strength"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A critic claims that a novelist's brief scenic descriptions often slow the plot only slightly while sharpening the reader's sense of place. Several reviews mention scenery, although not all address pacing."
+            ),
+            constraint_sentence="However, the strongest evidence must address both the limited effect on pace and the clearer sense of setting.",
+            prompt="Which finding would best support the critic's claim?",
+            answer_options=("Some readers remembered the novel's city streets but disliked its ending.", "A review praised the descriptions as beautiful without discussing plot movement.", "Several readers said the plot felt slow whenever descriptions appeared.", "Readers reported that the descriptions briefly paused the action but made the locations easier to imagine."),
+            correct_index=3,
+            topic="Command of Evidence",
+            subtopic="Pattern: textual_claim_strength",
+            question_type="Command of Evidence",
+            trap_type="claim strength trap",
+            explanation="Hard evidence type=textual; the answer must match both parts of the qualified claim rather than merely mentioning related information.",
+            constraints_required=2,
+        ),
     }
     try:
         return items[(question_type, pattern)]
@@ -685,7 +950,10 @@ def rw_ambiguity_first_base(module: int, index: int, item: AmbiguityFirstItem) -
         prompt=item.prompt,
         correct=correct_label,
         explanation=(
-            f"pattern={item.generation_pattern}; Ambiguity-first validation: {item.explanation}"
+            f"pattern={item.generation_pattern}; constraints_required={item.constraints_required}; "
+            f"logic_pattern={RW_PATTERN_REGISTRY[item.generation_pattern]['logic_rule']}; "
+            f"distractor_taxonomy={','.join(RW_PATTERN_REGISTRY[item.generation_pattern]['distractor_generators'])}; "
+            f"Ambiguity-first validation: {item.explanation}"
             f"{' Hard calibration: the correct answer turns on a subtle distinction among multiple plausible options.' if difficulty >= 8 else ''}"
         ),
         trap_type=item.trap_type,
@@ -1128,6 +1396,21 @@ def validate_rw_pattern_registry() -> None:
         "grammar_clause_boundary",
         "grammar_modifier",
         "grammar_pronoun_reference",
+        "textual_claim_strength",
+        "quantitative_trend_value",
+        "reinforcement",
+        "clarification",
+        "concession",
+        "conclusion",
+        "compare",
+        "present_conclusion",
+        "referent_precision",
+        "sentence_boundary_resolution",
+        "appositive_structure",
+        "modifier_attachment",
+        "clause_integration",
+        "punctuation_flow",
+        "subject_reference_alignment",
     }
     registered_patterns = set().union(*RW_GENERATION_PATTERNS.values())
     if registered_patterns != expected_patterns:
@@ -1170,6 +1453,8 @@ def validate_reading_writing_slot(spec: QuestionSpec, slot: RWModuleSlot, index:
         raise ValueError(f"RW slot {index + 1} medium question must require inference from constrained context.")
     if spec.difficulty >= 8 and "subtle" not in spec.explanation.lower() and spec.question_type != "Transitions":
         raise ValueError(f"RW slot {index + 1} hard question must depend on a subtle distinction among plausible answers.")
+    if index >= 18:
+        validate_hard_zone_item(spec, slot, index)
     if spec.question_type == "Standard English Conventions":
         validate_single_grammar_rule(spec, slot.pattern)
 
@@ -1204,7 +1489,7 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
         raise ValueError(f"Passage needs contrast language to create SAT-style ambiguity: {spec.question_type}.")
     if not any(qualifier in spec.passage.lower() for qualifier in ("often", "may", "tends", "tended", "could")):
         raise ValueError(f"Passage needs a qualifier to avoid over-direct conclusions: {spec.question_type}.")
-    if not any(marker in spec.passage.lower() for marker in ("at first", "first", "early", "initially", "expected", "seemed", "several", "though", "although", "not a simple")):
+    if not any(marker in spec.passage.lower() for marker in ("at first", "first", "early", "initially", "expected", "seemed", "several", "notes", "though", "although", "not a simple")):
         raise ValueError(f"Passage needs human-like noise or delayed clarity: {spec.question_type}.")
     weak_phrases = ("the finding suggests", "the observation suggests", "the result points to", "therefore, the answer")
     if any(phrase in spec.passage.lower() for phrase in weak_phrases):
@@ -1217,6 +1502,13 @@ def validate_single_grammar_rule(spec: QuestionSpec, pattern: str) -> None:
         "grammar_clause_boundary": "clause boundaries",
         "grammar_modifier": "modifier placement",
         "grammar_pronoun_reference": "pronoun reference",
+        "referent_precision": "referent_precision",
+        "sentence_boundary_resolution": "sentence_boundary_resolution",
+        "appositive_structure": "appositive_structure",
+        "modifier_attachment": "modifier_attachment",
+        "clause_integration": "clause_integration",
+        "punctuation_flow": "punctuation_flow",
+        "subject_reference_alignment": "subject_reference_alignment",
     }
     expected_rule = grammar_rules.get(pattern)
     if expected_rule is None:
@@ -1226,6 +1518,34 @@ def validate_single_grammar_rule(spec: QuestionSpec, pattern: str) -> None:
     other_rules = [rule for key, rule in grammar_rules.items() if key != pattern]
     if any(f"tests only {rule}" in spec.explanation for rule in other_rules):
         raise ValueError(f"Grammar question {pattern} mixes multiple grammar rules.")
+
+
+def validate_hard_zone_item(spec: QuestionSpec, slot: RWModuleSlot, index: int) -> None:
+    constraints_required = int(extract_metadata_value(spec.explanation, "constraints_required") or "0")
+    if constraints_required < 2:
+        raise ValueError(f"Hard-zone RW slot {index + 1} must require at least two simultaneous decisions.")
+    if "logic_pattern=" not in spec.explanation or "distractor_taxonomy=" not in spec.explanation:
+        raise ValueError(f"Hard-zone RW slot {index + 1} must expose logic pattern and distractor taxonomy metadata.")
+    if len(simulate_first_pass_elimination(spec)) < 3:
+        raise ValueError(f"Hard-zone RW slot {index + 1} must retain at least three first-pass survivors.")
+    if not all(choice_spec.text and len(choice_spec.text.strip()) >= 1 for choice_spec in spec.choices):
+        raise ValueError(f"Hard-zone RW slot {index + 1} has a distractor that is not valid answer text.")
+    if slot.question_type == "Transitions" and slot.pattern not in TRANSITION_TYPES:
+        raise ValueError(f"Transition pattern {slot.pattern} is not in the fine-grained transition taxonomy.")
+    if slot.question_type == "Rhetorical Synthesis" and slot.pattern not in RHETORICAL_TASK_TYPES:
+        raise ValueError(f"Rhetorical synthesis task {slot.pattern} is not in the supported task taxonomy.")
+    if slot.question_type == "Standard English Conventions":
+        allowed_hard_grammar = {
+            "referent_precision",
+            "sentence_boundary_resolution",
+            "appositive_structure",
+            "modifier_attachment",
+            "clause_integration",
+            "punctuation_flow",
+            "subject_reference_alignment",
+        }
+        if slot.pattern not in allowed_hard_grammar:
+            raise ValueError(f"Hard-zone grammar pattern {slot.pattern} is not a structural ambiguity pattern.")
 
 
 def validate_pattern_based_generation(spec: QuestionSpec) -> None:
