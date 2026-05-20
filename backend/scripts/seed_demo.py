@@ -59,6 +59,43 @@ class AmbiguityFirstItem:
     explanation: str
 
 
+@dataclass(frozen=True)
+class RWModuleSlot:
+    question_type: str
+    difficulty: int
+
+
+RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
+    RWModuleSlot("Vocabulary in Context", 3),
+    RWModuleSlot("Command of Evidence", 3),
+    RWModuleSlot("Transitions", 4),
+    RWModuleSlot("Inference", 4),
+    RWModuleSlot("Rhetorical Synthesis", 4),
+    RWModuleSlot("Vocabulary in Context", 4),
+    RWModuleSlot("Command of Evidence", 4),
+    RWModuleSlot("Transitions", 4),
+    RWModuleSlot("Inference", 4),
+    RWModuleSlot("Rhetorical Synthesis", 5),
+    RWModuleSlot("Vocabulary in Context", 5),
+    RWModuleSlot("Command of Evidence", 5),
+    RWModuleSlot("Transitions", 6),
+    RWModuleSlot("Inference", 6),
+    RWModuleSlot("Rhetorical Synthesis", 6),
+    RWModuleSlot("Vocabulary in Context", 7),
+    RWModuleSlot("Command of Evidence", 7),
+    RWModuleSlot("Transitions", 7),
+    RWModuleSlot("Inference", 8),
+    RWModuleSlot("Rhetorical Synthesis", 8),
+    RWModuleSlot("Vocabulary in Context", 8),
+    RWModuleSlot("Command of Evidence", 8),
+    RWModuleSlot("Transitions", 9),
+    RWModuleSlot("Inference", 9),
+    RWModuleSlot("Rhetorical Synthesis", 9),
+    RWModuleSlot("Vocabulary in Context", 10),
+    RWModuleSlot("Command of Evidence", 10),
+)
+
+
 def seed() -> None:
     db = get_session_local()()
     try:
@@ -146,6 +183,7 @@ def sync_choices(db, question: Question, specs: tuple[ChoiceSpec, ...]) -> None:
 
 
 def build_question_bank() -> list[QuestionSpec]:
+    validate_rw_module_blueprint()
     questions: list[QuestionSpec] = []
     for module in (1, 2):
         for index in range(27):
@@ -168,25 +206,31 @@ def difficulty_for(module: int, index: int) -> int:
     return {"easy": 3, "medium": 6, "hard": 8}[adaptive_level(module, index)] + (index % 2)
 
 
+def rw_difficulty_for(index: int) -> int:
+    return RW_MODULE_BLUEPRINT[index].difficulty
+
+
 def source_for(index: int) -> QuestionSource:
     return QuestionSource.generated_variant if index % 10 in (7, 8, 9) else QuestionSource.database
 
 
 def reading_writing_question(module: int, index: int) -> QuestionSpec:
-    templates = [
-        rw_vocabulary,
-        rw_transition,
-        rw_command_of_evidence,
-        rw_inference,
-        rw_rhetorical_synthesis,
-    ]
-    spec = templates[index % len(templates)](module, index)
+    slot = RW_MODULE_BLUEPRINT[index]
+    templates = {
+        "Vocabulary in Context": rw_vocabulary,
+        "Transitions": rw_transition,
+        "Command of Evidence": rw_command_of_evidence,
+        "Inference": rw_inference,
+        "Rhetorical Synthesis": rw_rhetorical_synthesis,
+    }
+    spec = templates[slot.question_type](module, index)
     validate_reading_writing_spec(spec)
+    validate_reading_writing_slot(spec, slot, index)
     return spec
 
 
 def rw_base(module: int, index: int, *, topic: str, subtopic: str, question_type: str, passage: str, prompt: str, correct: str, choices: tuple[ChoiceSpec, ...], explanation: str, trap_type: str) -> QuestionSpec:
-    difficulty = difficulty_for(module, index)
+    difficulty = rw_difficulty_for(index)
     return QuestionSpec(
         section=SATSection.reading_writing,
         module=module,
@@ -591,6 +635,43 @@ def validate_ambiguity_first_item(item: AmbiguityFirstItem) -> None:
         raise ValueError("Ambiguity-first passage must start with at least one ambiguous sentence.")
     if final_sentence_count < 2 or final_sentence_count > 4:
         raise ValueError("Constrained final passage must be 2-4 sentences.")
+
+
+def validate_rw_module_blueprint() -> None:
+    if len(RW_MODULE_BLUEPRINT) != 27:
+        raise ValueError("Reading & Writing module blueprint must contain exactly 27 slots.")
+    previous_difficulty = 0
+    consecutive_type_count = 0
+    previous_type = ""
+    for index, slot in enumerate(RW_MODULE_BLUEPRINT):
+        if slot.difficulty < previous_difficulty:
+            raise ValueError("Reading & Writing module difficulty must progress easy to medium to hard.")
+        previous_difficulty = slot.difficulty
+        if slot.question_type == previous_type:
+            consecutive_type_count += 1
+        else:
+            consecutive_type_count = 1
+            previous_type = slot.question_type
+        if consecutive_type_count > 3:
+            raise ValueError("Reading & Writing module blueprint cannot repeat one type more than three times consecutively.")
+        if index >= 18 and slot.difficulty < 8:
+            raise ValueError("Hard-zone Reading & Writing slots cannot contain easy or medium questions.")
+
+
+def validate_reading_writing_slot(spec: QuestionSpec, slot: RWModuleSlot, index: int) -> None:
+    if spec.question_type != slot.question_type:
+        raise ValueError(f"RW slot {index + 1} expected {slot.question_type}, got {spec.question_type}.")
+    if spec.difficulty != slot.difficulty:
+        raise ValueError(f"RW slot {index + 1} expected difficulty {slot.difficulty}, got {spec.difficulty}.")
+    if index >= 18 and spec.difficulty < 8:
+        raise ValueError(f"RW slot {index + 1} is in the hard zone but received an easy/medium question.")
+    plausible_distractors = [
+        choice_spec
+        for choice_spec in spec.choices
+        if choice_spec.role in {ChoiceTrapRole.common_mistake, ChoiceTrapRole.conceptual_misunderstanding}
+    ]
+    if len(plausible_distractors) < 2:
+        raise ValueError(f"RW slot {index + 1} must include at least two plausible distractors.")
 
 
 def validate_reading_writing_spec(spec: QuestionSpec) -> None:
