@@ -4,7 +4,7 @@ import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Ban, Bookmark, ChevronLeft, ChevronRight, X, Undo2 } from "lucide-react";
+import { Ban, Bookmark, ChevronLeft, ChevronRight, Flag, X, Undo2 } from "lucide-react";
 import { API_URL, ApiError, Question, api } from "@/lib/api";
 
 type ModulePayload = {
@@ -56,6 +56,8 @@ export default function TestPage() {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [marked, setMarked] = useState<Record<string, boolean>>({});
+  const [currentQuestion, setCurrentQuestion] = useState(1);
+  const [markedForReview, setMarkedForReview] = useState<Set<number>>(new Set());
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<string>>(new Set());
@@ -66,6 +68,7 @@ export default function TestPage() {
   const [lineReaderY, setLineReaderY] = useState(120);
   const [largeFontMode, setLargeFontMode] = useState(false);
   const [highlightModeEnabled, setHighlightModeEnabled] = useState(true);
+  const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
   const [focusedChoiceIndex, setFocusedChoiceIndex] = useState(0);
   const [leftPanelPercent, setLeftPanelPercent] = useState(60);
   const [highlightToolbar, setHighlightToolbar] = useState<HighlightToolbar>({ visible: false, x: 0, y: 0 });
@@ -74,6 +77,7 @@ export default function TestPage() {
   const passagePanelRef = useRef<HTMLElement | null>(null);
   const highlightToolbarRef = useRef<HTMLDivElement | null>(null);
   const moreMenuRef = useRef<HTMLDivElement | null>(null);
+  const navigatorRef = useRef<HTMLDivElement | null>(null);
   const selectedPassageRange = useRef<Range | null>(null);
   const selectedPassageOffsets = useRef<{ startOffset: number; endOffset: number; highlightId?: string } | null>(null);
   const toolbarAnchorRect = useRef<DOMRect | null>(null);
@@ -119,6 +123,17 @@ export default function TestPage() {
   }, [secondsLeft]);
 
   const question = moduleData?.questions[index];
+
+  useEffect(() => {
+    setCurrentQuestion(index + 1);
+  }, [index]);
+
+  useEffect(() => {
+    if (!moduleData) return;
+    setMarkedForReview(new Set(moduleData.questions.flatMap((item, itemIndex) => (
+      marked[item.id] ? [itemIndex + 1] : []
+    ))));
+  }, [moduleData, marked]);
 
   useEffect(() => {
     restorePassageHighlights();
@@ -181,6 +196,7 @@ export default function TestPage() {
       if (event.key !== "Escape") return;
       setIsMoreOpen(false);
       setActiveModal(null);
+      setIsNavigatorOpen(false);
     };
 
     window.addEventListener("keydown", handleGlobalKeyDown);
@@ -197,6 +213,39 @@ export default function TestPage() {
     window.addEventListener("mousedown", handleClickOutside);
     return () => window.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!isNavigatorOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (target && navigatorRef.current?.contains(target)) return;
+      setIsNavigatorOpen(false);
+    };
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || !navigatorRef.current) return;
+      const focusable = Array.from(navigatorRef.current.querySelectorAll<HTMLElement>(
+        "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
+      )).filter((element) => !element.hasAttribute("disabled"));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", trapFocus);
+    window.requestAnimationFrame(() => navigatorRef.current?.querySelector<HTMLElement>("button")?.focus());
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", trapFocus);
+    };
+  }, [isNavigatorOpen]);
 
   useEffect(() => {
     document.body.style.fontSize = largeFontMode ? "18px" : "";
@@ -518,6 +567,23 @@ export default function TestPage() {
     }
   }
 
+  function goToQuestion(questionNumber: number) {
+    setCurrentQuestion(questionNumber);
+    setIndex(questionNumber - 1);
+    setIsNavigatorOpen(false);
+  }
+
+  function isNavigatorQuestionAnswered(item: Question) {
+    if (question && item.id === question.id) return Boolean(selectedAnswer);
+    return Boolean(answers[item.id]);
+  }
+
+  function navigatorButtonClass(item: Question, questionNumber: number) {
+    if (questionNumber === currentQuestion) return "border-2 border-black bg-white text-slate-950";
+    if (isNavigatorQuestionAnswered(item)) return "border-2 border-blue-600 bg-white text-blue-600";
+    return "border-2 border-dashed border-gray-400 bg-white text-gray-500";
+  }
+
   function answerStorageKey(questionId = question?.id) {
     return `sat1600_answer_state:${attemptId}:${questionId}`;
   }
@@ -641,6 +707,15 @@ export default function TestPage() {
   async function toggleMark(questionId: string) {
     const next = !marked[questionId];
     setMarked((current) => ({ ...current, [questionId]: next }));
+    setMarkedForReview((current) => {
+      const nextSet = new Set(current);
+      if (next) {
+        nextSet.add(index + 1);
+      } else {
+        nextSet.delete(index + 1);
+      }
+      return nextSet;
+    });
     await save(questionId, answers[questionId] || "", next);
   }
 
@@ -977,6 +1052,74 @@ export default function TestPage() {
         </div>
       ) : null}
 
+      {isNavigatorOpen ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/20 px-4" role="dialog" aria-modal="true" aria-labelledby="question-navigator-title">
+          <div
+            className="relative w-full max-w-[520px] rounded-xl bg-white p-6 text-slate-950 shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
+            ref={navigatorRef}
+          >
+            <div className="absolute -bottom-3 left-1/2 h-6 w-6 -translate-x-1/2 rotate-45 bg-white shadow-[4px_4px_10px_rgba(0,0,0,0.08)]" aria-hidden="true" />
+            <div className="relative z-10">
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <h2 className="text-lg font-bold leading-6" id="question-navigator-title">
+                  {fullSectionTitle} Questions
+                </h2>
+                <button
+                  aria-label="Close question navigator"
+                  className="rounded p-1 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+                  onClick={() => setIsNavigatorOpen(false)}
+                  type="button"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-semibold text-slate-700">
+                <div className="flex items-center gap-2">
+                  <span className="h-5 w-5 border-2 border-black bg-white" />
+                  Current
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="h-5 w-5 border-2 border-dashed border-gray-400 bg-white" />
+                  Unanswered
+                </div>
+                <div className="flex items-center gap-2">
+                  <Flag size={16} className="fill-red-600 text-red-600" />
+                  For Review
+                </div>
+              </div>
+
+              <div className="grid grid-cols-10 gap-2">
+                {moduleData.questions.map((item, itemIndex) => {
+                  const questionNumber = itemIndex + 1;
+                  return (
+                    <button
+                      className={`relative h-10 rounded text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700 ${navigatorButtonClass(item, questionNumber)}`}
+                      key={item.id}
+                      onClick={() => goToQuestion(questionNumber)}
+                      type="button"
+                    >
+                      {questionNumber}
+                      {markedForReview.has(questionNumber) ? (
+                        <Flag size={12} className="absolute -right-1 -top-1 fill-red-600 text-red-600" />
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                className="mt-6 w-full rounded-md bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+                onClick={() => console.log("review page")}
+                type="button"
+              >
+                Go to Review Page
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <footer className="sticky bottom-0 z-20 border-t border-[#e5e7eb] bg-white">
         <div className="mx-auto grid h-14 max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5">
           <div>
@@ -988,7 +1131,15 @@ export default function TestPage() {
               <ChevronLeft size={18} /> Back
             </button>
           </div>
-          <div className="text-sm font-semibold text-slate-700">Question {index + 1} of {moduleData.questions.length}</div>
+          <div className="relative flex justify-center">
+            <button
+              className="rounded px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+              onClick={() => setIsNavigatorOpen(true)}
+              type="button"
+            >
+              Question {currentQuestion} of {moduleData.questions.length}
+            </button>
+          </div>
           <div className="flex justify-end">
             {index === moduleData.questions.length - 1 ? (
               <button onClick={advance} className="rounded bg-blue-700 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800">
