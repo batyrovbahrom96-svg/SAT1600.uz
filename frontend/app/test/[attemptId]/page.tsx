@@ -67,6 +67,7 @@ export default function TestPage() {
   const [lineReaderEnabled, setLineReaderEnabled] = useState(false);
   const [lineReaderY, setLineReaderY] = useState(120);
   const [largeFontMode, setLargeFontMode] = useState(false);
+  const [isTimerHidden, setIsTimerHidden] = useState(false);
   const [highlightModeEnabled, setHighlightModeEnabled] = useState(true);
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
   const [focusedChoiceIndex, setFocusedChoiceIndex] = useState(0);
@@ -771,10 +772,15 @@ export default function TestPage() {
           </div>
           <div className="flex items-center justify-center gap-3">
             <div className="px-3 py-2 text-center text-base font-bold tabular-nums text-slate-950" aria-label="Time remaining">
-              {minutes}:{seconds}
+              {isTimerHidden ? "--:--" : `${minutes}:${seconds}`}
             </div>
-            <button className="rounded px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950" type="button">
-              Hide
+            <button
+              aria-pressed={isTimerHidden}
+              className="rounded px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+              onClick={() => setIsTimerHidden((hidden) => !hidden)}
+              type="button"
+            >
+              {isTimerHidden ? "Show" : "Hide"}
             </button>
           </div>
           <div className="flex justify-end gap-6 text-sm font-semibold text-slate-700">
