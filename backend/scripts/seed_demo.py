@@ -11,6 +11,11 @@ from app.models import ChoiceTrapRole, Question, QuestionChoice, QuestionFormat,
 TEST_TITLE = "SAT1600 Diagnostic Mock 1"
 RW_DISTRACTOR_TAXONOMY = {"semantic_twin", "scope_error", "logic_flip"}
 RW_HIGH_PLAUSIBILITY_TAXONOMY = {"semantic_twin", "scope_error"}
+RW_GENERATION_PATTERNS = {
+    "Vocabulary in Context": {"tone_shift", "context_reversal", "precision_vs_general"},
+    "Inference": {"implicit_contradiction", "partial_support", "reversed_causality"},
+    "Transitions": {"contrast_trap", "false_cause", "example_vs_result_confusion"},
+}
 
 
 @dataclass(frozen=True)
@@ -49,6 +54,7 @@ class QuestionSpec:
 
 @dataclass(frozen=True)
 class AmbiguityFirstItem:
+    generation_pattern: str
     ambiguous_passage: str
     constraint_sentence: str
     prompt: str
@@ -282,7 +288,7 @@ def rw_ambiguity_first_base(module: int, index: int, item: AmbiguityFirstItem) -
         prompt=item.prompt,
         correct=correct_label,
         explanation=(
-            f"Ambiguity-first validation: {item.explanation}"
+            f"pattern={item.generation_pattern}; Ambiguity-first validation: {item.explanation}"
             f"{' Hard calibration: the correct answer turns on a subtle distinction among multiple plausible options.' if difficulty >= 8 else ''}"
         ),
         trap_type=item.trap_type,
@@ -293,11 +299,12 @@ def rw_ambiguity_first_base(module: int, index: int, item: AmbiguityFirstItem) -
 def rw_vocabulary(module: int, index: int) -> QuestionSpec:
     records = (
         AmbiguityFirstItem(
+            generation_pattern="context_reversal",
             ambiguous_passage=(
                 "The astronomer's first images were blurred by dust on the lens. "
                 "After the instrument was cleaned, the outline of the distant moon became clear."
             ),
-            constraint_sentence="The team could map its ridges from the image, although several shadows still required cautious interpretation.",
+            constraint_sentence="The team could often map its ridges from the image, although several shadows still required cautious interpretation.",
             prompt="As used in the text, what does \"clear\" most nearly mean?",
             answer_options=("successful", "transparent like glass", "easy to see", "free from obstruction"),
             correct_index=2,
@@ -308,11 +315,12 @@ def rw_vocabulary(module: int, index: int) -> QuestionSpec:
             explanation="The first sentence makes several meanings of clear plausible; the mapping detail forces the visual sense, easy to see.",
         ),
         AmbiguityFirstItem(
+            generation_pattern="precision_vs_general",
             ambiguous_passage=(
                 "In early trials, the new coating changed the metal's temperature only slightly. "
                 "When the researchers added a thin mineral layer, however, the difference became marked."
             ),
-            constraint_sentence="The change was large enough to force them to revise their explanation of how heat moved through the sample.",
+            constraint_sentence="The change was often large enough to force them to revise their explanation of how heat moved through the sample.",
             prompt="As used in the text, what does \"marked\" most nearly mean?",
             answer_options=("important", "labeled with a symbol", "noticeable", "damaged by scratches"),
             correct_index=2,
@@ -323,11 +331,12 @@ def rw_vocabulary(module: int, index: int) -> QuestionSpec:
             explanation="Marked could suggest labeling or importance, but the measured difference becoming large forces the meaning noticeable.",
         ),
         AmbiguityFirstItem(
+            generation_pattern="precision_vs_general",
             ambiguous_passage=(
                 "The curator first thought the woven cloth was plain because its colors had faded. "
                 "Under angled light, however, fine threads of silver appeared between the darker fibers."
             ),
-            constraint_sentence="Their placement revealed workmanship that was delicate and precise rather than bold.",
+            constraint_sentence="Their placement tended to reveal workmanship that was delicate and precise rather than bold.",
             prompt="As used in the text, what does \"fine\" most nearly mean?",
             answer_options=("acceptable", "very thin", "delicate and precise", "requiring payment as punishment"),
             correct_index=2,
@@ -335,14 +344,15 @@ def rw_vocabulary(module: int, index: int) -> QuestionSpec:
             subtopic="Words in context",
             question_type="Vocabulary in Context",
             trap_type="context-controlled vocabulary meaning",
-            explanation="Fine could mean thin or acceptable, but the workmanship constraint makes delicate and precise the only valid sense.",
+            explanation="Fine could mean thin or acceptable, but the workmanship constraint favors delicate and precise over the nearby alternatives.",
         ),
         AmbiguityFirstItem(
+            generation_pattern="tone_shift",
             ambiguous_passage=(
-                "The critic praised the novelist's anger at injustice but noted that the final chapter tempers that anger with sympathy. "
+                "At first, the critic praised the novelist's anger at injustice but noted that the final chapter tempers that anger with sympathy. "
                 "The shift does not excuse the characters who made harmful choices under pressure."
             ),
-            constraint_sentence="Instead, it makes the judgment less severe.",
+            constraint_sentence="Instead, it tends to make the judgment less severe.",
             prompt="As used in the text, what does \"tempers\" most nearly mean?",
             answer_options=("changes", "heats and hardens metal", "softens or moderates", "loses emotional control"),
             correct_index=2,
@@ -353,11 +363,12 @@ def rw_vocabulary(module: int, index: int) -> QuestionSpec:
             explanation="Tempers has several plausible meanings, but less severe constrains it to softens or moderates.",
         ),
         AmbiguityFirstItem(
+            generation_pattern="context_reversal",
             ambiguous_passage=(
                 "Sensors placed near the wetland did not register the brief afternoon shower. "
                 "The rain evaporated before reaching the lower leaves."
             ),
-            constraint_sentence="By contrast, the slower overnight storm produced a signal across nearly every device.",
+            constraint_sentence="By contrast, the slower overnight storm often produced a signal across nearly every device.",
             prompt="As used in the text, what does \"register\" most nearly mean?",
             answer_options=("respond to", "enroll officially", "detect or record", "speak in a particular tone"),
             correct_index=2,
@@ -368,33 +379,37 @@ def rw_vocabulary(module: int, index: int) -> QuestionSpec:
             explanation="Register could mean several things, but signal from sensors forces the detect-or-record meaning.",
         ),
     )
-    return rw_ambiguity_first_base(module, index, records[index % len(records)])
+    return rw_ambiguity_first_base(module, index, records[(index // 5) % len(records)])
 
 
 def rw_transition(module: int, index: int) -> QuestionSpec:
     records = (
         (
-            "The first climate model predicted that the algae would decline as the water warmed. The follow-up samples showed the opposite pattern, with the population increasing near the heated vents. ___ the team revised its account of the algae's nutrient source.",
+            "The first climate model predicted that the algae would often decline as the water warmed. The follow-up samples showed the opposite pattern, with the population increasing near the heated vents. ___ the team revised its account of the algae's nutrient source.",
             "therefore",
             "cause-effect after contrast",
+            "false_cause",
         ),
         (
-            "Although the museum expected visitors to spend less time in the smaller photography exhibit, the gallery's quiet layout encouraged longer conversations and repeat viewing. ___ attendance surveys showed that visitors described the exhibit as unusually absorbing.",
+            "Although the museum expected visitors to spend less time in the smaller photography exhibit, the gallery's quiet layout tended to encourage longer conversations and repeat viewing. ___ attendance surveys showed that visitors described the exhibit as unusually absorbing.",
             "however",
             "contrast with expectation",
+            "contrast_trap",
         ),
         (
-            "Although the first poem presents the city as a place shaped by memory rather than by maps, the second poem also treats streets as emotional landmarks. ___ both poems connect geography with personal history.",
+            "Although the first poem presents the city as a place shaped by memory rather than by maps, the second poem also tends to treat streets as emotional landmarks. ___ both poems connect geography with personal history.",
             "similarly",
             "parallel relationship",
+            "example_vs_result_confusion",
         ),
         (
-            "Although the engineer knew the prototype used more expensive materials than the older model, the new design reduced maintenance costs so sharply that the total five-year expense was lower. ___ she recommended the prototype for the transit project.",
+            "Although the engineer knew the prototype used more expensive materials than the older model, the new design often reduced maintenance costs so sharply that the total five-year expense was lower. ___ she recommended the prototype for the transit project.",
             "nevertheless",
             "concession followed by decision",
+            "contrast_trap",
         ),
     )
-    passage, correct_word, relationship = records[index % len(records)]
+    passage, correct_word, relationship, generation_pattern = records[index % len(records)]
     choices = {
         "A": "However,",
         "B": "Therefore,",
@@ -428,7 +443,7 @@ def rw_transition(module: int, index: int) -> QuestionSpec:
         passage=passage,
         prompt="Which choice completes the text with the most logical transition?",
         correct=correct_label,
-        explanation=f"The sentence relationship is {relationship}, so {choices[correct_label].strip(',')} is the only transition that fits.",
+        explanation=f"pattern={generation_pattern}; The sentence relationship is {relationship}, so {choices[correct_label].strip(',')} best preserves the intended logic.",
         trap_type="logical transition mismatch",
         choices=(
             rw_choice("A", choices["A"], transition_traps["A"], trap_roles[transition_traps["A"]]),
@@ -442,7 +457,8 @@ def rw_transition(module: int, index: int) -> QuestionSpec:
 def rw_command_of_evidence(module: int, index: int) -> QuestionSpec:
     records = (
         AmbiguityFirstItem(
-            ambiguous_passage="A botanist studying desert flowers found that one species opened later in the day during unusually dry weeks. The timing change initially seemed beneficial.",
+            generation_pattern="partial_support",
+            ambiguous_passage="A botanist studying desert flowers found that one species often opened later in the day during unusually dry weeks. The timing change initially seemed beneficial, a useful-looking shift but not a simple one.",
             constraint_sentence="Although this delay reduced water loss, it also meant fewer visits from morning pollinators, so the pattern was not a simple improvement.",
             prompt="Which choice best describes the conclusion that is most strongly supported by the text?",
             answer_options=(
@@ -456,10 +472,11 @@ def rw_command_of_evidence(module: int, index: int) -> QuestionSpec:
             subtopic="Evidence-based conclusion",
             question_type="Command of Evidence",
             trap_type="evidence scope mismatch",
-            explanation="The first two sentences allow a simple benefit reading, but the pollinator contrast makes the trade-off answer uniquely valid.",
+            explanation="The first two sentences allow a simple benefit reading, but the pollinator contrast favors the trade-off answer over broader claims.",
         ),
         AmbiguityFirstItem(
-            ambiguous_passage="A literary scholar notes that the narrator's brief jokes interrupt scenes of grief. At first, those jokes might seem to make the novel lighter.",
+            generation_pattern="implicit_contradiction",
+            ambiguous_passage="A literary scholar notes that the narrator's brief jokes often interrupt scenes of grief. At first, those jokes might seem to make the novel lighter, or at least less severe.",
             constraint_sentence="Instead, the interruptions make the grief feel more controlled and, therefore, more intense; the humor functions as restraint, not escape.",
             prompt="Which choice best describes the conclusion that is most strongly supported by the text?",
             answer_options=(
@@ -473,10 +490,11 @@ def rw_command_of_evidence(module: int, index: int) -> QuestionSpec:
             subtopic="Evidence-based conclusion",
             question_type="Command of Evidence",
             trap_type="evidence scope mismatch",
-            explanation="The draft makes lightness plausible, but the restraint-not-escape constraint makes intensification the only supported conclusion.",
+            explanation="The draft makes lightness plausible, but the restraint-not-escape constraint makes intensification stronger than a comedy reading.",
         ),
         AmbiguityFirstItem(
-            ambiguous_passage="An economist compared neighborhoods with identical transit access but different street designs. Several explanations for shop activity remained possible.",
+            generation_pattern="partial_support",
+            ambiguous_passage="An economist compared neighborhoods with identical transit access but different street designs. Several explanations for shop activity remained possible, and some may have seemed equally persuasive at first.",
             constraint_sentence="However, shops on narrower streets received more foot traffic even when rent and population density were similar.",
             prompt="Which choice best describes the conclusion that is most strongly supported by the text?",
             answer_options=(
@@ -499,7 +517,8 @@ def rw_command_of_evidence(module: int, index: int) -> QuestionSpec:
 def rw_inference(module: int, index: int) -> QuestionSpec:
     records = (
         AmbiguityFirstItem(
-            ambiguous_passage="During rehearsals, the orchestra's conductor asked the percussionists to play more softly, even though reviewers had praised their energy. The request could have reflected several concerns about the performance.",
+            generation_pattern="implicit_contradiction",
+            ambiguous_passage="During rehearsals, the orchestra's conductor asked the percussionists to play more softly, even though reviewers had often praised their energy. The request could have reflected several concerns about the performance.",
             constraint_sentence="However, she wanted the audience to notice a quiet flute melody that returns near the end of the piece.",
             prompt="Which choice is the most reasonable inference from the text?",
             answer_options=(
@@ -513,10 +532,11 @@ def rw_inference(module: int, index: int) -> QuestionSpec:
             subtopic="Reasonable inference",
             question_type="Inference",
             trap_type="unsupported inference",
-            explanation="The softer-percussion request is ambiguous until the flute-melody detail makes the balance inference uniquely valid.",
+            explanation="The softer-percussion request is ambiguous until the flute-melody detail favors the balance inference.",
         ),
         AmbiguityFirstItem(
-            ambiguous_passage="A marine biologist expected young fish to avoid artificial reefs because the structures lacked mature coral. Yet many young fish gathered near some of those reefs.",
+            generation_pattern="reversed_causality",
+            ambiguous_passage="A marine biologist expected young fish to avoid artificial reefs because the structures lacked mature coral. Yet many young fish often gathered near some of those reefs.",
             constraint_sentence="However, they did so only when nearby grasses were dense enough to hide them from predators.",
             prompt="Which choice is the most reasonable inference from the text?",
             answer_options=(
@@ -533,7 +553,8 @@ def rw_inference(module: int, index: int) -> QuestionSpec:
             explanation="The gathering behavior is ambiguous until the predator-shelter constraint makes the broader habitat inference strongest.",
         ),
         AmbiguityFirstItem(
-            ambiguous_passage="The novelist describes a village festival through smells from kitchens and fragments of overheard songs rather than through a full explanation of the event. The scene therefore feels unfinished.",
+            generation_pattern="partial_support",
+            ambiguous_passage="The novelist often describes a village festival through smells from kitchens and fragments of overheard songs rather than through a full explanation of the event. The scene feels unfinished, though not careless.",
             constraint_sentence="However, readers must assemble the festival from partial impressions, much as a visitor would.",
             prompt="Which choice is the most reasonable inference from the text?",
             answer_options=(
@@ -556,7 +577,8 @@ def rw_inference(module: int, index: int) -> QuestionSpec:
 def rw_rhetorical_synthesis(module: int, index: int) -> QuestionSpec:
     records = (
         AmbiguityFirstItem(
-            ambiguous_passage="A student is writing about architect Lina Bo Bardi. The notes say that Bo Bardi designed buildings in Brazil, often reused industrial materials, and placed theaters, walkways, and gathering areas inside a former factory.",
+            generation_pattern="partial_support",
+            ambiguous_passage="A student is writing about architect Lina Bo Bardi. Several notes could seem useful: Bo Bardi designed buildings in Brazil, often reused industrial materials, and placed theaters, walkways, and gathering areas inside a former factory.",
             constraint_sentence="However, the student's goal is to emphasize Bo Bardi's desire for public spaces to feel informal and welcoming.",
             prompt="To emphasize Bo Bardi's goal of making public spaces welcoming, which choice best uses relevant information from the notes?",
             answer_options=(
@@ -570,10 +592,11 @@ def rw_rhetorical_synthesis(module: int, index: int) -> QuestionSpec:
             subtopic="Use notes to meet a goal",
             question_type="Rhetorical Synthesis",
             trap_type="rhetorical goal mismatch",
-            explanation="Several notes are relevant to Bo Bardi, but the welcoming-public-space goal makes only the cultural-center answer fully responsive.",
+            explanation="Several notes are relevant to Bo Bardi, but the welcoming-public-space goal favors the cultural-center answer.",
         ),
         AmbiguityFirstItem(
-            ambiguous_passage="A student is writing about a citizen-science bird survey. The notes say that volunteers counted birds each spring, professional ornithologists checked unusual reports, and the data helped reveal a northward shift in two species' nesting ranges.",
+            generation_pattern="partial_support",
+            ambiguous_passage="A student is writing about a citizen-science bird survey. Several notes could seem useful: volunteers counted birds each spring, professional ornithologists often checked unusual reports, and the data helped reveal a northward shift in two species' nesting ranges.",
             constraint_sentence="However, the student's goal is to show why the survey's design made its findings credible.",
             prompt="To show why the survey's design made its findings credible, which choice best uses relevant information from the notes?",
             answer_options=(
@@ -590,7 +613,8 @@ def rw_rhetorical_synthesis(module: int, index: int) -> QuestionSpec:
             explanation="The survey topic and duration are plausible, but credibility requires combining duration with expert review.",
         ),
         AmbiguityFirstItem(
-            ambiguous_passage="A student is writing about chemist Alice Ball. The notes say that Ball developed an injectable treatment from chaulmoogra oil, earlier forms of the oil were difficult for patients to absorb, and she died before her work received full public credit.",
+            generation_pattern="partial_support",
+            ambiguous_passage="A student is writing about chemist Alice Ball. Several notes could seem useful: Ball developed an injectable treatment from chaulmoogra oil, earlier forms of the oil were often difficult for patients to absorb, and she died before her work received full public credit.",
             constraint_sentence="However, the student's goal is to emphasize the practical importance of Ball's method for treating Hansen's disease.",
             prompt="To emphasize the practical importance of Ball's method, which choice best uses relevant information from the notes?",
             answer_options=(
@@ -637,7 +661,25 @@ def rw_choice(label: str, text: str, pattern: str, role: ChoiceTrapRole) -> Choi
         "TOO NARROW": "high",
         "CONTEXT MISMATCH": "medium",
     }[pattern]
-    return choice(label, text, role, f"{explanations[pattern]} taxonomy={taxonomy}; plausibility={plausibility}")
+    competition = "top" if pattern in {"CORRECT", "TOO NARROW"} else "first_pass"
+    return choice(
+        label,
+        text,
+        role,
+        (
+            f"{explanations[pattern]} taxonomy={taxonomy}; plausibility={plausibility}; "
+            f"competition={competition}; why_wrong={internal_distractor_explanation(pattern)}"
+        ),
+    )
+
+
+def internal_distractor_explanation(pattern: str) -> str:
+    return {
+        "CORRECT": "correct",
+        "TOO BROAD": "too broad",
+        "TOO NARROW": "too narrow but sentence-compatible",
+        "CONTEXT MISMATCH": "incorrect logical relation or wrong tone",
+    }[pattern]
 
 
 def validate_ambiguity_first_item(item: AmbiguityFirstItem) -> None:
@@ -727,11 +769,52 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
             raise ValueError(f"Missing distractor taxonomy {taxonomy} for {spec.question_type}.")
     if len([basis for basis in distractor_bases if "plausibility=high" in basis]) < 2:
         raise ValueError(f"Question is too easy: fewer than two distractors are highly plausible for {spec.question_type}.")
+    validate_pattern_based_generation(spec)
+    validate_answer_competition(spec)
     if not any(word in spec.passage.lower() for word in ("although", "however", "yet", "by contrast", "instead", "opposite", "rather than")):
         raise ValueError(f"Passage needs contrast language to create SAT-style ambiguity: {spec.question_type}.")
+    if not any(qualifier in spec.passage.lower() for qualifier in ("often", "may", "tends", "tended", "could")):
+        raise ValueError(f"Passage needs a qualifier to avoid over-direct conclusions: {spec.question_type}.")
+    if not any(marker in spec.passage.lower() for marker in ("at first", "first", "early", "initially", "expected", "seemed", "several", "though", "although", "not a simple")):
+        raise ValueError(f"Passage needs human-like noise or delayed clarity: {spec.question_type}.")
     weak_phrases = ("the finding suggests", "the observation suggests", "the result points to", "therefore, the answer")
     if any(phrase in spec.passage.lower() for phrase in weak_phrases):
         raise ValueError(f"Passage contains a direct conclusion cue that makes the answer too obvious: {spec.question_type}.")
+
+
+def validate_pattern_based_generation(spec: QuestionSpec) -> None:
+    pattern = extract_metadata_value(spec.explanation, "pattern")
+    allowed_patterns = RW_GENERATION_PATTERNS.get(spec.question_type)
+    if allowed_patterns is None:
+        allowed_patterns = set().union(*RW_GENERATION_PATTERNS.values())
+    if pattern not in allowed_patterns:
+        raise ValueError(f"{spec.question_type} must use a named generation pattern, got {pattern!r}.")
+
+
+def validate_answer_competition(spec: QuestionSpec) -> None:
+    top_competitors = [
+        choice_spec
+        for choice_spec in spec.choices
+        if "competition=top" in (choice_spec.basis or "")
+    ]
+    if len(top_competitors) < 2:
+        raise ValueError(f"{spec.question_type} is too obvious: fewer than two top-competing answers.")
+    if not any(choice_spec.role == ChoiceTrapRole.correct for choice_spec in top_competitors):
+        raise ValueError(f"{spec.question_type} top competition must include the correct answer.")
+    if not any("taxonomy=semantic_twin" in (choice_spec.basis or "") for choice_spec in top_competitors if choice_spec.role != ChoiceTrapRole.correct):
+        raise ValueError(f"{spec.question_type} needs a semantic-twin distractor that differs only in nuance.")
+    if not all("why_wrong=" in (choice_spec.basis or "") for choice_spec in spec.choices):
+        raise ValueError(f"{spec.question_type} choices must include internal answer explanations.")
+    obviously_strong_markers = ("only valid", "obviously", "clearly the")
+    if any(marker in spec.explanation.lower() for marker in obviously_strong_markers):
+        raise ValueError(f"{spec.question_type} final filter rejected an obviously stronger correct-answer explanation.")
+
+
+def extract_metadata_value(text: str, key: str) -> str | None:
+    prefix = f"{key}="
+    if prefix not in text:
+        return None
+    return text.split(prefix, 1)[1].split(";", 1)[0].strip()
 
 
 def simulate_first_pass_elimination(spec: QuestionSpec) -> list[ChoiceSpec]:
