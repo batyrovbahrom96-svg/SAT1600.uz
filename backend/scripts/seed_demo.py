@@ -12,9 +12,11 @@ TEST_TITLE = "SAT1600 Diagnostic Mock 1"
 RW_DISTRACTOR_TAXONOMY = {"semantic_twin", "scope_error", "logic_flip"}
 RW_HIGH_PLAUSIBILITY_TAXONOMY = {"semantic_twin", "scope_error"}
 RW_GENERATION_PATTERNS = {
-    "Vocabulary in Context": {"tone_shift", "context_reversal", "precision_vs_general"},
-    "Inference": {"implicit_contradiction", "partial_support", "reversed_causality"},
-    "Transitions": {"contrast_trap", "false_cause", "example_vs_result_confusion"},
+    "Vocabulary in Context": {"literal_vs_abstract", "functional_precision", "tone_alignment"},
+    "Function": {"setup_refutation", "local_explanation", "evidence_support"},
+    "Main Idea": {"example_vs_general", "study_vs_conclusion"},
+    "Cross-Text Connections": {"claim_vs_evidence", "agreement_shift"},
+    "Inference": {"expectation_violation", "causal_gap"},
 }
 
 
@@ -70,37 +72,38 @@ class AmbiguityFirstItem:
 @dataclass(frozen=True)
 class RWModuleSlot:
     question_type: str
+    pattern: str
     difficulty: int
 
 
 RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
-    RWModuleSlot("Vocabulary in Context", 3),
-    RWModuleSlot("Command of Evidence", 3),
-    RWModuleSlot("Transitions", 4),
-    RWModuleSlot("Inference", 4),
-    RWModuleSlot("Rhetorical Synthesis", 4),
-    RWModuleSlot("Vocabulary in Context", 4),
-    RWModuleSlot("Command of Evidence", 4),
-    RWModuleSlot("Transitions", 4),
-    RWModuleSlot("Inference", 4),
-    RWModuleSlot("Rhetorical Synthesis", 5),
-    RWModuleSlot("Vocabulary in Context", 5),
-    RWModuleSlot("Command of Evidence", 5),
-    RWModuleSlot("Transitions", 6),
-    RWModuleSlot("Inference", 6),
-    RWModuleSlot("Rhetorical Synthesis", 6),
-    RWModuleSlot("Vocabulary in Context", 7),
-    RWModuleSlot("Command of Evidence", 7),
-    RWModuleSlot("Transitions", 7),
-    RWModuleSlot("Inference", 8),
-    RWModuleSlot("Rhetorical Synthesis", 8),
-    RWModuleSlot("Vocabulary in Context", 8),
-    RWModuleSlot("Command of Evidence", 8),
-    RWModuleSlot("Transitions", 9),
-    RWModuleSlot("Inference", 9),
-    RWModuleSlot("Rhetorical Synthesis", 9),
-    RWModuleSlot("Vocabulary in Context", 10),
-    RWModuleSlot("Command of Evidence", 10),
+    RWModuleSlot("Vocabulary in Context", "literal_vs_abstract", 3),
+    RWModuleSlot("Function", "setup_refutation", 3),
+    RWModuleSlot("Main Idea", "example_vs_general", 4),
+    RWModuleSlot("Inference", "expectation_violation", 4),
+    RWModuleSlot("Cross-Text Connections", "claim_vs_evidence", 4),
+    RWModuleSlot("Vocabulary in Context", "functional_precision", 4),
+    RWModuleSlot("Function", "local_explanation", 4),
+    RWModuleSlot("Main Idea", "study_vs_conclusion", 4),
+    RWModuleSlot("Inference", "causal_gap", 4),
+    RWModuleSlot("Cross-Text Connections", "agreement_shift", 5),
+    RWModuleSlot("Vocabulary in Context", "tone_alignment", 5),
+    RWModuleSlot("Function", "evidence_support", 5),
+    RWModuleSlot("Main Idea", "example_vs_general", 6),
+    RWModuleSlot("Inference", "expectation_violation", 6),
+    RWModuleSlot("Cross-Text Connections", "claim_vs_evidence", 6),
+    RWModuleSlot("Vocabulary in Context", "literal_vs_abstract", 7),
+    RWModuleSlot("Function", "setup_refutation", 7),
+    RWModuleSlot("Main Idea", "study_vs_conclusion", 7),
+    RWModuleSlot("Inference", "causal_gap", 8),
+    RWModuleSlot("Cross-Text Connections", "agreement_shift", 8),
+    RWModuleSlot("Vocabulary in Context", "functional_precision", 8),
+    RWModuleSlot("Function", "local_explanation", 8),
+    RWModuleSlot("Main Idea", "example_vs_general", 9),
+    RWModuleSlot("Inference", "expectation_violation", 9),
+    RWModuleSlot("Cross-Text Connections", "claim_vs_evidence", 9),
+    RWModuleSlot("Vocabulary in Context", "tone_alignment", 10),
+    RWModuleSlot("Function", "evidence_support", 10),
 )
 
 
@@ -224,17 +227,215 @@ def source_for(index: int) -> QuestionSource:
 
 def reading_writing_question(module: int, index: int) -> QuestionSpec:
     slot = RW_MODULE_BLUEPRINT[index]
-    templates = {
-        "Vocabulary in Context": rw_vocabulary,
-        "Transitions": rw_transition,
-        "Command of Evidence": rw_command_of_evidence,
-        "Inference": rw_inference,
-        "Rhetorical Synthesis": rw_rhetorical_synthesis,
-    }
-    spec = templates[slot.question_type](module, index)
+    spec = generate_reading_writing_pattern(module, index, slot)
     validate_reading_writing_spec(spec)
     validate_reading_writing_slot(spec, slot, index)
     return spec
+
+
+def generate_reading_writing_pattern(module: int, index: int, slot: RWModuleSlot) -> QuestionSpec:
+    return rw_ambiguity_first_base(module, index, rw_pattern_item(slot.question_type, slot.pattern))
+
+
+def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
+    items: dict[tuple[str, str], AmbiguityFirstItem] = {
+        ("Vocabulary in Context", "literal_vs_abstract"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "At first, the curator described the restored mural as bright, a word that could refer to color or to the idea behind the design. "
+                "The pigments often remained muted after cleaning."
+            ),
+            constraint_sentence="However, the arrangement made the once-confusing political symbols easier for visitors to interpret.",
+            prompt="As used in the text, what does \"bright\" most nearly mean?",
+            answer_options=("visually intense", "not dull in color", "cheerful in tone", "intellectually clear"),
+            correct_index=3,
+            topic="Vocabulary in Context",
+            subtopic="Pattern: literal_vs_abstract",
+            question_type="Vocabulary in Context",
+            trap_type="literal meaning trap",
+            explanation="The opening makes a literal color sense tempting, but the correction sentence shifts bright toward abstract clarity.",
+        ),
+        ("Vocabulary in Context", "functional_precision"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Early field notes called the sensor's reading sharp, and several interpretations of the word seemed possible. "
+                "The device often detected tiny changes, though the display itself was plain."
+            ),
+            constraint_sentence="However, the researchers valued the reading because it distinguished neighboring temperature changes that older tools merged.",
+            prompt="As used in the text, what does \"sharp\" most nearly mean?",
+            answer_options=("severe", "finely precise", "sudden", "visually crisp"),
+            correct_index=3,
+            topic="Vocabulary in Context",
+            subtopic="Pattern: functional_precision",
+            question_type="Vocabulary in Context",
+            trap_type="precision versus intensity trap",
+            explanation="The passage delays clarity until the function of distinguishing close values makes precision the controlling sense.",
+        ),
+        ("Vocabulary in Context", "tone_alignment"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "At first, the review called the memoir restrained, which may sound like criticism. "
+                "The reviewer often praised the writer's refusal to dramatize painful scenes."
+            ),
+            constraint_sentence="However, the quiet tone made the final chapter feel more trustworthy rather than less emotional.",
+            prompt="As used in the text, what does \"restrained\" most nearly mean?",
+            answer_options=("prevented from acting", "emotionally limited", "lacking detail", "controlled in expression"),
+            correct_index=3,
+            topic="Vocabulary in Context",
+            subtopic="Pattern: tone_alignment",
+            question_type="Vocabulary in Context",
+            trap_type="tone misread trap",
+            explanation="The positive tone of the review makes controlled expression a better fit than a negative sense of limitation.",
+        ),
+        ("Function", "setup_refutation"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Several archaeologists expected the broken pottery to be ordinary kitchen waste. "
+                "The passage initially describes that expectation in some detail, although it may seem like background."
+            ),
+            constraint_sentence="However, the next sentence notes traces of rare pigment on the pieces, challenging the kitchen-waste explanation.",
+            prompt="What is the main function of the expectation described in the first sentence?",
+            answer_options=("It summarizes the author's final claim.", "It identifies a view the later evidence complicates.", "It gives an example unrelated to the evidence.", "It provides a setup that the later evidence partly refutes."),
+            correct_index=3,
+            topic="Function",
+            subtopic="Pattern: setup_refutation",
+            question_type="Function",
+            trap_type="setup-refutation trap",
+            explanation="The expectation is not the conclusion; it is a setup that later evidence pushes against.",
+        ),
+        ("Function", "local_explanation"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The author pauses to describe how moss absorbs water through leaflike structures rather than roots. "
+                "At first, this detail may seem like a digression, and the paragraph often moves slowly here."
+            ),
+            constraint_sentence="However, the following sentence uses the detail to explain why moss responded quickly after the dry spell ended.",
+            prompt="What is the main function of the detail about moss structure?",
+            answer_options=("It introduces a competing species.", "It explains a mechanism needed for the later claim.", "It proves that roots are unimportant in all plants.", "It supplies a local explanation for the moss's quick response."),
+            correct_index=3,
+            topic="Function",
+            subtopic="Pattern: local_explanation",
+            question_type="Function",
+            trap_type="local explanation trap",
+            explanation="The detail locally explains the response rather than making a broad botanical claim.",
+        ),
+        ("Function", "evidence_support"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The passage mentions that recordings from three neighborhoods showed the same late-night noise pattern. "
+                "Several details could seem merely descriptive, and the author often avoids stating the conclusion immediately."
+            ),
+            constraint_sentence="However, the repeated pattern supports the claim that the sound came from a scheduled rail-cleaning machine.",
+            prompt="What is the main function of the neighborhood recordings?",
+            answer_options=("They create a contrast with rail schedules.", "They provide evidence for the source of the sound.", "They describe residents' reactions to noise.", "They support the claim by showing the pattern was repeated."),
+            correct_index=3,
+            topic="Function",
+            subtopic="Pattern: evidence_support",
+            question_type="Function",
+            trap_type="evidence role trap",
+            explanation="The recordings are evidence; the subtlety is that their repetition, not their location alone, supports the claim.",
+        ),
+        ("Main Idea", "example_vs_general"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The text begins with a study of one library that added evening hours and saw more student visits. "
+                "At first, the example may seem to be the whole point."
+            ),
+            constraint_sentence="However, the author uses it to argue that public services often work best when schedules reflect users' actual routines.",
+            prompt="Which choice best states the main idea of the text?",
+            answer_options=("One library increased student visits by adding evening hours.", "Libraries should always stay open at night.", "Student routines are difficult for libraries to measure.", "A specific library example supports a broader claim about adapting services to users' routines."),
+            correct_index=3,
+            topic="Main Idea",
+            subtopic="Pattern: example_vs_general",
+            question_type="Main Idea",
+            trap_type="example versus general claim trap",
+            explanation="The example is tempting, but the final sentence shifts from one library to a general service-design claim.",
+        ),
+        ("Main Idea", "study_vs_conclusion"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A study tracked urban bees that visited balcony gardens, park flowers, and roadside plants. "
+                "Several measurements may seem important on their own."
+            ),
+            constraint_sentence="However, the researchers concluded that small scattered habitats can often function together as a connected food network.",
+            prompt="Which choice best states the main idea of the text?",
+            answer_options=("Urban bees visit balcony gardens, parks, and roadside plants.", "The study measured more than one type of urban habitat.", "Roadside plants are the most important food source for bees.", "A study of bee visits suggests scattered city habitats may operate as a connected network."),
+            correct_index=3,
+            topic="Main Idea",
+            subtopic="Pattern: study_vs_conclusion",
+            question_type="Main Idea",
+            trap_type="study detail versus conclusion trap",
+            explanation="The measurements matter because they support the broader conclusion about connected habitats.",
+        ),
+        ("Cross-Text Connections", "claim_vs_evidence"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Text 1 claims that a poet's short lines mainly create speed. Text 2 notes that the same short lines often force readers to pause over isolated images. "
+                "At first, the texts may seem to discuss the same feature in agreement."
+            ),
+            constraint_sentence="However, Text 2 uses evidence about reader pauses to complicate Text 1's claim about speed.",
+            prompt="How would the author of Text 2 most likely respond to Text 1?",
+            answer_options=("By accepting Text 1's claim without qualification", "By adding evidence that narrows Text 1's interpretation", "By rejecting the importance of line length entirely", "By arguing that Text 1 overlooks evidence that short lines can slow readers down"),
+            correct_index=3,
+            topic="Cross-Text Connections",
+            subtopic="Pattern: claim_vs_evidence",
+            question_type="Cross-Text Connections",
+            trap_type="claim versus evidence trap",
+            explanation="Text 2 does not simply disagree; it uses evidence to challenge the completeness of Text 1's claim.",
+        ),
+        ("Cross-Text Connections", "agreement_shift"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Text 1 argues that community gardens may strengthen neighborhood ties. Text 2 agrees that such gardens often create meeting places. "
+                "At first, the two authors appear fully aligned."
+            ),
+            constraint_sentence="However, Text 2 adds that the effect tends to fade when residents do not share responsibility for maintenance.",
+            prompt="Which choice best describes the relationship between the two texts?",
+            answer_options=("Text 2 completely rejects Text 1's claim.", "Text 2 agrees with Text 1 but adds a condition.", "Text 2 discusses a different topic from Text 1.", "Text 2 qualifies Text 1's claim by identifying a condition for the effect."),
+            correct_index=3,
+            topic="Cross-Text Connections",
+            subtopic="Pattern: agreement_shift",
+            question_type="Cross-Text Connections",
+            trap_type="agreement shift trap",
+            explanation="The second text begins in agreement but shifts by adding a maintenance condition.",
+        ),
+        ("Inference", "expectation_violation"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Researchers expected older seeds to germinate more slowly than newer seeds. "
+                "At first, that expectation seemed reasonable because older seeds often lose moisture."
+            ),
+            constraint_sentence="However, seeds stored in cooler rooms sprouted nearly as quickly as new seeds from warmer rooms.",
+            prompt="Which inference is best supported by the text?",
+            answer_options=("Seed age is never related to germination speed.", "Storage conditions may affect germination speed.", "Older seeds always sprout faster in cool rooms.", "Cool storage may reduce the expected disadvantage of seed age."),
+            correct_index=3,
+            topic="Inference",
+            subtopic="Pattern: expectation_violation",
+            question_type="Inference",
+            trap_type="expectation violation trap",
+            explanation="The result violates the age expectation and supports a qualified inference about cool storage.",
+        ),
+        ("Inference", "causal_gap"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A theater introduced lower ticket prices, and attendance rose the next month. "
+                "Several observers initially treated the timing as proof of cause."
+            ),
+            constraint_sentence="However, a popular actor joined the production during the same period, so the price change may not fully explain the increase.",
+            prompt="Which inference is best supported by the text?",
+            answer_options=("Lower prices had no effect on attendance.", "The actor's arrival is a possible alternative explanation.", "Attendance rises whenever a popular actor joins a show.", "The attendance increase cannot be attributed confidently to lower prices alone."),
+            correct_index=3,
+            topic="Inference",
+            subtopic="Pattern: causal_gap",
+            question_type="Inference",
+            trap_type="causal gap trap",
+            explanation="The timing invites a price-cause answer, but the actor creates a causal gap requiring caution.",
+        ),
+    }
+    try:
+        return items[(question_type, pattern)]
+    except KeyError as exc:
+        raise ValueError(f"No Reading & Writing generator for {question_type}/{pattern}") from exc
 
 
 def rw_base(module: int, index: int, *, topic: str, subtopic: str, question_type: str, passage: str, prompt: str, correct: str, choices: tuple[ChoiceSpec, ...], explanation: str, trap_type: str) -> QuestionSpec:
@@ -704,6 +905,8 @@ def validate_rw_module_blueprint() -> None:
     consecutive_type_count = 0
     previous_type = ""
     for index, slot in enumerate(RW_MODULE_BLUEPRINT):
+        if slot.pattern not in RW_GENERATION_PATTERNS.get(slot.question_type, set()):
+            raise ValueError(f"RW slot {index + 1} has invalid pattern {slot.pattern} for {slot.question_type}.")
         if slot.difficulty < previous_difficulty:
             raise ValueError("Reading & Writing module difficulty must progress easy to medium to hard.")
         previous_difficulty = slot.difficulty
@@ -721,6 +924,8 @@ def validate_rw_module_blueprint() -> None:
 def validate_reading_writing_slot(spec: QuestionSpec, slot: RWModuleSlot, index: int) -> None:
     if spec.question_type != slot.question_type:
         raise ValueError(f"RW slot {index + 1} expected {slot.question_type}, got {spec.question_type}.")
+    if extract_metadata_value(spec.explanation, "pattern") != slot.pattern:
+        raise ValueError(f"RW slot {index + 1} expected pattern {slot.pattern}.")
     if spec.difficulty != slot.difficulty:
         raise ValueError(f"RW slot {index + 1} expected difficulty {slot.difficulty}, got {spec.difficulty}.")
     if index >= 18 and spec.difficulty < 8:
@@ -746,7 +951,7 @@ def validate_reading_writing_slot(spec: QuestionSpec, slot: RWModuleSlot, index:
 
 
 def validate_reading_writing_spec(spec: QuestionSpec) -> None:
-    allowed_types = {"Vocabulary in Context", "Transitions", "Command of Evidence", "Inference", "Rhetorical Synthesis"}
+    allowed_types = set(RW_GENERATION_PATTERNS)
     if spec.question_type not in allowed_types:
         raise ValueError(f"Unsupported Reading & Writing question type: {spec.question_type}")
     if not spec.passage:
