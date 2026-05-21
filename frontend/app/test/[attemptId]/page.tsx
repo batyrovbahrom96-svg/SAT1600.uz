@@ -345,7 +345,20 @@ export default function TestPage() {
       .replaceAll("'", "&#039;");
   }
 
+  function renderPassageSegment(segment: string, targetSentence?: string) {
+    if (!targetSentence || !segment.includes(targetSentence)) return escapeHtml(segment);
+    const parts = segment.split(targetSentence);
+    return parts.map((part, partIndex) => {
+      const escapedPart = escapeHtml(part);
+      if (partIndex === parts.length - 1) return escapedPart;
+      return `${escapedPart}<span class="underline decoration-2 underline-offset-4">${escapeHtml(targetSentence)}</span>`;
+    }).join("");
+  }
+
   function renderPassageHtml(text: string, highlights: PassageHighlight[]) {
+    const targetSentence = typeof question?.data_payload?.target_sentence === "string"
+      ? question.data_payload.target_sentence
+      : undefined;
     const ordered = [...highlights]
       .map((highlight) => reconcileHighlight(text, highlight))
       .filter((highlight): highlight is PassageHighlight => Boolean(highlight))
@@ -355,12 +368,12 @@ export default function TestPage() {
 
     for (const highlight of ordered) {
       if (highlight.startOffset < cursor) continue;
-      html += escapeHtml(text.slice(cursor, highlight.startOffset));
+      html += renderPassageSegment(text.slice(cursor, highlight.startOffset), targetSentence);
       html += `<span class="passage-highlight" data-passage-highlight="${highlight.id}" style="${highlightStyles[highlight.type]} border-radius: 2px; cursor: pointer;">${escapeHtml(text.slice(highlight.startOffset, highlight.endOffset))}</span>`;
       cursor = highlight.endOffset;
     }
 
-    return html + escapeHtml(text.slice(cursor));
+    return html + renderPassageSegment(text.slice(cursor), targetSentence);
   }
 
   function restorePassageHighlights(highlights = loadPassageHighlights()) {

@@ -17,6 +17,8 @@ RW_HIGH_PLAUSIBILITY_TAXONOMY = {"semantic_twin", "scope_error"}
 RW_GENERATION_PATTERNS = {
     "Data Analysis": {"ranking_flip_threshold", "data_mapping_table"},
     "Command of Evidence": {"causal_chain_support", "weaken_origin_claim", "textual_claim_strength", "quantitative_trend_value"},
+    "TEXT_STRUCTURE_FUNCTION": {"belief_vs_evidence", "claim_vs_refutation", "setup_vs_result"},
+    "CROSS_TEXT_CONNECTION": {"claim_vs_empirical_evidence", "model_vs_data", "hypothesis_vs_revision"},
     "Inference": {"contradiction_inference"},
     "Transitions": {"reinforcement", "clarification", "concession", "conclusion"},
     "Rhetorical Synthesis": {"compare", "present_conclusion"},
@@ -110,6 +112,42 @@ RW_PATTERN_REGISTRY = {
         "logic_rule": "distinguish trend direction from individual values",
         "correct_answer_rule": "must use exact data relationship and variable direction",
         "distractor_generators": ("wrong_variable", "trend_value_confusion", "inverted_direction"),
+    },
+    "belief_vs_evidence": {
+        "passage_template": "target sentence states a belief later tested against evidence",
+        "logic_rule": "identify the target as a belief or claim that later evidence qualifies",
+        "correct_answer_rule": "must name the target sentence's precise function as a belief being evaluated",
+        "distractor_generators": ("mislabel_as_evidence", "too_general_context", "wrong_focus"),
+    },
+    "claim_vs_refutation": {
+        "passage_template": "target sentence introduces a claim that later information refutes",
+        "logic_rule": "separate the claim setup from the refuting result",
+        "correct_answer_rule": "must identify the target as a claim set up for later challenge",
+        "distractor_generators": ("mislabel_as_conclusion", "too_general_context", "wrong_focus"),
+    },
+    "setup_vs_result": {
+        "passage_template": "target sentence prepares a contrast before the result resolves it",
+        "logic_rule": "identify the target as contrast setup rather than outcome",
+        "correct_answer_rule": "must identify the target as setup for the later result",
+        "distractor_generators": ("mislabel_as_result", "too_general_context", "wrong_focus"),
+    },
+    "claim_vs_empirical_evidence": {
+        "passage_template": "Text 1 presents a claim and Text 2 responds with empirical evidence",
+        "logic_rule": "compare Text 2's evidence-based stance with Text 1's claim",
+        "correct_answer_rule": "must state whether Text 2 supports, contradicts, or modifies Text 1",
+        "distractor_generators": ("irrelevant_detail", "partial_agreement", "wrong_direction"),
+    },
+    "model_vs_data": {
+        "passage_template": "Text 1 proposes a model and Text 2 weighs it against data",
+        "logic_rule": "recognize that Text 2 reframes the model using measured evidence",
+        "correct_answer_rule": "must identify Text 2's qualified response to the model",
+        "distractor_generators": ("irrelevant_detail", "partial_agreement", "wrong_direction"),
+    },
+    "hypothesis_vs_revision": {
+        "passage_template": "Text 1 offers a hypothesis and Text 2 revises its scope",
+        "logic_rule": "compare the original hypothesis with the revised limitation",
+        "correct_answer_rule": "must identify Text 2's modification of Text 1's claim",
+        "distractor_generators": ("irrelevant_detail", "partial_agreement", "wrong_direction"),
     },
     "reinforcement": {
         "passage_template": "second sentence strengthens an already stated claim",
@@ -282,12 +320,12 @@ RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("Command of Evidence", "causal_chain_support", 3),
     RWModuleSlot("Inference", "contradiction_inference", 4),
     RWModuleSlot("Data Analysis", "data_mapping_table", 4),
-    RWModuleSlot("Standard English Conventions", "grammar_subject_verb", 4),
-    RWModuleSlot("Command of Evidence", "weaken_origin_claim", 4),
-    RWModuleSlot("Standard English Conventions", "grammar_clause_boundary", 4),
-    RWModuleSlot("Data Analysis", "ranking_flip_threshold", 4),
-    RWModuleSlot("Standard English Conventions", "grammar_modifier", 4),
-    RWModuleSlot("Inference", "contradiction_inference", 5),
+    RWModuleSlot("TEXT_STRUCTURE_FUNCTION", "belief_vs_evidence", 4),
+    RWModuleSlot("TEXT_STRUCTURE_FUNCTION", "claim_vs_refutation", 4),
+    RWModuleSlot("TEXT_STRUCTURE_FUNCTION", "setup_vs_result", 4),
+    RWModuleSlot("CROSS_TEXT_CONNECTION", "claim_vs_empirical_evidence", 4),
+    RWModuleSlot("CROSS_TEXT_CONNECTION", "model_vs_data", 4),
+    RWModuleSlot("CROSS_TEXT_CONNECTION", "hypothesis_vs_revision", 5),
     RWModuleSlot("Standard English Conventions", "grammar_pronoun_reference", 5),
     RWModuleSlot("Command of Evidence", "causal_chain_support", 5),
     RWModuleSlot("Data Analysis", "data_mapping_table", 6),
@@ -719,6 +757,120 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             question_type="Cross-Text Connections",
             trap_type="agreement shift trap",
             explanation="The second text begins in agreement but shifts by adding a maintenance condition.",
+        ),
+        ("TEXT_STRUCTURE_FUNCTION", "belief_vs_evidence"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Several marine historians initially believed that coastal bells were used mainly to warn ships away from shallow reefs. "
+                "That belief seemed reasonable because early harbor maps often marked bells near dangerous channels."
+            ),
+            constraint_sentence="However, maintenance logs show that some bells were moved inland during fog season, where they helped workers coordinate unloading rather than guide ships. Together, the records and logs make the original explanation less complete.",
+            prompt="Which choice best describes the function of the underlined sentence in the text as a whole?",
+            answer_options=("It presents evidence proving that bells were used only for navigation.", "It gives general background about harbor maps without connecting to the argument.", "It shifts the focus from ships to dockworkers.", "It states a belief that the later evidence complicates."),
+            correct_index=3,
+            topic="TEXT_STRUCTURE_FUNCTION",
+            subtopic="Pattern: belief_vs_evidence",
+            question_type="TEXT_STRUCTURE_FUNCTION",
+            trap_type="belief versus evidence trap",
+            explanation="The target is a belief/claim, not evidence; the logs later qualify it.",
+            constraints_required=2,
+            data_payload={
+                "target_sentence": "That belief seemed reasonable because early harbor maps often marked bells near dangerous channels.",
+                "target_role": "belief / claim",
+            },
+        ),
+        ("TEXT_STRUCTURE_FUNCTION", "claim_vs_refutation"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A botanist argued that the pale leaves on several alpine plants were simply signs of poor nutrition. "
+                "The claim initially fit observations from lower elevations, where nutrient-poor soil often produces similar coloring."
+            ),
+            constraint_sentence="However, later tests showed that the alpine leaves reflected a waxy coating that reduced water loss, not a nutritional problem. The newer evidence made the original explanation seem too narrow.",
+            prompt="Which choice best describes the function of the underlined sentence in the text as a whole?",
+            answer_options=("It reports the later test result that resolves the passage.", "It offers a broad description of alpine plants without advancing the argument.", "It introduces evidence that confirms the botanist's claim.", "It presents a claim whose apparent support is later overturned."),
+            correct_index=3,
+            topic="TEXT_STRUCTURE_FUNCTION",
+            subtopic="Pattern: claim_vs_refutation",
+            question_type="TEXT_STRUCTURE_FUNCTION",
+            trap_type="claim versus refutation trap",
+            explanation="The target functions as claim setup; the later tests refute its explanation.",
+            constraints_required=2,
+            data_payload={
+                "target_sentence": "The claim initially fit observations from lower elevations, where nutrient-poor soil often produces similar coloring.",
+                "target_role": "contrast setup",
+            },
+        ),
+        ("TEXT_STRUCTURE_FUNCTION", "setup_vs_result"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Engineers expected a lightweight bridge panel could vibrate more than the older steel panel. "
+                "At first, the expectation seemed likely because the new material was thinner and less dense."
+            ),
+            constraint_sentence="However, embedded ribs distributed force across the panel, and measurements showed less vibration than in the older design. The measurements therefore reversed what the initial expectation made likely.",
+            prompt="Which choice best describes the function of the underlined sentence in the text as a whole?",
+            answer_options=("It states the final result of the engineering test.", "It provides unrelated information about material cost.", "It offers evidence that the older panel was badly designed.", "It sets up an expectation that the later measurements challenge."),
+            correct_index=3,
+            topic="TEXT_STRUCTURE_FUNCTION",
+            subtopic="Pattern: setup_vs_result",
+            question_type="TEXT_STRUCTURE_FUNCTION",
+            trap_type="setup versus result trap",
+            explanation="The target is not the result; it sets up an expectation that later evidence reverses.",
+            constraints_required=2,
+            data_payload={
+                "target_sentence": "At first, the expectation seemed likely because the new material was thinner and less dense.",
+                "target_role": "hypothesis",
+            },
+        ),
+        ("CROSS_TEXT_CONNECTION", "claim_vs_empirical_evidence"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Text 1: Some art historians claim that patrons chose miniature portraits mainly because they were inexpensive substitutes for larger paintings. "
+                "Text 2: However, purchase records show that several miniatures cost nearly as much as full-size portraits, and buyers often described them as private keepsakes."
+            ),
+            constraint_sentence="Although both texts discuss why patrons chose miniatures, Text 2 uses evidence to revise Text 1's economic explanation.",
+            prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
+            answer_options=("By noting that the records include prices for full-size portraits.", "By partly agreeing that cost mattered in every case.", "By arguing that miniatures were never purchased by wealthy patrons.", "By saying the claim is incomplete because evidence points to personal use as well as price."),
+            correct_index=3,
+            topic="CROSS_TEXT_CONNECTION",
+            subtopic="Pattern: claim_vs_empirical_evidence",
+            question_type="CROSS_TEXT_CONNECTION",
+            trap_type="claim versus empirical evidence trap",
+            explanation="Text 2 responds with empirical evidence that modifies, rather than simply repeats, Text 1's claim.",
+            constraints_required=2,
+        ),
+        ("CROSS_TEXT_CONNECTION", "model_vs_data"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Text 1: A climate model proposes that urban trees cool nearby streets mostly by casting shade during midday. "
+                "Text 2: However, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening."
+            ),
+            constraint_sentence="Although Text 2 does not reject the model entirely, it reframes the cooling effect as depending partly on moisture and time of day.",
+            prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
+            answer_options=("By focusing only on how many blocks were measured.", "By agreeing that shade explains all cooling in the data.", "By denying that trees can cool streets at midday.", "By arguing that the model captures only part of the cooling pattern."),
+            correct_index=3,
+            topic="CROSS_TEXT_CONNECTION",
+            subtopic="Pattern: model_vs_data",
+            question_type="CROSS_TEXT_CONNECTION",
+            trap_type="model versus data trap",
+            explanation="Text 2 uses data to qualify the model without fully rejecting it.",
+            constraints_required=2,
+        ),
+        ("CROSS_TEXT_CONNECTION", "hypothesis_vs_revision"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Text 1: A linguist hypothesizes that borrowed words could spread rapidly when speakers need names for new technologies. "
+                "Text 2: However, a study of radio terminology found that some borrowed terms spread slowly when local words already had social prestige."
+            ),
+            constraint_sentence="Although Text 2 accepts that need can matter, it revises the hypothesis by adding a social condition.",
+            prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
+            answer_options=("By discussing radio terminology as an unrelated historical detail.", "By agreeing that new technology always causes rapid borrowing.", "By claiming that borrowed words never spread for practical reasons.", "By suggesting that the hypothesis works only when local alternatives lack strong social value."),
+            correct_index=3,
+            topic="CROSS_TEXT_CONNECTION",
+            subtopic="Pattern: hypothesis_vs_revision",
+            question_type="CROSS_TEXT_CONNECTION",
+            trap_type="hypothesis revision trap",
+            explanation="Text 2 modifies the hypothesis by adding a condition about existing local terms.",
+            constraints_required=2,
         ),
         ("Inference", "expectation_violation"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -1586,6 +1738,12 @@ def validate_rw_pattern_registry() -> None:
         "grammar_pronoun_reference",
         "textual_claim_strength",
         "quantitative_trend_value",
+        "belief_vs_evidence",
+        "claim_vs_refutation",
+        "setup_vs_result",
+        "claim_vs_empirical_evidence",
+        "model_vs_data",
+        "hypothesis_vs_revision",
         "reinforcement",
         "clarification",
         "concession",
@@ -1682,7 +1840,48 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
     weak_phrases = ("the finding suggests", "the observation suggests", "the result points to", "therefore, the answer")
     if any(phrase in spec.passage.lower() for phrase in weak_phrases):
         raise ValueError(f"Passage contains a direct conclusion cue that makes the answer too obvious: {spec.question_type}.")
+    if spec.question_type == "TEXT_STRUCTURE_FUNCTION":
+        validate_text_structure_function(spec)
+    if spec.question_type == "CROSS_TEXT_CONNECTION":
+        validate_cross_text_connection(spec)
     validate_question_data_contract(spec)
+
+
+def validate_text_structure_function(spec: QuestionSpec) -> None:
+    target_sentence = (spec.data_payload or {}).get("target_sentence")
+    target_role = (spec.data_payload or {}).get("target_role")
+    if not isinstance(target_sentence, str) or target_sentence not in (spec.passage or ""):
+        raise ValueError("TEXT_STRUCTURE_FUNCTION questions must include a target_sentence present in the passage.")
+    if target_role not in {"belief / claim", "contrast setup", "evidence", "conclusion", "hypothesis"}:
+        raise ValueError(f"Invalid target sentence role: {target_role!r}.")
+    if len(target_sentence.split()) < 8:
+        raise ValueError("TARGET sentence must not be trivial.")
+    if "underlined sentence" not in spec.prompt.lower():
+        raise ValueError("TEXT_STRUCTURE_FUNCTION prompt must ask about the underlined sentence.")
+    if not re.search(r"\b(however|although|later|rather than|not)\b", spec.passage.lower()):
+        raise ValueError("TEXT_STRUCTURE_FUNCTION passage must contain contrast or development.")
+    plausible_distractors = [
+        choice_spec
+        for choice_spec in spec.choices
+        if choice_spec.role != ChoiceTrapRole.correct and "plausibility=high" in (choice_spec.basis or "")
+    ]
+    if len(plausible_distractors) < 2:
+        raise ValueError("TEXT_STRUCTURE_FUNCTION requires at least two plausible distractors.")
+
+
+def validate_cross_text_connection(spec: QuestionSpec) -> None:
+    passage = spec.passage or ""
+    if "Text 1:" not in passage or "Text 2:" not in passage:
+        raise ValueError("CROSS_TEXT_CONNECTION questions must include Text 1 and Text 2.")
+    if "author of Text 2" not in spec.prompt:
+        raise ValueError("CROSS_TEXT_CONNECTION prompt must ask how Text 2 would respond to Text 1.")
+    if not re.search(r"\b(however|although|revises|qualifies|modifies|contradicts|supports)\b", passage.lower()):
+        raise ValueError("CROSS_TEXT_CONNECTION must have a clear logical relationship.")
+    text_1, text_2 = passage.split("Text 2:", 1)
+    if not text_1.strip() or not text_2.strip():
+        raise ValueError("CROSS_TEXT_CONNECTION must require comparison between both texts.")
+    if len(set(text_1.lower().split()) & set(text_2.lower().split())) < 2:
+        raise ValueError("CROSS_TEXT_CONNECTION texts must be connected by shared subject matter.")
 
 
 def validate_question_data_contract(spec: QuestionSpec) -> None:
