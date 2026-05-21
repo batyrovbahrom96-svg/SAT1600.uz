@@ -49,6 +49,21 @@ const highlightStyles: Record<HighlightType, string> = {
   underline: "text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 2px;"
 };
 
+const passageLayoutContract = {
+  maxWidthPx: 580,
+  minReadableWidthPx: 500,
+  lineHeight: 1.65,
+  blockGapPx: 16
+};
+
+if (
+  passageLayoutContract.maxWidthPx < passageLayoutContract.minReadableWidthPx
+  || passageLayoutContract.lineHeight < 1.5
+  || passageLayoutContract.blockGapPx < 16
+) {
+  throw new Error("Invalid passage layout contract for Bluebook-style reading.");
+}
+
 export default function TestPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const router = useRouter();
@@ -865,18 +880,17 @@ export default function TestPage() {
           }}
           ref={passagePanelRef}
         >
-          <div className="mx-auto max-w-[560px]">
+          <div className="flex w-full max-w-[580px] flex-col gap-4">
             {isCrossTextQuestion ? (
-              <div className="max-w-[58ch] select-text space-y-7 text-[16px] leading-[1.62] text-slate-950 [text-wrap:pretty]">
-                <section aria-labelledby="text-1-label">
-                  <div id="text-1-label" className="mb-3 text-sm font-bold text-slate-950">
+              <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
+                <section aria-labelledby="text-1-label" className="mb-5 border-b border-[#e5e7eb] pb-3">
+                  <div id="text-1-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
                     Text 1
                   </div>
                   <p>{question.data_payload?.text_1}</p>
                 </section>
-                <div className="border-t border-[#e5e7eb]" />
                 <section aria-labelledby="text-2-label">
-                  <div id="text-2-label" className="mb-3 text-sm font-bold text-slate-950">
+                  <div id="text-2-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
                     Text 2
                   </div>
                   <p>{question.data_payload?.text_2}</p>
@@ -886,7 +900,7 @@ export default function TestPage() {
               <p
                 ref={passageRef}
                 aria-label="Passage text"
-                className="max-w-[58ch] select-text text-[16px] leading-[1.62] text-slate-950 [text-wrap:pretty]"
+                className="mb-6 w-full max-w-[580px] select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]"
                 onClick={handlePassageClick}
                 onMouseUp={handlePassageMouseUp}
               />
