@@ -11,6 +11,9 @@ export type Question = {
   graph_path?: string | null;
   data_type: "none" | "text_data" | "table" | "graph";
   data_payload?: {
+    type?: "cross_text" | string;
+    text_1?: string;
+    text_2?: string;
     title?: string;
     columns?: string[];
     rows?: Record<string, string | number>[];

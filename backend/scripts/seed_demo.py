@@ -938,6 +938,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             trap_type="claim versus empirical evidence trap",
             explanation="Text 2 responds with empirical evidence that modifies, rather than simply repeats, Text 1's claim.",
             constraints_required=2,
+            data_payload={
+                "type": "cross_text",
+                "text_1": "Some art historians claim that patrons chose miniature portraits mainly because they were inexpensive substitutes for larger paintings.",
+                "text_2": "However, purchase records show that several miniatures cost nearly as much as full-size portraits, and buyers often described them as private keepsakes.",
+            },
         ),
         ("CROSS_TEXT_CONNECTION", "model_vs_data"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -955,6 +960,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             trap_type="model versus data trap",
             explanation="Text 2 uses data to qualify the model without fully rejecting it.",
             constraints_required=2,
+            data_payload={
+                "type": "cross_text",
+                "text_1": "A climate model proposes that urban trees cool nearby streets mostly by casting shade during midday.",
+                "text_2": "However, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening.",
+            },
         ),
         ("CROSS_TEXT_CONNECTION", "hypothesis_vs_revision"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -972,6 +982,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             trap_type="hypothesis revision trap",
             explanation="Text 2 modifies the hypothesis by adding a condition about existing local terms.",
             constraints_required=2,
+            data_payload={
+                "type": "cross_text",
+                "text_1": "A linguist hypothesizes that borrowed words could spread rapidly when speakers need names for new technologies.",
+                "text_2": "However, a study of radio terminology found that some borrowed terms spread slowly when local words already had social prestige.",
+            },
         ),
         ("Inference", "expectation_violation"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -2119,16 +2134,22 @@ def validate_text_structure_function(spec: QuestionSpec) -> None:
 
 def validate_cross_text_connection(spec: QuestionSpec) -> None:
     passage = spec.passage or ""
-    if "Text 1:" not in passage or "Text 2:" not in passage:
-        raise ValueError("CROSS_TEXT_CONNECTION questions must include Text 1 and Text 2.")
+    payload = spec.data_payload or {}
+    text_1 = payload.get("text_1")
+    text_2 = payload.get("text_2")
+    if payload.get("type") != "cross_text" or not isinstance(text_1, str) or not isinstance(text_2, str):
+        raise ValueError("CROSS_TEXT_CONNECTION questions must include data_payload.type='cross_text', text_1, and text_2.")
+    if not text_1.strip() or not text_2.strip():
+        raise ValueError("CROSS_TEXT_CONNECTION text_1 and text_2 must both be nonempty.")
+    if text_1.strip() == text_2.strip():
+        raise ValueError("CROSS_TEXT_CONNECTION text_1 and text_2 must be distinct.")
     if "author of Text 2" not in spec.prompt:
         raise ValueError("CROSS_TEXT_CONNECTION prompt must ask how Text 2 would respond to Text 1.")
     if not re.search(r"\b(however|although|revises|qualifies|modifies|contradicts|supports)\b", passage.lower()):
         raise ValueError("CROSS_TEXT_CONNECTION must have a clear logical relationship.")
-    text_1, text_2 = passage.split("Text 2:", 1)
-    if not text_1.strip() or not text_2.strip():
-        raise ValueError("CROSS_TEXT_CONNECTION must require comparison between both texts.")
-    if len(set(text_1.lower().split()) & set(text_2.lower().split())) < 2:
+    text_1_terms = set(re.findall(r"[a-z]+", text_1.lower()))
+    text_2_terms = set(re.findall(r"[a-z]+", text_2.lower()))
+    if len(text_1_terms & text_2_terms) < 2:
         raise ValueError("CROSS_TEXT_CONNECTION texts must be connected by shared subject matter.")
 
 

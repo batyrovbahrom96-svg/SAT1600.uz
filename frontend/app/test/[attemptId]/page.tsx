@@ -124,6 +124,9 @@ export default function TestPage() {
   }, [secondsLeft]);
 
   const question = moduleData?.questions[index];
+  const isCrossTextQuestion = question?.data_payload?.type === "cross_text"
+    && typeof question.data_payload.text_1 === "string"
+    && typeof question.data_payload.text_2 === "string";
   const orderedChoices = useMemo(() => {
     if (!question || question.format !== "multiple_choice") return [];
     const choices = [...question.choices].sort((a, b) => a.label.localeCompare(b.label));
@@ -863,7 +866,23 @@ export default function TestPage() {
           ref={passagePanelRef}
         >
           <div className="mx-auto max-w-[560px]">
-            {question.passage ? (
+            {isCrossTextQuestion ? (
+              <div className="max-w-[58ch] select-text space-y-7 text-[16px] leading-[1.62] text-slate-950 [text-wrap:pretty]">
+                <section aria-labelledby="text-1-label">
+                  <div id="text-1-label" className="mb-3 text-sm font-bold text-slate-950">
+                    Text 1
+                  </div>
+                  <p>{question.data_payload?.text_1}</p>
+                </section>
+                <div className="border-t border-[#e5e7eb]" />
+                <section aria-labelledby="text-2-label">
+                  <div id="text-2-label" className="mb-3 text-sm font-bold text-slate-950">
+                    Text 2
+                  </div>
+                  <p>{question.data_payload?.text_2}</p>
+                </section>
+              </div>
+            ) : question.passage ? (
               <p
                 ref={passageRef}
                 aria-label="Passage text"
