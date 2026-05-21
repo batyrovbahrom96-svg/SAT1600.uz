@@ -53,6 +53,19 @@ RHETORICAL_TASK_TYPES = {
     "emphasize_difference",
     "emphasize_similarity",
 }
+TABLE_REASONING_PATTERNS = {
+    "conditional_comparison",
+    "claim_validation",
+    "trend_exception",
+    "multi_row_inference",
+}
+TABLE_CONSTRAINT_TYPES = {
+    "subset_filtering",
+    "comparison_across_rows_columns",
+    "relationship_to_claim",
+    "exception_detection",
+}
+TABLE_REQUIRED_SKILLS = {"scan_multiple_rows", "apply_condition"}
 RW_PATTERN_REGISTRY = {
     "ranking_flip_threshold": {
         "passage_template": "ranked evidence with a threshold that flips the apparent winner",
@@ -683,14 +696,20 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             question_type="Data Analysis",
             trap_type="wrong row or column trap",
             explanation="The answer must use the weekend satisfaction column and the total repeat visitor column separately.",
+            constraints_required=2,
             data_type="table",
             data_payload={
                 "title": "Museum Survey Results",
+                "reasoning_pattern": "multi_row_inference",
+                "required_constraints": 2,
+                "constraint_types": ["comparison_across_rows_columns", "exception_detection"],
+                "required_skills": ["scan_multiple_rows", "apply_condition"],
+                "reject_shortcuts": ["max_min_lookup", "single_value_reading", "direct_row_match"],
                 "columns": ["Museum", "Total repeat visitors", "Weekend satisfaction rating"],
                 "rows": [
                     {"Museum": "East", "Total repeat visitors": 42, "Weekend satisfaction rating": "82%"},
                     {"Museum": "North", "Total repeat visitors": 38, "Weekend satisfaction rating": "79%"},
-                    {"Museum": "West", "Total repeat visitors": 42, "Weekend satisfaction rating": "91%"},
+                    {"Museum": "West", "Total repeat visitors": 35, "Weekend satisfaction rating": "91%"},
                 ],
             },
         ),
@@ -888,7 +907,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, the claim being evaluated is that Route M showed the larger percentage increase, not the larger final ridership value.",
             prompt="Which choice best evaluates the claim using the data?",
-            answer_options=("Route L had more riders in May, so it showed the larger increase.", "Route M had fewer riders in April, so its increase is irrelevant.", "Both routes gained riders, so the claim cannot be evaluated.", "Route M supports the claim because its increase from 900 to 1,050 is a larger percentage change than Route L's increase from 1,200 to 1,260."),
+            answer_options=("Route L supports the claim because 1,260 riders in May is more than Route M's 1,050.", "Route M cannot support the claim because it began with 900 riders, fewer than Route L's 1,200.", "Route L and Route M both gained riders, so the percentage comparison is the same for the two routes.", "Route M supports the claim because its increase from 900 to 1,050 is a larger percentage change than Route L's increase from 1,200 to 1,260."),
             correct_index=3,
             topic="Command of Evidence",
             subtopic="Pattern: quantitative_trend_value",
@@ -899,6 +918,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             data_type="table",
             data_payload={
                 "title": "Bus Route Ridership",
+                "reasoning_pattern": "claim_validation",
+                "required_constraints": 2,
+                "constraint_types": ["comparison_across_rows_columns", "relationship_to_claim"],
+                "required_skills": ["scan_multiple_rows", "apply_condition"],
+                "reject_shortcuts": ["max_min_lookup", "single_value_reading", "direct_row_match"],
                 "columns": ["Route", "April riders", "May riders"],
                 "rows": [
                     {"Route": "L", "April riders": 1200, "May riders": 1260},
@@ -1562,6 +1586,7 @@ def validate_question_data_contract(spec: QuestionSpec) -> None:
             raise ValueError(f"Table question missing data_payload.rows: {spec.question_type}.")
         if not re.search(r"\b(table|data)\b", text):
             raise ValueError(f"Table question wording must reference table/data: {spec.question_type}.")
+        validate_table_reasoning_contract(spec, payload, text)
     elif spec.data_type == "graph":
         if not spec.graph_path and not (spec.data_payload or {}).get("graph_path"):
             raise ValueError(f"Graph question missing graph_path/data_payload: {spec.question_type}.")
@@ -1569,6 +1594,57 @@ def validate_question_data_contract(spec: QuestionSpec) -> None:
             raise ValueError(f"Graph question wording must reference graph/figure: {spec.question_type}.")
     elif mentions_visual:
         raise ValueError(f"Question mentions visual source without matching data_type/data_payload: {spec.question_type}.")
+
+
+def validate_table_reasoning_contract(spec: QuestionSpec, payload: dict, text: str) -> None:
+    reasoning_pattern = payload.get("reasoning_pattern")
+    if reasoning_pattern not in TABLE_REASONING_PATTERNS:
+        raise ValueError(f"Table question needs a valid reasoning pattern, got {reasoning_pattern!r}.")
+
+    metadata_constraints = int(extract_metadata_value(spec.explanation, "constraints_required") or "0")
+    payload_constraints = int(payload.get("required_constraints") or 0)
+    if max(metadata_constraints, payload_constraints) < 2:
+        raise ValueError(f"Table question must require at least two constraints: {spec.question_type}.")
+
+    constraint_types = set(payload.get("constraint_types") or [])
+    if not constraint_types & TABLE_CONSTRAINT_TYPES:
+        raise ValueError(f"Table question must use subset, comparison, claim, or exception reasoning: {spec.question_type}.")
+
+    required_skills = set(payload.get("required_skills") or [])
+    if not TABLE_REQUIRED_SKILLS.issubset(required_skills):
+        raise ValueError(f"Table question must require scanning multiple rows and applying a condition: {spec.question_type}.")
+
+    rejected_shortcuts = set(payload.get("reject_shortcuts") or [])
+    if not {"max_min_lookup", "single_value_reading", "direct_row_match"}.issubset(rejected_shortcuts):
+        raise ValueError(f"Table question must explicitly reject direct lookup shortcuts: {spec.question_type}.")
+
+    if re.search(r"\b(what is|what was|which row|which value)\b", text):
+        raise ValueError(f"Table question is phrased like a direct lookup: {spec.question_type}.")
+
+    table_values = extract_table_value_tokens(payload)
+    wrong_choices = [choice for choice in spec.choices if choice.role != ChoiceTrapRole.correct]
+    for choice in wrong_choices:
+        answer_text = choice.text.lower()
+        answer_compact = answer_text.replace(",", "")
+        if not any(token in answer_text or token.replace(",", "") in answer_compact for token in table_values):
+            raise ValueError(f"Table distractor must use real table values while applying the wrong constraint: {choice.text}")
+
+
+def extract_table_value_tokens(payload: dict) -> set[str]:
+    tokens: set[str] = set()
+    for row in payload.get("rows") or []:
+        if not isinstance(row, dict):
+            continue
+        for value in row.values():
+            text = str(value).strip().lower()
+            if text:
+                if len(text) > 1:
+                    tokens.add(text)
+                    tokens.add(text.replace(",", ""))
+        route_value = str(row.get("Route", "")).strip().lower()
+        if route_value:
+            tokens.add(f"route {route_value}")
+    return tokens
 
 
 def validate_single_grammar_rule(spec: QuestionSpec, pattern: str) -> None:
