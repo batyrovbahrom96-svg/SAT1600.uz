@@ -16,6 +16,7 @@ from app.services.sat_engine import (
     advance_module,
     dynamic_next_question_strategy,
     finalize_attempt,
+    finish_module_one,
     get_module_questions,
     module_seconds_remaining,
     results_payload,
@@ -83,6 +84,10 @@ def create_attempt(test_id: UUID, db: Session = Depends(get_db), user: User = De
 @router.get("/attempts/{attempt_id}/module", response_model=ModuleOut)
 def current_module(attempt_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
     attempt = _owned_attempt(db, attempt_id, user)
+    return _module_payload(db, attempt)
+
+
+def _module_payload(db: Session, attempt: TestAttempt) -> dict:
     questions = get_module_questions(db, attempt)
     _record_exposures(db, attempt, questions)
     existing_results = db.execute(
@@ -107,7 +112,7 @@ def current_module(attempt_id: UUID, db: Session = Depends(get_db), user: User =
             "current_section": attempt.current_section,
             "current_module": attempt.current_module,
             "status": attempt.status,
-            "route": attempt.route or {},
+            "route": {},
         },
         "duration_seconds": module_seconds_remaining(attempt),
         "can_go_back": False,
@@ -139,11 +144,37 @@ def advance_attempt(attempt_id: UUID, db: Session = Depends(get_db), user: User 
     return {"current_section": attempt.current_section, "current_module": attempt.current_module, "status": attempt.status}
 
 
+@router.post("/attempts/{attempt_id}/finish-module-1")
+def finish_module_1(attempt_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    attempt = _owned_attempt(db, attempt_id, user)
+    if attempt.current_module != 1:
+        raise HTTPException(status_code=409, detail="Module 1 is already finished")
+    finish_module_one(db, attempt)
+    db.commit()
+    db.refresh(attempt)
+    return {
+        "module1_correct": attempt.module1_correct,
+        "module1_total": attempt.module1_total,
+        "module2_started": attempt.module2_started,
+    }
+
+
+@router.post("/attempts/{attempt_id}/start-module-2", response_model=ModuleOut)
+def start_module_2(attempt_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    attempt = _owned_attempt(db, attempt_id, user)
+    if attempt.current_module != 1:
+        raise HTTPException(status_code=409, detail="Module 2 has already been started")
+    if attempt.module1_total == 0:
+        finish_module_one(db, attempt)
+    attempt = advance_module(db, attempt)
+    return _module_payload(db, attempt)
+
+
 @router.post("/attempts/{attempt_id}/submit")
 def submit_attempt(attempt_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
     attempt = _owned_attempt(db, attempt_id, user)
     finalize_attempt(db, attempt)
-    return {"status": attempt.status, "score_total": attempt.score_total}
+    return {"status": attempt.status, "score_total": attempt.score_total, "final_score": attempt.final_score}
 
 
 @router.get("/attempts/{attempt_id}/results", response_model=ResultsOut)

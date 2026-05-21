@@ -869,6 +869,19 @@ export default function TestPage() {
 
   async function advance() {
     try {
+      if (moduleData?.attempt.current_module === 1) {
+        await api(`/api/attempts/${attemptId}/finish-module-1`, { method: "POST" });
+        const nextModule = await api<ModulePayload>(`/api/attempts/${attemptId}/start-module-2`, { method: "POST" });
+        setModuleData(nextModule);
+        setSecondsLeft(nextModule.duration_seconds);
+        setIndex(0);
+        setAnswers(Object.fromEntries(Object.entries(nextModule.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
+        setMarked(Object.fromEntries(Object.entries(nextModule.answers).map(([id, answer]) => [id, answer.marked_for_review])));
+        spentByQuestion.current = Object.fromEntries(Object.entries(nextModule.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
+        firstInteractionByQuestion.current = {};
+        interactionCountByQuestion.current = {};
+        return;
+      }
       const result = await api<{ status: string; current_section: string; current_module: number }>(`/api/attempts/${attemptId}/advance`, { method: "POST" });
       if (result.status === "completed") {
         router.push(`/results/${attemptId}`);

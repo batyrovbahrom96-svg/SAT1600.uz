@@ -100,6 +100,7 @@ class ResultsOut(BaseModel):
     score_total: int
     score_reading_writing: int
     score_math: int
+    final_score: float | None = None
     topic_accuracy: dict
     weaknesses: list[str]
     strengths: list[str]

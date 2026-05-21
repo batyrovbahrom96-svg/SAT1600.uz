@@ -18,6 +18,8 @@ MODULE_RULES = {
     (SATSection.math, 2): {"count": 22, "seconds": 35 * 60},
 }
 
+MODULE2_HARD_THRESHOLD = 0.75
+
 
 def start_attempt(db: Session, user: User, test_id: UUID) -> TestAttempt:
     test = db.get(Test, test_id)
@@ -28,6 +30,12 @@ def start_attempt(db: Session, user: User, test_id: UUID) -> TestAttempt:
         user_id=user.id,
         test_id=test.id,
         route={"reading_writing": {}, "math": {}},
+        module1_correct=0,
+        module1_total=0,
+        module2_mode="medium",
+        module2_started=False,
+        module2_correct=0,
+        module2_total=0,
         module_started_at=started,
         module_deadline_at=started + timedelta(seconds=module_duration(SATSection.reading_writing, 1)),
     )
@@ -48,10 +56,13 @@ def module_seconds_remaining(attempt: TestAttempt) -> int:
 
 
 def choose_adaptive_level(db: Session, attempt: TestAttempt, section: SATSection) -> str:
+    if attempt.current_module == 2 and attempt.module2_mode in {"hard", "medium"}:
+        return attempt.module2_mode
     return adaptive_decision(db, attempt, section)["path"]
 
 
 def adaptive_decision(db: Session, attempt: TestAttempt, section: SATSection) -> dict:
+    module_total = MODULE_RULES[(section, 1)]["count"]
     module_one_results = (
         db.execute(
             select(QuestionResult)
@@ -67,17 +78,26 @@ def adaptive_decision(db: Session, attempt: TestAttempt, section: SATSection) ->
         .all()
     )
     if not module_one_results:
-        return {"path": "medium", "total_correct": 0, "weighted_score": 0, "response_time_ratio": 1, "topic_misses": {}}
+        return {
+            "path": "medium",
+            "total_correct": 0,
+            "total_questions": module_total,
+            "answered_questions": 0,
+            "accuracy": 0,
+            "weighted_score": 0,
+            "response_time_ratio": 1,
+            "topic_misses": {},
+        }
 
-    total = len(module_one_results)
+    answered_total = len(module_one_results)
     correct = sum(1 for result in module_one_results if result.is_correct)
     weighted_possible = sum(max(1, result.question.difficulty) for result in module_one_results)
     weighted_correct = sum(result.question.difficulty for result in module_one_results if result.is_correct)
     weighted_score = weighted_correct / weighted_possible if weighted_possible else 0
-    accuracy = correct / total
+    accuracy = correct / module_total
     avg_time_ratio = sum(
         min(1.8, result.time_spent_seconds / max(1, result.question.estimated_time)) for result in module_one_results
-    ) / total
+    ) / answered_total
     topic_misses = defaultdict(int)
     for result in module_one_results:
         if not result.is_correct:
@@ -85,17 +105,12 @@ def adaptive_decision(db: Session, attempt: TestAttempt, section: SATSection) ->
     weak_topic_penalty = min(0.18, 0.04 * len([misses for misses in topic_misses.values() if misses >= 2]))
     speed_adjustment = 0.06 if avg_time_ratio <= 0.85 else -0.06 if avg_time_ratio >= 1.25 else 0
     routing_score = (accuracy * 0.45) + (weighted_score * 0.45) + speed_adjustment - weak_topic_penalty
-
-    if routing_score >= 0.72:
-        path = "hard"
-    elif routing_score >= 0.48:
-        path = "medium"
-    else:
-        path = "easy"
+    path = "hard" if accuracy >= MODULE2_HARD_THRESHOLD else "medium"
     return {
         "path": path,
         "total_correct": correct,
-        "total_questions": total,
+        "total_questions": module_total,
+        "answered_questions": answered_total,
         "accuracy": round(accuracy, 3),
         "weighted_score": round(weighted_score, 3),
         "response_time_ratio": round(avg_time_ratio, 3),
@@ -108,6 +123,8 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
     enforce_deadline(db, attempt)
     section = attempt.current_section
     module = attempt.current_module
+    if module == 2 and not attempt.module2_started:
+        raise HTTPException(status_code=409, detail="Module 2 cannot start before Module 1 is finished")
     required_count = MODULE_RULES[(section, module)]["count"]
     query = (
         select(Question)
@@ -170,6 +187,8 @@ def save_answer(db: Session, attempt: TestAttempt, answer) -> QuestionResult:
     result.answered_at = datetime.utcnow()
     log_question_telemetry(db, attempt, question, answer)
     if attempt.current_module == 2:
+        db.flush()
+        update_module2_score(db, attempt)
         route = dict(attempt.route or {})
         route.setdefault(attempt.current_section.value, {})["dynamic_next"] = dynamic_next_question_strategy(db, attempt, result)
         attempt.route = route
@@ -204,15 +223,13 @@ def advance_module(db: Session, attempt: TestAttempt) -> TestAttempt:
     if attempt.status != AttemptStatus.in_progress:
         return attempt
     if attempt.current_module == 1:
-        decision = adaptive_decision(db, attempt, attempt.current_section)
-        adaptive_level = decision["path"]
-        route = dict(attempt.route or {})
-        route.setdefault(attempt.current_section.value, {})["module_2"] = decision
-        attempt.route = route
+        finish_module_one(db, attempt)
         attempt.current_module = 2
+        attempt.module2_started = True
     elif attempt.current_section == SATSection.reading_writing:
         attempt.current_section = SATSection.math
         attempt.current_module = 1
+        attempt.module2_started = False
     else:
         finalize_attempt(db, attempt)
         return attempt
@@ -230,9 +247,12 @@ def finalize_attempt(db: Session, attempt: TestAttempt) -> TestAttempt:
 
     rw_correct, rw_total = _section_score(db, attempt.id, SATSection.reading_writing)
     math_correct, math_total = _section_score(db, attempt.id, SATSection.math)
+    if attempt.current_module == 2:
+        update_module2_score(db, attempt)
     attempt.score_reading_writing = _scaled_score(rw_correct, rw_total)
     attempt.score_math = _scaled_score(math_correct, math_total)
     attempt.score_total = attempt.score_reading_writing + attempt.score_math
+    attempt.final_score = compute_final_score(attempt)
     attempt.status = AttemptStatus.completed
     attempt.completed_at = datetime.utcnow()
     analytics = build_analytics(db, attempt)
@@ -242,6 +262,88 @@ def finalize_attempt(db: Session, attempt: TestAttempt) -> TestAttempt:
     db.commit()
     db.refresh(attempt)
     return attempt
+
+
+def finish_module_one(db: Session, attempt: TestAttempt) -> TestAttempt:
+    decision = adaptive_decision(db, attempt, attempt.current_section)
+    module1_correct = int(decision.get("total_correct") or 0)
+    module1_total = int(decision.get("total_questions") or 0)
+    module1_score = module1_correct / module1_total if module1_total else 0
+    module2_mode = "hard" if module1_score >= MODULE2_HARD_THRESHOLD else "medium"
+    route = dict(attempt.route or {})
+    section_route = route.setdefault(attempt.current_section.value, {})
+    section_route["module_1"] = {
+        "correct": module1_correct,
+        "total": module1_total,
+        "score": round(module1_score, 3),
+    }
+    section_route["module_2"] = {
+        "path": module2_mode,
+        "threshold": MODULE2_HARD_THRESHOLD,
+        "routing_score": decision.get("routing_score"),
+        "weighted_score": decision.get("weighted_score"),
+        "response_time_ratio": decision.get("response_time_ratio"),
+        "topic_misses": decision.get("topic_misses", {}),
+    }
+    attempt.route = route
+    attempt.module1_correct = module1_correct
+    attempt.module1_total = module1_total
+    attempt.module2_mode = module2_mode
+    attempt.module2_started = False
+    attempt.module2_correct = 0
+    attempt.module2_total = 0
+    return attempt
+
+
+def update_module2_score(db: Session, attempt: TestAttempt) -> None:
+    module_total = MODULE_RULES[(attempt.current_section, 2)]["count"]
+    rows = (
+        db.execute(
+            select(QuestionResult)
+            .join(Question)
+            .where(
+                QuestionResult.attempt_id == attempt.id,
+                QuestionResult.module_snapshot == 2,
+                Question.section == attempt.current_section,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    attempt.module2_correct = sum(1 for row in rows if row.is_correct)
+    attempt.module2_total = module_total if rows or attempt.current_module == 2 else 0
+    route = dict(attempt.route or {})
+    section_route = route.setdefault(attempt.current_section.value, {})
+    module_two = dict(section_route.get("module_2") or {})
+    module_two.update(
+        {
+            "correct": attempt.module2_correct,
+            "total": attempt.module2_total,
+            "score": round(attempt.module2_correct / attempt.module2_total, 3) if attempt.module2_total else 0,
+        }
+    )
+    section_route["module_2"] = module_two
+    attempt.route = route
+
+
+def compute_final_score(attempt: TestAttempt) -> float | None:
+    section_scores = []
+    for section_route in (attempt.route or {}).values():
+        module_one = section_route.get("module_1") or {}
+        module_two = section_route.get("module_2") or {}
+        module1_total = module_one.get("total") or 0
+        module2_total = module_two.get("total") or 0
+        if module1_total and module2_total:
+            module1_score = (module_one.get("correct") or 0) / module1_total
+            module2_score = (module_two.get("correct") or 0) / module2_total
+            section_scores.append((module1_score * 0.4) + (module2_score * 0.6))
+    if section_scores:
+        return round(sum(section_scores) / len(section_scores), 4)
+    if not attempt.module1_total or not attempt.module2_total:
+        return None
+    module1_score = attempt.module1_correct / attempt.module1_total
+    module2_score = attempt.module2_correct / attempt.module2_total
+    return round((module1_score * 0.4) + (module2_score * 0.6), 4)
 
 
 def enforce_deadline(db: Session, attempt: TestAttempt) -> None:
@@ -330,6 +432,7 @@ def results_payload(db: Session, attempt: TestAttempt) -> dict:
         "score_total": attempt.score_total or 0,
         "score_reading_writing": attempt.score_reading_writing or 0,
         "score_math": attempt.score_math or 0,
+        "final_score": attempt.final_score,
         "topic_accuracy": analytics.topic_accuracy if analytics else {},
         "weaknesses": analytics.weaknesses if analytics else [],
         "strengths": analytics.strengths if analytics else [],
