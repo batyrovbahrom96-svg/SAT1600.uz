@@ -702,8 +702,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Vocabulary in Context", "literal_vs_abstract"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, the curator described the restored mural as bright, a word that could refer to color or to the idea behind the design. "
-                "The pigments often remained muted after cleaning."
+                "At first, the curator described the restored mural as bright, though the pigments often remained muted after cleaning."
             ),
             constraint_sentence="However, the arrangement made the once-confusing political symbols easier for visitors to interpret.",
             prompt="As used in the text, what does \"bright\" most nearly mean?",
@@ -718,8 +717,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Vocabulary in Context", "functional_precision"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Early field notes called the sensor's reading sharp, and several interpretations of the word seemed possible. "
-                "The device often detected tiny changes, though the display itself was plain."
+                "Early field notes called the sensor's reading sharp, though the plain display often made the word seem visual."
             ),
             constraint_sentence="However, the researchers valued the reading because it distinguished neighboring temperature changes that older tools merged.",
             prompt="As used in the text, what does \"sharp\" most nearly mean?",
@@ -734,8 +732,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Vocabulary in Context", "tone_alignment"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, the review called the memoir restrained, which may sound like criticism. "
-                "The reviewer often praised the writer's refusal to dramatize painful scenes."
+                "At first, the review called the memoir restrained, which may sound like criticism despite the reviewer's often admiring tone."
             ),
             constraint_sentence="However, the quiet tone made the final chapter feel more trustworthy rather than less emotional.",
             prompt="As used in the text, what does \"restrained\" most nearly mean?",
@@ -814,8 +811,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Main Idea", "study_vs_conclusion"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A study tracked urban bees that visited balcony gardens, park flowers, and roadside plants. "
-                "Several measurements may seem important on their own."
+                "A study tracked urban bees visiting balcony gardens as well as park and roadside plants, and several measurements may seem important on their own."
             ),
             constraint_sentence="However, the researchers concluded that small scattered habitats can often function together as a connected food network.",
             prompt="Which choice best states the main idea of the text?",
@@ -904,10 +900,9 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("TEXT_STRUCTURE_FUNCTION", "setup_vs_result"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Engineers expected a lightweight bridge panel could vibrate more than the older steel panel. "
-                "At first, the expectation seemed likely because the new material was thinner and less dense."
+                "At first, engineers expected a lightweight bridge panel could vibrate more than the older steel panel because the new material was thinner and less dense."
             ),
-            constraint_sentence="However, embedded ribs distributed force across the panel, and measurements showed less vibration than in the older design. The measurements therefore reversed what the initial expectation made likely.",
+            constraint_sentence="However, embedded ribs distributed force across the panel, and measurements showed less vibration than in the older design.",
             prompt="Which choice best describes the function of the underlined sentence in the text as a whole?",
             answer_options=("It states the final result of the engineering test.", "It provides unrelated information about material cost.", "It offers evidence that the older panel was badly designed.", "It sets up an expectation that the later measurements challenge."),
             correct_index=3,
@@ -918,7 +913,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             explanation="The target is not the result; it sets up an expectation that later evidence reverses.",
             constraints_required=2,
             data_payload={
-                "target_sentence": "At first, the expectation seemed likely because the new material was thinner and less dense.",
+                "target_sentence": "At first, engineers expected a lightweight bridge panel could vibrate more than the older steel panel because the new material was thinner and less dense.",
                 "target_role": "hypothesis",
             },
         ),
@@ -997,8 +992,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Inference", "expectation_violation"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Researchers expected older seeds to germinate more slowly than newer seeds. "
-                "At first, that expectation seemed reasonable because older seeds often lose moisture."
+                "At first, researchers expected older seeds to germinate more slowly than newer seeds because older seeds often lose moisture."
             ),
             constraint_sentence="However, seeds stored in cooler rooms sprouted nearly as quickly as new seeds from warmer rooms.",
             prompt="Which inference is best supported by the text?",
@@ -1120,7 +1114,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "grammar_subject_verb"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The collection of field notes, along with several sketches from the trip, ___ often stored in the archive's climate-controlled room. The extra phrase may distract readers at first."
+                "At first, the collection of field notes, along with several sketches from the trip, ___ often stored in the archive's climate-controlled room."
             ),
             constraint_sentence="However, the grammatical subject is collection, not sketches.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
@@ -1135,7 +1129,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "grammar_clause_boundary"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The prototype seemed simple at first ___ however, its internal sensors often required careful calibration. Only the boundary between the two clauses is being tested."
+                "The prototype seemed simple at first ___ however, its internal sensors often required careful calibration."
             ),
             constraint_sentence="However, both sides of the boundary are independent clauses.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
@@ -1150,7 +1144,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "sentence_boundary_resolution"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The mural's surface looked uniform at first ___ later imaging often revealed two separate paint layers. The relationship between the clauses may seem subtle because both describe observations of the same object."
+                "The mural's surface looked uniform at first ___ later imaging often revealed two separate paint layers."
             ),
             constraint_sentence="However, both clauses can stand independently, and the second complicates the first observation.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
@@ -1166,7 +1160,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "grammar_modifier"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "After often comparing the fossil under angled light, ___ noticed a faint ridge along its edge. At first, several nouns could seem available after the modifier."
+                "After often comparing the fossil under angled light, ___ noticed a faint ridge along its edge."
             ),
             constraint_sentence="However, the opening modifier must describe the person doing the comparing.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
@@ -1181,7 +1175,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "grammar_pronoun_reference"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Maya told Lina that the archive's map was missing a label, and ___ often made the catalog confusing. At first, either person might seem connected to the problem."
+                "At first, Maya told Lina that the archive's map was missing a label, and ___ often made the catalog confusing."
             ),
             constraint_sentence="However, the intended antecedent is the missing label, not either researcher.",
             prompt="Which choice completes the text so that it conforms to Standard English and makes the reference clear?",
@@ -1261,7 +1255,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "referent_precision"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "When Dr. Mensah gave Rivera the revised catalog entry, ___ often still contained an unclear date range. At first, either the person or the entry could seem to be the focus."
+                "At first, when Dr. Mensah gave Rivera the revised catalog entry, ___ often still contained an unclear date range."
             ),
             constraint_sentence="However, the sentence must refer precisely to the catalog entry, not to either researcher.",
             prompt="Which choice completes the text so that it conforms to Standard English and resolves the reference?",
@@ -1277,7 +1271,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "clause_integration"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The satellite detected a faint heat signal over the ridge ___ the research team often treated the result cautiously because cloud cover can distort readings. At first, the relationship between the clauses may seem merely sequential."
+                "At first, the satellite detected a faint heat signal over the ridge ___ the research team often treated the result cautiously because cloud cover can distort readings."
             ),
             constraint_sentence="However, the second clause explains why the team qualified the first observation.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
@@ -1293,7 +1287,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "modifier_attachment"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "After often comparing the restored panels with older photographs, ___ noticed that the border had been repainted in a slightly different blue. At first, both the panels and the conservator seem nearby enough to attract the modifier."
+                "At first, after often comparing the restored panels with older photographs, ___ noticed that the border had been repainted in a slightly different blue."
             ),
             constraint_sentence="However, only the conservator can logically perform the comparison.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
@@ -1309,7 +1303,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Rhetorical Synthesis", "compare"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A student is comparing two restoration projects. Notes: Project A often reused original stone but required longer closures; Project B used newer stone and reopened sooner; both projects preserved the buildings' original outlines; several notes about budgets are available but not relevant."
+                "A student is comparing two restoration projects.\nNotes:\n- Project A often reused original stone but required longer closures.\n- Project B used newer stone and reopened sooner.\n- Both projects preserved the buildings' original outlines.\n- Several budget details are available but not relevant."
             ),
             constraint_sentence="However, the student's goal is to compare the projects' preservation approaches while acknowledging one shared outcome.",
             prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
@@ -1325,7 +1319,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Rhetorical Synthesis", "contrast"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A student is contrasting two community archives. Notes: Archive A often invites residents to annotate photographs online; Archive B relies on staff-written labels and in-person exhibits; both preserve neighborhood images; several funding details may seem relevant at first."
+                "A student is contrasting two community archives.\nNotes:\n- Archive A often invites residents to annotate photographs online.\n- Archive B relies on staff-written labels and in-person exhibits.\n- Both preserve neighborhood images.\n- Several funding details may seem relevant at first."
             ),
             constraint_sentence="However, the student's goal is to emphasize the difference in how each archive involves the public.",
             prompt="Which choice best uses the notes to emphasize the contrast between the two archives?",
@@ -1341,7 +1335,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Rhetorical Synthesis", "present_conclusion"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A student is reviewing notes about a school garden. Notes: pollinator counts often rose near native flowers; vegetable yields changed little; maintenance took fewer hours after paths were redesigned; a local newspaper praised the garden's appearance."
+                "A student is reviewing notes about a school garden.\nNotes:\n- Pollinator counts often rose near native flowers.\n- Vegetable yields changed little.\n- Maintenance took fewer hours after paths were redesigned.\n- A local newspaper praised the garden's appearance."
             ),
             constraint_sentence="However, the student's goal is to present a conclusion about ecological impact, not appearance or labor.",
             prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
@@ -1885,7 +1879,7 @@ def validate_ambiguity_first_item(item: AmbiguityFirstItem) -> None:
     final_sentence_count = sum(f"{item.ambiguous_passage} {item.constraint_sentence}".count(mark) for mark in ".!?")
     if ambiguous_sentence_count < 1:
         raise ValueError("Ambiguity-first passage must start with at least one ambiguous sentence.")
-    max_final_sentences = 6 if item.question_type == "CROSS_TEXT_CONNECTION" else 4
+    max_final_sentences = 6 if item.question_type in {"CROSS_TEXT_CONNECTION", "Rhetorical Synthesis"} else 4
     if final_sentence_count < 2 or final_sentence_count > max_final_sentences:
         raise ValueError(f"Constrained final passage must be 2-{max_final_sentences} sentences.")
 
@@ -2012,10 +2006,7 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
         raise ValueError(f"Unsupported Reading & Writing question type: {spec.question_type}")
     if not spec.passage:
         raise ValueError("Reading & Writing questions require a passage.")
-    sentence_count = sum(spec.passage.count(mark) for mark in ".!?")
-    max_sentence_count = 6 if spec.question_type == "CROSS_TEXT_CONNECTION" else 4
-    if sentence_count < 2 or sentence_count > max_sentence_count:
-        raise ValueError(f"Passage must be 2-{max_sentence_count} sentences: {spec.passage}")
+    validate_passage_length_by_type_and_difficulty(spec)
     if len(spec.choices) != 4:
         raise ValueError("Reading & Writing questions must have exactly four choices.")
     correct_choices = [item for item in spec.choices if item.role == ChoiceTrapRole.correct]
@@ -2038,7 +2029,7 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
         raise ValueError(f"Passage needs contrast language to create SAT-style ambiguity: {spec.question_type}.")
     if not any(qualifier in spec.passage.lower() for qualifier in ("often", "may", "tends", "tended", "could")):
         raise ValueError(f"Passage needs a qualifier to avoid over-direct conclusions: {spec.question_type}.")
-    if not any(marker in spec.passage.lower() for marker in ("at first", "first", "early", "initially", "expected", "seemed", "several", "notes", "though", "although", "not a simple")):
+    if spec.question_type != "Standard English Conventions" and not any(marker in spec.passage.lower() for marker in ("at first", "first", "early", "initially", "expected", "seemed", "several", "notes", "though", "although", "not a simple")):
         raise ValueError(f"Passage needs human-like noise or delayed clarity: {spec.question_type}.")
     weak_phrases = ("the finding suggests", "the observation suggests", "the result points to", "therefore, the answer")
     if any(phrase in spec.passage.lower() for phrase in weak_phrases):
@@ -2061,6 +2052,101 @@ def validate_cognitive_depth(spec: QuestionSpec) -> None:
         validate_quant_cognitive_depth(spec)
     if spec.difficulty >= 8:
         validate_hard_zone_cognitive_depth(spec)
+
+
+def validate_passage_length_by_type_and_difficulty(spec: QuestionSpec) -> None:
+    sentence_count = passage_sentence_count(spec.passage or "")
+    position = spec.order_index + 1
+
+    if spec.question_type == "Vocabulary in Context":
+        if sentence_count > 2:
+            raise ValueError("Words in Context passages must stay short.")
+        return
+
+    if spec.question_type == "Standard English Conventions":
+        if sentence_count > 2:
+            raise ValueError("Grammar questions must not exceed two sentences.")
+        return
+
+    if spec.question_type == "CROSS_TEXT_CONNECTION":
+        validate_cross_text_length_contract(spec)
+        return
+
+    if spec.question_type == "Rhetorical Synthesis":
+        if position >= 19 and not has_bullet_notes(spec.passage or ""):
+            raise ValueError("Hard Rhetorical Synthesis questions must use bullet notes.")
+        return
+
+    if position <= 5:
+        if sentence_count > 2:
+            raise ValueError(f"Easy RW question {position} must be 1-2 sentences, not {sentence_count}.")
+        if has_extra_clause_density(spec.passage or ""):
+            raise ValueError(f"Easy RW question {position} has too many extra clauses.")
+    elif position <= 12:
+        if not 2 <= sentence_count <= 3:
+            raise ValueError(f"Medium RW question {position} must be 2-3 sentences, not {sentence_count}.")
+        if not has_distractor_detail(spec.passage or ""):
+            raise ValueError(f"Medium RW question {position} needs one distractor detail.")
+    elif position <= 18:
+        if not 2 <= sentence_count <= 4:
+            raise ValueError(f"Upper RW question {position} must be 2-4 sentences, not {sentence_count}.")
+        if not re.search(r"\b(although|however|while)\b", (spec.passage or "").lower()):
+            raise ValueError(f"Upper RW question {position} needs a qualifier such as although/however/while.")
+    else:
+        if sentence_count < 3 or sentence_count > 5:
+            raise ValueError(f"Hard RW question {position} must be 3-5 sentences or bullet notes, not {sentence_count}.")
+        validate_hard_passage_layers(spec)
+
+    if spec.question_type == "Command of Evidence":
+        validate_command_evidence_length_contract(spec, sentence_count)
+
+
+def passage_sentence_count(text: str) -> int:
+    return len([sentence for sentence in re.split(r"[.!?]+", text) if sentence.strip()])
+
+
+def has_bullet_notes(text: str) -> bool:
+    return "Notes:" in text and bool(re.search(r"(?m)^\s*-\s+", text))
+
+
+def has_extra_clause_density(text: str) -> bool:
+    return len(re.findall(r"[,;:]", text)) > 3
+
+
+def has_distractor_detail(text: str) -> bool:
+    return bool(re.search(r"\b(at first|several|unrelated|may seem|seemed|notes|details|though|although)\b", text.lower()))
+
+
+def validate_cross_text_length_contract(spec: QuestionSpec) -> None:
+    payload = spec.data_payload or {}
+    text_1 = payload.get("text_1", "")
+    text_2 = payload.get("text_2", "")
+    if not isinstance(text_1, str) or not isinstance(text_2, str):
+        raise ValueError("Cross-text length validation requires text_1 and text_2.")
+    if passage_sentence_count(text_1) != 2:
+        raise ValueError("Cross-text Text 1 must be exactly two sentences.")
+    text_2_count = passage_sentence_count(text_2)
+    if not 2 <= text_2_count <= 3:
+        raise ValueError("Cross-text Text 2 must be 2-3 sentences.")
+
+
+def validate_hard_passage_layers(spec: QuestionSpec) -> None:
+    passage = (spec.passage or "").lower()
+    layer_checks = (
+        bool(re.search(r"\b(at first|initially|expected|seemed|although|however|while|but)\b", passage)),
+        bool(re.search(r"\b(suggests|indicating|implies|likely|therefore|found|revealed|recorded|recommended)\b", passage)),
+        bool(re.search(r"\b(however|ultimately|taken together|not just|rather than|instead|___)\b", passage)),
+    )
+    if sum(layer_checks) < 2:
+        raise ValueError(f"Hard {spec.question_type} passage needs at least two logical layers.")
+
+
+def validate_command_evidence_length_contract(spec: QuestionSpec, sentence_count: int) -> None:
+    text = f"{spec.passage or ''} {spec.prompt}".lower()
+    if sentence_count < 2:
+        raise ValueError("Command of Evidence questions must be medium-long enough to require evidence alignment.")
+    if not re.search(r"\b(data|table|study|report|evidence|records?|fragment|review|claim)\b", text):
+        raise ValueError("Command of Evidence questions must include explicit evidence or data context.")
 
 
 def validate_distractor_quality_taxonomy(spec: QuestionSpec) -> None:
