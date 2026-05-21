@@ -17,6 +17,12 @@ export type Question = {
     title?: string;
     columns?: string[];
     rows?: Record<string, string | number>[];
+    x_label?: string;
+    y_label?: string;
+    series?: {
+      name: string;
+      values: [number, number][];
+    }[];
     [key: string]: unknown;
   } | null;
   passage?: string | null;

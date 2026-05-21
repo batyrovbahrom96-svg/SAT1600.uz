@@ -20,6 +20,7 @@ RW_GENERATION_PATTERNS = {
     "Function": {"setup_refutation", "local_explanation", "evidence_support"},
     "Data Analysis": {"ranking_flip_threshold", "data_mapping_table"},
     "Command of Evidence": {"causal_chain_support", "weaken_origin_claim", "textual_claim_strength", "quantitative_trend_value"},
+    "command_of_evidence_quantitative_graph": {"graph_trend_claim_shift"},
     "TEXT_STRUCTURE_FUNCTION": {"belief_vs_evidence", "claim_vs_refutation", "setup_vs_result"},
     "CROSS_TEXT_CONNECTION": {"claim_vs_empirical_evidence", "model_vs_data", "hypothesis_vs_revision"},
     "Inference": {"contradiction_inference", "expectation_violation", "causal_gap"},
@@ -175,6 +176,12 @@ RW_PATTERN_REGISTRY = {
         "logic_rule": "distinguish trend direction from individual values",
         "correct_answer_rule": "must use exact data relationship and variable direction",
         "distractor_generators": ("wrong_variable", "trend_value_confusion", "inverted_direction"),
+    },
+    "graph_trend_claim_shift": {
+        "passage_template": "graph-backed study claim revised after considering a second condition",
+        "logic_rule": "match a graph trend to the revised conclusion, not the initial finding alone",
+        "correct_answer_rule": "must connect the graph direction to the researchers' conclusion logic",
+        "distractor_generators": ("correct_graph_wrong_claim", "correct_claim_wrong_data", "misread_trend"),
     },
     "belief_vs_evidence": {
         "passage_template": "target sentence states a belief later tested against evidence",
@@ -396,7 +403,7 @@ RW_FIXED_MODULE1_SLOT_KEYS = [
     "cross_text_response",
     "central_competing",
     "inference_combined",
-    "quant_table_support",
+    "quant_graph_support",
     "evidence_weaken",
     "evidence_support_harder",
     "quant_table_mapping",
@@ -427,7 +434,7 @@ RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("cross_text_response", "CROSS_TEXT_CONNECTION", "model_vs_data", 5),
     RWModuleSlot("central_competing", "Main Idea", "example_vs_general", 6),
     RWModuleSlot("inference_combined", "Inference", "causal_gap", 6),
-    RWModuleSlot("quant_table_support", "Command of Evidence", "quantitative_trend_value", 6),
+    RWModuleSlot("quant_graph_support", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 6),
     RWModuleSlot("evidence_weaken", "Command of Evidence", "weaken_origin_claim", 6),
     RWModuleSlot("evidence_support_harder", "Command of Evidence", "textual_claim_strength", 7),
     RWModuleSlot("quant_table_mapping", "Data Analysis", "data_mapping_table", 7),
@@ -1378,6 +1385,36 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
                 ],
             },
         ),
+        ("command_of_evidence_quantitative_graph", "graph_trend_claim_shift"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "Researchers studying rooftop gardens first found that plots with more weekly watering often had more plant growth. Several early notes made watering frequency seem like the main explanation."
+            ),
+            constraint_sentence="However, when factoring soil depth into the graph, they concluded that deeper soil was associated with larger gains even when watering levels were similar.",
+            prompt="Which choice best describes data from the graph that supports the researchers' conclusion?",
+            answer_options=(
+                "The shallow-soil plots increased as watering rose, but that pattern focuses on watering rather than the revised soil-depth claim.",
+                "The deep-soil plots started with lower growth than shallow-soil plots at the first watering level, which supports the need to compare starting points.",
+                "The shallow-soil series rises more steeply than the deep-soil series, suggesting watering mattered more than soil depth.",
+                "At each watering level shown, the deep-soil plots had higher growth than the shallow-soil plots, supporting the conclusion that soil depth mattered.",
+            ),
+            correct_index=3,
+            topic="command_of_evidence_quantitative_graph",
+            subtopic="Pattern: graph_trend_claim_shift",
+            question_type="command_of_evidence_quantitative_graph",
+            trap_type="graph trend versus conclusion trap",
+            explanation="Graph evidence type=quantitative; the correct answer must use the graph trend and the revised conclusion about soil depth, not watering alone.",
+            constraints_required=2,
+            data_type="graph",
+            data_payload={
+                "x_label": "Weekly watering events",
+                "y_label": "Average growth increase (cm)",
+                "series": [
+                    {"name": "Shallow soil", "values": [(1, 3), (2, 5), (3, 6)]},
+                    {"name": "Deep soil", "values": [(1, 5), (2, 8), (3, 10)]},
+                ],
+            },
+        ),
         ("Command of Evidence", "textual_claim_strength"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
@@ -1901,8 +1938,8 @@ def validate_rw_module_blueprint() -> None:
         if slot.pattern == previous_pattern:
             raise ValueError("Reading & Writing module blueprint cannot repeat the same pattern in adjacent slots.")
         previous_pattern = slot.pattern
-        if slot.slot_key.startswith("quant_") and slot.pattern not in {"quantitative_trend_value", "data_mapping_table"}:
-            raise ValueError(f"Quant slot {slot.slot_key} must use a table-backed quantitative pattern.")
+        if slot.slot_key.startswith("quant_") and slot.pattern not in {"quantitative_trend_value", "data_mapping_table", "graph_trend_claim_shift"}:
+            raise ValueError(f"Quant slot {slot.slot_key} must use a table- or graph-backed quantitative pattern.")
         if index >= 18 and slot.difficulty < 8:
             raise ValueError("Hard-zone Reading & Writing slots cannot contain easy or medium questions.")
 
@@ -1930,6 +1967,7 @@ def validate_rw_pattern_registry() -> None:
         "grammar_pronoun_reference",
         "textual_claim_strength",
         "quantitative_trend_value",
+        "graph_trend_claim_shift",
         "belief_vs_evidence",
         "claim_vs_refutation",
         "setup_vs_result",
@@ -1972,8 +2010,8 @@ def validate_reading_writing_slot(spec: QuestionSpec, slot: RWModuleSlot, index:
         raise ValueError(f"RW slot {index + 1} expected pattern {slot.pattern}.")
     if spec.difficulty != slot.difficulty:
         raise ValueError(f"RW slot {index + 1} expected difficulty {slot.difficulty}, got {spec.difficulty}.")
-    if slot.slot_key.startswith("quant_") and spec.data_type != "table":
-        raise ValueError(f"RW slot {index + 1} ({slot.slot_key}) must include structured table data.")
+    if slot.slot_key.startswith("quant_") and spec.data_type not in {"table", "graph"}:
+        raise ValueError(f"RW slot {index + 1} ({slot.slot_key}) must include structured table or graph data.")
     if index >= 18 and spec.difficulty < 8:
         raise ValueError(f"RW slot {index + 1} is in the hard zone but received an easy/medium question.")
     plausible_distractors = [
@@ -2050,6 +2088,8 @@ def validate_cognitive_depth(spec: QuestionSpec) -> None:
         validate_cross_text_cognitive_relationship(spec)
     if spec.data_type == "table":
         validate_quant_cognitive_depth(spec)
+    if spec.data_type == "graph":
+        validate_graph_cognitive_depth(spec)
     if spec.difficulty >= 8:
         validate_hard_zone_cognitive_depth(spec)
 
@@ -2097,7 +2137,7 @@ def validate_passage_length_by_type_and_difficulty(spec: QuestionSpec) -> None:
             raise ValueError(f"Hard RW question {position} must be 3-5 sentences or bullet notes, not {sentence_count}.")
         validate_hard_passage_layers(spec)
 
-    if spec.question_type == "Command of Evidence":
+    if spec.question_type in {"Command of Evidence", "command_of_evidence_quantitative_graph"}:
         validate_command_evidence_length_contract(spec, sentence_count)
 
 
@@ -2194,6 +2234,20 @@ def validate_quant_cognitive_depth(spec: QuestionSpec) -> None:
         raise ValueError("Quant/table question is answerable by table lookup alone.")
     if "required_skills" not in (spec.data_payload or {}) or "apply_condition" not in (spec.data_payload or {}).get("required_skills", []):
         raise ValueError("Quant/table question must explicitly require applying a textual condition.")
+
+
+def validate_graph_cognitive_depth(spec: QuestionSpec) -> None:
+    text = f"{spec.passage or ''} {spec.prompt} {spec.explanation}".lower()
+    if spec.question_type != "command_of_evidence_quantitative_graph":
+        raise ValueError("RW graph questions must use command_of_evidence_quantitative_graph.")
+    if not re.search(r"\b(study|researchers|found)\b", text):
+        raise ValueError("Graph question passage must include a study description.")
+    if not re.search(r"\b(initial|first|early)\b", text):
+        raise ValueError("Graph question passage must include an initial finding.")
+    if not re.search(r"\b(however|when factoring|concluded|conclusion|revised)\b", text):
+        raise ValueError("Graph question passage must include a revised conclusion shift.")
+    if not re.search(r"\b(graph trend|graph direction|revised conclusion|both graph|trend and)\b", text):
+        raise ValueError("Graph question answer logic must require both graph and text.")
 
 
 def validate_hard_zone_cognitive_depth(spec: QuestionSpec) -> None:
@@ -2325,12 +2379,57 @@ def validate_question_data_contract(spec: QuestionSpec) -> None:
             raise ValueError(f"Table question wording must reference table/data: {spec.question_type}.")
         validate_table_reasoning_contract(spec, payload, text)
     elif spec.data_type == "graph":
-        if not spec.graph_path and not (spec.data_payload or {}).get("graph_path"):
-            raise ValueError(f"Graph question missing graph_path/data_payload: {spec.question_type}.")
+        if spec.question_type == "command_of_evidence_quantitative_graph" or (spec.data_payload or {}).get("series"):
+            validate_graph_payload_contract(spec)
+        elif not spec.graph_path and not (spec.data_payload or {}).get("graph_path"):
+            raise ValueError(f"Graph question missing graph_path or structured graph payload: {spec.question_type}.")
         if not re.search(r"\b(graph|figure)\b", text):
             raise ValueError(f"Graph question wording must reference graph/figure: {spec.question_type}.")
     elif mentions_visual:
         raise ValueError(f"Question mentions visual source without matching data_type/data_payload: {spec.question_type}.")
+
+
+def validate_graph_payload_contract(spec: QuestionSpec) -> None:
+    payload = spec.data_payload or {}
+    if not isinstance(payload.get("x_label"), str) or not payload["x_label"].strip():
+        raise ValueError(f"Graph question missing data_payload.x_label: {spec.question_type}.")
+    if not isinstance(payload.get("y_label"), str) or not payload["y_label"].strip():
+        raise ValueError(f"Graph question missing data_payload.y_label: {spec.question_type}.")
+    series = payload.get("series")
+    if not isinstance(series, list) or not series:
+        raise ValueError(f"Graph question missing data_payload.series: {spec.question_type}.")
+    for item in series:
+        if not isinstance(item, dict) or not isinstance(item.get("name"), str):
+            raise ValueError(f"Graph series must include a name: {spec.question_type}.")
+        values = item.get("values")
+        if not isinstance(values, list) or len(values) < 2:
+            raise ValueError(f"Graph series must include at least two values: {spec.question_type}.")
+        for point in values:
+            if (
+                not isinstance(point, (list, tuple))
+                or len(point) != 2
+                or not all(isinstance(value, (int, float)) for value in point)
+            ):
+                raise ValueError(f"Graph values must be numeric (x, y) pairs: {spec.question_type}.")
+    if spec.question_type == "command_of_evidence_quantitative_graph":
+        validate_quantitative_graph_answer_design(spec)
+
+
+def validate_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
+    combined_wrong = " ".join(choice.text.lower() for choice in spec.choices if choice.role != ChoiceTrapRole.correct)
+    required_distractor_logic = (
+        r"watering rather than|focuses on watering",
+        r"started with lower|starting points",
+        r"rises more steeply|misread",
+    )
+    if not all(re.search(marker, combined_wrong) for marker in required_distractor_logic):
+        raise ValueError("Graph question distractors must include correct graph/wrong conclusion, correct conclusion/wrong data, and misread trend.")
+    correct_choices = [choice for choice in spec.choices if choice.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1:
+        raise ValueError("Graph question must have one correct answer.")
+    correct_text = correct_choices[0].text.lower()
+    if not re.search(r"\b(deep|higher|both|levels|soil|conclusion|support)\b", correct_text):
+        raise ValueError("Graph correct answer must match both trend and conclusion logic.")
 
 
 def validate_table_reasoning_contract(spec: QuestionSpec, payload: dict, text: str) -> None:

@@ -14,6 +14,17 @@ type ModulePayload = {
   answers: Record<string, { selected_answer: string | null; marked_for_review: boolean; time_spent_seconds: number }>;
 };
 
+type GraphSeries = {
+  name: string;
+  values: [number, number][];
+};
+
+type GraphPayload = {
+  x_label: string;
+  y_label: string;
+  series: GraphSeries[];
+};
+
 type HighlightType = "yellow" | "blue" | "pink" | "underline";
 
 type PassageHighlight = {
@@ -62,6 +73,98 @@ if (
   || passageLayoutContract.blockGapPx < 16
 ) {
   throw new Error("Invalid passage layout contract for Bluebook-style reading.");
+}
+
+function isGraphPayload(payload: Question["data_payload"]): payload is GraphPayload {
+  return Boolean(
+    payload
+    && typeof payload.x_label === "string"
+    && typeof payload.y_label === "string"
+    && Array.isArray(payload.series)
+    && payload.series.length > 0
+    && payload.series.every((series) => (
+      typeof series?.name === "string"
+      && Array.isArray(series.values)
+      && series.values.length > 1
+      && series.values.every((point) => (
+        Array.isArray(point)
+        && point.length === 2
+        && typeof point[0] === "number"
+        && typeof point[1] === "number"
+      ))
+    ))
+  );
+}
+
+function DataGraph({ payload }: { payload: GraphPayload }) {
+  const width = 560;
+  const height = 320;
+  const padding = { top: 24, right: 32, bottom: 54, left: 58 };
+  const colors = ["#2563eb", "#16a34a", "#dc2626", "#7c3aed"];
+  const points = payload.series.flatMap((series) => series.values);
+  const xValues = points.map(([x]) => x);
+  const yValues = points.map(([, y]) => y);
+  const minX = Math.min(...xValues);
+  const maxX = Math.max(...xValues);
+  const minY = Math.min(0, ...yValues);
+  const maxY = Math.max(...yValues);
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const scaleX = (value: number) => padding.left + ((value - minX) / Math.max(1, maxX - minX)) * plotWidth;
+  const scaleY = (value: number) => padding.top + (1 - ((value - minY) / Math.max(1, maxY - minY))) * plotHeight;
+  const xTicks = Array.from(new Set(xValues)).sort((a, b) => a - b);
+  const yTicks = [minY, Math.round((minY + maxY) / 2), maxY];
+
+  return (
+    <figure className="mt-8 w-full max-w-[580px]" aria-label="Graph data">
+      <svg className="h-auto w-full" viewBox={`0 0 ${width} ${height}`} role="img">
+        <line x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} stroke="#6b7280" />
+        <line x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} stroke="#6b7280" />
+        {yTicks.map((tick) => (
+          <g key={`y-${tick}`}>
+            <line x1={padding.left - 5} x2={width - padding.right} y1={scaleY(tick)} y2={scaleY(tick)} stroke="#e5e7eb" />
+            <text x={padding.left - 10} y={scaleY(tick) + 4} textAnchor="end" className="fill-slate-600 text-[12px]">
+              {tick}
+            </text>
+          </g>
+        ))}
+        {xTicks.map((tick) => (
+          <g key={`x-${tick}`}>
+            <line x1={scaleX(tick)} x2={scaleX(tick)} y1={height - padding.bottom} y2={height - padding.bottom + 5} stroke="#6b7280" />
+            <text x={scaleX(tick)} y={height - padding.bottom + 22} textAnchor="middle" className="fill-slate-600 text-[12px]">
+              {tick}
+            </text>
+          </g>
+        ))}
+        {payload.series.map((series, seriesIndex) => {
+          const color = colors[seriesIndex % colors.length];
+          const linePoints = series.values.map(([x, y]) => `${scaleX(x)},${scaleY(y)}`).join(" ");
+          return (
+            <g key={series.name}>
+              <polyline fill="none" points={linePoints} stroke={color} strokeWidth={3} />
+              {series.values.map(([x, y]) => (
+                <circle cx={scaleX(x)} cy={scaleY(y)} fill="white" key={`${series.name}-${x}-${y}`} r={4} stroke={color} strokeWidth={2} />
+              ))}
+            </g>
+          );
+        })}
+        <text x={padding.left + plotWidth / 2} y={height - 12} textAnchor="middle" className="fill-slate-700 text-[13px] font-semibold">
+          {payload.x_label}
+        </text>
+        <text transform={`translate(16 ${padding.top + plotHeight / 2}) rotate(-90)`} textAnchor="middle" className="fill-slate-700 text-[13px] font-semibold">
+          {payload.y_label}
+        </text>
+      </svg>
+      <figcaption className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-700">
+        {payload.series.map((series, index) => (
+          <span className="inline-flex items-center gap-2" key={series.name}>
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
+            {series.name}
+          </span>
+        ))}
+      </figcaption>
+    </figure>
+  );
 }
 
 export default function TestPage() {
@@ -142,6 +245,9 @@ export default function TestPage() {
   const isCrossTextQuestion = question?.data_payload?.type === "cross_text"
     && typeof question.data_payload.text_1 === "string"
     && typeof question.data_payload.text_2 === "string";
+  const graphPayload = question?.data_type === "graph" && isGraphPayload(question.data_payload)
+    ? question.data_payload
+    : null;
   const orderedChoices = useMemo(() => {
     if (!question || question.format !== "multiple_choice") return [];
     const choices = [...question.choices].sort((a, b) => a.label.localeCompare(b.label));
@@ -939,6 +1045,9 @@ export default function TestPage() {
                   </tbody>
                 </table>
               </div>
+            ) : null}
+            {graphPayload ? (
+              <DataGraph payload={graphPayload} />
             ) : null}
             {question.graph_path ? (
               <Image
