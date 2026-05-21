@@ -2023,7 +2023,76 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
         validate_text_structure_function(spec)
     if spec.question_type == "CROSS_TEXT_CONNECTION":
         validate_cross_text_connection(spec)
+    validate_cognitive_depth(spec)
     validate_question_data_contract(spec)
+
+
+def validate_cognitive_depth(spec: QuestionSpec) -> None:
+    validate_distractor_quality_taxonomy(spec)
+    if spec.question_type == "TEXT_STRUCTURE_FUNCTION":
+        validate_text_structure_cognitive_shift(spec)
+    if spec.question_type == "CROSS_TEXT_CONNECTION":
+        validate_cross_text_cognitive_relationship(spec)
+    if spec.data_type == "table":
+        validate_quant_cognitive_depth(spec)
+    if spec.difficulty >= 8:
+        validate_hard_zone_cognitive_depth(spec)
+
+
+def validate_distractor_quality_taxonomy(spec: QuestionSpec) -> None:
+    distractor_bases = [choice_spec.basis or "" for choice_spec in spec.choices if choice_spec.role != ChoiceTrapRole.correct]
+    for taxonomy in ("taxonomy=semantic_twin", "taxonomy=scope_error", "taxonomy=logic_flip"):
+        if not any(taxonomy in basis for basis in distractor_bases):
+            raise ValueError(f"{spec.question_type} must include distractor quality {taxonomy}.")
+
+
+def validate_text_structure_cognitive_shift(spec: QuestionSpec) -> None:
+    passage = (spec.passage or "").lower()
+    logical_shift_pairs = (
+        ("belief", ("however", "logs", "evidence", "qualif")),
+        ("hypothesis", ("however", "data", "measurements", "result")),
+        ("expected", ("however", "result", "showed", "measurements")),
+        ("expectation", ("however", "result", "showed", "measurements")),
+        ("claim", ("however", "tests", "evidence", "refut", "overturn")),
+    )
+    if not any(start in passage and any(end in passage for end in endings) for start, endings in logical_shift_pairs):
+        raise ValueError("TEXT_STRUCTURE_FUNCTION must contain a cognitive shift such as belief->contradiction, hypothesis->evidence, or expectation->result.")
+
+
+def validate_cross_text_cognitive_relationship(spec: QuestionSpec) -> None:
+    passage = (spec.passage or "").lower()
+    direct_contradiction_markers = (
+        "text 2 directly contradicts",
+        "text 2 completely rejects",
+        "text 2 proves text 1 false",
+        "text 2 shows text 1 is wrong",
+    )
+    if any(marker in passage for marker in direct_contradiction_markers):
+        raise ValueError("CROSS_TEXT_CONNECTION must not be direct contradiction.")
+    relationship_markers = ("revise", "revises", "reframe", "reframes", "limitation", "condition", "qualif", "modif", "captures only part", "incomplete")
+    combined = f"{spec.passage or ''} {spec.explanation}".lower()
+    if not any(marker in combined for marker in relationship_markers):
+        raise ValueError("CROSS_TEXT_CONNECTION relationship must be refinement, reinterpretation, or limitation.")
+
+
+def validate_quant_cognitive_depth(spec: QuestionSpec) -> None:
+    passage = (spec.passage or "").lower()
+    prompt = spec.prompt.lower()
+    if not re.search(r"\b(claim|conclusion|statement|when|only|while|because|supports|evaluates|maps)\b", f"{passage} {prompt}"):
+        raise ValueError("Quant/table question must require textual reasoning in addition to data interpretation.")
+    if re.search(r"\b(which (route|museum|row)|what (number|value|percent))\b", prompt):
+        raise ValueError("Quant/table question is answerable by table lookup alone.")
+    if "required_skills" not in (spec.data_payload or {}) or "apply_condition" not in (spec.data_payload or {}).get("required_skills", []):
+        raise ValueError("Quant/table question must explicitly require applying a textual condition.")
+
+
+def validate_hard_zone_cognitive_depth(spec: QuestionSpec) -> None:
+    survivors = simulate_first_pass_elimination(spec)
+    if len(survivors) < 3:
+        raise ValueError(f"Hard-zone {spec.question_type} must retain at least three first-pass survivors.")
+    wrong_survivors = [choice_spec for choice_spec in survivors if choice_spec.role != ChoiceTrapRole.correct]
+    if len(wrong_survivors) < 2:
+        raise ValueError(f"Hard-zone {spec.question_type} correct answer is too obviously unique.")
 
 
 def validate_text_structure_function(spec: QuestionSpec) -> None:
