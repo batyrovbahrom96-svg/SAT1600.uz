@@ -39,6 +39,8 @@ CREATE TABLE questions (
   graph_path VARCHAR(500),
   graph_reasoning_type VARCHAR(80),
   graph_required BOOLEAN NOT NULL DEFAULT FALSE,
+  data_type VARCHAR(24) NOT NULL DEFAULT 'none',
+  data_payload JSONB NOT NULL DEFAULT '{}',
   passage TEXT,
   prompt TEXT NOT NULL,
   correct_answer VARCHAR(255) NOT NULL,

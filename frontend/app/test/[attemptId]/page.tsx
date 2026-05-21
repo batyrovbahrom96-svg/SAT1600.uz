@@ -849,6 +849,41 @@ export default function TestPage() {
                 onMouseUp={handlePassageMouseUp}
               />
             ) : null}
+            {question.data_type === "table" && question.data_payload?.columns?.length && question.data_payload?.rows?.length ? (
+              <div className="mt-8 overflow-x-auto">
+                {question.data_payload.title ? (
+                  <div className="mb-2 text-center text-sm font-semibold text-slate-950">
+                    {question.data_payload.title}
+                  </div>
+                ) : null}
+                <table className="w-full border-collapse text-sm text-slate-950">
+                  <thead>
+                    <tr>
+                      {question.data_payload.columns.map((column) => (
+                        <th
+                          className="border border-slate-300 bg-slate-100 px-3 py-2 text-left font-semibold"
+                          key={column}
+                          scope="col"
+                        >
+                          {column}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {question.data_payload.rows.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {question.data_payload?.columns?.map((column) => (
+                          <td className="border border-slate-300 px-3 py-2" key={column}>
+                            {String(row[column] ?? "")}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
             {question.graph_path ? (
               <Image
                 alt="SAT graph"

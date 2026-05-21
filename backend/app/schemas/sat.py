@@ -40,6 +40,8 @@ class QuestionOut(BaseModel):
     graph_path: str | None
     graph_reasoning_type: str | None
     graph_required: bool
+    data_type: str = "none"
+    data_payload: dict = Field(default_factory=dict)
     passage: str | None
     prompt: str
     question_type: str

@@ -9,6 +9,13 @@ export type Question = {
   subtopic?: string | null;
   structure_key: string;
   graph_path?: string | null;
+  data_type: "none" | "text_data" | "table" | "graph";
+  data_payload?: {
+    title?: string;
+    columns?: string[];
+    rows?: Record<string, string | number>[];
+    [key: string]: unknown;
+  } | null;
   passage?: string | null;
   prompt: string;
   question_type: string;

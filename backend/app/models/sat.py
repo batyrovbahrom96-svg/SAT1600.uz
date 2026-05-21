@@ -81,6 +81,8 @@ class Question(Base):
     graph_path: Mapped[str | None] = mapped_column(String(500))
     graph_reasoning_type: Mapped[str | None] = mapped_column(String(80))
     graph_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    data_type: Mapped[str] = mapped_column(String(24), default="none")
+    data_payload: Mapped[dict] = mapped_column(JSON, default=dict)
     passage: Mapped[str | None] = mapped_column(Text)
     prompt: Mapped[str] = mapped_column(Text)
     correct_answer: Mapped[str] = mapped_column(String(255))

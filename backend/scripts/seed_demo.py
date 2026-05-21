@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+import re
 
 import matplotlib.pyplot as plt
 from sqlalchemy import select
@@ -232,6 +233,8 @@ class QuestionSpec:
     graph_path: str | None = None
     graph_reasoning_type: str | None = None
     graph_required: bool = False
+    data_type: str = "none"
+    data_payload: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -248,6 +251,8 @@ class AmbiguityFirstItem:
     trap_type: str
     explanation: str
     constraints_required: int = 1
+    data_type: str = "text_data"
+    data_payload: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -344,6 +349,8 @@ def apply_question_spec(question: Question, spec: QuestionSpec) -> None:
     question.graph_path = spec.graph_path
     question.graph_reasoning_type = spec.graph_reasoning_type
     question.graph_required = spec.graph_required
+    question.data_type = spec.data_type
+    question.data_payload = spec.data_payload or {}
     question.passage = spec.passage
     question.prompt = spec.prompt
     question.correct_answer = spec.correct_answer
@@ -380,10 +387,14 @@ def build_question_bank() -> list[QuestionSpec]:
     questions: list[QuestionSpec] = []
     for module in (1, 2):
         for index in range(27):
-            questions.append(reading_writing_question(module, index))
+            question = reading_writing_question(module, index)
+            validate_question_data_contract(question)
+            questions.append(question)
     for module in (1, 2):
         for index in range(22):
-            questions.append(math_question(module, index))
+            question = math_question(module, index)
+            validate_question_data_contract(question)
+            questions.append(question)
     return questions
 
 
@@ -661,7 +672,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Data Analysis", "data_mapping_table"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A table lists survey results for three museums: East had 42 repeat visitors, North had 38, and West had 42. Several unrelated details about exhibit size may seem relevant at first."
+                "The table lists survey results for three museums. Several unrelated details about exhibit size may seem relevant at first."
             ),
             constraint_sentence="However, when only weekend responses are considered, West had the highest satisfaction rating, while East led only in total repeat visitors.",
             prompt="Which statement correctly maps the data in the table?",
@@ -672,6 +683,16 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             question_type="Data Analysis",
             trap_type="wrong row or column trap",
             explanation="The answer must use the weekend satisfaction column and the total repeat visitor column separately.",
+            data_type="table",
+            data_payload={
+                "title": "Museum Survey Results",
+                "columns": ["Museum", "Total repeat visitors", "Weekend satisfaction rating"],
+                "rows": [
+                    {"Museum": "East", "Total repeat visitors": 42, "Weekend satisfaction rating": "82%"},
+                    {"Museum": "North", "Total repeat visitors": 38, "Weekend satisfaction rating": "79%"},
+                    {"Museum": "West", "Total repeat visitors": 42, "Weekend satisfaction rating": "91%"},
+                ],
+            },
         ),
         ("Command of Evidence", "weaken_origin_claim"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -863,7 +884,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Command of Evidence", "quantitative_trend_value"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A table compares two bus routes. Route L had 1,200 riders in April and 1,260 in May; Route M had 900 riders in April and 1,050 in May. Several scheduling notes appear beside the table, although they are not needed."
+                "The table compares two bus routes. Several scheduling notes may appear relevant beside the table, although they are not needed."
             ),
             constraint_sentence="However, the claim being evaluated is that Route M showed the larger percentage increase, not the larger final ridership value.",
             prompt="Which choice best evaluates the claim using the data?",
@@ -875,6 +896,15 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             trap_type="trend versus value trap",
             explanation="Hard evidence type=quantitative; the answer separates final value from percentage trend and uses the exact data direction.",
             constraints_required=2,
+            data_type="table",
+            data_payload={
+                "title": "Bus Route Ridership",
+                "columns": ["Route", "April riders", "May riders"],
+                "rows": [
+                    {"Route": "L", "April riders": 1200, "May riders": 1260},
+                    {"Route": "M", "April riders": 900, "May riders": 1050},
+                ],
+            },
         ),
         ("Command of Evidence", "textual_claim_strength"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -899,7 +929,22 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         raise ValueError(f"No Reading & Writing generator for {question_type}/{pattern}") from exc
 
 
-def rw_base(module: int, index: int, *, topic: str, subtopic: str, question_type: str, passage: str, prompt: str, correct: str, choices: tuple[ChoiceSpec, ...], explanation: str, trap_type: str) -> QuestionSpec:
+def rw_base(
+    module: int,
+    index: int,
+    *,
+    topic: str,
+    subtopic: str,
+    question_type: str,
+    passage: str,
+    prompt: str,
+    correct: str,
+    choices: tuple[ChoiceSpec, ...],
+    explanation: str,
+    trap_type: str,
+    data_type: str = "none",
+    data_payload: dict | None = None,
+) -> QuestionSpec:
     difficulty = rw_difficulty_for(index)
     return QuestionSpec(
         section=SATSection.reading_writing,
@@ -921,6 +966,8 @@ def rw_base(module: int, index: int, *, topic: str, subtopic: str, question_type
         estimated_time=65 + (index % 4) * 10,
         discrimination_score=round(0.42 + (index % 6) * 0.07, 2),
         choices=choices,
+        data_type=data_type,
+        data_payload=data_payload or {},
     )
 
 
@@ -958,6 +1005,8 @@ def rw_ambiguity_first_base(module: int, index: int, item: AmbiguityFirstItem) -
         ),
         trap_type=item.trap_type,
         choices=tuple(choices),
+        data_type=item.data_type,
+        data_payload=item.data_payload,
     )
 
 
@@ -1494,6 +1543,32 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
     weak_phrases = ("the finding suggests", "the observation suggests", "the result points to", "therefore, the answer")
     if any(phrase in spec.passage.lower() for phrase in weak_phrases):
         raise ValueError(f"Passage contains a direct conclusion cue that makes the answer too obvious: {spec.question_type}.")
+    validate_question_data_contract(spec)
+
+
+def validate_question_data_contract(spec: QuestionSpec) -> None:
+    allowed_data_types = {"none", "text_data", "table", "graph"}
+    if spec.data_type not in allowed_data_types:
+        raise ValueError(f"Invalid data_type {spec.data_type} for {spec.question_type}.")
+    text = " ".join(part for part in (spec.passage, spec.prompt) if part).lower()
+    mentions_visual = bool(re.search(r"\b(table|graph|figure|chart)\b", text))
+    if spec.data_type == "text_data" and mentions_visual:
+        raise ValueError(f"text_data question cannot mention table/graph/figure/chart: {spec.question_type}.")
+    if spec.data_type == "table":
+        payload = spec.data_payload or {}
+        if not isinstance(payload.get("columns"), list) or not payload["columns"]:
+            raise ValueError(f"Table question missing data_payload.columns: {spec.question_type}.")
+        if not isinstance(payload.get("rows"), list) or not payload["rows"]:
+            raise ValueError(f"Table question missing data_payload.rows: {spec.question_type}.")
+        if not re.search(r"\b(table|data)\b", text):
+            raise ValueError(f"Table question wording must reference table/data: {spec.question_type}.")
+    elif spec.data_type == "graph":
+        if not spec.graph_path and not (spec.data_payload or {}).get("graph_path"):
+            raise ValueError(f"Graph question missing graph_path/data_payload: {spec.question_type}.")
+        if not re.search(r"\b(graph|figure)\b", text):
+            raise ValueError(f"Graph question wording must reference graph/figure: {spec.question_type}.")
+    elif mentions_visual:
+        raise ValueError(f"Question mentions visual source without matching data_type/data_payload: {spec.question_type}.")
 
 
 def validate_single_grammar_rule(spec: QuestionSpec, pattern: str) -> None:
@@ -1633,6 +1708,8 @@ def math_base(module: int, index: int, *, topic: str, subtopic: str, question_ty
         graph_path=graph_path,
         graph_reasoning_type="slope_meaning" if graph_path else None,
         graph_required=bool(graph_path),
+        data_type="graph" if graph_path else "none",
+        data_payload={"graph_path": graph_path, "graph_reasoning_type": "slope_meaning"} if graph_path else {},
     )
 
 
