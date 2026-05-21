@@ -926,12 +926,13 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             generation_pattern=pattern,
             ambiguous_passage=(
                 "Text 1: Some art historians claim that patrons chose miniature portraits mainly because they were inexpensive substitutes for larger paintings. "
+                "They reason that smaller works would have let patrons participate in portrait culture without paying for a full-size commission. "
                 "Text 2: Although that explanation may hold for some commissions, purchase records from two estate inventories show that several miniatures cost nearly as much as full-size portraits. "
                 "This pattern suggests that private display, not price alone, limited the claim's scope, indicating that patrons often valued miniatures as intimate keepsakes."
             ),
             constraint_sentence="Although both texts discuss why patrons chose miniatures, Text 2 uses evidence to revise Text 1's economic explanation.",
             prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
-            answer_options=("By noting that the records include prices for full-size portraits.", "By agreeing that cost may have mattered but treating it as the only verified factor.", "By arguing that expensive miniatures were never chosen for personal reasons.", "By saying the claim is incomplete because evidence points to personal use as well as price."),
+            answer_options=("By noting that the records give useful price comparisons between different portrait formats.", "By agreeing that cost may have mattered while giving less attention to the keepsake evidence.", "By suggesting that high prices make the economic explanation less complete than it first appears.", "By suggesting that the claim may need revision because evidence points to personal use as well as price."),
             correct_index=3,
             topic="CROSS_TEXT_CONNECTION",
             subtopic="Pattern: claim_vs_empirical_evidence",
@@ -941,7 +942,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             constraints_required=2,
             data_payload={
                 "type": "cross_text",
-                "text_1": "Some art historians claim that patrons chose miniature portraits mainly because they were inexpensive substitutes for larger paintings.",
+                "text_1": "Some art historians claim that patrons chose miniature portraits mainly because they were inexpensive substitutes for larger paintings. They reason that smaller works would have let patrons participate in portrait culture without paying for a full-size commission.",
                 "text_2": "Although that explanation may hold for some commissions, purchase records from two estate inventories show that several miniatures cost nearly as much as full-size portraits. This pattern suggests that private display, not price alone, limited the claim's scope, indicating that patrons often valued miniatures as intimate keepsakes.",
             },
         ),
@@ -949,12 +950,13 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             generation_pattern=pattern,
             ambiguous_passage=(
                 "Text 1: A climate model proposes that urban trees cool nearby streets mostly by casting shade during midday. "
+                "The model emphasizes shade because pavement temperatures tend to peak when direct sunlight is strongest. "
                 "Text 2: Although midday shade may explain part of the cooling, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening. "
                 "The pattern suggests that moisture and time of day constrain the model, indicating that shade captures only one part of the cooling effect."
             ),
             constraint_sentence="Although Text 2 does not reject the model entirely, it reframes the cooling effect as depending partly on moisture and time of day.",
             prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
-            answer_options=("By focusing mainly on how many blocks were measured.", "By agreeing that shade may matter but treating it as sufficient in every case.", "By denying that shade can ever cool streets at midday.", "By arguing that the model captures only part of the cooling pattern."),
+            answer_options=("By noting that the block-level sensor data are relevant to evaluating the model.", "By agreeing that shade may matter while giving less weight to evening moisture effects.", "By suggesting that the model may describe midday cooling better than evening cooling.", "By suggesting that the model tends to understate factors besides shade in the cooling pattern."),
             correct_index=3,
             topic="CROSS_TEXT_CONNECTION",
             subtopic="Pattern: model_vs_data",
@@ -964,7 +966,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             constraints_required=2,
             data_payload={
                 "type": "cross_text",
-                "text_1": "A climate model proposes that urban trees cool nearby streets mostly by casting shade during midday.",
+                "text_1": "A climate model proposes that urban trees cool nearby streets mostly by casting shade during midday. The model emphasizes shade because pavement temperatures tend to peak when direct sunlight is strongest.",
                 "text_2": "Although midday shade may explain part of the cooling, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening. The pattern suggests that moisture and time of day constrain the model, indicating that shade captures only one part of the cooling effect.",
             },
         ),
@@ -972,12 +974,13 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             generation_pattern=pattern,
             ambiguous_passage=(
                 "Text 1: A linguist hypothesizes that borrowed words could spread rapidly when speakers need names for new technologies. "
+                "The hypothesis treats practical usefulness as a strong reason for communities to adopt unfamiliar terms. "
                 "Text 2: Although practical need may encourage borrowing in some speech communities, a study of radio terminology found that borrowed terms spread slowly when local words already carried social prestige. "
                 "The evidence suggests that social value can limit adoption, indicating that the hypothesis works best when local alternatives lack strong cultural status."
             ),
             constraint_sentence="Although Text 2 accepts that need can matter, it revises the hypothesis by adding a social condition.",
             prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
-            answer_options=("By treating radio terminology as evidence that technology can create naming needs.", "By agreeing that new technology usually causes borrowing regardless of local words.", "By claiming that borrowed words never spread for practical reasons.", "By suggesting that the hypothesis works only when local alternatives lack strong social value."),
+            answer_options=("By treating radio terminology as evidence that technology can create naming needs.", "By agreeing that practical need may encourage borrowing while understating local prestige.", "By suggesting that social prestige can slow borrowing even when new terms are useful.", "By suggesting that the hypothesis tends to fit communities where existing terms carry less status."),
             correct_index=3,
             topic="CROSS_TEXT_CONNECTION",
             subtopic="Pattern: hypothesis_vs_revision",
@@ -987,7 +990,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             constraints_required=2,
             data_payload={
                 "type": "cross_text",
-                "text_1": "A linguist hypothesizes that borrowed words could spread rapidly when speakers need names for new technologies.",
+                "text_1": "A linguist hypothesizes that borrowed words could spread rapidly when speakers need names for new technologies. The hypothesis treats practical usefulness as a strong reason for communities to adopt unfamiliar terms.",
                 "text_2": "Although practical need may encourage borrowing in some speech communities, a study of radio terminology found that borrowed terms spread slowly when local words already carried social prestige. The evidence suggests that social value can limit adoption, indicating that the hypothesis works best when local alternatives lack strong cultural status.",
             },
         ),
@@ -1882,8 +1885,9 @@ def validate_ambiguity_first_item(item: AmbiguityFirstItem) -> None:
     final_sentence_count = sum(f"{item.ambiguous_passage} {item.constraint_sentence}".count(mark) for mark in ".!?")
     if ambiguous_sentence_count < 1:
         raise ValueError("Ambiguity-first passage must start with at least one ambiguous sentence.")
-    if final_sentence_count < 2 or final_sentence_count > 4:
-        raise ValueError("Constrained final passage must be 2-4 sentences.")
+    max_final_sentences = 6 if item.question_type == "CROSS_TEXT_CONNECTION" else 4
+    if final_sentence_count < 2 or final_sentence_count > max_final_sentences:
+        raise ValueError(f"Constrained final passage must be 2-{max_final_sentences} sentences.")
 
 
 def validate_rw_module_blueprint() -> None:
@@ -2009,8 +2013,9 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
     if not spec.passage:
         raise ValueError("Reading & Writing questions require a passage.")
     sentence_count = sum(spec.passage.count(mark) for mark in ".!?")
-    if sentence_count < 2 or sentence_count > 4:
-        raise ValueError(f"Passage must be 2-4 sentences: {spec.passage}")
+    max_sentence_count = 6 if spec.question_type == "CROSS_TEXT_CONNECTION" else 4
+    if sentence_count < 2 or sentence_count > max_sentence_count:
+        raise ValueError(f"Passage must be 2-{max_sentence_count} sentences: {spec.passage}")
     if len(spec.choices) != 4:
         raise ValueError("Reading & Writing questions must have exactly four choices.")
     correct_choices = [item for item in spec.choices if item.role == ChoiceTrapRole.correct]
@@ -2146,6 +2151,9 @@ def validate_cross_text_connection(spec: QuestionSpec) -> None:
         raise ValueError("CROSS_TEXT_CONNECTION text_1 and text_2 must both be nonempty.")
     if text_1.strip() == text_2.strip():
         raise ValueError("CROSS_TEXT_CONNECTION text_1 and text_2 must be distinct.")
+    text_1_sentences = [sentence for sentence in re.split(r"[.!?]+", text_1) if sentence.strip()]
+    if len(text_1_sentences) < 2 and not re.search(r"\b(because|since|as|reason|so that|therefore)\b", text_1.lower()):
+        raise ValueError("CROSS_TEXT_CONNECTION Text 1 must be two sentences or include context/reasoning.")
     if "author of Text 2" not in spec.prompt:
         raise ValueError("CROSS_TEXT_CONNECTION prompt must ask how Text 2 would respond to Text 1.")
     if not re.search(r"\b(however|although|revises|qualifies|modifies|contradicts|supports)\b", passage.lower()):
@@ -2171,6 +2179,45 @@ def validate_cross_text_connection(spec: QuestionSpec) -> None:
     text_2_terms = set(re.findall(r"[a-z]+", text_2.lower()))
     if len(text_1_terms & text_2_terms) < 2:
         raise ValueError("CROSS_TEXT_CONNECTION texts must be connected by shared subject matter.")
+    validate_cross_text_answer_competition(spec, text_1, text_2)
+
+
+def validate_cross_text_answer_competition(spec: QuestionSpec, text_1: str, text_2: str) -> None:
+    correct_choices = [choice_spec for choice_spec in spec.choices if choice_spec.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1:
+        raise ValueError("CROSS_TEXT_CONNECTION must have exactly one correct answer.")
+
+    correct_text = correct_choices[0].text.lower()
+    absolute_words = {"only", "always", "never", "every", "completely", "entirely", "proves", "must"}
+    if any(re.search(rf"\b{re.escape(word)}\b", correct_text) for word in absolute_words):
+        raise ValueError("CROSS_TEXT_CONNECTION correct answer must avoid absolute wording.")
+    if not re.search(r"\b(may|tends?|suggests?|likely|partly|can|could)\b", correct_text):
+        raise ValueError("CROSS_TEXT_CONNECTION correct answer must use soft logic.")
+
+    direct_source_text = f"{text_1} {text_2}".lower()
+    correct_tokens = re.findall(r"[a-z]+", correct_text)
+    direct_match_found = any(
+        " ".join(correct_tokens[index:index + 4]) in direct_source_text
+        for index in range(max(0, len(correct_tokens) - 3))
+    )
+    if direct_match_found:
+        raise ValueError("CROSS_TEXT_CONNECTION correct answer matches text wording too directly.")
+
+    distractors = [choice_spec for choice_spec in spec.choices if choice_spec.role != ChoiceTrapRole.correct]
+    extreme_distractor_words = {"always", "never", "completely", "entirely", "unrelated", "denying", "proves", "false"}
+    for choice_spec in distractors:
+        text = choice_spec.text.lower()
+        if any(re.search(rf"\b{re.escape(word)}\b", text) for word in extreme_distractor_words):
+            raise ValueError("CROSS_TEXT_CONNECTION distractors must not be extreme.")
+        if not re.search(r"\b(may|can|could|relevant|evidence|data|cost|costs|price|prices|portrait|portraits|shade|cooling|moisture|midday|evening|need|useful|usefulness|prestige|social|terminology|terms|adoption|local|model|hypothesis|claim)\b", text):
+            raise ValueError("CROSS_TEXT_CONNECTION distractors must contain partial truth from the texts.")
+
+    survivors = simulate_first_pass_elimination(spec)
+    if len(survivors) < 3:
+        raise ValueError("CROSS_TEXT_CONNECTION must leave at least three answers after first-pass elimination.")
+    survivor_labels = {choice_spec.label for choice_spec in survivors}
+    if "B" not in survivor_labels or "C" not in survivor_labels:
+        raise ValueError("CROSS_TEXT_CONNECTION should create hesitation between answer choices B and C.")
 
 
 def validate_question_data_contract(spec: QuestionSpec) -> None:
@@ -2343,6 +2390,8 @@ def simulate_first_pass_elimination(spec: QuestionSpec) -> list[ChoiceSpec]:
     for choice_spec in spec.choices:
         basis = choice_spec.basis or ""
         if choice_spec.role == ChoiceTrapRole.correct:
+            survivors.append(choice_spec)
+        elif spec.question_type == "CROSS_TEXT_CONNECTION":
             survivors.append(choice_spec)
         elif "plausibility=high" in basis:
             survivors.append(choice_spec)
