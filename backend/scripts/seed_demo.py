@@ -74,6 +74,7 @@ TABLE_CONSTRAINT_TYPES = {
     "exception_detection",
 }
 TABLE_REQUIRED_SKILLS = {"scan_multiple_rows", "apply_condition"}
+GRAPH_REASONING_PATTERNS = {"crossover_point", "threshold_shift", "divergence_convergence"}
 RW_PATTERN_REGISTRY = {
     "literal_vs_abstract": {
         "passage_template": "context redirects a word from literal sense to abstract sense",
@@ -178,8 +179,8 @@ RW_PATTERN_REGISTRY = {
         "distractor_generators": ("wrong_variable", "trend_value_confusion", "inverted_direction"),
     },
     "graph_trend_claim_shift": {
-        "passage_template": "graph-backed study claim revised after considering a second condition",
-        "logic_rule": "match a graph trend to the revised conclusion, not the initial finding alone",
+        "passage_template": "graph-backed study claim revised after a crossover or threshold pattern",
+        "logic_rule": "use the graph's new relationship to choose the evidence for the revised conclusion",
         "correct_answer_rule": "must connect the graph direction to the researchers' conclusion logic",
         "distractor_generators": ("correct_graph_wrong_claim", "correct_claim_wrong_data", "misread_trend"),
     },
@@ -1388,30 +1389,32 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("command_of_evidence_quantitative_graph", "graph_trend_claim_shift"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Researchers studying rooftop gardens first found that plots with more weekly watering often had more plant growth. Several early notes made watering frequency seem like the main explanation."
+                "Researchers studying rooftop gardens first found that increasing weekly watering often improved plant growth. Several early notes made watering frequency seem like the main explanation."
             ),
-            constraint_sentence="However, when factoring soil depth into the graph, they concluded that deeper soil was associated with larger gains even when watering levels were similar.",
+            constraint_sentence="However, after comparing soil-depth groups in the graph, they concluded that the advantage shifted under heavier watering.",
             prompt="Which choice best describes data from the graph that supports the researchers' conclusion?",
             answer_options=(
-                "The shallow-soil plots increased as watering rose, but that pattern focuses on watering rather than the revised soil-depth claim.",
-                "The deep-soil plots started with lower growth than shallow-soil plots at the first watering level, which supports the need to compare starting points.",
-                "The shallow-soil series rises more steeply than the deep-soil series, suggesting watering mattered more than soil depth.",
-                "At each watering level shown, the deep-soil plots had higher growth than the shallow-soil plots, supporting the conclusion that soil depth mattered.",
+                "Both soil groups show higher growth as watering increases, but that pattern focuses on watering rather than the revised shift between groups.",
+                "The deep-soil group has higher growth at one watering event, which partly fits the soil-depth claim but misses the later crossover.",
+                "The deep-soil series remains above the shallow-soil series at every watering level, misreading the trend after the crossover point.",
+                "The deep-soil group is higher at low watering, but the shallow-soil group is higher at three watering events, supporting the conclusion that the advantage shifts under heavier watering.",
             ),
             correct_index=3,
             topic="command_of_evidence_quantitative_graph",
             subtopic="Pattern: graph_trend_claim_shift",
             question_type="command_of_evidence_quantitative_graph",
             trap_type="graph trend versus conclusion trap",
-            explanation="Graph evidence type=quantitative; the correct answer must use the graph trend and the revised conclusion about soil depth, not watering alone.",
+            explanation="Graph evidence type=quantitative; pattern=crossover_point; the correct answer requires the graph trend and revised conclusion because the passage does not state which series overtakes the other.",
             constraints_required=2,
             data_type="graph",
             data_payload={
                 "x_label": "Weekly watering events",
                 "y_label": "Average growth increase (cm)",
+                "reasoning_pattern": "crossover_point",
+                "graph_dependency": "necessary",
                 "series": [
-                    {"name": "Shallow soil", "values": [(1, 3), (2, 5), (3, 6)]},
-                    {"name": "Deep soil", "values": [(1, 5), (2, 8), (3, 10)]},
+                    {"name": "Deep soil", "values": [(1, 6), (2, 7), (3, 8)]},
+                    {"name": "Shallow soil", "values": [(1, 4), (2, 7), (3, 11)]},
                 ],
             },
         ),
@@ -2248,6 +2251,8 @@ def validate_graph_cognitive_depth(spec: QuestionSpec) -> None:
         raise ValueError("Graph question passage must include a revised conclusion shift.")
     if not re.search(r"\b(graph trend|graph direction|revised conclusion|both graph|trend and)\b", text):
         raise ValueError("Graph question answer logic must require both graph and text.")
+    if graph_is_text_solvable(spec):
+        raise ValueError("Graph question is solvable from text alone; graph must introduce necessary new information.")
 
 
 def validate_hard_zone_cognitive_depth(spec: QuestionSpec) -> None:
@@ -2398,6 +2403,9 @@ def validate_graph_payload_contract(spec: QuestionSpec) -> None:
     series = payload.get("series")
     if not isinstance(series, list) or not series:
         raise ValueError(f"Graph question missing data_payload.series: {spec.question_type}.")
+    reasoning_pattern = payload.get("reasoning_pattern")
+    if spec.question_type == "command_of_evidence_quantitative_graph" and reasoning_pattern not in GRAPH_REASONING_PATTERNS:
+        raise ValueError(f"Graph question needs crossover, threshold, or divergence/convergence pattern, got {reasoning_pattern!r}.")
     for item in series:
         if not isinstance(item, dict) or not isinstance(item.get("name"), str):
             raise ValueError(f"Graph series must include a name: {spec.question_type}.")
@@ -2419,8 +2427,8 @@ def validate_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
     combined_wrong = " ".join(choice.text.lower() for choice in spec.choices if choice.role != ChoiceTrapRole.correct)
     required_distractor_logic = (
         r"watering rather than|focuses on watering",
-        r"started with lower|starting points",
-        r"rises more steeply|misread",
+        r"partly fits|misses the later crossover",
+        r"misreading|misread",
     )
     if not all(re.search(marker, combined_wrong) for marker in required_distractor_logic):
         raise ValueError("Graph question distractors must include correct graph/wrong conclusion, correct conclusion/wrong data, and misread trend.")
@@ -2428,8 +2436,37 @@ def validate_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
     if len(correct_choices) != 1:
         raise ValueError("Graph question must have one correct answer.")
     correct_text = correct_choices[0].text.lower()
-    if not re.search(r"\b(deep|higher|both|levels|soil|conclusion|support)\b", correct_text):
+    if not re.search(r"\b(deep|shallow|higher|crossover|shifts|watering|support)\b", correct_text):
         raise ValueError("Graph correct answer must match both trend and conclusion logic.")
+    graph_partial_distractors = [
+        choice
+        for choice in spec.choices
+        if choice.role != ChoiceTrapRole.correct
+        and re.search(r"\b(group|series|growth|watering|higher|trend|crossover|level)\b", choice.text.lower())
+    ]
+    if len(graph_partial_distractors) < 2:
+        raise ValueError("Graph question needs at least two distractors that partially match the graph.")
+    graph_aligned_choices = [
+        choice
+        for choice in spec.choices
+        if re.search(r"\b(supporting|supports|support)\b", choice.text.lower())
+        and re.search(r"\b(conclusion|shift|advantage)\b", choice.text.lower())
+    ]
+    if len(graph_aligned_choices) != 1 or graph_aligned_choices[0].role != ChoiceTrapRole.correct:
+        raise ValueError("Only one answer may match both graph data and conclusion logic.")
+
+
+def graph_is_text_solvable(spec: QuestionSpec) -> bool:
+    text_without_graph = (spec.passage or "").lower()
+    correct_choices = [choice for choice in spec.choices if choice.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1:
+        return True
+    correct_text = correct_choices[0].text.lower()
+    graph_only_terms = ("crossover", "overtakes", "higher at low", "higher at three", "three watering", "series")
+    if any(term in text_without_graph for term in graph_only_terms):
+        return True
+    correct_specifics = ("deep-soil group is higher at low", "shallow-soil group is higher", "three watering events")
+    return any(specific in text_without_graph for specific in correct_specifics) or not any(term in correct_text for term in graph_only_terms)
 
 
 def validate_table_reasoning_contract(spec: QuestionSpec, payload: dict, text: str) -> None:
