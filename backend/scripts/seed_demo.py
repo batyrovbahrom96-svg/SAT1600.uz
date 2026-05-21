@@ -408,6 +408,7 @@ def build_question_bank() -> list[QuestionSpec]:
         validate_answer_distribution(module_questions)
         for question in module_questions:
             validate_reading_writing_spec(question)
+            validate_choice_label_order(question)
             validate_question_data_contract(question)
             questions.append(question)
     for module in (1, 2):
@@ -417,6 +418,7 @@ def build_question_bank() -> list[QuestionSpec]:
         module_questions = apply_answer_distribution(module_questions, seed=f"math-module-{module}")
         validate_answer_distribution(module_questions)
         for question in module_questions:
+            validate_choice_label_order(question)
             validate_question_data_contract(question)
             questions.append(question)
     return questions
@@ -507,6 +509,17 @@ def validate_answer_distribution(module_questions: list[QuestionSpec]) -> None:
         raise ValueError(f"Answer distribution contains invalid labels: {counts}.")
     if max(counts.values()) - min(counts.get(label, 0) for label in ("A", "B", "C", "D")) > 1:
         raise ValueError(f"Answer distribution is too skewed in module: {counts}.")
+
+
+def validate_choice_label_order(question: QuestionSpec) -> None:
+    if question.format != QuestionFormat.multiple_choice:
+        return
+    rendered_labels = [choice_spec.label for choice_spec in question.choices]
+    if rendered_labels != ["A", "B", "C", "D"]:
+        raise ValueError(f"Rendered answer labels must be A/B/C/D for {question.question_type}: {rendered_labels}.")
+    correct_choices = [choice_spec for choice_spec in question.choices if choice_spec.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1 or correct_choices[0].label != question.correct_answer:
+        raise ValueError(f"Correct answer integrity failed after label remapping for {question.question_type}.")
 
 
 def has_three_consecutive(labels: list[str]) -> bool:

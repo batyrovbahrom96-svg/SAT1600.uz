@@ -204,7 +204,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {selected.distractor_effectiveness.map((choice) => (
+                    {[...selected.distractor_effectiveness].sort((a, b) => a.label.localeCompare(b.label)).map((choice) => (
                       <tr key={choice.label} className="border-b border-slate-100">
                         <td className="p-3 font-bold">{choice.label}. {choice.text}</td>
                         <td className="p-3">{choice.trap_role}</td>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Ban, Bookmark, ChevronLeft, ChevronRight, Flag, X, Undo2 } from "lucide-react";
@@ -124,6 +124,15 @@ export default function TestPage() {
   }, [secondsLeft]);
 
   const question = moduleData?.questions[index];
+  const orderedChoices = useMemo(() => {
+    if (!question || question.format !== "multiple_choice") return [];
+    const choices = [...question.choices].sort((a, b) => a.label.localeCompare(b.label));
+    const renderedLabels = choices.map((choice) => choice.label);
+    if (renderedLabels.join(",") !== "A,B,C,D") {
+      throw new Error(`Invalid SAT answer label order: ${renderedLabels.join(",")}`);
+    }
+    return choices;
+  }, [question]);
 
   useEffect(() => {
     setCurrentQuestion(index + 1);
@@ -145,15 +154,16 @@ export default function TestPage() {
 
   useEffect(() => {
     questionStartedAt.current = Date.now();
-    if (question) loadStoredAnswerState(question);
-    const selectedIndex = question?.choices.findIndex((choice) => choice.label === (selectedAnswer || answers[question.id])) ?? -1;
+    if (!question) return;
+    loadStoredAnswerState(question);
+    const selectedIndex = orderedChoices.findIndex((choice) => choice.label === (selectedAnswer || answers[question.id]));
     setFocusedChoiceIndex(selectedIndex >= 0 ? selectedIndex : 0);
-  }, [question?.id]);
+  }, [question?.id, orderedChoices]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (activeModal || isMoreOpen) return;
-      if (!question || question.format !== "multiple_choice" || !question.choices.length) return;
+      if (!question || question.format !== "multiple_choice" || !orderedChoices.length) return;
       const target = event.target as HTMLElement | null;
       const tagName = target?.tagName.toLowerCase();
       if (tagName === "input" || tagName === "textarea" || tagName === "select" || target?.isContentEditable) return;
@@ -161,7 +171,7 @@ export default function TestPage() {
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         const direction = event.key === "ArrowDown" ? 1 : -1;
-        const nextIndex = (focusedChoiceIndex + direction + question.choices.length) % question.choices.length;
+        const nextIndex = (focusedChoiceIndex + direction + orderedChoices.length) % orderedChoices.length;
         setFocusedChoiceIndex(nextIndex);
         window.requestAnimationFrame(() => {
           document.querySelector<HTMLElement>(`[data-choice-index="${nextIndex}"]`)?.focus();
@@ -171,7 +181,7 @@ export default function TestPage() {
       if (event.shiftKey && /^[a-d]$/i.test(event.key)) {
         event.preventDefault();
         const label = event.key.toUpperCase();
-        if (question.choices.some((choice) => choice.label === label)) {
+        if (orderedChoices.some((choice) => choice.label === label)) {
           toggleEliminate(label);
         }
       }
@@ -183,14 +193,14 @@ export default function TestPage() {
 
       if (event.key === "Enter") {
         event.preventDefault();
-        const choice = question.choices[focusedChoiceIndex];
+        const choice = orderedChoices[focusedChoiceIndex];
         if (choice) selectAnswer(choice.label);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [question, focusedChoiceIndex, answers, marked, selectedAnswer, eliminatedAnswers, actionHistory, activeModal, isMoreOpen]);
+  }, [question, orderedChoices, focusedChoiceIndex, answers, marked, selectedAnswer, eliminatedAnswers, actionHistory, activeModal, isMoreOpen]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
@@ -946,7 +956,7 @@ export default function TestPage() {
           <h1 className="mb-6 text-[20px] font-semibold leading-[1.45] text-slate-950">{question.prompt}</h1>
 
           <div className="grid gap-4">
-            {question.format === "multiple_choice" ? question.choices.map((choice, choiceIndex) => (
+            {question.format === "multiple_choice" ? orderedChoices.map((choice, choiceIndex) => (
               <div
                 key={choice.label}
                 className={`flex w-full items-stretch rounded-md border text-left text-[16px] leading-6 transition-colors hover:bg-slate-50 ${
