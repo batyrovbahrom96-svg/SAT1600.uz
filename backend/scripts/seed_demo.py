@@ -12,6 +12,7 @@ from app.db.session import get_session_local
 from app.models import ChoiceTrapRole, Question, QuestionChoice, QuestionFormat, QuestionSource, SATSection, Test
 
 TEST_TITLE = "SAT1600 Diagnostic Mock 1"
+MODULE2_MODE = "hard"
 RW_DISTRACTOR_TAXONOMY = {"semantic_twin", "scope_error", "incomplete_reasoning"}
 RW_HIGH_PLAUSIBILITY_TAXONOMY = {"semantic_twin", "scope_error"}
 RW_GENERATION_PATTERNS = {
@@ -359,6 +360,7 @@ class QuestionSpec:
     format: QuestionFormat
     estimated_time: int
     discrimination_score: float
+    constraints_required: int = 1
     choices: tuple[ChoiceSpec, ...] = ()
     graph_path: str | None = None
     graph_reasoning_type: str | None = None
@@ -452,6 +454,50 @@ RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("rhetorical_contrast", "Rhetorical Synthesis", "contrast", 10),
     RWModuleSlot("rhetorical_conclusion", "Rhetorical Synthesis", "present_conclusion", 10),
     RWModuleSlot("rhetorical_comparison", "Rhetorical Synthesis", "compare", 10),
+)
+
+
+MODULE2_HARD_ORDER = [
+    "inference", "inference", "inference",
+    "function", "function", "function",
+    "cross_text", "cross_text", "cross_text",
+    "command_text", "command_text", "command_text",
+    "command_graph", "command_graph",
+    "transition", "transition",
+    "central_idea", "central_idea", "central_idea",
+    "rhetorical", "rhetorical", "rhetorical",
+    "grammar", "grammar", "grammar", "grammar", "grammar",
+]
+
+
+MODULE2_HARD_BLUEPRINT: tuple[RWModuleSlot, ...] = (
+    RWModuleSlot("m2_inference_1", "Inference", "causal_gap", 8),
+    RWModuleSlot("m2_inference_2", "Inference", "contradiction_inference", 9),
+    RWModuleSlot("m2_inference_3", "Inference", "expectation_violation", 10),
+    RWModuleSlot("m2_function_1", "Function", "setup_refutation", 8),
+    RWModuleSlot("m2_function_2", "Function", "local_explanation", 9),
+    RWModuleSlot("m2_function_3", "Function", "evidence_support", 10),
+    RWModuleSlot("m2_cross_text_1", "CROSS_TEXT_CONNECTION", "claim_vs_empirical_evidence", 8),
+    RWModuleSlot("m2_cross_text_2", "CROSS_TEXT_CONNECTION", "model_vs_data", 9),
+    RWModuleSlot("m2_cross_text_3", "CROSS_TEXT_CONNECTION", "hypothesis_vs_revision", 10),
+    RWModuleSlot("m2_command_text_1", "Command of Evidence", "textual_claim_strength", 8),
+    RWModuleSlot("m2_command_text_2", "Command of Evidence", "weaken_origin_claim", 9),
+    RWModuleSlot("m2_command_text_3", "Command of Evidence", "causal_chain_support", 10),
+    RWModuleSlot("m2_command_graph_1", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 8),
+    RWModuleSlot("m2_command_graph_2", "Command of Evidence", "quantitative_trend_value", 9),
+    RWModuleSlot("m2_transition_1", "Transitions", "concession", 8),
+    RWModuleSlot("m2_transition_2", "Transitions", "conclusion", 9),
+    RWModuleSlot("m2_central_idea_1", "Main Idea", "study_vs_conclusion", 8),
+    RWModuleSlot("m2_central_idea_2", "Main Idea", "example_vs_general", 9),
+    RWModuleSlot("m2_central_idea_3", "Main Idea", "study_vs_conclusion", 10),
+    RWModuleSlot("m2_rhetorical_1", "Rhetorical Synthesis", "contrast", 8),
+    RWModuleSlot("m2_rhetorical_2", "Rhetorical Synthesis", "compare", 9),
+    RWModuleSlot("m2_rhetorical_3", "Rhetorical Synthesis", "present_conclusion", 10),
+    RWModuleSlot("m2_grammar_1", "Standard English Conventions", "sentence_boundary_resolution", 8),
+    RWModuleSlot("m2_grammar_2", "Standard English Conventions", "modifier_attachment", 9),
+    RWModuleSlot("m2_grammar_3", "Standard English Conventions", "referent_precision", 10),
+    RWModuleSlot("m2_grammar_4", "Standard English Conventions", "clause_integration", 9),
+    RWModuleSlot("m2_grammar_5", "Standard English Conventions", "modifier_attachment", 10),
 )
 
 
@@ -676,6 +722,8 @@ def has_three_consecutive(labels: list[str]) -> bool:
 def adaptive_level(module: int, index: int) -> str:
     if module == 1:
         return "standard"
+    if module == 2 and MODULE2_MODE == "hard":
+        return "hard"
     return ("hard", "medium", "easy")[index % 3]
 
 
@@ -685,7 +733,9 @@ def difficulty_for(module: int, index: int) -> int:
     return {"easy": 3, "medium": 6, "hard": 8}[adaptive_level(module, index)] + (index % 2)
 
 
-def rw_difficulty_for(index: int) -> int:
+def rw_difficulty_for(module: int, index: int) -> int:
+    if module == 2 and MODULE2_MODE == "hard":
+        return MODULE2_HARD_BLUEPRINT[index].difficulty
     return RW_MODULE_BLUEPRINT[index].difficulty
 
 
@@ -694,15 +744,24 @@ def source_for(index: int) -> QuestionSource:
 
 
 def reading_writing_question(module: int, index: int) -> QuestionSpec:
-    slot = RW_MODULE_BLUEPRINT[index]
+    slot = rw_slot_for(module, index)
     spec = generate(slot.question_type, slot.pattern, module=module, index=index)
     validate_reading_writing_spec(spec)
     validate_reading_writing_slot(spec, slot, index)
     return spec
 
 
+def rw_slot_for(module: int, index: int) -> RWModuleSlot:
+    if module == 2 and MODULE2_MODE == "hard":
+        return MODULE2_HARD_BLUEPRINT[index]
+    return RW_MODULE_BLUEPRINT[index]
+
+
 def generate(question_type: str, pattern: str, *, module: int, index: int) -> QuestionSpec:
-    return rw_ambiguity_first_base(module, index, rw_pattern_item(question_type, pattern))
+    item = rw_pattern_item(question_type, pattern)
+    if module == 2 and MODULE2_MODE == "hard" and item.constraints_required < 2:
+        item = replace(item, constraints_required=2)
+    return rw_ambiguity_first_base(module, index, item)
 
 
 def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
@@ -1050,7 +1109,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, the report shows that lower rainfall reduced runoff, reduced runoff carried less soil into the stream, and the reduced soil load made the water clearer.",
             prompt="Which choice best supports the report's causal claim?",
-            answer_options=("Rainfall was lower during several months of the study.", "Runoff may affect how much soil enters a stream.", "Clearer water can occur in streams for many different reasons.", "Lower rainfall reduced runoff, which reduced soil entering the stream and made the water clearer."),
+            answer_options=("Rainfall was lower during several months of the study.", "Runoff may affect how much soil enters a stream.", "Clearer water can occur in streams for many different reasons.", "The report traces the change through runoff and soil load before reaching the water-clarity claim."),
             correct_index=3,
             topic="Command of Evidence",
             subtopic="Pattern: causal_chain_support",
@@ -1454,10 +1513,11 @@ def rw_base(
     choices: tuple[ChoiceSpec, ...],
     explanation: str,
     trap_type: str,
+    constraints_required: int = 1,
     data_type: str = "none",
     data_payload: dict | None = None,
 ) -> QuestionSpec:
-    difficulty = rw_difficulty_for(index)
+    difficulty = rw_difficulty_for(module, index)
     return QuestionSpec(
         section=SATSection.reading_writing,
         module=module,
@@ -1477,6 +1537,7 @@ def rw_base(
         format=QuestionFormat.multiple_choice,
         estimated_time=65 + (index % 4) * 10,
         discrimination_score=round(0.42 + (index % 6) * 0.07, 2),
+        constraints_required=constraints_required,
         choices=choices,
         data_type=data_type,
         data_payload=data_payload or {},
@@ -1485,7 +1546,7 @@ def rw_base(
 
 def rw_ambiguity_first_base(module: int, index: int, item: AmbiguityFirstItem) -> QuestionSpec:
     validate_ambiguity_first_item(item)
-    difficulty = rw_difficulty_for(index)
+    difficulty = rw_difficulty_for(module, index)
     labels = ("A", "B", "C", "D")
     correct_label = labels[item.correct_index]
     wrong_patterns = iter(("TOO BROAD", "TOO NARROW", "CONTEXT MISMATCH"))
@@ -1499,13 +1560,16 @@ def rw_ambiguity_first_base(module: int, index: int, item: AmbiguityFirstItem) -
     for option_index, answer_text in enumerate(item.answer_options):
         pattern = "CORRECT" if option_index == item.correct_index else next(wrong_patterns)
         choices.append(rw_choice(labels[option_index], answer_text, pattern, roles[pattern]))
+    passage = f"{item.ambiguous_passage} {item.constraint_sentence}"
+    if module == 2 and MODULE2_MODE == "hard":
+        passage = harden_module2_passage(passage, item)
     return rw_base(
         module,
         index,
         topic=item.topic,
         subtopic=item.subtopic,
         question_type=item.question_type,
-        passage=f"{item.ambiguous_passage} {item.constraint_sentence}",
+        passage=passage,
         prompt=item.prompt,
         correct=correct_label,
         explanation=(
@@ -1516,10 +1580,19 @@ def rw_ambiguity_first_base(module: int, index: int, item: AmbiguityFirstItem) -
             f"{' Hard calibration: the correct answer turns on a subtle distinction among multiple plausible options.' if difficulty >= 8 else ''}"
         ),
         trap_type=item.trap_type,
+        constraints_required=item.constraints_required,
         choices=tuple(choices),
         data_type=item.data_type,
         data_payload=item.data_payload,
     )
+
+
+def harden_module2_passage(passage: str, item: AmbiguityFirstItem) -> str:
+    if item.question_type in {"Standard English Conventions", "CROSS_TEXT_CONNECTION", "Rhetorical Synthesis"}:
+        return passage
+    if passage_sentence_count(passage) >= 3:
+        return passage
+    return f"{passage} Taken together, the details make the initial reading less secure than it first appears."
 
 
 def rw_vocabulary(module: int, index: int) -> QuestionSpec:
@@ -1945,6 +2018,30 @@ def validate_rw_module_blueprint() -> None:
             raise ValueError(f"Quant slot {slot.slot_key} must use a table- or graph-backed quantitative pattern.")
         if index >= 18 and slot.difficulty < 8:
             raise ValueError("Hard-zone Reading & Writing slots cannot contain easy or medium questions.")
+    validate_module2_hard_blueprint()
+
+
+def validate_module2_hard_blueprint() -> None:
+    if MODULE2_MODE != "hard":
+        raise ValueError("Only module2_mode='hard' is implemented.")
+    if len(MODULE2_HARD_BLUEPRINT) != 27:
+        raise ValueError("Module 2 hard blueprint must contain exactly 27 slots.")
+    actual_order = [slot.slot_key.split("_", 2)[1] if slot.slot_key.startswith("m2_") else slot.slot_key for slot in MODULE2_HARD_BLUEPRINT]
+    normalized = [
+        "cross_text" if value == "cross" else
+        "command_text" if value == "command" and "command_text" in slot.slot_key else
+        "command_graph" if value == "command" and "command_graph" in slot.slot_key else
+        "central_idea" if value == "central" else
+        value
+        for value, slot in zip(actual_order, MODULE2_HARD_BLUEPRINT, strict=True)
+    ]
+    if normalized != MODULE2_HARD_ORDER:
+        raise ValueError(f"Module 2 hard blueprint order mismatch: {normalized}.")
+    for index, slot in enumerate(MODULE2_HARD_BLUEPRINT):
+        if slot.difficulty < 8 or slot.difficulty > 10:
+            raise ValueError(f"Module 2 hard slot {index + 1} must use difficulty 8-10.")
+        if slot.pattern not in RW_GENERATION_PATTERNS.get(slot.question_type, set()):
+            raise ValueError(f"Module 2 hard slot {index + 1} has invalid pattern {slot.pattern}.")
 
 
 def validate_rw_pattern_registry() -> None:
@@ -2037,6 +2134,8 @@ def validate_reading_writing_slot(spec: QuestionSpec, slot: RWModuleSlot, index:
         raise ValueError(f"RW slot {index + 1} hard question must depend on a subtle distinction among plausible answers.")
     if index >= 18:
         validate_hard_zone_item(spec, slot, index)
+    if spec.module == 2 and MODULE2_MODE == "hard":
+        validate_module2_hard_item(spec, slot, index)
     if spec.question_type == "Standard English Conventions":
         validate_single_grammar_rule(spec, slot.pattern)
 
@@ -2101,6 +2200,10 @@ def validate_passage_length_by_type_and_difficulty(spec: QuestionSpec) -> None:
     sentence_count = passage_sentence_count(spec.passage or "")
     position = spec.order_index + 1
 
+    if spec.module == 2 and MODULE2_MODE == "hard":
+        validate_module2_hard_passage_contract(spec, sentence_count)
+        return
+
     if spec.question_type == "Vocabulary in Context":
         if sentence_count > 2:
             raise ValueError("Words in Context passages must stay short.")
@@ -2145,7 +2248,8 @@ def validate_passage_length_by_type_and_difficulty(spec: QuestionSpec) -> None:
 
 
 def passage_sentence_count(text: str) -> int:
-    return len([sentence for sentence in re.split(r"[.!?]+", text) if sentence.strip()])
+    normalized = re.sub(r"\b(Dr|Mr|Ms|Mrs)\.", r"\1", text)
+    return len([sentence for sentence in re.split(r"[.!?]+", normalized) if sentence.strip()])
 
 
 def has_bullet_notes(text: str) -> bool:
@@ -2190,6 +2294,23 @@ def validate_command_evidence_length_contract(spec: QuestionSpec, sentence_count
         raise ValueError("Command of Evidence questions must be medium-long enough to require evidence alignment.")
     if not re.search(r"\b(data|table|study|report|evidence|records?|fragment|review|claim)\b", text):
         raise ValueError("Command of Evidence questions must include explicit evidence or data context.")
+
+
+def validate_module2_hard_passage_contract(spec: QuestionSpec, sentence_count: int) -> None:
+    if spec.question_type == "Standard English Conventions":
+        if sentence_count > 2:
+            raise ValueError("Module 2 hard grammar questions must stay short.")
+        return
+    if spec.question_type == "CROSS_TEXT_CONNECTION":
+        validate_cross_text_length_contract(spec)
+        return
+    if spec.question_type == "Rhetorical Synthesis":
+        if not has_bullet_notes(spec.passage or ""):
+            raise ValueError("Module 2 hard rhetorical questions must use bullet notes.")
+        return
+    if sentence_count < 3 or sentence_count > 5:
+        raise ValueError(f"Module 2 hard {spec.question_type} must be 3-5 sentences, not {sentence_count}.")
+    validate_hard_passage_layers(spec)
 
 
 def validate_distractor_quality_taxonomy(spec: QuestionSpec) -> None:
@@ -2571,6 +2692,77 @@ def validate_hard_zone_item(spec: QuestionSpec, slot: RWModuleSlot, index: int) 
         }
         if slot.pattern not in allowed_hard_grammar:
             raise ValueError(f"Hard-zone grammar pattern {slot.pattern} is not a structural ambiguity pattern.")
+
+
+def validate_module2_hard_item(spec: QuestionSpec, slot: RWModuleSlot, index: int) -> None:
+    if spec.adaptive_level != "hard" or spec.difficulty < 8:
+        raise ValueError(f"Module 2 hard slot {index + 1} must be hard difficulty.")
+    constraints_required = int(extract_metadata_value(spec.explanation, "constraints_required") or str(spec.constraints_required))
+    if constraints_required < 2 or spec.constraints_required < 2:
+        raise ValueError(f"Module 2 hard slot {index + 1} must require at least two constraints.")
+    if len(simulate_first_pass_elimination(spec)) < 3:
+        raise ValueError(f"Module 2 hard slot {index + 1} must retain at least three first-pass survivors.")
+    if keyword_match_solves_question(spec):
+        raise ValueError(f"Module 2 hard slot {index + 1} is too keyword-matchable.")
+    if spec.question_type == "CROSS_TEXT_CONNECTION":
+        validate_module2_cross_text_hard_mode(spec)
+    if slot.slot_key.startswith("m2_command_graph"):
+        validate_module2_graph_hard_mode(spec)
+    if spec.question_type == "Rhetorical Synthesis":
+        validate_module2_rhetorical_hard_mode(spec)
+    if spec.question_type == "Standard English Conventions":
+        validate_module2_grammar_hard_mode(slot)
+
+
+def keyword_match_solves_question(spec: QuestionSpec) -> bool:
+    correct_choices = [choice for choice in spec.choices if choice.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1 or spec.question_type == "Standard English Conventions":
+        return False
+    return longest_common_token_run(correct_choices[0].text, spec.passage or "") >= 4
+
+
+def validate_module2_cross_text_hard_mode(spec: QuestionSpec) -> None:
+    text_2 = ((spec.data_payload or {}).get("text_2") or "").lower()
+    if not re.search(r"\b(although|while|admittedly)\b", text_2):
+        raise ValueError("Module 2 hard cross-text Text 2 must include concession.")
+    if not re.search(r"\b(limit|scope|condition|constrain|less|part|only)\b", text_2):
+        raise ValueError("Module 2 hard cross-text Text 2 must include limitation.")
+    if not re.search(r"\b(suggests|indicating|implies|revis|refin|refram)\b", text_2):
+        raise ValueError("Module 2 hard cross-text Text 2 must include refinement.")
+
+
+def validate_module2_graph_hard_mode(spec: QuestionSpec) -> None:
+    if spec.data_type not in {"graph", "table"}:
+        raise ValueError("Module 2 hard quantitative slots must include graph or table data.")
+    if spec.data_type == "graph":
+        payload = spec.data_payload or {}
+        if payload.get("reasoning_pattern") not in GRAPH_REASONING_PATTERNS:
+            raise ValueError("Module 2 hard graph must use crossover, threshold, or divergence/convergence.")
+        if graph_answer_found_from_single_point(spec):
+            raise ValueError("Module 2 hard graph cannot be answerable from a single point.")
+
+
+def graph_answer_found_from_single_point(spec: QuestionSpec) -> bool:
+    correct_choices = [choice for choice in spec.choices if choice.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1:
+        return True
+    correct_text = correct_choices[0].text.lower()
+    comparison_markers = ("but", "whereas", "while", "both", "each", "crossover", "shifts")
+    return not any(marker in correct_text for marker in comparison_markers)
+
+
+def validate_module2_rhetorical_hard_mode(spec: QuestionSpec) -> None:
+    text = f"{spec.passage or ''} {spec.prompt}".lower()
+    if not re.search(r"\b(goal|emphasize|highlight|limit|filter|relevant|not)\b", text):
+        raise ValueError("Module 2 hard rhetorical question needs a filtering condition.")
+    if not re.search(r"\b(compare|contrast|similar|difference|relationship|shared|whereas|impact|conclusion about)\b", text):
+        raise ValueError("Module 2 hard rhetorical question needs a relationship constraint.")
+
+
+def validate_module2_grammar_hard_mode(slot: RWModuleSlot) -> None:
+    allowed = {"sentence_boundary_resolution", "modifier_attachment", "clause_integration", "referent_precision"}
+    if slot.pattern not in allowed:
+        raise ValueError("Module 2 hard grammar must use subject separation, modifier ambiguity, or parallel/clause interruption traps.")
 
 
 def validate_pattern_based_generation(spec: QuestionSpec) -> None:
