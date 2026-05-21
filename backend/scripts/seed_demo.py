@@ -15,13 +15,16 @@ TEST_TITLE = "SAT1600 Diagnostic Mock 1"
 RW_DISTRACTOR_TAXONOMY = {"semantic_twin", "scope_error", "logic_flip"}
 RW_HIGH_PLAUSIBILITY_TAXONOMY = {"semantic_twin", "scope_error"}
 RW_GENERATION_PATTERNS = {
+    "Vocabulary in Context": {"literal_vs_abstract", "functional_precision", "tone_alignment"},
+    "Main Idea": {"example_vs_general", "study_vs_conclusion"},
+    "Function": {"setup_refutation", "local_explanation", "evidence_support"},
     "Data Analysis": {"ranking_flip_threshold", "data_mapping_table"},
     "Command of Evidence": {"causal_chain_support", "weaken_origin_claim", "textual_claim_strength", "quantitative_trend_value"},
     "TEXT_STRUCTURE_FUNCTION": {"belief_vs_evidence", "claim_vs_refutation", "setup_vs_result"},
     "CROSS_TEXT_CONNECTION": {"claim_vs_empirical_evidence", "model_vs_data", "hypothesis_vs_revision"},
-    "Inference": {"contradiction_inference"},
+    "Inference": {"contradiction_inference", "expectation_violation", "causal_gap"},
     "Transitions": {"reinforcement", "clarification", "concession", "conclusion"},
-    "Rhetorical Synthesis": {"compare", "present_conclusion"},
+    "Rhetorical Synthesis": {"compare", "contrast", "present_conclusion"},
     "Standard English Conventions": {
         "grammar_subject_verb",
         "grammar_clause_boundary",
@@ -71,6 +74,54 @@ TABLE_CONSTRAINT_TYPES = {
 }
 TABLE_REQUIRED_SKILLS = {"scan_multiple_rows", "apply_condition"}
 RW_PATTERN_REGISTRY = {
+    "literal_vs_abstract": {
+        "passage_template": "context redirects a word from literal sense to abstract sense",
+        "logic_rule": "use the later constraint to choose the contextual meaning",
+        "correct_answer_rule": "must fit the abstract role created by the context",
+        "distractor_generators": ("literal_meaning", "near_synonym_wrong_context", "wrong_tone"),
+    },
+    "functional_precision": {
+        "passage_template": "context narrows a word toward functional precision",
+        "logic_rule": "choose the meaning that describes what the thing does",
+        "correct_answer_rule": "must match the function specified by the later sentence",
+        "distractor_generators": ("intensity_trap", "visual_trap", "wrong_register"),
+    },
+    "tone_alignment": {
+        "passage_template": "context uses tone to disambiguate a word",
+        "logic_rule": "align the meaning with the author's attitude",
+        "correct_answer_rule": "must preserve the passage's evaluative tone",
+        "distractor_generators": ("negative_tone_trap", "literal_trap", "scope_error"),
+    },
+    "example_vs_general": {
+        "passage_template": "specific example supports a broader central claim",
+        "logic_rule": "choose the general claim rather than the example alone",
+        "correct_answer_rule": "must include the broader conclusion supported by the example",
+        "distractor_generators": ("example_only", "overgeneralized_rule", "irrelevant_detail"),
+    },
+    "study_vs_conclusion": {
+        "passage_template": "study details lead to a broader central conclusion",
+        "logic_rule": "distinguish measured details from the conclusion they support",
+        "correct_answer_rule": "must state the study's supported conclusion",
+        "distractor_generators": ("study_detail_only", "wrong_variable", "unsupported_importance"),
+    },
+    "setup_refutation": {
+        "passage_template": "opening expectation is later refuted",
+        "logic_rule": "identify setup rather than final conclusion",
+        "correct_answer_rule": "must describe the setup function precisely",
+        "distractor_generators": ("mislabel_conclusion", "unrelated_detail", "too_general"),
+    },
+    "local_explanation": {
+        "passage_template": "local mechanism explains a later claim",
+        "logic_rule": "identify explanation function without broadening it",
+        "correct_answer_rule": "must connect the detail to the later claim",
+        "distractor_generators": ("broad_claim", "wrong_mechanism", "unrelated_background"),
+    },
+    "evidence_support": {
+        "passage_template": "specific evidence supports a later claim",
+        "logic_rule": "identify evidence by its role in supporting the claim",
+        "correct_answer_rule": "must name the support relationship",
+        "distractor_generators": ("mislabel_reaction", "wrong_focus", "too_general"),
+    },
     "ranking_flip_threshold": {
         "passage_template": "ranked evidence with a threshold that flips the apparent winner",
         "logic_rule": "choose the claim that accounts for the threshold, not the surface ranking",
@@ -88,6 +139,18 @@ RW_PATTERN_REGISTRY = {
         "logic_rule": "infer the limited conclusion created by the contradiction",
         "correct_answer_rule": "must explain the contradiction without overgeneralizing",
         "distractor_generators": ("denies_result", "restates_expectation", "extreme_inference"),
+    },
+    "expectation_violation": {
+        "passage_template": "expected pattern is violated by a qualifying condition",
+        "logic_rule": "infer the condition that limits the expectation",
+        "correct_answer_rule": "must preserve the qualified violation",
+        "distractor_generators": ("denies_expectation", "overgeneralizes_result", "wrong_condition"),
+    },
+    "causal_gap": {
+        "passage_template": "apparent cause is complicated by an alternative explanation",
+        "logic_rule": "avoid treating timing as proof of cause",
+        "correct_answer_rule": "must identify the causal uncertainty",
+        "distractor_generators": ("false_cause", "denies_effect", "extreme_causal_claim"),
     },
     "data_mapping_table": {
         "passage_template": "compact data table described in prose with irrelevant detail",
@@ -178,6 +241,12 @@ RW_PATTERN_REGISTRY = {
         "logic_rule": "select and compress relationship-relevant notes",
         "correct_answer_rule": "must compare both subjects on the stated dimension",
         "distractor_generators": ("single_subject_true_note", "wrong_relationship", "irrelevant_true_detail"),
+    },
+    "contrast": {
+        "passage_template": "notes about two subjects where the goal is to emphasize difference",
+        "logic_rule": "filter notes to foreground contrast",
+        "correct_answer_rule": "must emphasize a relevant difference without losing shared context",
+        "distractor_generators": ("similarity_instead", "single_subject_true_note", "irrelevant_true_detail"),
     },
     "present_conclusion": {
         "passage_template": "notes requiring filtering before a conclusion",
@@ -310,39 +379,71 @@ class AmbiguityFirstItem:
 
 @dataclass(frozen=True)
 class RWModuleSlot:
+    slot_key: str
     question_type: str
     pattern: str
     difficulty: int
 
 
+RW_FIXED_MODULE1_SLOT_KEYS = [
+    "vocab_easy",
+    "vocab_context",
+    "central_detail",
+    "inference_easy",
+    "text_structure_basic",
+    "evidence_support",
+    "cross_text_basic",
+    "cross_text_response",
+    "central_competing",
+    "inference_combined",
+    "quant_table_support",
+    "evidence_weaken",
+    "evidence_support_harder",
+    "quant_table_mapping",
+    "inference_hypothesis",
+    "grammar_sva",
+    "grammar_modifier",
+    "grammar_boundary",
+    "grammar_ambiguous_boundary",
+    "grammar_pronoun",
+    "transition_logic",
+    "transition_subtle",
+    "transition_precision",
+    "transition_hard",
+    "rhetorical_contrast",
+    "rhetorical_conclusion",
+    "rhetorical_comparison",
+]
+
+
 RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
-    RWModuleSlot("Data Analysis", "ranking_flip_threshold", 3),
-    RWModuleSlot("Command of Evidence", "causal_chain_support", 3),
-    RWModuleSlot("Inference", "contradiction_inference", 4),
-    RWModuleSlot("Data Analysis", "data_mapping_table", 4),
-    RWModuleSlot("TEXT_STRUCTURE_FUNCTION", "belief_vs_evidence", 4),
-    RWModuleSlot("TEXT_STRUCTURE_FUNCTION", "claim_vs_refutation", 4),
-    RWModuleSlot("TEXT_STRUCTURE_FUNCTION", "setup_vs_result", 4),
-    RWModuleSlot("CROSS_TEXT_CONNECTION", "claim_vs_empirical_evidence", 4),
-    RWModuleSlot("CROSS_TEXT_CONNECTION", "model_vs_data", 4),
-    RWModuleSlot("CROSS_TEXT_CONNECTION", "hypothesis_vs_revision", 5),
-    RWModuleSlot("Standard English Conventions", "grammar_pronoun_reference", 5),
-    RWModuleSlot("Command of Evidence", "causal_chain_support", 5),
-    RWModuleSlot("Data Analysis", "data_mapping_table", 6),
-    RWModuleSlot("Standard English Conventions", "grammar_subject_verb", 6),
-    RWModuleSlot("Command of Evidence", "weaken_origin_claim", 6),
-    RWModuleSlot("Standard English Conventions", "grammar_clause_boundary", 7),
-    RWModuleSlot("Inference", "contradiction_inference", 7),
-    RWModuleSlot("Standard English Conventions", "grammar_modifier", 7),
-    RWModuleSlot("Transitions", "reinforcement", 8),
-    RWModuleSlot("Standard English Conventions", "referent_precision", 8),
-    RWModuleSlot("Rhetorical Synthesis", "compare", 8),
-    RWModuleSlot("Command of Evidence", "quantitative_trend_value", 8),
-    RWModuleSlot("Standard English Conventions", "clause_integration", 9),
-    RWModuleSlot("Rhetorical Synthesis", "present_conclusion", 9),
-    RWModuleSlot("Transitions", "concession", 9),
-    RWModuleSlot("Command of Evidence", "textual_claim_strength", 10),
-    RWModuleSlot("Standard English Conventions", "modifier_attachment", 10),
+    RWModuleSlot("vocab_easy", "Vocabulary in Context", "literal_vs_abstract", 3),
+    RWModuleSlot("vocab_context", "Vocabulary in Context", "functional_precision", 3),
+    RWModuleSlot("central_detail", "Main Idea", "study_vs_conclusion", 4),
+    RWModuleSlot("inference_easy", "Inference", "expectation_violation", 4),
+    RWModuleSlot("text_structure_basic", "TEXT_STRUCTURE_FUNCTION", "setup_vs_result", 4),
+    RWModuleSlot("evidence_support", "Function", "evidence_support", 5),
+    RWModuleSlot("cross_text_basic", "CROSS_TEXT_CONNECTION", "claim_vs_empirical_evidence", 5),
+    RWModuleSlot("cross_text_response", "CROSS_TEXT_CONNECTION", "model_vs_data", 5),
+    RWModuleSlot("central_competing", "Main Idea", "example_vs_general", 6),
+    RWModuleSlot("inference_combined", "Inference", "causal_gap", 6),
+    RWModuleSlot("quant_table_support", "Command of Evidence", "quantitative_trend_value", 6),
+    RWModuleSlot("evidence_weaken", "Command of Evidence", "weaken_origin_claim", 6),
+    RWModuleSlot("evidence_support_harder", "Command of Evidence", "textual_claim_strength", 7),
+    RWModuleSlot("quant_table_mapping", "Data Analysis", "data_mapping_table", 7),
+    RWModuleSlot("inference_hypothesis", "CROSS_TEXT_CONNECTION", "hypothesis_vs_revision", 7),
+    RWModuleSlot("grammar_sva", "Standard English Conventions", "grammar_subject_verb", 7),
+    RWModuleSlot("grammar_modifier", "Standard English Conventions", "grammar_modifier", 7),
+    RWModuleSlot("grammar_boundary", "Standard English Conventions", "grammar_clause_boundary", 7),
+    RWModuleSlot("grammar_ambiguous_boundary", "Standard English Conventions", "sentence_boundary_resolution", 8),
+    RWModuleSlot("grammar_pronoun", "Standard English Conventions", "grammar_pronoun_reference", 8),
+    RWModuleSlot("transition_logic", "Transitions", "reinforcement", 8),
+    RWModuleSlot("transition_subtle", "Transitions", "clarification", 9),
+    RWModuleSlot("transition_precision", "Transitions", "concession", 9),
+    RWModuleSlot("transition_hard", "Transitions", "conclusion", 9),
+    RWModuleSlot("rhetorical_contrast", "Rhetorical Synthesis", "contrast", 10),
+    RWModuleSlot("rhetorical_conclusion", "Rhetorical Synthesis", "present_conclusion", 10),
+    RWModuleSlot("rhetorical_comparison", "Rhetorical Synthesis", "compare", 10),
 )
 
 
@@ -586,14 +687,14 @@ def source_for(index: int) -> QuestionSource:
 
 def reading_writing_question(module: int, index: int) -> QuestionSpec:
     slot = RW_MODULE_BLUEPRINT[index]
-    spec = generate_reading_writing_pattern(module, index, slot)
+    spec = generate(slot.question_type, slot.pattern, module=module, index=index)
     validate_reading_writing_spec(spec)
     validate_reading_writing_slot(spec, slot, index)
     return spec
 
 
-def generate_reading_writing_pattern(module: int, index: int, slot: RWModuleSlot) -> QuestionSpec:
-    return rw_ambiguity_first_base(module, index, rw_pattern_item(slot.question_type, slot.pattern))
+def generate(question_type: str, pattern: str, *, module: int, index: int) -> QuestionSpec:
+    return rw_ambiguity_first_base(module, index, rw_pattern_item(question_type, pattern))
 
 
 def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
@@ -1025,6 +1126,22 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             trap_type="clause boundary trap",
             explanation="This pattern tests only clause boundaries; a semicolon correctly separates two independent clauses before however.",
         ),
+        ("Standard English Conventions", "sentence_boundary_resolution"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The mural's surface looked uniform at first ___ later imaging often revealed two separate paint layers. The relationship between the clauses may seem subtle because both describe observations of the same object."
+            ),
+            constraint_sentence="However, both clauses can stand independently, and the second complicates the first observation.",
+            prompt="Which choice completes the text so that it conforms to Standard English?",
+            answer_options=(",", "which", "and later", ";"),
+            correct_index=3,
+            topic="Standard English Conventions",
+            subtopic="Pattern: sentence_boundary_resolution",
+            question_type="Standard English Conventions",
+            trap_type="ambiguous boundary trap",
+            explanation="This pattern tests only sentence_boundary_resolution; the subtle issue is resolving two independent clauses without a comma splice or fragment.",
+            constraints_required=2,
+        ),
         ("Standard English Conventions", "grammar_modifier"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
@@ -1054,6 +1171,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             question_type="Standard English Conventions",
             trap_type="pronoun reference trap",
             explanation="This pattern tests only pronoun reference; repeating the noun removes the ambiguous pronoun.",
+            constraints_required=2,
         ),
         ("Transitions", "reinforcement"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -1071,6 +1189,22 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             explanation="Hard transition category=reinforcement; the second finding strengthens the first rather than merely adding, conceding, or concluding from it.",
             constraints_required=2,
         ),
+        ("Transitions", "clarification"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The historian argues that the archive's silence is not proof that the craft disappeared, although early readers may assume that missing records mean missing activity. Later tax lists often mention the same tools under a broader household category."
+            ),
+            constraint_sentence="___, the records do not name the craft directly but preserve indirect evidence that it continued.",
+            prompt="Which choice completes the text with the most logical transition?",
+            answer_options=("Nevertheless,", "Similarly,", "Therefore,", "Specifically,"),
+            correct_index=3,
+            topic="Transitions",
+            subtopic="Pattern: clarification",
+            question_type="Transitions",
+            trap_type="fine-grained transition trap",
+            explanation="Hard transition category=clarification; the final sentence restates the archival point more precisely rather than contrasting, concluding, or comparing.",
+            constraints_required=2,
+        ),
         ("Transitions", "concession"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
@@ -1085,6 +1219,22 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             question_type="Transitions",
             trap_type="fine-grained transition trap",
             explanation="Hard transition category=concession; the sentence admits a limitation before preserving the recommendation.",
+            constraints_required=2,
+        ),
+        ("Transitions", "conclusion"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "The excavation team found imported beads, local pottery, and repair marks on several tools, although no single object proved how the settlement was used. Taken together, the finds often point to both trade and everyday residence."
+            ),
+            constraint_sentence="___, the site was likely not just a trading stop but a place where people lived for extended periods.",
+            prompt="Which choice completes the text with the most logical transition?",
+            answer_options=("Specifically,", "Meanwhile,", "Admittedly,", "Ultimately,"),
+            correct_index=3,
+            topic="Transitions",
+            subtopic="Pattern: conclusion",
+            question_type="Transitions",
+            trap_type="fine-grained transition trap",
+            explanation="Hard transition category=conclusion; the final sentence draws a cautious summary from several pieces of evidence.",
             constraints_required=2,
         ),
         ("Standard English Conventions", "referent_precision"): AmbiguityFirstItem(
@@ -1149,6 +1299,22 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             question_type="Rhetorical Synthesis",
             trap_type="rhetorical task filtering trap",
             explanation="Hard synthesis task=compare; the answer filters irrelevant budget detail, recognizes the difference in approach, and compresses the shared outcome.",
+            constraints_required=3,
+        ),
+        ("Rhetorical Synthesis", "contrast"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "A student is contrasting two community archives. Notes: Archive A often invites residents to annotate photographs online; Archive B relies on staff-written labels and in-person exhibits; both preserve neighborhood images; several funding details may seem relevant at first."
+            ),
+            constraint_sentence="However, the student's goal is to emphasize the difference in how each archive involves the public.",
+            prompt="Which choice best uses the notes to emphasize the contrast between the two archives?",
+            answer_options=("Both archives preserve historical photographs for community members.", "Archive A and Archive B received grants in different years.", "Archive B has in-person exhibits, so it is more historically accurate than Archive A.", "Archive A lets residents add online annotations, whereas Archive B presents staff-written labels in exhibits."),
+            correct_index=3,
+            topic="Rhetorical Synthesis",
+            subtopic="Pattern: contrast",
+            question_type="Rhetorical Synthesis",
+            trap_type="rhetorical contrast trap",
+            explanation="Hard synthesis task=contrast; the subtle distinction is filtering true but irrelevant funding details and emphasizing the public-involvement difference.",
             constraints_required=3,
         ),
         ("Rhetorical Synthesis", "present_conclusion"): AmbiguityFirstItem(
@@ -1705,31 +1871,41 @@ def validate_ambiguity_first_item(item: AmbiguityFirstItem) -> None:
 def validate_rw_module_blueprint() -> None:
     if len(RW_MODULE_BLUEPRINT) != 27:
         raise ValueError("Reading & Writing module blueprint must contain exactly 27 slots.")
+    slot_keys = [slot.slot_key for slot in RW_MODULE_BLUEPRINT]
+    if slot_keys != RW_FIXED_MODULE1_SLOT_KEYS:
+        raise ValueError(f"Module 1 RW blueprint must use the fixed slot order: {slot_keys}.")
     previous_difficulty = 0
-    consecutive_type_count = 0
-    previous_type = ""
+    previous_pattern = ""
     for index, slot in enumerate(RW_MODULE_BLUEPRINT):
         if slot.pattern not in RW_GENERATION_PATTERNS.get(slot.question_type, set()):
             raise ValueError(f"RW slot {index + 1} has invalid pattern {slot.pattern} for {slot.question_type}.")
         if slot.difficulty < previous_difficulty:
             raise ValueError("Reading & Writing module difficulty must progress easy to medium to hard.")
         previous_difficulty = slot.difficulty
-        if slot.question_type == previous_type:
-            consecutive_type_count += 1
-        else:
-            consecutive_type_count = 1
-            previous_type = slot.question_type
-        if consecutive_type_count > 3:
-            raise ValueError("Reading & Writing module blueprint cannot repeat one type more than three times consecutively.")
+        if slot.pattern == previous_pattern:
+            raise ValueError("Reading & Writing module blueprint cannot repeat the same pattern in adjacent slots.")
+        previous_pattern = slot.pattern
+        if slot.slot_key.startswith("quant_") and slot.pattern not in {"quantitative_trend_value", "data_mapping_table"}:
+            raise ValueError(f"Quant slot {slot.slot_key} must use a table-backed quantitative pattern.")
         if index >= 18 and slot.difficulty < 8:
             raise ValueError("Hard-zone Reading & Writing slots cannot contain easy or medium questions.")
 
 
 def validate_rw_pattern_registry() -> None:
     expected_patterns = {
+        "literal_vs_abstract",
+        "functional_precision",
+        "tone_alignment",
+        "example_vs_general",
+        "study_vs_conclusion",
+        "setup_refutation",
+        "local_explanation",
+        "evidence_support",
         "ranking_flip_threshold",
         "causal_chain_support",
         "contradiction_inference",
+        "expectation_violation",
+        "causal_gap",
         "data_mapping_table",
         "weaken_origin_claim",
         "grammar_subject_verb",
@@ -1748,6 +1924,7 @@ def validate_rw_pattern_registry() -> None:
         "clarification",
         "concession",
         "conclusion",
+        "contrast",
         "compare",
         "present_conclusion",
         "referent_precision",
@@ -1779,6 +1956,8 @@ def validate_reading_writing_slot(spec: QuestionSpec, slot: RWModuleSlot, index:
         raise ValueError(f"RW slot {index + 1} expected pattern {slot.pattern}.")
     if spec.difficulty != slot.difficulty:
         raise ValueError(f"RW slot {index + 1} expected difficulty {slot.difficulty}, got {spec.difficulty}.")
+    if slot.slot_key.startswith("quant_") and spec.data_type != "table":
+        raise ValueError(f"RW slot {index + 1} ({slot.slot_key}) must include structured table data.")
     if index >= 18 and spec.difficulty < 8:
         raise ValueError(f"RW slot {index + 1} is in the hard zone but received an easy/medium question.")
     plausible_distractors = [
@@ -2008,6 +2187,7 @@ def validate_hard_zone_item(spec: QuestionSpec, slot: RWModuleSlot, index: int) 
             "clause_integration",
             "punctuation_flow",
             "subject_reference_alignment",
+            "grammar_pronoun_reference",
         }
         if slot.pattern not in allowed_hard_grammar:
             raise ValueError(f"Hard-zone grammar pattern {slot.pattern} is not a structural ambiguity pattern.")
