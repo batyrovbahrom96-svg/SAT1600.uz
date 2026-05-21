@@ -926,11 +926,12 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             generation_pattern=pattern,
             ambiguous_passage=(
                 "Text 1: Some art historians claim that patrons chose miniature portraits mainly because they were inexpensive substitutes for larger paintings. "
-                "Text 2: However, purchase records show that several miniatures cost nearly as much as full-size portraits, and buyers often described them as private keepsakes."
+                "Text 2: Although that explanation may hold for some commissions, purchase records from two estate inventories show that several miniatures cost nearly as much as full-size portraits. "
+                "This pattern suggests that private display, not price alone, limited the claim's scope, indicating that patrons often valued miniatures as intimate keepsakes."
             ),
             constraint_sentence="Although both texts discuss why patrons chose miniatures, Text 2 uses evidence to revise Text 1's economic explanation.",
             prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
-            answer_options=("By noting that the records include prices for full-size portraits.", "By partly agreeing that cost mattered in every case.", "By arguing that miniatures were never purchased by wealthy patrons.", "By saying the claim is incomplete because evidence points to personal use as well as price."),
+            answer_options=("By noting that the records include prices for full-size portraits.", "By agreeing that cost may have mattered but treating it as the only verified factor.", "By arguing that expensive miniatures were never chosen for personal reasons.", "By saying the claim is incomplete because evidence points to personal use as well as price."),
             correct_index=3,
             topic="CROSS_TEXT_CONNECTION",
             subtopic="Pattern: claim_vs_empirical_evidence",
@@ -941,18 +942,19 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             data_payload={
                 "type": "cross_text",
                 "text_1": "Some art historians claim that patrons chose miniature portraits mainly because they were inexpensive substitutes for larger paintings.",
-                "text_2": "However, purchase records show that several miniatures cost nearly as much as full-size portraits, and buyers often described them as private keepsakes.",
+                "text_2": "Although that explanation may hold for some commissions, purchase records from two estate inventories show that several miniatures cost nearly as much as full-size portraits. This pattern suggests that private display, not price alone, limited the claim's scope, indicating that patrons often valued miniatures as intimate keepsakes.",
             },
         ),
         ("CROSS_TEXT_CONNECTION", "model_vs_data"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
                 "Text 1: A climate model proposes that urban trees cool nearby streets mostly by casting shade during midday. "
-                "Text 2: However, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening."
+                "Text 2: Although midday shade may explain part of the cooling, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening. "
+                "The pattern suggests that moisture and time of day constrain the model, indicating that shade captures only one part of the cooling effect."
             ),
             constraint_sentence="Although Text 2 does not reject the model entirely, it reframes the cooling effect as depending partly on moisture and time of day.",
             prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
-            answer_options=("By focusing only on how many blocks were measured.", "By agreeing that shade explains all cooling in the data.", "By denying that trees can cool streets at midday.", "By arguing that the model captures only part of the cooling pattern."),
+            answer_options=("By focusing mainly on how many blocks were measured.", "By agreeing that shade may matter but treating it as sufficient in every case.", "By denying that shade can ever cool streets at midday.", "By arguing that the model captures only part of the cooling pattern."),
             correct_index=3,
             topic="CROSS_TEXT_CONNECTION",
             subtopic="Pattern: model_vs_data",
@@ -963,18 +965,19 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             data_payload={
                 "type": "cross_text",
                 "text_1": "A climate model proposes that urban trees cool nearby streets mostly by casting shade during midday.",
-                "text_2": "However, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening.",
+                "text_2": "Although midday shade may explain part of the cooling, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening. The pattern suggests that moisture and time of day constrain the model, indicating that shade captures only one part of the cooling effect.",
             },
         ),
         ("CROSS_TEXT_CONNECTION", "hypothesis_vs_revision"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
                 "Text 1: A linguist hypothesizes that borrowed words could spread rapidly when speakers need names for new technologies. "
-                "Text 2: However, a study of radio terminology found that some borrowed terms spread slowly when local words already had social prestige."
+                "Text 2: Although practical need may encourage borrowing in some speech communities, a study of radio terminology found that borrowed terms spread slowly when local words already carried social prestige. "
+                "The evidence suggests that social value can limit adoption, indicating that the hypothesis works best when local alternatives lack strong cultural status."
             ),
             constraint_sentence="Although Text 2 accepts that need can matter, it revises the hypothesis by adding a social condition.",
             prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
-            answer_options=("By discussing radio terminology as an unrelated historical detail.", "By agreeing that new technology always causes rapid borrowing.", "By claiming that borrowed words never spread for practical reasons.", "By suggesting that the hypothesis works only when local alternatives lack strong social value."),
+            answer_options=("By treating radio terminology as evidence that technology can create naming needs.", "By agreeing that new technology usually causes borrowing regardless of local words.", "By claiming that borrowed words never spread for practical reasons.", "By suggesting that the hypothesis works only when local alternatives lack strong social value."),
             correct_index=3,
             topic="CROSS_TEXT_CONNECTION",
             subtopic="Pattern: hypothesis_vs_revision",
@@ -985,7 +988,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             data_payload={
                 "type": "cross_text",
                 "text_1": "A linguist hypothesizes that borrowed words could spread rapidly when speakers need names for new technologies.",
-                "text_2": "However, a study of radio terminology found that some borrowed terms spread slowly when local words already had social prestige.",
+                "text_2": "Although practical need may encourage borrowing in some speech communities, a study of radio terminology found that borrowed terms spread slowly when local words already carried social prestige. The evidence suggests that social value can limit adoption, indicating that the hypothesis works best when local alternatives lack strong cultural status.",
             },
         ),
         ("Inference", "expectation_violation"): AmbiguityFirstItem(
@@ -2147,6 +2150,23 @@ def validate_cross_text_connection(spec: QuestionSpec) -> None:
         raise ValueError("CROSS_TEXT_CONNECTION prompt must ask how Text 2 would respond to Text 1.")
     if not re.search(r"\b(however|although|revises|qualifies|modifies|contradicts|supports)\b", passage.lower()):
         raise ValueError("CROSS_TEXT_CONNECTION must have a clear logical relationship.")
+    text_2_lower = text_2.lower()
+    text_2_sentences = [sentence for sentence in re.split(r"[.!?]+", text_2) if sentence.strip()]
+    if len(text_2_sentences) < 2:
+        raise ValueError("CROSS_TEXT_CONNECTION Text 2 must contain at least two sentences.")
+    if not re.search(r"\b(although|while|however)\b", text_2_lower):
+        raise ValueError("CROSS_TEXT_CONNECTION Text 2 must include a logical connector such as although, while, or however.")
+    if not re.search(r"\b(suggests that|indicating that|implies that)\b", text_2_lower):
+        raise ValueError("CROSS_TEXT_CONNECTION Text 2 must include an interpretation phrase.")
+    if not re.search(r"\b(although|while|however|but|not .+ alone|rather than)\b", text_2_lower):
+        raise ValueError("CROSS_TEXT_CONNECTION Text 2 must include a contrast.")
+    if not re.search(r"\b(may|often|some|part|partly|can|tends|usually|best when|only when)\b", text_2_lower):
+        raise ValueError("CROSS_TEXT_CONNECTION Text 2 must include a qualifier.")
+    if not re.search(r"\b(suggests|indicating|implies|therefore|points to)\b", text_2_lower):
+        raise ValueError("CROSS_TEXT_CONNECTION Text 2 must include an inference.")
+    revision_text = f"{text_2} {spec.passage} {spec.explanation}".lower()
+    if not re.search(r"\b(revis|refin|refram|limit|scope|condition|constrain|incomplete|only part|not .+ alone|best when)\b", revision_text):
+        raise ValueError("CROSS_TEXT_CONNECTION Text 2 must answer what changes about the original claim.")
     text_1_terms = set(re.findall(r"[a-z]+", text_1.lower()))
     text_2_terms = set(re.findall(r"[a-z]+", text_2.lower()))
     if len(text_1_terms & text_2_terms) < 2:
