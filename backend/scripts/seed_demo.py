@@ -1,5 +1,7 @@
-from dataclasses import dataclass
+from collections import Counter
+from dataclasses import dataclass, replace
 from pathlib import Path
+import random
 import re
 
 import matplotlib.pyplot as plt
@@ -399,16 +401,116 @@ def build_question_bank() -> list[QuestionSpec]:
     validate_rw_module_blueprint()
     questions: list[QuestionSpec] = []
     for module in (1, 2):
+        module_questions: list[QuestionSpec] = []
         for index in range(27):
-            question = reading_writing_question(module, index)
+            module_questions.append(reading_writing_question(module, index))
+        module_questions = apply_answer_distribution(module_questions, seed=f"rw-module-{module}")
+        validate_answer_distribution(module_questions)
+        for question in module_questions:
+            validate_reading_writing_spec(question)
             validate_question_data_contract(question)
             questions.append(question)
     for module in (1, 2):
+        module_questions = []
         for index in range(22):
-            question = math_question(module, index)
+            module_questions.append(math_question(module, index))
+        module_questions = apply_answer_distribution(module_questions, seed=f"math-module-{module}")
+        validate_answer_distribution(module_questions)
+        for question in module_questions:
             validate_question_data_contract(question)
             questions.append(question)
     return questions
+
+
+def apply_answer_distribution(module_questions: list[QuestionSpec], *, seed: str) -> list[QuestionSpec]:
+    multiple_choice_questions = [
+        question
+        for question in module_questions
+        if question.format == QuestionFormat.multiple_choice and len(question.choices) == 4
+    ]
+    if not multiple_choice_questions:
+        return module_questions
+
+    rng = random.Random(f"{TEST_TITLE}:{seed}")
+    answer_cycle = ["A", "B", "C", "D"]
+    start_index = rng.randrange(len(answer_cycle))
+    target_labels = [answer_cycle[(start_index + index) % len(answer_cycle)] for index in range(len(multiple_choice_questions))]
+    target_labels = randomize_hard_zone_targets(multiple_choice_questions, target_labels, rng)
+
+    target_by_order = {
+        question.order_index: target_label
+        for question, target_label in zip(multiple_choice_questions, target_labels, strict=True)
+    }
+    redistributed: list[QuestionSpec] = []
+    for question in module_questions:
+        target_label = target_by_order.get(question.order_index)
+        if target_label is None:
+            redistributed.append(question)
+            continue
+        redistributed.append(assign_correct_answer_label(question, target_label, rng))
+    return redistributed
+
+
+def randomize_hard_zone_targets(questions: list[QuestionSpec], target_labels: list[str], rng: random.Random) -> list[str]:
+    hard_positions = [
+        index
+        for index, question in enumerate(questions)
+        if question.section == SATSection.reading_writing and question.order_index >= 18
+    ]
+    if len(hard_positions) < 2:
+        return target_labels
+
+    original = list(target_labels)
+    hard_labels = [target_labels[index] for index in hard_positions]
+    for _ in range(80):
+        shuffled = list(hard_labels)
+        rng.shuffle(shuffled)
+        candidate = list(original)
+        for position, label in zip(hard_positions, shuffled, strict=True):
+            candidate[position] = label
+        if not has_three_consecutive(candidate):
+            return candidate
+    return original
+
+
+def assign_correct_answer_label(question: QuestionSpec, target_label: str, rng: random.Random) -> QuestionSpec:
+    correct_choices = [choice_spec for choice_spec in question.choices if choice_spec.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1:
+        raise ValueError(f"Cannot distribute answers without exactly one correct choice: {question.question_type}.")
+
+    correct_choice = correct_choices[0]
+    distractors = [choice_spec for choice_spec in question.choices if choice_spec.role != ChoiceTrapRole.correct]
+    rng.shuffle(distractors)
+    remaining_labels = [label for label in ("A", "B", "C", "D") if label != target_label]
+    relabeled_choices = [replace(correct_choice, label=target_label)]
+    relabeled_choices.extend(
+        replace(choice_spec, label=label)
+        for label, choice_spec in zip(remaining_labels, distractors, strict=True)
+    )
+    relabeled_choices.sort(key=lambda choice_spec: choice_spec.label)
+    return replace(question, correct_answer=target_label, choices=tuple(relabeled_choices))
+
+
+def validate_answer_distribution(module_questions: list[QuestionSpec]) -> None:
+    labels = [
+        question.correct_answer
+        for question in module_questions
+        if question.format == QuestionFormat.multiple_choice and len(question.choices) == 4
+    ]
+    if not labels:
+        return
+    if has_three_consecutive(labels):
+        raise ValueError(f"Answer distribution has three identical answers in a row: {labels}.")
+
+    counts = Counter(labels)
+    if set(counts) - {"A", "B", "C", "D"}:
+        raise ValueError(f"Answer distribution contains invalid labels: {counts}.")
+    if max(counts.values()) - min(counts.get(label, 0) for label in ("A", "B", "C", "D")) > 1:
+        raise ValueError(f"Answer distribution is too skewed in module: {counts}.")
+
+
+def has_three_consecutive(labels: list[str]) -> bool:
+    return any(labels[index] == labels[index + 1] == labels[index + 2] for index in range(len(labels) - 2))
 
 
 def adaptive_level(module: int, index: int) -> str:
