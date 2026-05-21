@@ -12,7 +12,7 @@ from app.db.session import get_session_local
 from app.models import ChoiceTrapRole, Question, QuestionChoice, QuestionFormat, QuestionSource, SATSection, Test
 
 TEST_TITLE = "SAT1600 Diagnostic Mock 1"
-RW_DISTRACTOR_TAXONOMY = {"semantic_twin", "scope_error", "logic_flip"}
+RW_DISTRACTOR_TAXONOMY = {"semantic_twin", "scope_error", "incomplete_reasoning"}
 RW_HIGH_PLAUSIBILITY_TAXONOMY = {"semantic_twin", "scope_error"}
 RW_GENERATION_PATTERNS = {
     "Vocabulary in Context": {"literal_vs_abstract", "functional_precision", "tone_alignment"},
@@ -126,7 +126,7 @@ RW_PATTERN_REGISTRY = {
         "passage_template": "ranked evidence with a threshold that flips the apparent winner",
         "logic_rule": "choose the claim that accounts for the threshold, not the surface ranking",
         "correct_answer_rule": "must mention the post-threshold reversal",
-        "distractor_generators": ("surface_rank", "pre_threshold_scope", "logic_flip"),
+        "distractor_generators": ("surface_rank", "pre_threshold_scope", "incomplete_reasoning"),
     },
     "causal_chain_support": {
         "passage_template": "cause chain with one delayed support link",
@@ -803,7 +803,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, the author uses it to argue that public services often work best when schedules reflect users' actual routines.",
             prompt="Which choice best states the main idea of the text?",
-            answer_options=("One library increased student visits by adding evening hours.", "Libraries should always stay open at night.", "Student routines are difficult for libraries to measure.", "A specific library example supports a broader claim about adapting services to users' routines."),
+            answer_options=("One library increased student visits by adding evening hours.", "Libraries may need longer hours when student demand is high.", "Student routines are difficult for libraries to measure.", "A specific library example supports a broader claim about adapting services to users' routines."),
             correct_index=3,
             topic="Main Idea",
             subtopic="Pattern: example_vs_general",
@@ -835,7 +835,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, Text 2 uses evidence about reader pauses to complicate Text 1's claim about speed.",
             prompt="How would the author of Text 2 most likely respond to Text 1?",
-            answer_options=("By accepting Text 1's claim without qualification", "By adding evidence that narrows Text 1's interpretation", "By rejecting the importance of line length entirely", "By arguing that Text 1 overlooks evidence that short lines can slow readers down"),
+            answer_options=("By accepting Text 1's claim with limited qualification", "By adding evidence that narrows Text 1's interpretation", "By shifting attention from line length to reader movement", "By arguing that Text 1 overlooks evidence that short lines can slow readers down"),
             correct_index=3,
             topic="Cross-Text Connections",
             subtopic="Pattern: claim_vs_evidence",
@@ -851,7 +851,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, Text 2 adds that the effect tends to fade when residents do not share responsibility for maintenance.",
             prompt="Which choice best describes the relationship between the two texts?",
-            answer_options=("Text 2 completely rejects Text 1's claim.", "Text 2 agrees with Text 1 but adds a condition.", "Text 2 discusses a different topic from Text 1.", "Text 2 qualifies Text 1's claim by identifying a condition for the effect."),
+            answer_options=("Text 2 puts less emphasis on Text 1's claim.", "Text 2 agrees with Text 1 but adds a condition.", "Text 2 focuses more on maintenance than on social ties.", "Text 2 qualifies Text 1's claim by identifying a condition for the effect."),
             correct_index=3,
             topic="Cross-Text Connections",
             subtopic="Pattern: agreement_shift",
@@ -1002,7 +1002,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, seeds stored in cooler rooms sprouted nearly as quickly as new seeds from warmer rooms.",
             prompt="Which inference is best supported by the text?",
-            answer_options=("Seed age is never related to germination speed.", "Storage conditions may affect germination speed.", "Older seeds always sprout faster in cool rooms.", "Cool storage may reduce the expected disadvantage of seed age."),
+            answer_options=("Seed age may matter less under some storage conditions.", "Storage conditions may affect germination speed.", "Older seeds can sprout quickly when storage conditions are favorable.", "Cool storage may reduce the expected disadvantage of seed age."),
             correct_index=3,
             topic="Inference",
             subtopic="Pattern: expectation_violation",
@@ -1063,7 +1063,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, students in moderately noisy rooms remembered spoken examples nearly as well as students in quiet rooms, though they did worse on silent reading tasks.",
             prompt="Which inference is best supported by the text?",
-            answer_options=("Quiet rooms are never useful for recall tasks.", "Moderate noise may not affect all kinds of recall in the same way.", "Students prefer noisy rooms for spoken examples.", "The results contradict the prediction only for spoken examples, not for every task."),
+            answer_options=("Quiet rooms may help some recall tasks more than others.", "Moderate noise may not affect all kinds of recall in the same way.", "Students prefer noisy rooms for spoken examples.", "The results contradict the prediction for spoken examples more than for silent reading."),
             correct_index=3,
             topic="Inference",
             subtopic="Pattern: contradiction_inference",
@@ -1078,7 +1078,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, when only weekend responses are considered, West had the highest satisfaction rating, while East led only in total repeat visitors.",
             prompt="Which statement correctly maps the data in the table?",
-            answer_options=("East had the highest weekend satisfaction rating.", "West and East had the same total repeat visitors.", "North led both repeat visitors and weekend satisfaction.", "West led weekend satisfaction, while East led total repeat visitors."),
+            answer_options=("East had the strongest weekend approval result.", "West and East showed equal return-visitor totals.", "North was strongest on both measured outcomes.", "The weekend approval comparison favors West, whereas the visitor-count comparison favors East."),
             correct_index=3,
             topic="Data Analysis",
             subtopic="Pattern: data_mapping_table",
@@ -1109,7 +1109,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, a dated village fragment using the same pattern was found from fifty years before the earliest Harbor City inventory.",
             prompt="Which choice would most weaken the historian's origin claim?",
-            answer_options=("Harbor City traded woven goods with several villages.", "Inventories often preserve commercial names rather than makers' names.", "Some Harbor City records mention expensive dyes.", "A village fragment with the same pattern predates the earliest Harbor City record by fifty years."),
+            answer_options=("Harbor City traded woven goods with several villages.", "Inventories often preserve commercial names rather than makers' names.", "Some Harbor City records mention expensive dyes.", "Evidence places the pattern outside Harbor City before the city records can establish it there."),
             correct_index=3,
             topic="Command of Evidence",
             subtopic="Pattern: weaken_origin_claim",
@@ -1313,7 +1313,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, the student's goal is to compare the projects' preservation approaches while acknowledging one shared outcome.",
             prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
-            answer_options=("Project A took longer than Project B, and both had budget records.", "Project B reopened sooner because it used newer stone.", "Both projects involved historic buildings, although Project A took longer.", "Project A reused original stone, Project B used newer stone, and both preserved the buildings' outlines."),
+            answer_options=("Project A took longer than Project B, and both had budget records.", "Project B reopened sooner because it used newer stone.", "Both projects involved historic buildings, although Project A took longer.", "One project emphasized material continuity, the other prioritized replacement, and both maintained the same basic architectural form."),
             correct_index=3,
             topic="Rhetorical Synthesis",
             subtopic="Pattern: compare",
@@ -1329,7 +1329,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, the student's goal is to emphasize the difference in how each archive involves the public.",
             prompt="Which choice best uses the notes to emphasize the contrast between the two archives?",
-            answer_options=("Both archives preserve historical photographs for community members.", "Archive A and Archive B received grants in different years.", "Archive B has in-person exhibits, so it is more historically accurate than Archive A.", "Archive A lets residents add online annotations, whereas Archive B presents staff-written labels in exhibits."),
+            answer_options=("Both archives preserve historical photographs for community members.", "Archive A and Archive B received grants in different years.", "Archive B has in-person exhibits, so it is more historically accurate than Archive A.", "One archive gives residents a direct interpretive role, whereas the other keeps interpretation mainly with staff."),
             correct_index=3,
             topic="Rhetorical Synthesis",
             subtopic="Pattern: contrast",
@@ -1345,7 +1345,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ),
             constraint_sentence="However, the student's goal is to present a conclusion about ecological impact, not appearance or labor.",
             prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
-            answer_options=("The garden became easier to maintain after its paths were redesigned.", "A local newspaper praised the garden's appearance.", "Vegetable yields changed little after the redesign.", "The increase in pollinator counts near native flowers suggests that the garden improved habitat conditions."),
+            answer_options=("The garden became easier to maintain after its paths were redesigned.", "A local newspaper praised the garden's appearance.", "Vegetable yields changed little after the redesign.", "Greater pollinator activity around native plantings supports an ecological-benefit conclusion."),
             correct_index=3,
             topic="Rhetorical Synthesis",
             subtopic="Pattern: present_conclusion",
@@ -1654,7 +1654,7 @@ def rw_command_of_evidence(module: int, index: int) -> QuestionSpec:
             constraint_sentence="Although this delay reduced water loss, it also meant fewer visits from morning pollinators, so the pattern was not a simple improvement.",
             prompt="Which choice best describes the conclusion that is most strongly supported by the text?",
             answer_options=(
-                "Plants in deserts always benefit when flowers open later.",
+                "Plants in deserts may conserve water when flowers open later.",
                 "The species opened later during unusually dry weeks.",
                 "Morning pollinators stopped visiting desert flowers because temperatures were too high.",
                 "The plant conserves water in dry conditions but may receive fewer pollinator visits.",
@@ -1690,7 +1690,7 @@ def rw_command_of_evidence(module: int, index: int) -> QuestionSpec:
             constraint_sentence="However, shops on narrower streets received more foot traffic even when rent and population density were similar.",
             prompt="Which choice best describes the conclusion that is most strongly supported by the text?",
             answer_options=(
-                "Transit access is the main cause of commercial growth in every neighborhood.",
+                "Transit access may contribute to commercial growth in many neighborhoods.",
                 "The comparison used neighborhoods with identical transit access.",
                 "Narrow streets increase rent, which then produces more foot traffic.",
                 "Street design may influence local shopping activity even when transit access is the same.",
@@ -1714,7 +1714,7 @@ def rw_inference(module: int, index: int) -> QuestionSpec:
             constraint_sentence="However, she wanted the audience to notice a quiet flute melody that returns near the end of the piece.",
             prompt="Which choice is the most reasonable inference from the text?",
             answer_options=(
-                "The conductor thought every energetic performance prevents audiences from hearing melodies.",
+                "The conductor thought energetic percussion could distract from some melodies.",
                 "The flute melody appears near the end of the piece.",
                 "Reviewers caused the conductor to remove the percussion section from the performance.",
                 "The conductor believed a less forceful percussion part would help listeners hear an important melody.",
@@ -1732,7 +1732,7 @@ def rw_inference(module: int, index: int) -> QuestionSpec:
             constraint_sentence="However, they did so only when nearby grasses were dense enough to hide them from predators.",
             prompt="Which choice is the most reasonable inference from the text?",
             answer_options=(
-                "Artificial reefs are always better habitats than natural coral reefs.",
+                "Artificial reefs can attract young fish under some habitat conditions.",
                 "Young fish gathered near artificial reefs with dense grasses.",
                 "The fish preferred artificial reefs because mature coral is dangerous.",
                 "For young fish, protection from predators may matter as much as the reef material itself.",
@@ -1845,7 +1845,7 @@ def rw_choice(label: str, text: str, pattern: str, role: ChoiceTrapRole) -> Choi
         "CORRECT": "correct",
         "TOO BROAD": "scope_error",
         "TOO NARROW": "semantic_twin",
-        "CONTEXT MISMATCH": "logic_flip",
+        "CONTEXT MISMATCH": "incomplete_reasoning",
     }[pattern]
     plausibility = {
         "CORRECT": "correct",
@@ -1870,7 +1870,7 @@ def internal_distractor_explanation(pattern: str) -> str:
         "CORRECT": "correct",
         "TOO BROAD": "too broad",
         "TOO NARROW": "too narrow but sentence-compatible",
-        "CONTEXT MISMATCH": "incorrect logical relation or wrong tone",
+        "CONTEXT MISMATCH": "incomplete reasoning from a partially relevant clue",
     }[pattern]
 
 
@@ -2033,6 +2033,7 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
         raise ValueError(f"Question is too easy: fewer than two distractors are highly plausible for {spec.question_type}.")
     validate_pattern_based_generation(spec)
     validate_answer_competition(spec)
+    validate_answer_choice_quality(spec)
     if not any(word in spec.passage.lower() for word in ("although", "however", "yet", "by contrast", "instead", "opposite", "rather than")):
         raise ValueError(f"Passage needs contrast language to create SAT-style ambiguity: {spec.question_type}.")
     if not any(qualifier in spec.passage.lower() for qualifier in ("often", "may", "tends", "tended", "could")):
@@ -2064,7 +2065,7 @@ def validate_cognitive_depth(spec: QuestionSpec) -> None:
 
 def validate_distractor_quality_taxonomy(spec: QuestionSpec) -> None:
     distractor_bases = [choice_spec.basis or "" for choice_spec in spec.choices if choice_spec.role != ChoiceTrapRole.correct]
-    for taxonomy in ("taxonomy=semantic_twin", "taxonomy=scope_error", "taxonomy=logic_flip"):
+    for taxonomy in ("taxonomy=semantic_twin", "taxonomy=scope_error", "taxonomy=incomplete_reasoning"):
         if not any(taxonomy in basis for basis in distractor_bases):
             raise ValueError(f"{spec.question_type} must include distractor quality {taxonomy}.")
 
@@ -2376,6 +2377,71 @@ def validate_answer_competition(spec: QuestionSpec) -> None:
     obviously_strong_markers = ("only valid", "obviously", "clearly the")
     if any(marker in spec.explanation.lower() for marker in obviously_strong_markers):
         raise ValueError(f"{spec.question_type} final filter rejected an obviously stronger correct-answer explanation.")
+
+
+def validate_answer_choice_quality(spec: QuestionSpec) -> None:
+    correct_choices = [choice_spec for choice_spec in spec.choices if choice_spec.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1:
+        raise ValueError(f"{spec.question_type} must have exactly one correct answer for answer-quality validation.")
+
+    correct_text = correct_choices[0].text
+    if spec.question_type != "Standard English Conventions":
+        direct_overlap = longest_common_token_run(correct_text, spec.passage or "")
+        if direct_overlap >= 4:
+            raise ValueError(f"{spec.question_type} correct answer reuses passage wording too directly.")
+        if content_token_overlap(correct_text, spec.passage or "") >= 0.72:
+            raise ValueError(f"{spec.question_type} correct answer is too obviously paraphrased from the passage.")
+
+    distractors = [choice_spec for choice_spec in spec.choices if choice_spec.role != ChoiceTrapRole.correct]
+    absolute_words = {"always", "never", "completely", "entirely", "obviously", "certainly"}
+    for choice_spec in distractors:
+        text = choice_spec.text.lower()
+        if any(re.search(rf"\b{re.escape(word)}\b", text) for word in absolute_words):
+            raise ValueError(f"{spec.question_type} distractor uses extreme language: {choice_spec.text}")
+
+    partial_distractors = [
+        choice_spec
+        for choice_spec in distractors
+        if "plausibility=high" in (choice_spec.basis or "")
+        or any(f"taxonomy={taxonomy}" in (choice_spec.basis or "") for taxonomy in ("semantic_twin", "scope_error", "incomplete_reasoning"))
+    ]
+    if len(partial_distractors) < 2:
+        raise ValueError(f"{spec.question_type} must include at least two partially correct distractors.")
+
+    survivors = simulate_first_pass_elimination(spec)
+    if len(survivors) < 3:
+        raise ValueError(f"{spec.question_type} eliminates too many answers instantly; students need 2-3 plausible survivors.")
+    clearly_wrong = [choice_spec for choice_spec in distractors if choice_spec not in survivors]
+    if len(clearly_wrong) > 1:
+        raise ValueError(f"{spec.question_type} has too many clearly wrong distractors.")
+
+
+def content_tokens(text: str) -> list[str]:
+    stopwords = {
+        "a", "an", "and", "are", "as", "at", "be", "because", "by", "for", "from", "in", "is", "it",
+        "its", "of", "on", "or", "that", "the", "their", "they", "this", "to", "with", "would",
+    }
+    return [token for token in re.findall(r"[a-z]+", text.lower()) if len(token) > 2 and token not in stopwords]
+
+
+def longest_common_token_run(answer_text: str, passage: str) -> int:
+    answer_tokens = content_tokens(answer_text)
+    passage_joined = " ".join(content_tokens(passage))
+    longest = 0
+    for start in range(len(answer_tokens)):
+        for end in range(start + 1, len(answer_tokens) + 1):
+            phrase = " ".join(answer_tokens[start:end])
+            if phrase and phrase in passage_joined:
+                longest = max(longest, end - start)
+    return longest
+
+
+def content_token_overlap(answer_text: str, passage: str) -> float:
+    answer_tokens = set(content_tokens(answer_text))
+    if not answer_tokens:
+        return 0.0
+    passage_tokens = set(content_tokens(passage))
+    return len(answer_tokens & passage_tokens) / len(answer_tokens)
 
 
 def extract_metadata_value(text: str, key: str) -> str | None:
