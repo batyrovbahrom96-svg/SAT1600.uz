@@ -76,7 +76,16 @@ TABLE_CONSTRAINT_TYPES = {
     "exception_detection",
 }
 TABLE_REQUIRED_SKILLS = {"scan_multiple_rows", "apply_condition"}
-GRAPH_REASONING_PATTERNS = {"crossover_point", "threshold_shift", "divergence"}
+GRAPH_REASONING_PATTERNS = {
+    "crossover_point",
+    "threshold_shift",
+    "divergence",
+    "threshold_reversal",
+    "partial_support_region",
+    "conflicting_variable_dominance",
+    "lag_effect",
+    "diminishing_returns",
+}
 GRAPH_QUESTION_INTENTS = {"direct_read", "trend_description", "claim_support", "inference", "role_in_argument"}
 RW_PATTERN_REGISTRY = {
     "literal_vs_abstract": {
@@ -795,6 +804,8 @@ def rw_slot_for(module: int, index: int) -> RWModuleSlot:
 def generate(question_type: str, pattern: str, *, module: int, index: int) -> QuestionSpec:
     if question_type == "Rhetorical Synthesis" and pattern == "notes_task_selection":
         item = rw_notes_task_selection_item(index)
+    elif question_type == "command_of_evidence_quantitative_graph" and module == 2 and MODULE2_MODE == "hard":
+        item = rw_module2_hard_graph_item(pattern)
     else:
         item = rw_pattern_item(question_type, pattern)
     if module == 2 and MODULE2_MODE == "hard" and item.constraints_required < 2:
@@ -895,6 +906,58 @@ def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
             }[goal],
             "notes": notes,
             "distractor_types": ["true_but_wrong_task", "single_fact_only", "irrelevant_detail_focus"],
+        },
+    )
+
+
+def rw_module2_hard_graph_item(pattern: str) -> AmbiguityFirstItem:
+    return AmbiguityFirstItem(
+        generation_pattern=pattern,
+        ambiguous_passage=(
+            "Researchers testing three sound-dampening panels first expected the thickest panel may be the best overall choice. "
+            "A competing hypothesis was that material density mattered only when background noise passed a moderate level."
+        ),
+        constraint_sentence=(
+            "However, the researchers argued only when performance at low and high noise levels is considered together, except for the middle condition, can the graph be used to evaluate that hypothesis."
+        ),
+        prompt="Which choice best describes data from the graph that support the researchers' conditional conclusion?",
+        answer_options=(
+            "Panel R has the highest score at the first noise level, a true local detail that does not address the conditional change across the range.",
+            "All panels improve somewhere in the graph, which matches the early expectation but not the graph's threshold-dependent reversal.",
+            "Panel T is strongest below the threshold, but Panel S overtakes it after the plateau while Panel R changes little, supporting the claim only for higher-noise conditions.",
+            "Panel S has the highest final score, so it is the best panel at every noise level.",
+        ),
+        correct_index=2,
+        topic="command_of_evidence_quantitative_graph",
+        subtopic="Pattern: graph_trend_claim_shift; hard graph pattern=threshold_reversal",
+        question_type="command_of_evidence_quantitative_graph",
+        trap_type="hard graph conditional reasoning trap",
+        explanation=(
+            "Graph evidence type=quantitative; pattern=threshold_reversal; hard_graph_features=threshold-dependent change,"
+            "plateau / non-linear behavior,partial support only; the correct answer combines early-vs-late ordering with a plateau constraint and does not rely on text alone."
+        ),
+        constraints_required=3,
+        data_type="graph",
+        data_payload={
+            "x_label": "Background noise level",
+            "y_label": "Sound reduction score",
+            "graph_pattern": "threshold_reversal",
+            "question_intent": "claim_support",
+            "reasoning_pattern": "threshold_reversal",
+            "graph_dependency": "necessary",
+            "hard_mode": True,
+            "complexity_features": ["threshold-dependent change", "plateau / non-linear behavior", "partial support only"],
+            "distractor_types": [
+                "globally_true_but_irrelevant",
+                "locally_true_but_incomplete",
+                "matches_text_not_graph",
+                "overgeneralizes_trend",
+            ],
+            "series": [
+                {"name": "Panel R", "values": [(1, 7), (2, 7), (3, 8), (4, 8), (5, 8)]},
+                {"name": "Panel S", "values": [(1, 4), (2, 6), (3, 6), (4, 10), (5, 13)]},
+                {"name": "Panel T", "values": [(1, 8), (2, 9), (3, 9), (4, 9), (5, 10)]},
+            ],
         },
     )
 
@@ -2734,6 +2797,9 @@ def validate_graph_payload_contract(spec: QuestionSpec) -> None:
 
 
 def validate_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
+    if spec.module == 2 and MODULE2_MODE == "hard":
+        validate_hard_quantitative_graph_answer_design(spec)
+        return
     combined_wrong = " ".join(choice.text.lower() for choice in spec.choices if choice.role != ChoiceTrapRole.correct)
     required_distractor_logic = (
         r"watering rather than|focuses on watering",
@@ -2766,6 +2832,38 @@ def validate_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
         raise ValueError("Only one answer may match both graph data and conclusion logic.")
 
 
+def validate_hard_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
+    payload = spec.data_payload or {}
+    correct_choices = [choice for choice in spec.choices if choice.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1:
+        raise ValueError("Hard graph question must have one correct answer.")
+    correct_text = correct_choices[0].text.lower()
+    if not re.search(r"\b(but|while|except|only|after|below|above|threshold|plateau)\b", correct_text):
+        raise ValueError("Hard graph correct answer must include a condition or constraint.")
+    observation_markers = ("below", "after", "plateau", "overtakes", "changes little", "highest", "first", "final")
+    if sum(1 for marker in observation_markers if marker in correct_text) < 2:
+        raise ValueError("Hard graph correct answer must combine at least two graph observations.")
+    combined_wrong = " ".join(choice.text.lower() for choice in spec.choices if choice.role != ChoiceTrapRole.correct)
+    required_traps = (
+        r"true local detail|local detail",
+        r"matches the early expectation|early expectation",
+        r"best panel at every|every noise level|every level",
+    )
+    if not all(re.search(marker, combined_wrong) for marker in required_traps):
+        raise ValueError("Hard graph distractors must include local, text-match, and overgeneralization traps.")
+    distractor_types = set(payload.get("distractor_types") or [])
+    required_types = {
+        "globally_true_but_irrelevant",
+        "locally_true_but_incomplete",
+        "matches_text_not_graph",
+        "overgeneralizes_trend",
+    }
+    if not required_types.issubset(distractor_types):
+        raise ValueError("Hard graph payload must declare all required trap distractor types.")
+    if len(simulate_first_pass_elimination(spec)) < 3:
+        raise ValueError("Hard graph must leave trap distractors alive after first-pass elimination.")
+
+
 def graph_is_text_solvable(spec: QuestionSpec) -> bool:
     text_without_graph = (spec.passage or "").lower()
     correct_choices = [choice for choice in spec.choices if choice.role == ChoiceTrapRole.correct]
@@ -2777,6 +2875,11 @@ def graph_is_text_solvable(spec: QuestionSpec) -> bool:
         "crossover_point": ("crossover", "overtakes", "higher at low", "higher at three", "three watering", "series", "advantage shifts"),
         "threshold_shift": ("threshold", "after", "before", "exceeds", "falls below"),
         "divergence": ("diverge", "gap", "farther apart", "closer together", "converge"),
+        "threshold_reversal": ("threshold", "plateau", "overtakes", "below", "higher-noise", "changes little"),
+        "partial_support_region": ("only for", "region", "partial", "limited range"),
+        "conflicting_variable_dominance": ("dominates", "variable", "stronger than", "weaker than"),
+        "lag_effect": ("lag", "delayed", "one interval later"),
+        "diminishing_returns": ("diminishing", "levels off", "smaller gain"),
     }
     graph_only_terms = graph_only_terms_by_pattern.get(graph_pattern, ())
     if any(term in text_without_graph for term in graph_only_terms):
@@ -2931,10 +3034,57 @@ def validate_module2_graph_hard_mode(spec: QuestionSpec) -> None:
         raise ValueError("Module 2 hard quantitative slots must include graph or table data.")
     if spec.data_type == "graph":
         payload = spec.data_payload or {}
-        if payload.get("graph_pattern") not in GRAPH_REASONING_PATTERNS:
-            raise ValueError("Module 2 hard graph must declare a valid graph_pattern.")
+        hard_graph_patterns = {
+            "threshold_reversal",
+            "partial_support_region",
+            "conflicting_variable_dominance",
+            "lag_effect",
+            "diminishing_returns",
+        }
+        if payload.get("graph_pattern") not in hard_graph_patterns:
+            raise ValueError("Module 2 hard graph must use a hard-mode graph pattern.")
+        if len(payload.get("series") or []) <= 2:
+            raise ValueError("Module 2 hard graph cannot use only two lines.")
+        if graph_series_are_simple_monotonic(payload):
+            raise ValueError("Module 2 hard graph cannot rely on simple linear monotonic trends.")
+        complexity_features = set(payload.get("complexity_features") or [])
+        required_complexity = {
+            "crossover + divergence",
+            "plateau / non-linear behavior",
+            "threshold-dependent change",
+            "conflicting trends across variables",
+            "partial support only",
+        }
+        if len(complexity_features & required_complexity) < 2:
+            raise ValueError("Module 2 hard graph must include at least two hard graph complexity features.")
+        text = f"{spec.passage or ''} {spec.prompt}".lower()
+        forbidden_text_reveals = ("crossover", "overtakes", "trend direction", "threshold-dependent", "higher than", "lower than")
+        if any(phrase in text for phrase in forbidden_text_reveals):
+            raise ValueError("Module 2 hard graph text reveals the key graph relationship.")
+        if not re.search(r"\b(first expected|early|initial|misleading)\b", text):
+            raise ValueError("Module 2 hard graph text must include a misleading early interpretation.")
+        if not re.search(r"\b(competing hypothesis|hypothesis|alternative)\b", text):
+            raise ValueError("Module 2 hard graph text must include a competing hypothesis.")
+        if not re.search(r"\b(only when|except|unless)\b", text):
+            raise ValueError("Module 2 hard graph text must include conditional language.")
         if graph_answer_found_from_single_point(spec):
             raise ValueError("Module 2 hard graph cannot be answerable from a single point.")
+
+
+def graph_series_are_simple_monotonic(payload: dict) -> bool:
+    simple_count = 0
+    for series in payload.get("series") or []:
+        values = [point[1] for point in series.get("values", []) if isinstance(point, (list, tuple)) and len(point) == 2]
+        if len(values) < 3:
+            return True
+        deltas = [values[index + 1] - values[index] for index in range(len(values) - 1)]
+        nondecreasing = all(delta >= 0 for delta in deltas)
+        nonincreasing = all(delta <= 0 for delta in deltas)
+        constant_delta = len(set(deltas)) == 1
+        has_plateau = any(delta == 0 for delta in deltas)
+        if (nondecreasing or nonincreasing) and constant_delta and not has_plateau:
+            simple_count += 1
+    return simple_count == len(payload.get("series") or [])
 
 
 def graph_answer_found_from_single_point(spec: QuestionSpec) -> bool:
