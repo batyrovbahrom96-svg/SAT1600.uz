@@ -86,8 +86,9 @@ GRAPH_REASONING_PATTERNS = {
     "conflicting_variable_dominance",
     "lag_effect",
     "diminishing_returns",
+    "vertical_shift",
 }
-GRAPH_QUESTION_INTENTS = {"direct_read", "trend_description", "claim_support", "inference", "role_in_argument"}
+GRAPH_QUESTION_INTENTS = {"direct_read", "trend_description", "claim_support", "inference", "role_in_argument", "transformation_match"}
 RW_PATTERN_REGISTRY = {
     "literal_vs_abstract": {
         "passage_template": "context redirects a word from literal sense to abstract sense",
@@ -539,6 +540,15 @@ MATH_TYPES = {
     "quadratic_modeling",
     "exponential_growth",
     "word_problem",
+    "rational_equation_trap",
+    "expression_rewrite",
+    "graph_transformation",
+    "parameter_interpretation",
+    "ratio_scaling",
+    "absolute_value_equation",
+    "geometry_correspondence",
+    "polynomial_roots_gridin",
+    "circle_equation",
 }
 MATH_TRAPS = {
     "sign_trap",
@@ -562,18 +572,18 @@ MODULE1_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
     MathModuleSlot("m1_graph_1", "graph_reasoning", "slope_meaning", 5),
     MathModuleSlot("m1_quadratic_1", "quadratic_modeling", "zero_product", 5),
     MathModuleSlot("m1_exponential_1", "exponential_growth", "growth_factor", 5),
-    MathModuleSlot("m1_linear_2", "linear_equation", "two_step_isolation", 6),
-    MathModuleSlot("m1_percent_2", "percent_ratio", "base_change", 6),
-    MathModuleSlot("m1_function_2", "function_interpretation", "parameter_meaning", 6),
-    MathModuleSlot("m1_geometry_2", "geometry", "area_constraint", 6),
-    MathModuleSlot("m1_probability_2", "probability", "conditional_count", 6),
-    MathModuleSlot("m1_system_2", "system_equation", "solution_meaning", 7),
+    MathModuleSlot("m1_rational_1", "rational_equation_trap", "domain_restriction", 6),
+    MathModuleSlot("m1_expression_1", "expression_rewrite", "isolate_expression", 6),
+    MathModuleSlot("m1_graph_transform_1", "graph_transformation", "vertical_horizontal_shift", 6),
+    MathModuleSlot("m1_parameter_1", "parameter_interpretation", "coefficient_meaning", 6),
+    MathModuleSlot("m1_ratio_scaling_1", "ratio_scaling", "inverse_scaling", 6),
+    MathModuleSlot("m1_absolute_1", "absolute_value_equation", "two_solution_check", 7),
+    MathModuleSlot("m1_geometry_correspondence_1", "geometry_correspondence", "vertex_mapping", 7),
+    MathModuleSlot("m1_polynomial_grid_1", "polynomial_roots_gridin", "factorization_multiple_roots", 7),
+    MathModuleSlot("m1_circle_1", "circle_equation", "center_radius", 7),
     MathModuleSlot("m1_word_2", "word_problem", "hidden_unit", 7),
-    MathModuleSlot("m1_graph_2", "graph_reasoning", "intercept_meaning", 7),
-    MathModuleSlot("m1_quadratic_2", "quadratic_modeling", "vertex_context", 7),
-    MathModuleSlot("m1_exponential_2", "exponential_growth", "percent_growth", 7),
-    MathModuleSlot("m1_mixed_1", "word_problem", "multi_step_constraint", 7),
-    MathModuleSlot("m1_graph_3", "graph_reasoning", "rate_comparison", 7),
+    MathModuleSlot("m1_graph_2", "graph_reasoning", "rate_comparison", 7),
+    MathModuleSlot("m1_percent_2", "percent_ratio", "base_change", 7),
 )
 
 MODULE2_HARD_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
@@ -584,21 +594,21 @@ MODULE2_HARD_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
     MathModuleSlot("m2h_percent_1", "percent_ratio", "changing_base", 8),
     MathModuleSlot("m2h_probability_1", "probability", "conditional_probability", 8),
     MathModuleSlot("m2h_geometry_1", "geometry", "similarity_scale", 8),
-    MathModuleSlot("m2h_quadratic_1", "quadratic_modeling", "extraneous_root", 9),
-    MathModuleSlot("m2h_exponential_1", "exponential_growth", "growth_decay_comparison", 9),
-    MathModuleSlot("m2h_word_1", "word_problem", "unit_conversion_constraint", 9),
-    MathModuleSlot("m2h_linear_2", "linear_equation", "inequality_boundary", 9),
-    MathModuleSlot("m2h_system_2", "system_equation", "no_solution_condition", 9),
-    MathModuleSlot("m2h_function_2", "function_interpretation", "inverse_context", 9),
-    MathModuleSlot("m2h_graph_2", "graph_reasoning", "threshold_intersection", 9),
-    MathModuleSlot("m2h_percent_2", "percent_ratio", "successive_percent", 9),
-    MathModuleSlot("m2h_probability_2", "probability", "without_replacement", 9),
-    MathModuleSlot("m2h_geometry_2", "geometry", "circle_triangle_constraint", 10),
-    MathModuleSlot("m2h_quadratic_2", "quadratic_modeling", "model_domain", 10),
-    MathModuleSlot("m2h_exponential_2", "exponential_growth", "doubling_threshold", 10),
+    MathModuleSlot("m2h_rational_1", "rational_equation_trap", "domain_restriction_hard", 9),
+    MathModuleSlot("m2h_expression_1", "expression_rewrite", "isolate_expression_hard", 9),
+    MathModuleSlot("m2h_graph_transform_1", "graph_transformation", "vertical_horizontal_shift_hard", 9),
+    MathModuleSlot("m2h_parameter_1", "parameter_interpretation", "coefficient_meaning_hard", 9),
+    MathModuleSlot("m2h_ratio_scaling_1", "ratio_scaling", "inverse_scaling_hard", 9),
+    MathModuleSlot("m2h_absolute_1", "absolute_value_equation", "two_solution_check_hard", 9),
+    MathModuleSlot("m2h_geometry_correspondence_1", "geometry_correspondence", "vertex_mapping_hard", 9),
+    MathModuleSlot("m2h_polynomial_grid_1", "polynomial_roots_gridin", "factorization_multiple_roots_hard", 10),
+    MathModuleSlot("m2h_circle_1", "circle_equation", "center_radius_hard", 10),
+    MathModuleSlot("m2h_exponential_1", "exponential_growth", "growth_decay_comparison", 10),
+    MathModuleSlot("m2h_word_1", "word_problem", "unit_conversion_constraint", 10),
+    MathModuleSlot("m2h_quadratic_1", "quadratic_modeling", "model_domain", 10),
     MathModuleSlot("m2h_word_2", "word_problem", "system_from_context", 10),
-    MathModuleSlot("m2h_graph_3", "graph_reasoning", "piecewise_rate", 10),
-    MathModuleSlot("m2h_mixed_1", "word_problem", "hidden_condition", 10),
+    MathModuleSlot("m2h_graph_2", "graph_reasoning", "piecewise_rate", 10),
+    MathModuleSlot("m2h_ratio_scaling_2", "ratio_scaling", "compound_scale_hard", 10),
 )
 
 MODULE2_MEDIUM_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = tuple(
@@ -607,7 +617,7 @@ MODULE2_MEDIUM_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = tuple(
 )
 
 MATH_TRAP_SEQUENCE = sorted(MATH_TRAPS)
-MATH_STUDENT_RESPONSE_SLOT_KEYS = {"m1_quadratic_2", "m1_word_2", "m2h_quadratic_2", "m2h_word_2", "m2m_quadratic_2", "m2m_word_2"}
+MATH_STUDENT_RESPONSE_SLOT_KEYS = {"m1_polynomial_grid_1", "m1_word_2", "m2h_polynomial_grid_1", "m2h_word_2", "m2m_polynomial_grid_1", "m2m_word_2"}
 MATH_MISDIRECTION_TYPES = ("irrelevant_number", "misleading_phrasing", "alternate_interpretation", "extra_variable", "hidden_condition")
 MATH_MISDIRECTION_BY_TYPE = {
     "linear_equation": "irrelevant_number",
@@ -620,6 +630,15 @@ MATH_MISDIRECTION_BY_TYPE = {
     "quadratic_modeling": "alternate_interpretation",
     "exponential_growth": "hidden_condition",
     "word_problem": "irrelevant_number",
+    "rational_equation_trap": "alternate_interpretation",
+    "expression_rewrite": "misleading_phrasing",
+    "graph_transformation": "misleading_phrasing",
+    "parameter_interpretation": "misleading_phrasing",
+    "ratio_scaling": "alternate_interpretation",
+    "absolute_value_equation": "alternate_interpretation",
+    "geometry_correspondence": "misleading_phrasing",
+    "polynomial_roots_gridin": "alternate_interpretation",
+    "circle_equation": "alternate_interpretation",
 }
 MATH_PATTERN_REGISTRY = {
     slot.slot_key: {
@@ -3483,6 +3502,7 @@ def graph_is_text_solvable(spec: QuestionSpec) -> bool:
         "conflicting_variable_dominance": ("limited", "lower-noise", "preferable", "comparatively flat"),
         "lag_effect": ("lag", "delayed", "one interval later"),
         "diminishing_returns": ("plateau", "late increase", "outside the middle", "full range"),
+        "vertical_shift": ("vertical shift", "horizontal shift", "f(x) +", "f(x +", "outputs"),
     }
     graph_only_terms = graph_only_terms_by_pattern.get(graph_pattern, ())
     if any(term in text_without_graph for term in graph_only_terms):
@@ -4022,7 +4042,7 @@ def validate_hard_math_question(question: QuestionSpec) -> None:
     if constraints_required < 2:
         raise ValueError(f"Hard math question needs at least two constraints: {question.prompt}")
     validate_hard_math_misdirection(question)
-    if question.data_type != "graph" and not re.search(r"\b(if|when|after|only|given|for which|under|at least|greater than|less than|positive|exact)\b", question.prompt.lower()):
+    if question.data_type != "graph" and not re.search(r"\b(if|when|after|only|given|for which|for x|under|at least|greater than|less than|positive|exact|rather than|corresponds|which statement|not equal)\b", question.prompt.lower()):
         raise ValueError(f"Hard math question lacks a hidden condition: {question.prompt}")
     if question.format == QuestionFormat.grid_in:
         return
@@ -4051,8 +4071,8 @@ def validate_hard_math_misdirection(question: QuestionSpec) -> None:
     text = f"{question.prompt} {question.explanation}".lower()
     markers = {
         "irrelevant_number": r"\b(extra|not needed|irrelevant|unused|also mentions)\b",
-        "misleading_phrasing": r"\b(how much greater|not the value|rather than|instead of|compared with)\b",
-        "alternate_interpretation": r"\b(could be read|interpret|positive|domain|model)\b",
+        "misleading_phrasing": r"\b(how much greater|not the value|not x|rather than|instead of|compared with|corresponds|in that order)\b",
+        "alternate_interpretation": r"\b(could be read|interpret|positive|domain|model|inverse|two possible|confusing|restriction|repeated|distinct)\b",
         "extra_variable": r"\b[a-z]\s*[+=-]|extra variable|another variable|where [a-z]\b",
         "hidden_condition": r"\b(if|when|given|only|under|provided|condition)\b",
     }
@@ -4071,7 +4091,7 @@ def equation_directly_visible(question: QuestionSpec) -> bool:
     if question.data_type == "graph":
         return False
     equation_count = len(re.findall(r"[a-z]\s*[-+*/]?\s*\d*\s*=", prompt))
-    has_context = bool(re.search(r"\b(value|number|tank|pump|population|angle|tiles|function|solution|period|rate|minutes|liters)\b", prompt))
+    has_context = bool(re.search(r"\b(value|number|tank|pump|population|angle|tiles|function|solution|period|rate|minutes|liters|triangle|side|circle|radius|center)\b", prompt))
     return equation_count >= 1 and not has_context
 
 
@@ -4136,6 +4156,15 @@ def math_question(module: int, index: int) -> QuestionSpec:
         "quadratic_modeling": math_quadratic,
         "exponential_growth": math_exponential,
         "word_problem": math_word_problem,
+        "rational_equation_trap": math_rational_equation,
+        "expression_rewrite": math_expression_rewrite,
+        "graph_transformation": math_graph_transformation,
+        "parameter_interpretation": math_parameter_interpretation,
+        "ratio_scaling": math_ratio_scaling,
+        "absolute_value_equation": math_absolute_value,
+        "geometry_correspondence": math_geometry_correspondence,
+        "polynomial_roots_gridin": math_polynomial_roots_gridin,
+        "circle_equation": math_circle_equation,
     }
     return generators[slot.question_type](module, index)
 
@@ -4434,6 +4463,208 @@ def math_exponential(module: int, index: int) -> QuestionSpec:
         trap_type="growth factor confusion",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(str(start * periods), str(answer), str(start + growth * periods), str(answer // 2), correct="B"),
+    )
+
+
+def math_rational_equation(module: int, index: int) -> QuestionSpec:
+    excluded = 2 + index % 3
+    answer = excluded + 3
+    prompt = (
+        f"For x not equal to {excluded}, the equation (x^2 - {excluded ** 2})/(x - {excluded}) = {answer + excluded} "
+        f"can be simplified. Although cancellation may seem to allow every x, what value of x satisfies the simplified equation?"
+    )
+    return math_base(
+        module,
+        index,
+        topic="Advanced Math",
+        subtopic="Rational equations",
+        question_type="rational_equation_trap",
+        prompt=prompt,
+        correct="C",
+        explanation=f"The expression simplifies to x + {excluded}, but the domain restriction x != {excluded} remains; x = {answer}.",
+        trap_type="cancellation and domain restriction trap",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(str(excluded), str(-answer), str(answer), str(answer + excluded), correct="C"),
+    )
+
+
+def math_expression_rewrite(module: int, index: int) -> QuestionSpec:
+    a = 3 + index % 4
+    value = 18 + index
+    target = value - a
+    prompt = (
+        f"If {a} + 2x = {value}, a student needs the value of 2x, not x. "
+        f"Which value should the student use for the expression 2x?"
+    )
+    return math_base(
+        module,
+        index,
+        topic="Algebra",
+        subtopic="Expression rewriting",
+        question_type="expression_rewrite",
+        prompt=prompt,
+        correct="A",
+        explanation=f"Isolate the expression, not the variable: 2x = {value} - {a} = {target}.",
+        trap_type="isolate expression not solve trap",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(str(target), str(target / 2), str(value + a), str(a - value), correct="A"),
+    )
+
+
+def math_graph_transformation(module: int, index: int) -> QuestionSpec:
+    shift = 2 + index % 4
+    prompt = (
+        f"The function y = f(x) is transformed so that each output is {shift} greater, while the x-values stay the same. "
+        f"Which equation represents the transformed function rather than a horizontal shift?"
+    )
+    return math_base(
+        module,
+        index,
+        topic="Functions",
+        subtopic="Graph transformations",
+        question_type="graph_transformation",
+        prompt=prompt,
+        correct="B",
+        explanation=f"Increasing each output is a vertical shift: y = f(x) + {shift}, not f(x + {shift}).",
+        trap_type="vertical versus horizontal shift trap",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(f"y = f(x + {shift})", f"y = f(x) + {shift}", f"y = {shift}f(x)", f"y = f(x - {shift})", correct="B"),
+    )
+
+
+def math_parameter_interpretation(module: int, index: int) -> QuestionSpec:
+    slope = 4 + index % 5
+    intercept = 20 + index
+    prompt = (
+        f"In the model C = {slope}n + {intercept}, C is total cost and n is the number of notebooks. "
+        f"Rather than solving for n, what does the coefficient {slope} mean?"
+    )
+    return math_base(
+        module,
+        index,
+        topic="Functions",
+        subtopic="Parameter interpretation",
+        question_type="parameter_interpretation",
+        prompt=prompt,
+        correct="D",
+        explanation=f"The coefficient of n is the cost added for each additional notebook, so {slope} is the per-notebook cost.",
+        trap_type="coefficient meaning trap",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices("the starting cost", "the total number of notebooks", f"the total cost when n = {slope}", f"the cost per notebook", correct="D"),
+    )
+
+
+def math_ratio_scaling(module: int, index: int) -> QuestionSpec:
+    scale = 3 + index % 3
+    base = 12 + index
+    answer = base * scale
+    prompt = (
+        f"A recipe uses {base} grams of spice for 2 batches. For {2 * scale} batches, the batch count is scaled by {scale}. "
+        f"Which amount keeps the same ratio, rather than using the inverse scale?"
+    )
+    return math_base(
+        module,
+        index,
+        topic="Problem-Solving and Data Analysis",
+        subtopic="Ratio scaling",
+        question_type="ratio_scaling",
+        prompt=prompt,
+        correct="C",
+        explanation=f"Keeping the ratio means multiplying by the same scale factor: {base} x {scale} = {answer}.",
+        trap_type="inverse scaling confusion trap",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(str(base / scale), str(base + scale), str(answer), str(2 * scale), correct="C"),
+    )
+
+
+def math_absolute_value(module: int, index: int) -> QuestionSpec:
+    center = 5 + index % 3
+    distance = 4
+    positive = center + distance
+    negative = center - distance
+    prompt = (
+        f"The equation |x - {center}| = {distance} has two possible values of x. "
+        f"Which choice gives both solutions rather than missing one?"
+    )
+    return math_base(
+        module,
+        index,
+        topic="Advanced Math",
+        subtopic="Absolute value equations",
+        question_type="absolute_value_equation",
+        prompt=prompt,
+        correct="A",
+        explanation=f"The expression is {distance} units from {center}, so x = {center} - {distance} or x = {center} + {distance}.",
+        trap_type="two solutions missing solution trap",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(f"{negative} and {positive}", f"{positive} only", f"{negative} only", f"{-positive} and {positive}", correct="A"),
+    )
+
+
+def math_geometry_correspondence(module: int, index: int) -> QuestionSpec:
+    side = 6 + index % 4
+    scale = 2
+    answer = side * scale
+    prompt = (
+        f"Triangles ABC and DEF are similar in that order, so A corresponds to D, B to E, and C to F. "
+        f"If AB = {side} and DE is the corresponding side in the larger triangle with scale factor {scale}, what is DE?"
+    )
+    return math_base(
+        module,
+        index,
+        topic="Geometry and Trigonometry",
+        subtopic="Corresponding sides",
+        question_type="geometry_correspondence",
+        prompt=prompt,
+        correct="B",
+        explanation=f"The order gives the vertex mapping, so AB corresponds to DE and DE = {side} x {scale} = {answer}.",
+        trap_type="mapping of vertices trap",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(str(side), str(answer), str(side + scale), str(answer + scale), correct="B"),
+    )
+
+
+def math_polynomial_roots_gridin(module: int, index: int) -> QuestionSpec:
+    root = 2 + index % 4
+    other = root + 3
+    prompt = (
+        f"The polynomial (x - {root})^2(x - {other}) has roots {root} and {other}. "
+        f"Give the exact sum of the distinct roots; do not count the repeated root twice."
+    )
+    return math_base(
+        module,
+        index,
+        topic="Advanced Math",
+        subtopic="Polynomial roots",
+        question_type="polynomial_roots_gridin",
+        prompt=prompt,
+        correct=str(root + other),
+        explanation=f"The distinct roots are {root} and {other}; the repeated factor creates a multiple-root trap, so the exact sum is {root + other}.",
+        trap_type="factorization and multiple roots trap",
+        fmt=QuestionFormat.grid_in,
+    )
+
+
+def math_circle_equation(module: int, index: int) -> QuestionSpec:
+    h = 2 + index % 3
+    k = 3 + index % 4
+    r = 5
+    prompt = (
+        f"A circle has equation (x - {h})^2 + (y + {k})^2 = {r ** 2}. "
+        f"Which statement correctly interprets the center and radius rather than confusing a coordinate with the radius?"
+    )
+    return math_base(
+        module,
+        index,
+        topic="Geometry and Trigonometry",
+        subtopic="Circle equations",
+        question_type="circle_equation",
+        prompt=prompt,
+        correct="D",
+        explanation=f"The center is ({h}, {-k}) and the radius is {r}, since the right side is r squared.",
+        trap_type="center versus radius confusion trap",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(f"center ({-h}, {k}), radius {r ** 2}", f"center ({h}, {k}), radius {r}", f"center ({h}, {-k}), radius {r ** 2}", f"center ({h}, {-k}), radius {r}", correct="D"),
     )
 
 
