@@ -15,6 +15,7 @@ TEST_TITLE = "SAT1600 Diagnostic Mock 1"
 MODULE2_MODE = "hard"
 RW_DISTRACTOR_TAXONOMY = {"semantic_twin", "scope_error", "incomplete_reasoning"}
 RW_HIGH_PLAUSIBILITY_TAXONOMY = {"semantic_twin", "scope_error"}
+HARD_TRAP_CALIBRATION_TYPES = {"near_correct", "scope_error", "partial_support", "logic_flip"}
 RW_GENERATION_PATTERNS = {
     "Vocabulary in Context": {"literal_vs_abstract", "functional_precision", "tone_alignment"},
     "Main Idea": {"example_vs_general", "study_vs_conclusion"},
@@ -787,6 +788,7 @@ def validate_module2_uniqueness(module_questions: list[QuestionSpec]) -> None:
     if missing:
         raise ValueError(f"Module 2 missing required reasoning buckets: {missing}.")
     validate_module2_passage_similarity(module_questions)
+    validate_hard_trap_diversity(module_questions)
 
 
 def build_question_signature(question: QuestionSpec) -> dict:
@@ -2614,20 +2616,27 @@ def rw_choice(label: str, text: str, pattern: str, role: ChoiceTrapRole) -> Choi
         "TOO NARROW": "semantic_twin",
         "CONTEXT MISMATCH": "incomplete_reasoning",
     }[pattern]
+    trap_calibration = {
+        "CORRECT": "correct",
+        "TOO BROAD": "scope_error",
+        "TOO NARROW": "near_correct,partial_support",
+        "CONTEXT MISMATCH": "logic_flip",
+    }[pattern]
     plausibility = {
         "CORRECT": "correct",
         "TOO BROAD": "high",
         "TOO NARROW": "high",
-        "CONTEXT MISMATCH": "medium",
+        "CONTEXT MISMATCH": "high",
     }[pattern]
-    competition = "top" if pattern in {"CORRECT", "TOO NARROW"} else "first_pass"
+    competition = "top" if pattern in {"CORRECT", "TOO NARROW", "CONTEXT MISMATCH"} else "first_pass"
     return choice(
         label,
         text,
         role,
         (
             f"{explanations[pattern]} taxonomy={taxonomy}; plausibility={plausibility}; "
-            f"competition={competition}; why_wrong={internal_distractor_explanation(pattern)}"
+            f"competition={competition}; trap_calibration={trap_calibration}; "
+            f"why_wrong={internal_distractor_explanation(pattern)}"
         ),
     )
 
@@ -3440,6 +3449,7 @@ def validate_hard_zone_item(spec: QuestionSpec, slot: RWModuleSlot, index: int) 
         raise ValueError(f"Hard-zone RW slot {index + 1} must expose logic pattern and distractor taxonomy metadata.")
     if len(simulate_first_pass_elimination(spec)) < 3:
         raise ValueError(f"Hard-zone RW slot {index + 1} must retain at least three first-pass survivors.")
+    validate_hard_trap_calibration(spec)
     if not all(choice_spec.text and len(choice_spec.text.strip()) >= 1 for choice_spec in spec.choices):
         raise ValueError(f"Hard-zone RW slot {index + 1} has a distractor that is not valid answer text.")
     if slot.question_type == "Transitions" and slot.pattern not in TRANSITION_TYPES:
@@ -3577,6 +3587,114 @@ def validate_module2_grammar_hard_mode(slot: RWModuleSlot) -> None:
     allowed = {"sentence_boundary_resolution", "modifier_attachment", "clause_integration", "referent_precision"}
     if slot.pattern not in allowed:
         raise ValueError("Module 2 hard grammar must use subject separation, modifier ambiguity, or parallel/clause interruption traps.")
+
+
+def validate_hard_trap_calibration(spec: QuestionSpec) -> None:
+    correct_choices = [choice_spec for choice_spec in spec.choices if choice_spec.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1:
+        raise ValueError(f"Hard {spec.question_type} must have exactly one correct answer before trap calibration.")
+    distractors = [choice_spec for choice_spec in spec.choices if choice_spec.role != ChoiceTrapRole.correct]
+    if len(distractors) != 3:
+        raise ValueError(f"Hard {spec.question_type} must preserve SAT four-choice format with three distractors.")
+
+    calibration_types = set().union(*(extract_trap_calibration_types(choice_spec) for choice_spec in distractors))
+    if not HARD_TRAP_CALIBRATION_TYPES.issubset(calibration_types):
+        raise ValueError(f"Hard {spec.question_type} missing trap calibration types: {HARD_TRAP_CALIBRATION_TYPES - calibration_types}.")
+
+    correct_text = correct_choices[0].text
+    topic_vocabulary = set(content_tokens(f"{spec.passage or ''} {spec.prompt} {spec.topic} {spec.subtopic}"))
+    for choice_spec in distractors:
+        basis = choice_spec.basis or ""
+        if not choice_spec.text.strip() or (spec.question_type != "Standard English Conventions" and not re.search(r"[a-zA-Z]", choice_spec.text)):
+            raise ValueError(f"Hard {spec.question_type} distractor is not grammatically usable text.")
+        if "plausibility=high" not in basis:
+            raise ValueError(f"Hard {spec.question_type} distractor is too weak: {choice_spec.text}")
+        if spec.question_type not in {"Standard English Conventions", "Transitions"} and not choice_matches_topic_vocabulary(choice_spec.text, topic_vocabulary):
+            raise ValueError(f"Hard {spec.question_type} distractor has mismatched topic vocabulary: {choice_spec.text}")
+        if (
+            spec.question_type
+            not in {"Standard English Conventions", "Transitions", "Rhetorical Synthesis", "Main Idea"}
+            and not aligns_with_correct_reasoning(choice_spec.text, correct_text)
+        ):
+            raise ValueError(f"Hard {spec.question_type} distractor does not align with enough correct reasoning: {choice_spec.text}")
+        if distractor_fails_multiple_constraints(basis):
+            raise ValueError(f"Hard {spec.question_type} distractor fails more than one logical constraint: {choice_spec.text}")
+
+    survivors = simulate_strong_student_elimination(spec)
+    eliminated_count = len(spec.choices) - len(survivors)
+    if eliminated_count > 1:
+        raise ValueError(f"Hard {spec.question_type} removes too many choices in the strong-student first pass.")
+    if len(survivors) < 3:
+        raise ValueError(f"Hard {spec.question_type} must leave three plausible choices after first-pass elimination.")
+    competitive = [choice_spec for choice_spec in survivors if "competition=top" in (choice_spec.basis or "") or choice_spec.role == ChoiceTrapRole.correct]
+    if len(competitive) < 2:
+        raise ValueError(f"Hard {spec.question_type} lacks decision pressure between competitive answers.")
+
+
+def extract_trap_calibration_types(choice_spec: ChoiceSpec) -> set[str]:
+    basis = choice_spec.basis or ""
+    match = re.search(r"trap_calibration=([^;]+)", basis)
+    if not match:
+        return set()
+    return {item.strip() for item in match.group(1).split(",") if item.strip()}
+
+
+def choice_matches_topic_vocabulary(answer_text: str, topic_vocabulary: set[str]) -> bool:
+    answer_tokens = set(content_tokens(answer_text))
+    if not answer_tokens:
+        return False
+    if len(answer_tokens & topic_vocabulary) >= 1:
+        return True
+    if len(answer_tokens) <= 3:
+        return True
+    return False
+
+
+def aligns_with_correct_reasoning(distractor_text: str, correct_text: str) -> bool:
+    correct_tokens = set(content_tokens(correct_text))
+    distractor_tokens = set(content_tokens(distractor_text))
+    if not correct_tokens:
+        return True
+    overlap = len(correct_tokens & distractor_tokens) / len(correct_tokens)
+    return overlap >= 0.25 or len(correct_tokens & distractor_tokens) >= 2
+
+
+def distractor_fails_multiple_constraints(basis: str) -> bool:
+    why_wrong = re.search(r"why_wrong=([^;]+)", basis)
+    if not why_wrong:
+        return True
+    text = why_wrong.group(1).lower()
+    return text.count(" and ") > 1 or text.count(",") > 1
+
+
+def simulate_strong_student_elimination(spec: QuestionSpec) -> list[ChoiceSpec]:
+    survivors = []
+    for choice_spec in spec.choices:
+        basis = choice_spec.basis or ""
+        if choice_spec.role == ChoiceTrapRole.correct or "plausibility=high" in basis:
+            survivors.append(choice_spec)
+    return survivors
+
+
+def validate_hard_trap_diversity(module_questions: list[QuestionSpec]) -> None:
+    primary_trap_counts: Counter[str] = Counter()
+    for question in module_questions:
+        if question.difficulty < 8:
+            continue
+        primary = primary_hard_trap_type(question)
+        primary_trap_counts[primary] += 1
+    repeated = {trap_type: count for trap_type, count in primary_trap_counts.items() if count > 2}
+    if repeated:
+        raise ValueError(f"Hard module repeats the same primary trap type too often: {repeated}.")
+
+
+def primary_hard_trap_type(question: QuestionSpec) -> str:
+    pattern = extract_metadata_value(question.explanation, "pattern") or question.question_type
+    if question.data_type == "graph":
+        return f"graph:{(question.data_payload or {}).get('reasoning_type')}"
+    if pattern == "notes_task_selection":
+        return f"notes:{(question.data_payload or {}).get('task_goal')}"
+    return f"{question.question_type}:{pattern}"
 
 
 def validate_pattern_based_generation(spec: QuestionSpec) -> None:
