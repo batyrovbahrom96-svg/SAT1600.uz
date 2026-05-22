@@ -1116,94 +1116,96 @@ export default function TestPage() {
           <div className="absolute left-1/2 top-1/2 h-12 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e5e7eb] bg-white hover:border-slate-400" />
         </div>
 
-        <aside className="bg-white px-10 py-9">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 min-w-9 items-center justify-center bg-slate-950 text-base font-bold text-white">
-                {index + 1}
+        <aside className="page-container bg-white px-10 py-9">
+          <div className="question-center">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 min-w-9 items-center justify-center bg-slate-950 text-base font-bold text-white">
+                  {index + 1}
+                </div>
+                <button
+                  onClick={() => toggleMark(question.id)}
+                  className={`inline-flex items-center gap-2 text-sm font-semibold hover:text-blue-800 ${marked[question.id] ? "text-blue-700" : "text-slate-700"}`}
+                  title="Mark for review"
+                >
+                  <Bookmark size={17} fill={marked[question.id] ? "currentColor" : "none"} /> Mark for Review
+                </button>
               </div>
               <button
-                onClick={() => toggleMark(question.id)}
-                className={`inline-flex items-center gap-2 text-sm font-semibold hover:text-blue-800 ${marked[question.id] ? "text-blue-700" : "text-slate-700"}`}
-                title="Mark for review"
+                className="inline-flex items-center gap-2 rounded px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950 disabled:opacity-40"
+                disabled={actionHistory.length === 0}
+                onClick={undoLastAnswerAction}
+                type="button"
               >
-                <Bookmark size={17} fill={marked[question.id] ? "currentColor" : "none"} /> Mark for Review
+                <Undo2 size={16} /> Undo
               </button>
             </div>
-            <button
-              className="inline-flex items-center gap-2 rounded px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950 disabled:opacity-40"
-              disabled={actionHistory.length === 0}
-              onClick={undoLastAnswerAction}
-              type="button"
-            >
-              <Undo2 size={16} /> Undo
-            </button>
-          </div>
-          <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
-          <h1 className="mb-6 text-[20px] font-semibold leading-[1.45] text-slate-950">{question.prompt}</h1>
+            <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
+            <h1 className="question-text text-[20px] font-semibold leading-[1.45] text-slate-950">{question.prompt}</h1>
 
-          <div className="grid gap-4">
-            {question.format === "multiple_choice" ? orderedChoices.map((choice, choiceIndex) => (
-              <div
-                key={choice.label}
-                className={`flex w-full items-stretch rounded-md border text-left text-[16px] leading-6 transition-colors hover:bg-slate-50 ${
-                  selectedAnswer === choice.label
-                    ? "border-blue-700 bg-blue-50"
-                    : "border-[#e5e7eb]"
-                }`}
-                role="radio"
-                aria-checked={selectedAnswer === choice.label}
-                aria-disabled={eliminatedAnswers.has(choice.label)}
-              >
-                <button
-                  className={`flex min-w-0 flex-1 items-start gap-4 px-4 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
-                    eliminatedAnswers.has(choice.label) ? "cursor-not-allowed text-slate-400 opacity-60" : "text-slate-950"
+            <div className="answers">
+              {question.format === "multiple_choice" ? orderedChoices.map((choice, choiceIndex) => (
+                <div
+                  key={choice.label}
+                  className={`answer-option flex items-stretch rounded-md border text-left text-[16px] leading-6 transition-colors hover:bg-slate-50 ${
+                    selectedAnswer === choice.label
+                      ? "border-blue-700 bg-blue-50"
+                      : "border-[#e5e7eb]"
                   }`}
-                  data-choice-index={choiceIndex}
-                  disabled={eliminatedAnswers.has(choice.label)}
-                  onClick={() => {
-                    setFocusedChoiceIndex(choiceIndex);
-                    selectAnswer(choice.label);
-                  }}
-                  onFocus={() => setFocusedChoiceIndex(choiceIndex)}
-                  tabIndex={choiceIndex === focusedChoiceIndex ? 0 : -1}
-                  type="button"
+                  role="radio"
+                  aria-checked={selectedAnswer === choice.label}
+                  aria-disabled={eliminatedAnswers.has(choice.label)}
                 >
-                  <span
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
-                      selectedAnswer === choice.label
-                        ? "border-blue-700 bg-blue-700 text-white"
-                        : eliminatedAnswers.has(choice.label)
-                          ? "border-slate-400 bg-white text-slate-400"
-                          : "border-slate-500 bg-white text-slate-950"
+                  <button
+                    className={`flex min-w-0 flex-1 items-start gap-4 px-4 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
+                      eliminatedAnswers.has(choice.label) ? "cursor-not-allowed text-slate-400 opacity-60" : "text-slate-950"
                     }`}
+                    data-choice-index={choiceIndex}
+                    disabled={eliminatedAnswers.has(choice.label)}
+                    onClick={() => {
+                      setFocusedChoiceIndex(choiceIndex);
+                      selectAnswer(choice.label);
+                    }}
+                    onFocus={() => setFocusedChoiceIndex(choiceIndex)}
+                    tabIndex={choiceIndex === focusedChoiceIndex ? 0 : -1}
+                    type="button"
                   >
-                    {choice.label}
-                  </span>
-                  <span className={eliminatedAnswers.has(choice.label) ? "text-slate-500 line-through decoration-slate-500 decoration-2" : "text-slate-950"}>
-                    {choice.text}
-                  </span>
-                </button>
-                <button
-                  aria-pressed={eliminatedAnswers.has(choice.label)}
-                  className={`m-3 ml-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-white hover:border-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
-                    eliminatedAnswers.has(choice.label) ? "border-slate-700 text-slate-800" : "border-[#e5e7eb] text-slate-500"
-                  }`}
-                  onClick={() => toggleEliminate(choice.label)}
-                  title={eliminatedAnswers.has(choice.label) ? `Undo elimination for ${choice.label}` : `Eliminate ${choice.label}`}
-                  type="button"
-                >
-                  <Ban size={17} />
-                </button>
-              </div>
-            )) : (
-              <input
-                value={answers[question.id] || ""}
-                onChange={(event) => save(question.id, event.target.value)}
-                className="w-full rounded-[10px] border border-[#e5e7eb] px-5 py-4 text-[16px] text-slate-950 outline-blue-700"
-                placeholder="Enter answer"
-              />
-            )}
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
+                        selectedAnswer === choice.label
+                          ? "border-blue-700 bg-blue-700 text-white"
+                          : eliminatedAnswers.has(choice.label)
+                            ? "border-slate-400 bg-white text-slate-400"
+                            : "border-slate-500 bg-white text-slate-950"
+                      }`}
+                    >
+                      {choice.label}
+                    </span>
+                    <span className={eliminatedAnswers.has(choice.label) ? "text-slate-500 line-through decoration-slate-500 decoration-2" : "text-slate-950"}>
+                      {choice.text}
+                    </span>
+                  </button>
+                  <button
+                    aria-pressed={eliminatedAnswers.has(choice.label)}
+                    className={`m-3 ml-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-white hover:border-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
+                      eliminatedAnswers.has(choice.label) ? "border-slate-700 text-slate-800" : "border-[#e5e7eb] text-slate-500"
+                    }`}
+                    onClick={() => toggleEliminate(choice.label)}
+                    title={eliminatedAnswers.has(choice.label) ? `Undo elimination for ${choice.label}` : `Eliminate ${choice.label}`}
+                    type="button"
+                  >
+                    <Ban size={17} />
+                  </button>
+                </div>
+              )) : (
+                <input
+                  value={answers[question.id] || ""}
+                  onChange={(event) => save(question.id, event.target.value)}
+                  className="answer-option rounded-[10px] border border-[#e5e7eb] px-5 py-4 text-[16px] text-slate-950 outline-blue-700"
+                  placeholder="Enter answer"
+                />
+              )}
+            </div>
           </div>
         </aside>
       </section>

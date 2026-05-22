@@ -21,3 +21,41 @@ button, input {
   filter: saturate(1.12);
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.18);
 }
+
+.page-container {
+  display: flex;
+  justify-content: center;
+}
+
+.question-center {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.question-text {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.answers {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.answer-option {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .question-center,
+  .answer-option {
+    max-width: 100%;
+  }
+}
