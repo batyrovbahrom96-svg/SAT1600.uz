@@ -228,6 +228,14 @@ function CalculatorModal({
     };
   }, [mode, open, scriptReady]);
 
+  useEffect(() => {
+    if (!open || scriptReady || scriptFailed) return;
+    const timeout = window.setTimeout(() => {
+      setInitError("Calculator is still loading. Please close and reopen it after the page finishes loading.");
+    }, 5000);
+    return () => window.clearTimeout(timeout);
+  }, [open, scriptFailed, scriptReady]);
+
   if (!open) return null;
 
   return (
@@ -1042,9 +1050,13 @@ export default function TestPage() {
   return (
     <main className="min-h-screen bg-white text-slate-950">
       <Script
-        src="https://www.desmos.com/api/v1.6/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"
+        src="/desmos/calculator.js"
         strategy="afterInteractive"
         onLoad={() => {
+          setDesmosFailed(false);
+          setDesmosReady(true);
+        }}
+        onReady={() => {
           setDesmosFailed(false);
           setDesmosReady(true);
         }}
