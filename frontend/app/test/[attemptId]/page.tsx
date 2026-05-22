@@ -470,6 +470,8 @@ export default function TestPage() {
   const spentByQuestion = useRef<Record<string, number>>({});
   const firstInteractionByQuestion = useRef<Record<string, number>>({});
   const interactionCountByQuestion = useRef<Record<string, number>>({});
+  const currentSection = moduleData?.attempt.current_section;
+  const isMathSection = currentSection === "math";
 
   useEffect(() => {
     api<ModulePayload>(`/api/attempts/${attemptId}/module`).then((data) => {
@@ -507,11 +509,11 @@ export default function TestPage() {
   }, [secondsLeft]);
 
   useEffect(() => {
-    if (moduleData?.attempt.current_section !== "math") {
+    if (!isMathSection) {
       setIsReferenceOpen(false);
       setIsCalculatorOpen(false);
     }
-  }, [moduleData?.attempt.current_section]);
+  }, [isMathSection]);
 
   const question = moduleData?.questions[index];
   const isCrossTextQuestion = question?.data_payload?.type === "cross_text"
@@ -524,7 +526,6 @@ export default function TestPage() {
     ? question.data_payload
     : null;
   const hasTablePayload = Boolean(question?.data_type === "table" && question.data_payload?.columns?.length && question.data_payload?.rows?.length);
-  const isMathSection = moduleData?.attempt.current_section === "math";
   const hasTextStimulus = Boolean(isNotesQuestion || isCrossTextQuestion || (!isMathSection && question?.passage?.trim()));
   const hasVisualStimulus = Boolean(hasTablePayload || graphPayload || question?.graph_path);
   const hasStimulus = hasTextStimulus || hasVisualStimulus;
@@ -1197,22 +1198,24 @@ export default function TestPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
-      <Script
-        src="/desmos/calculator.js"
-        strategy="afterInteractive"
-        onLoad={() => {
-          setDesmosFailed(false);
-          setDesmosReady(true);
-        }}
-        onReady={() => {
-          setDesmosFailed(false);
-          setDesmosReady(true);
-        }}
-        onError={() => {
-          setDesmosReady(false);
-          setDesmosFailed(true);
-        }}
-      />
+      {isMathSection ? (
+        <Script
+          src="/desmos/calculator.js"
+          strategy="afterInteractive"
+          onLoad={() => {
+            setDesmosFailed(false);
+            setDesmosReady(true);
+          }}
+          onReady={() => {
+            setDesmosFailed(false);
+            setDesmosReady(true);
+          }}
+          onError={() => {
+            setDesmosReady(false);
+            setDesmosFailed(true);
+          }}
+        />
+      ) : null}
       <header className="sticky top-0 z-20 bg-white">
         <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-[#e5e7eb] px-5">
           <div className="flex min-w-0 items-center gap-6">
