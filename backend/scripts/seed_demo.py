@@ -384,6 +384,7 @@ class QuestionSpec:
     graph_required: bool = False
     data_type: str = "none"
     data_payload: dict | None = None
+    question_signature: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -619,6 +620,8 @@ def build_question_bank() -> list[QuestionSpec]:
         validate_notes_task_count(module_questions)
         validate_graph_intent_distribution(module_questions)
         validate_graph_coverage(module_questions, module)
+        if module == 2:
+            validate_module2_uniqueness(module_questions)
         for question in module_questions:
             validate_reading_writing_spec(question)
             validate_choice_label_order(question)
@@ -759,6 +762,176 @@ def validate_graph_coverage(module_questions: list[QuestionSpec], module: int) -
         raise ValueError(f"Module {module} uses the same graph reasoning type too often: {repeated}.")
 
 
+def validate_module2_uniqueness(module_questions: list[QuestionSpec]) -> None:
+    signatures = [question.question_signature or build_question_signature(question) for question in module_questions]
+    serialized = [tuple(sorted(signature.items())) for signature in signatures]
+    if len(set(serialized)) != len(module_questions):
+        raise ValueError("Module 2 contains duplicate question signatures.")
+    graph_structures: set[tuple] = set()
+    graph_reasoning_counts: Counter[str] = Counter()
+    for question in module_questions:
+        if question.data_type != "graph":
+            continue
+        payload = question.data_payload or {}
+        structure = graph_structure_signature(payload)
+        if structure in graph_structures:
+            raise ValueError(f"Module 2 graph structure repeats: {structure}.")
+        graph_structures.add(structure)
+        graph_reasoning_counts[str(payload.get("reasoning_type"))] += 1
+    repeated_reasoning = {reasoning_type: count for reasoning_type, count in graph_reasoning_counts.items() if count > 1}
+    if repeated_reasoning:
+        raise ValueError(f"Module 2 graph reasoning_type repeats: {repeated_reasoning}.")
+    required_reasoning = {"support", "weaken", "conditional/threshold", "limitation", "inference"}
+    module_reasoning = {module2_reasoning_bucket(question) for question in module_questions}
+    missing = required_reasoning - module_reasoning
+    if missing:
+        raise ValueError(f"Module 2 missing required reasoning buckets: {missing}.")
+    validate_module2_passage_similarity(module_questions)
+
+
+def build_question_signature(question: QuestionSpec) -> dict:
+    payload = question.data_payload or {}
+    pattern_type = extract_metadata_value(question.explanation, "pattern") or payload.get("reasoning_pattern") or question.question_type
+    reasoning_type = payload.get("reasoning_type") or reasoning_bucket_from_question(question)
+    graph_pattern = payload.get("graph_pattern") or "none"
+    answer_logic_type = payload.get("answer_logic_type") or answer_logic_signature(question)
+    return {
+        "pattern_type": str(pattern_type),
+        "reasoning_type": str(reasoning_type),
+        "graph_pattern": str(graph_pattern),
+        "answer_logic_type": str(answer_logic_type),
+    }
+
+
+def reasoning_bucket_from_question(question: QuestionSpec) -> str:
+    text = f"{question.prompt} {question.explanation} {question.trap_type}".lower()
+    if "weaken" in text:
+        return "weaken"
+    if "support" in text:
+        return "support"
+    if re.search(r"\b(only when|threshold|condition|conditional)\b", text):
+        return "conditional/threshold"
+    if re.search(r"\b(limit|exception|except)\b", text):
+        return "limitation"
+    if re.search(r"\b(infer|inference|suggests)\b", text):
+        return "inference"
+    return question.question_type
+
+
+def answer_logic_signature(question: QuestionSpec) -> str:
+    correct_choices = [choice for choice in question.choices if choice.role == ChoiceTrapRole.correct]
+    correct_text = correct_choices[0].text.lower() if len(correct_choices) == 1 else question.correct_answer.lower()
+    context_suffix = "-".join(sorted(content_keywords(f"{question.passage or ''} {correct_text}"))[:4])
+    if re.search(r"\b(weaken|weakening|contradict)\b", correct_text):
+        return f"weaken:{context_suffix}"
+    if re.search(r"\b(support|supporting)\b", correct_text):
+        return f"support:{context_suffix}"
+    if re.search(r"\b(only|when|threshold|after|below|condition)\b", correct_text):
+        return f"conditional/threshold:{context_suffix}"
+    if re.search(r"\b(limit|exception|except|outside)\b", correct_text):
+        return f"limitation:{context_suffix}"
+    if re.search(r"\b(infer|suggest|should be)\b", correct_text):
+        return f"inference:{context_suffix}"
+    normalized_prompt = re.sub(r"[^a-z0-9]+", "-", question.prompt.lower()).strip("-")
+    return f"{normalized_prompt[:48]}:{context_suffix}" or question.correct_answer.lower()
+
+
+def module2_reasoning_bucket(question: QuestionSpec) -> str:
+    if question.data_type == "graph":
+        payload = question.data_payload or {}
+        template = str(payload.get("prompt_template") or "")
+        if template == "supports_the_conclusion":
+            return "support"
+        if template == "weakens_the_conclusion":
+            return "weaken"
+        if payload.get("graph_pattern") == "threshold_reversal":
+            return "conditional/threshold"
+        if template == "shows_a_limitation":
+            return "limitation"
+        if template == "completes_the_conclusion":
+            return "inference"
+    return reasoning_bucket_from_question(question)
+
+
+def graph_structure_signature(payload: dict) -> tuple:
+    series = payload.get("series") or []
+    line_count = len(series)
+    directions = tuple(trend_direction(item.get("values") or []) for item in series)
+    crossover_structure = detect_crossover_structure(series)
+    relationship = payload.get("variable_relationship") or payload.get("graph_pattern")
+    return line_count, crossover_structure, directions, relationship
+
+
+def trend_direction(values: list) -> str:
+    y_values = [point[1] for point in values if isinstance(point, (list, tuple)) and len(point) == 2]
+    if len(y_values) < 2:
+        return "insufficient"
+    deltas = [y_values[index + 1] - y_values[index] for index in range(len(y_values) - 1)]
+    if any(delta == 0 for delta in deltas) and any(delta > 0 for delta in deltas):
+        return "plateau_then_rise"
+    if all(delta > 0 for delta in deltas):
+        return "increasing"
+    if all(delta < 0 for delta in deltas):
+        return "decreasing"
+    if any(delta > 0 for delta in deltas) and any(delta < 0 for delta in deltas):
+        return "mixed"
+    return "flat"
+
+
+def detect_crossover_structure(series: list) -> str:
+    if len(series) < 2:
+        return "no_comparison"
+    first = series[0].get("values") or []
+    second = series[1].get("values") or []
+    pairs = zip(first, second, strict=False)
+    signs = []
+    for first_point, second_point in pairs:
+        if not isinstance(first_point, (list, tuple)) or not isinstance(second_point, (list, tuple)):
+            continue
+        delta = first_point[1] - second_point[1]
+        signs.append(1 if delta > 0 else -1 if delta < 0 else 0)
+    if any(signs[index] * signs[index + 1] < 0 for index in range(len(signs) - 1)):
+        return "crossover"
+    if 0 in signs:
+        return "touch"
+    return "no_crossover"
+
+
+def validate_module2_passage_similarity(module_questions: list[QuestionSpec]) -> None:
+    seen_flows: dict[str, list[set[str]]] = {}
+    seen_keywords: list[set[str]] = []
+    for question in module_questions:
+        flow = logical_flow_signature(question.passage or "")
+        keywords = content_keywords(f"{question.passage or ''} {question.prompt}")
+        for previous_flow_keywords in seen_flows.get(flow, []):
+            union = keywords | previous_flow_keywords
+            if union and len(keywords & previous_flow_keywords) / len(union) >= 0.5:
+                raise ValueError(f"Module 2 passage repeats both logical flow and topic structure: {flow}.")
+        seen_flows.setdefault(flow, []).append(keywords)
+        for previous in seen_keywords:
+            union = keywords | previous
+            if union and len(keywords & previous) / len(union) >= 0.7:
+                raise ValueError("Module 2 passage keyword overlap is too high.")
+        seen_keywords.append(keywords)
+
+
+def logical_flow_signature(text: str) -> str:
+    lower = text.lower()
+    markers = []
+    for marker in ("researchers", "student", "text 1", "notes", "graph", "hypothesis", "however", "although", "claim", "conclusion"):
+        if marker in lower:
+            markers.append(marker)
+    return ">".join(markers[:4]) or "generic"
+
+
+def content_keywords(text: str) -> set[str]:
+    stopwords = {
+        "the", "and", "that", "this", "with", "from", "which", "choice", "best", "when", "only",
+        "however", "although", "researchers", "student", "claim", "conclusion", "graph", "text",
+    }
+    return {word for word in re.findall(r"[a-z]{4,}", text.lower()) if word not in stopwords}
+
+
 def validate_notes_task_count(module_questions: list[QuestionSpec]) -> None:
     count_notes = sum(
         1
@@ -831,9 +1004,53 @@ def generate(question_type: str, pattern: str, *, module: int, index: int) -> Qu
         item = rw_graph_item(pattern, module, index)
     else:
         item = rw_pattern_item(question_type, pattern)
+    item = module2_unique_variant(item, module, index)
     if module == 2 and MODULE2_MODE == "hard" and item.constraints_required < 2:
         item = replace(item, constraints_required=2)
     return rw_ambiguity_first_base(module, index, item)
+
+
+def module2_unique_variant(item: AmbiguityFirstItem, module: int, index: int) -> AmbiguityFirstItem:
+    if module != 2 or MODULE2_MODE != "hard":
+        return item
+    if item.question_type == "Main Idea" and item.generation_pattern == "study_vs_conclusion" and index >= 18:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "An investigation of clay jars from a coastal market recorded fish-oil residue, grain dust, and repair marks; at first, each trace may seem to point to a separate use. "
+                "However, the pattern tended to vary by season, while repeated repairs appeared most often on containers carried inland."
+            ),
+            constraint_sentence=(
+                "Taken together, these details suggest the jars were not single-purpose storage vessels but adaptable containers in a shifting trade network."
+            ),
+            answer_options=(
+                "The study cataloged several residues found on jars from a coastal market.",
+                "Seasonal fish-oil residue was the strongest evidence that the jars were used only near the coast.",
+                "Repair marks prove that inland sellers valued durability more than trade flexibility.",
+                "Residue and repair evidence together suggest the jars served flexible roles within a changing trade network.",
+            ),
+            trap_type="artifact evidence versus network conclusion trap",
+            explanation=(
+                "The residue and repair details compete for attention, but the combined seasonal and inland evidence supports a broader conclusion about flexible trade use."
+            ),
+        )
+    if item.question_type == "Standard English Conventions" and item.generation_pattern == "modifier_attachment" and index >= 26:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "At first, while often reviewing wind-tunnel images from the prototype, ___ noticed a small distortion near the wingtip."
+            ),
+            constraint_sentence="However, only the engineer can logically be reviewing the images.",
+            answer_options=(
+                "the prototype revealed that the engineer",
+                "the wind-tunnel images led the engineer to notice",
+                "a small distortion was noticed by the engineer, who",
+                "the engineer",
+            ),
+            trap_type="modifier attachment with subject separation trap",
+            explanation="This pattern tests only modifier_attachment; the intended reviewer must immediately follow the opening modifier.",
+        )
+    return item
 
 
 def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
@@ -993,7 +1210,7 @@ def rw_graph_item(pattern: str, module: int, index: int) -> AmbiguityFirstItem:
             "prompt_template": "weakens_the_conclusion",
             "prompt": "Which choice gives data from the graph that weakens the researchers' broad conclusion?",
             "answer_role": "weakening",
-            "correct": "The pattern supports the hypothesis only after the middle condition; below that range, Panel T remains stronger, weakening the claim that Panel S is generally superior.",
+            "correct": "The pattern supports the hypothesis only after the middle condition; below that range, Formula Q remains stronger, weakening the claim that Formula S is generally superior.",
         },
         {
             "graph_pattern": "conflicting_variable_dominance",
@@ -1002,7 +1219,7 @@ def rw_graph_item(pattern: str, module: int, index: int) -> AmbiguityFirstItem:
             "prompt_template": "completes_the_conclusion",
             "prompt": "Which choice most logically completes the researchers' conclusion using the graph?",
             "answer_role": "completing",
-            "correct": "The conclusion should be limited: Panel S becomes preferable only after the middle condition, while Panel T better fits the lower-noise cases and Panel R stays comparatively flat.",
+            "correct": "The conclusion should be limited: Sensor M becomes preferable only after the middle condition, while Sensor K better fits the lower-activity cases and Sensor L stays comparatively flat.",
         },
         {
             "graph_pattern": "diminishing_returns",
@@ -1011,7 +1228,7 @@ def rw_graph_item(pattern: str, module: int, index: int) -> AmbiguityFirstItem:
             "prompt_template": "shows_a_limitation",
             "prompt": "Which choice shows a limitation or exception to the researchers' reasoning?",
             "answer_role": "limiting",
-            "correct": "The graph shows a plateau before the late increase, so the claim works only outside the middle condition rather than across the full range.",
+            "correct": "The graph shows a plateau before the late increase, so the practice claim works only outside the middle interval rather than across the full range.",
         },
     )
     variant = module_two_variants[(index - 10) % len(module_two_variants)] if module == 2 and MODULE2_MODE == "hard" else module_one_variants[index % len(module_one_variants)]
@@ -1021,21 +1238,94 @@ def rw_graph_item(pattern: str, module: int, index: int) -> AmbiguityFirstItem:
 
 
 def rw_module2_hard_graph_item(pattern: str, variant: dict) -> AmbiguityFirstItem:
-    base = {
-        "passage": (
-            "Researchers testing three sound-dampening panels first expected the thickest panel may be the best overall choice. "
-            "A competing hypothesis was that material density mattered only when background noise passed a moderate level."
-        ),
-        "constraint": (
-            "However, the researchers argued only when performance at low and high noise levels is considered together, except for the middle condition, can the graph be used to evaluate that hypothesis."
-        ),
-        "answers": (
-            "Panel R has the highest score at the first noise level, a true local detail that does not address the conditional change across the range.",
-            "All panels improve somewhere in the graph, which matches the early expectation but not the graph's threshold-dependent reversal.",
-            variant["correct"],
-            "Panel S has the highest final score, so it is the best panel at every noise level.",
-        ),
+    graph_pattern = variant["graph_pattern"]
+    base_by_pattern = {
+        "threshold_reversal": {
+            "passage": (
+                "Researchers testing three sound-dampening panels first expected the thickest panel may be the best overall choice. "
+                "A competing hypothesis was that material density mattered only when background noise passed a moderate level."
+            ),
+            "constraint": (
+                "However, the researchers argued only when performance at low and high noise levels is considered together, except for the middle condition, can the graph be used to evaluate that hypothesis."
+            ),
+            "answers": (
+                "Panel R has the highest score at the first noise level, a true local detail that does not address the conditional change across the range.",
+                "All panels improve somewhere in the graph, which matches the early expectation but not the graph's threshold-dependent reversal.",
+                variant["correct"],
+                "Panel S has the highest final score, so it is the best panel at every noise level.",
+            ),
+            "series": [
+                {"name": "Panel R", "values": [(1, 7), (2, 7), (3, 8), (4, 8), (5, 8)]},
+                {"name": "Panel S", "values": [(1, 4), (2, 6), (3, 6), (4, 10), (5, 13)]},
+                {"name": "Panel T", "values": [(1, 8), (2, 9), (3, 9), (4, 9), (5, 10)]},
+            ],
+            "variable_relationship": "noise_panel_threshold",
+        },
+        "partial_support_region": {
+            "passage": (
+                "Researchers evaluating three restoration adhesives first expected the fastest-setting formula may also be the most reliable. "
+                "A competing hypothesis was that drying speed mattered only when humidity stayed within a narrow test range."
+            ),
+            "constraint": (
+                "However, the researchers argued only when low, middle, and high humidity trials are considered together, except for the driest condition, can the graph be used to evaluate that hypothesis."
+            ),
+            "answers": (
+                "Formula Q has the strongest result in the driest trial, a true local detail that does not address the conditional change across the range.",
+                "Each adhesive performs well in at least one trial, which matches the early expectation but not the graph's threshold-dependent reversal.",
+                variant["correct"],
+                "Formula S has the highest final score, so it is the best option at every level.",
+            ),
+            "series": [
+                {"name": "Formula Q", "values": [(1, 11), (2, 10), (3, 8), (4, 7), (5, 7)]},
+                {"name": "Formula R", "values": [(1, 7), (2, 8), (3, 10), (4, 11), (5, 10)]},
+                {"name": "Formula S", "values": [(1, 5), (2, 6), (3, 8), (4, 12), (5, 14)]},
+            ],
+            "variable_relationship": "humidity_adhesive_region",
+        },
+        "conflicting_variable_dominance": {
+            "passage": (
+                "Researchers comparing three shoreline sensors first expected the model with the strongest battery may be most useful. "
+                "A competing hypothesis was that battery strength mattered only when wave activity remained below a certain range."
+            ),
+            "constraint": (
+                "However, the researchers argued only when calm and rough-water trials are considered together, except for the middle readings, can the graph be used to evaluate that hypothesis."
+            ),
+            "answers": (
+                "Sensor K is strongest in the calmest trial, a true local detail that does not address the conditional change across the range.",
+                "Every sensor improves somewhere in the graph, which matches the early expectation but not the graph's threshold-dependent reversal.",
+                variant["correct"],
+                "Sensor M has the highest final score, so it is the best option at every level.",
+            ),
+            "series": [
+                {"name": "Sensor K", "values": [(1, 13), (2, 11), (3, 9), (4, 8), (5, 8)]},
+                {"name": "Sensor L", "values": [(1, 8), (2, 9), (3, 11), (4, 10), (5, 9)]},
+                {"name": "Sensor M", "values": [(1, 6), (2, 7), (3, 8), (4, 12), (5, 15)]},
+            ],
+            "variable_relationship": "wave_sensor_dominance",
+        },
+        "diminishing_returns": {
+            "passage": (
+                "Researchers studying three memory-training schedules first expected that adding more practice blocks may steadily improve recall. "
+                "A competing hypothesis was that extra practice mattered only when sessions were spaced beyond an initial range."
+            ),
+            "constraint": (
+                "However, the researchers argued only when early and late practice intervals are considered together, except for the middle interval, can the graph be used to evaluate that hypothesis."
+            ),
+            "answers": (
+                "Schedule C has the highest first score, a true local detail that does not address the conditional change across the range.",
+                "The schedules all improve somewhere in the graph, which matches the early expectation but not the graph's threshold-dependent reversal.",
+                variant["correct"],
+                "Schedule B has the highest final score, so it is the best option at every level.",
+            ),
+            "series": [
+                {"name": "Schedule A", "values": [(1, 6), (2, 9), (3, 9), (4, 10), (5, 10)]},
+                {"name": "Schedule B", "values": [(1, 4), (2, 7), (3, 7), (4, 12), (5, 15)]},
+                {"name": "Schedule C", "values": [(1, 9), (2, 10), (3, 10), (4, 10), (5, 11)]},
+            ],
+            "variable_relationship": "practice_recall_returns",
+        },
     }
+    base = base_by_pattern[graph_pattern]
     return rw_graph_variant_item(pattern, {**variant, **base}, hard_mode=True)
 
 
@@ -1084,6 +1374,7 @@ def rw_graph_variant_item(pattern: str, variant: dict, *, hard_mode: bool) -> Am
             "question_intent": variant["question_intent"],
             "prompt_template": variant["prompt_template"],
             "reasoning_type": variant["reasoning_type"],
+            "variable_relationship": variant.get("variable_relationship"),
             "reasoning_pattern": variant["graph_pattern"],
             "graph_dependency": "necessary",
             "hard_mode": hard_mode,
@@ -1855,6 +2146,35 @@ def rw_base(
     data_payload: dict | None = None,
 ) -> QuestionSpec:
     difficulty = rw_difficulty_for(module, index)
+    payload = dict(data_payload or {})
+    signature_seed = QuestionSpec(
+        section=SATSection.reading_writing,
+        module=module,
+        order_index=index,
+        difficulty=difficulty,
+        adaptive_level=adaptive_level(module, index),
+        source=source_for(index),
+        topic=topic,
+        subtopic=subtopic,
+        structure_key=f"rw-{question_type.lower().replace(' ', '-')}-{difficulty_band(difficulty)}-{index % 6}",
+        passage=passage,
+        prompt=prompt,
+        correct_answer=correct,
+        explanation=explanation,
+        trap_type=trap_type,
+        question_type=question_type,
+        format=QuestionFormat.multiple_choice,
+        estimated_time=65 + (index % 4) * 10,
+        discrimination_score=round(0.42 + (index % 6) * 0.07, 2),
+        constraints_required=constraints_required,
+        choices=choices,
+        graph_reasoning_type=payload.get("graph_pattern") if data_type == "graph" else None,
+        graph_required=data_type == "graph",
+        data_type=data_type,
+        data_payload=payload,
+    )
+    signature = build_question_signature(signature_seed)
+    payload["question_signature"] = signature
     return QuestionSpec(
         section=SATSection.reading_writing,
         module=module,
@@ -1876,10 +2196,11 @@ def rw_base(
         discrimination_score=round(0.42 + (index % 6) * 0.07, 2),
         constraints_required=constraints_required,
         choices=choices,
-        graph_reasoning_type=(data_payload or {}).get("graph_pattern") if data_type == "graph" else None,
+        graph_reasoning_type=payload.get("graph_pattern") if data_type == "graph" else None,
         graph_required=data_type == "graph",
         data_type=data_type,
-        data_payload=data_payload or {},
+        data_payload=payload,
+        question_signature=signature,
     )
 
 
@@ -3402,7 +3723,36 @@ def math_base(
     graph_path: str | None = None,
     graph_payload: dict | None = None,
 ) -> QuestionSpec:
-    graph_data = graph_payload or {}
+    has_graph = bool(graph_payload)
+    graph_data = dict(graph_payload or {})
+    signature_seed = QuestionSpec(
+        section=SATSection.math,
+        module=module,
+        order_index=index,
+        difficulty=difficulty_for(module, index),
+        adaptive_level=adaptive_level(module, index),
+        source=source_for(index),
+        topic=topic,
+        subtopic=subtopic,
+        structure_key=f"math-{subtopic.lower().replace(' ', '-')}-{index % 4}",
+        passage=None,
+        prompt=prompt,
+        correct_answer=correct,
+        explanation=explanation,
+        trap_type=trap_type,
+        question_type=question_type,
+        format=fmt,
+        estimated_time=75 + (index % 5) * 15,
+        discrimination_score=round(0.44 + (index % 6) * 0.06, 2),
+        choices=choices,
+        graph_path=graph_path,
+        graph_reasoning_type=graph_data.get("graph_pattern") if has_graph else None,
+        graph_required=has_graph,
+        data_type="graph" if has_graph else "none",
+        data_payload=graph_data,
+    )
+    signature = build_question_signature(signature_seed)
+    graph_data["question_signature"] = signature
     return QuestionSpec(
         section=SATSection.math,
         module=module,
@@ -3424,10 +3774,11 @@ def math_base(
         discrimination_score=round(0.44 + (index % 6) * 0.06, 2),
         choices=choices,
         graph_path=graph_path,
-        graph_reasoning_type=graph_data.get("graph_pattern") if graph_data else None,
-        graph_required=bool(graph_data),
-        data_type="graph" if graph_data else "none",
+        graph_reasoning_type=graph_data.get("graph_pattern") if has_graph else None,
+        graph_required=has_graph,
+        data_type="graph" if has_graph else "none",
         data_payload=graph_data,
+        question_signature=signature,
     )
 
 
