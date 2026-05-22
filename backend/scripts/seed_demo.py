@@ -26,7 +26,7 @@ RW_GENERATION_PATTERNS = {
     "CROSS_TEXT_CONNECTION": {"claim_vs_empirical_evidence", "model_vs_data", "hypothesis_vs_revision"},
     "Inference": {"contradiction_inference", "expectation_violation", "causal_gap"},
     "Transitions": {"reinforcement", "clarification", "concession", "conclusion"},
-    "Rhetorical Synthesis": {"compare", "contrast", "present_conclusion"},
+    "Rhetorical Synthesis": {"notes_task_selection", "compare", "contrast", "present_conclusion"},
     "Standard English Conventions": {
         "grammar_subject_verb",
         "grammar_clause_boundary",
@@ -263,6 +263,12 @@ RW_PATTERN_REGISTRY = {
         "correct_answer_rule": "must state a concise conclusion from relevant notes",
         "distractor_generators": ("true_but_background", "unsupported_generalization", "wrong_note_combination"),
     },
+    "notes_task_selection": {
+        "passage_template": "4-6 bullet notes with relevant facts, irrelevant details, and overlapping information",
+        "logic_rule": "select notes by the stated writing task before combining evidence",
+        "correct_answer_rule": "must match the task exactly, include only relevant information, and combine two or more notes when needed",
+        "distractor_generators": ("true_but_wrong_task", "single_fact_only", "irrelevant_detail_focus"),
+    },
     "grammar_subject_verb": {
         "passage_template": "one sentence with intervening phrase between subject and verb",
         "logic_rule": "match the verb to the grammatical subject only",
@@ -401,7 +407,7 @@ RW_FIXED_MODULE1_SLOT_KEYS = [
     "central_detail",
     "inference_easy",
     "text_structure_basic",
-    "evidence_support",
+    "notes_task_selection",
     "cross_text_basic",
     "cross_text_response",
     "central_competing",
@@ -432,7 +438,7 @@ RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("central_detail", "Main Idea", "study_vs_conclusion", 4),
     RWModuleSlot("inference_easy", "Inference", "expectation_violation", 4),
     RWModuleSlot("text_structure_basic", "TEXT_STRUCTURE_FUNCTION", "setup_vs_result", 4),
-    RWModuleSlot("evidence_support", "Function", "evidence_support", 5),
+    RWModuleSlot("notes_task_selection", "Rhetorical Synthesis", "notes_task_selection", 5),
     RWModuleSlot("cross_text_basic", "CROSS_TEXT_CONNECTION", "claim_vs_empirical_evidence", 5),
     RWModuleSlot("cross_text_response", "CROSS_TEXT_CONNECTION", "model_vs_data", 5),
     RWModuleSlot("central_competing", "Main Idea", "example_vs_general", 6),
@@ -758,10 +764,136 @@ def rw_slot_for(module: int, index: int) -> RWModuleSlot:
 
 
 def generate(question_type: str, pattern: str, *, module: int, index: int) -> QuestionSpec:
-    item = rw_pattern_item(question_type, pattern)
+    if question_type == "Rhetorical Synthesis" and pattern == "notes_task_selection":
+        item = rw_notes_task_selection_item(index)
+    else:
+        item = rw_pattern_item(question_type, pattern)
     if module == 2 and MODULE2_MODE == "hard" and item.constraints_required < 2:
         item = replace(item, constraints_required=2)
     return rw_ambiguity_first_base(module, index, item)
+
+
+def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
+    goal = ("contrast", "summarize", "support a claim", "describe difference", "highlight purpose")[index % 5]
+    goal_payloads = {
+        "contrast": {
+            "notes": (
+                "- Project Delta often hosted weekend workshops for residents.\n"
+                "- Project Mira was designed mainly for quiet individual study.\n"
+                "- Both projects used recycled materials.\n"
+                "- Project Delta had a rooftop garden that opened in 2021.\n"
+                "- Project Mira won a regional design award.\n"
+                "- Several cost estimates may seem relevant but do not address the writing task."
+            ),
+            "constraint": "However, the student's goal is to contrast the two projects' community use, not summarize their awards or materials.",
+            "prompt": "Which choice best uses relevant information from the notes to contrast the two projects?",
+            "answers": (
+                "Both projects used recycled materials and received regional design awards.",
+                "One project invited collective public participation, whereas the other centered on independent use.",
+                "Project Delta had a rooftop garden that opened in 2021.",
+                "Project Mira won a regional design award, although both projects used recycled materials.",
+            ),
+            "correct": 1,
+        },
+        "summarize": {
+            "notes": (
+                "- The East program paired local mentors with after-school studio access.\n"
+                "- The West program paired local mentors with after-school studio access.\n"
+                "- The East program displayed sketches in May.\n"
+                "- The West program used donated tablets.\n"
+                "- Both programs often gave students extra time to practice design skills.\n"
+                "- Several room locations may seem relevant but are only background details."
+            ),
+            "constraint": "However, the student's goal is to summarize the main shared outcome of both programs, not list a single detail from one site.",
+            "prompt": "Which choice best uses relevant information from the notes to summarize the programs' shared outcome?",
+            "answers": (
+                "By combining guidance from experienced adults with extra studio time, both programs expanded students' design practice.",
+                "The East program met in a library basement and displayed sketches in May.",
+                "The West program used donated tablets, a detail that made its posters more colorful.",
+                "The programs were different because one used mentors and the other used tablets.",
+            ),
+            "correct": 0,
+        },
+        "support a claim": {
+            "notes": (
+                "- Visitors often added written responses beside artifacts.\n"
+                "- Visitors could compare their responses with comments from earlier visitors.\n"
+                "- The exhibit opened in June.\n"
+                "- Several objects were borrowed from three museums.\n"
+                "- Attendance rose during the exhibit's first month.\n"
+                "- The curator selected rare objects that may have attracted first-time visitors."
+            ),
+            "constraint": "However, the student's goal is to support the claim that the exhibit encouraged active public interpretation, not merely attendance.",
+            "prompt": "Which choice best uses relevant information from the notes to support the student's claim?",
+            "answers": (
+                "The exhibit opened in June and included objects borrowed from three museums.",
+                "The exhibit asked visitors to contribute interpretations and place them in conversation with other viewers' responses.",
+                "The curator selected several rare objects that may have attracted first-time visitors.",
+                "The exhibit was popular because attendance rose during its first month.",
+            ),
+            "correct": 1,
+        },
+        "describe difference": {
+            "notes": (
+                "- Researcher N used satellite records collected over many years.\n"
+                "- Researcher O relied on interviews from one fishing season.\n"
+                "- Both researchers studied migration patterns that may shift as coastal weather changes.\n"
+                "- Researcher O interviewed fishers in three towns along the same coast.\n"
+                "- Researcher N's maps were published before Researcher O began interviewing participants.\n"
+                "- Several publication dates overlap but are not the key evidence difference."
+            ),
+            "constraint": "However, the student's goal is to describe the difference in evidence sources, not the topic both researchers studied.",
+            "prompt": "Which choice best uses relevant information from the notes to describe a difference between the researchers' evidence?",
+            "answers": (
+                "Both researchers studied migration patterns that may shift as coastal weather changes.",
+                "One researcher drew on long-term remote measurements, whereas the other used short-term firsthand accounts.",
+                "Researcher O interviewed fishers in three towns along the same coast.",
+                "Researcher N's maps were published before Researcher O began interviewing participants.",
+            ),
+            "correct": 1,
+        },
+        "highlight purpose": {
+            "notes": (
+                "- The old entrance was narrow.\n"
+                "- The new layout added ramps.\n"
+                "- The new layout added clearer signs.\n"
+                "- The museum reopened in September after weather-related delays.\n"
+                "- The redesign used several locally produced materials.\n"
+                "- The changes may help more visitors move through the building independently."
+            ),
+            "constraint": "However, the student's goal is to highlight the purpose of the redesign, not discuss its cost or schedule.",
+            "prompt": "Which choice best uses relevant information from the notes to highlight the purpose of the redesign?",
+            "answers": (
+                "The redesign took six months and used several locally produced materials.",
+                "The changes turned a difficult entry sequence into one that supported more independent movement through the building.",
+                "The museum reopened in September after several weather-related delays.",
+                "Local materials made the redesign visually similar to nearby public buildings.",
+            ),
+            "correct": 1,
+        },
+    }
+    payload = goal_payloads[goal]
+    return AmbiguityFirstItem(
+        generation_pattern="notes_task_selection",
+        ambiguous_passage=(
+            "A student is reviewing notes for a writing task.\n"
+            "Notes:\n"
+            f"{payload['notes']}"
+        ),
+        constraint_sentence=payload["constraint"],
+        prompt=payload["prompt"],
+        answer_options=payload["answers"],
+        correct_index=payload["correct"],
+        topic="Rhetorical Synthesis",
+        subtopic=f"Pattern: notes_task_selection; goal={goal}",
+        question_type="Rhetorical Synthesis",
+        trap_type="notes task selection trap",
+        explanation=(
+            f"Task={goal}; correct answer combines two or more relevant notes and filters overlapping or irrelevant details; "
+            "distractor_types=true_but_wrong_task,single_fact_only,irrelevant_detail_focus."
+        ),
+        constraints_required=2,
+    )
 
 
 def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
@@ -1993,6 +2125,8 @@ def validate_ambiguity_first_item(item: AmbiguityFirstItem) -> None:
     if ambiguous_sentence_count < 1:
         raise ValueError("Ambiguity-first passage must start with at least one ambiguous sentence.")
     max_final_sentences = 6 if item.question_type in {"CROSS_TEXT_CONNECTION", "Rhetorical Synthesis"} else 4
+    if item.generation_pattern == "notes_task_selection":
+        return
     if final_sentence_count < 2 or final_sentence_count > max_final_sentences:
         raise ValueError(f"Constrained final passage must be 2-{max_final_sentences} sentences.")
 
@@ -2081,6 +2215,7 @@ def validate_rw_pattern_registry() -> None:
         "contrast",
         "compare",
         "present_conclusion",
+        "notes_task_selection",
         "referent_precision",
         "sentence_boundary_resolution",
         "appositive_structure",
@@ -2178,6 +2313,8 @@ def validate_reading_writing_spec(spec: QuestionSpec) -> None:
         validate_text_structure_function(spec)
     if spec.question_type == "CROSS_TEXT_CONNECTION":
         validate_cross_text_connection(spec)
+    if extract_metadata_value(spec.explanation, "pattern") == "notes_task_selection":
+        validate_notes_task_selection(spec)
     validate_cognitive_depth(spec)
     validate_question_data_contract(spec)
 
@@ -2331,6 +2468,29 @@ def validate_text_structure_cognitive_shift(spec: QuestionSpec) -> None:
     )
     if not any(start in passage and any(end in passage for end in endings) for start, endings in logical_shift_pairs):
         raise ValueError("TEXT_STRUCTURE_FUNCTION must contain a cognitive shift such as belief->contradiction, hypothesis->evidence, or expectation->result.")
+
+
+def validate_notes_task_selection(spec: QuestionSpec) -> None:
+    passage = spec.passage or ""
+    bullet_count = len(re.findall(r"(?m)^\s*-\s+", passage))
+    if bullet_count < 4:
+        raise ValueError("notes_task_selection requires at least four bullet notes.")
+    if bullet_count > 6:
+        raise ValueError("notes_task_selection must stay within 4-6 bullet notes.")
+    explanation = spec.explanation
+    for distractor_type in ("true_but_wrong_task", "single_fact_only", "irrelevant_detail_focus"):
+        if distractor_type not in explanation:
+            raise ValueError(f"notes_task_selection missing distractor type {distractor_type}.")
+    correct_choices = [choice_spec for choice_spec in spec.choices if choice_spec.role == ChoiceTrapRole.correct]
+    if len(correct_choices) != 1:
+        raise ValueError("notes_task_selection requires exactly one correct answer.")
+    correct_text = correct_choices[0].text.lower()
+    if not any(joiner in correct_text for joiner in (" and ", " whereas ", " while ", ";")):
+        raise ValueError("notes_task_selection correct answer must combine two or more notes.")
+    if "Task=" not in explanation:
+        raise ValueError("notes_task_selection must record the randomized question goal.")
+    if len(simulate_first_pass_elimination(spec)) < 2:
+        raise ValueError("notes_task_selection distractors are too obvious.")
 
 
 def validate_cross_text_cognitive_relationship(spec: QuestionSpec) -> None:
