@@ -428,6 +428,101 @@ function ReferenceModal({ open, onClose }: { open: boolean; onClose: () => void 
   );
 }
 
+function StudentResponseDirections() {
+  const examples = [
+    {
+      answer: "3.5",
+      acceptable: ["3.5", "3.50", "7/2"],
+      unacceptable: ["31/2", "3 1/2"]
+    },
+    {
+      answer: "2/3",
+      acceptable: ["2/3", ".6666", ".6667", "0.666", "0.667"],
+      unacceptable: ["0.66", ".66", "0.67", ".67"]
+    },
+    {
+      answer: "-1/3",
+      acceptable: ["-1/3", "-.3333", "-0.333"],
+      unacceptable: ["-.33", "-0.33"]
+    }
+  ];
+
+  return (
+    <div className="mx-auto max-w-[620px] px-8 py-9 text-slate-950">
+      <h2 className="mb-6 text-[22px] font-bold leading-tight">Student-produced response directions</h2>
+      <ul className="mb-10 list-disc space-y-2 pl-7 text-[17px] leading-7">
+        <li>If you find <strong>more than one correct answer</strong>, enter only one answer.</li>
+        <li>You can enter up to 5 characters for a <strong>positive answer</strong> and up to 6 characters for a <strong>negative answer</strong>.</li>
+        <li>If your answer is a <strong>fraction</strong> that does not fit, enter the decimal equivalent.</li>
+        <li>If your answer is a <strong>decimal</strong> that does not fit, truncate or round at the fourth digit.</li>
+        <li>If your answer is a <strong>mixed number</strong>, enter it as an improper fraction or decimal equivalent.</li>
+        <li>Do not enter <strong>symbols</strong> such as a percent sign, comma, or dollar sign.</li>
+      </ul>
+
+      <h3 className="mb-2 text-center text-[18px] font-semibold">Examples</h3>
+      <table className="w-full border-collapse text-center text-[15px]">
+        <thead>
+          <tr>
+            <th className="border border-slate-600 px-3 py-4 font-semibold">Answer</th>
+            <th className="border border-slate-600 px-3 py-4 font-semibold">Acceptable ways to enter answer</th>
+            <th className="border border-slate-600 px-3 py-4 font-semibold">Unacceptable: will NOT receive credit</th>
+          </tr>
+        </thead>
+        <tbody>
+          {examples.map((example) => (
+            <tr key={example.answer}>
+              <td className="border border-slate-600 px-3 py-5 text-lg font-semibold">{example.answer}</td>
+              <td className="border border-slate-600 px-3 py-5">
+                <div className="flex flex-col items-center gap-2">
+                  {example.acceptable.map((value) => (
+                    <code className="bg-slate-100 px-1.5 py-0.5 text-[15px]" key={value}>{value}</code>
+                  ))}
+                </div>
+              </td>
+              <td className="border border-slate-600 px-3 py-5">
+                <div className="flex flex-col items-center gap-2">
+                  {example.unacceptable.map((value) => (
+                    <code className="bg-slate-100 px-1.5 py-0.5 text-[15px]" key={value}>{value}</code>
+                  ))}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function StudentResponseEntry({
+  value,
+  onChange
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="mt-8">
+      <label className="block w-36">
+        <span className="sr-only">Enter answer</span>
+        <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-16 w-36 rounded-lg border-2 border-slate-900 px-4 text-center text-2xl font-semibold tracking-[0.2em] text-slate-950 outline-blue-700"
+          inputMode="decimal"
+          maxLength={6}
+        />
+      </label>
+      <div className="mt-12">
+        <h2 className="mb-4 text-[22px] font-bold text-slate-950">Answer Preview:</h2>
+        <div className="min-h-12 text-[28px] font-semibold text-slate-950">
+          {value || ""}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TestPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const router = useRouter();
@@ -526,8 +621,9 @@ export default function TestPage() {
     ? question.data_payload
     : null;
   const hasTablePayload = Boolean(question?.data_type === "table" && question.data_payload?.columns?.length && question.data_payload?.rows?.length);
+  const isStudentResponse = question?.format === "grid_in";
   const hasTextStimulus = Boolean(isNotesQuestion || isCrossTextQuestion || (!isMathSection && question?.passage?.trim()));
-  const hasVisualStimulus = Boolean(hasTablePayload || graphPayload || question?.graph_path);
+  const hasVisualStimulus = Boolean(hasTablePayload || graphPayload || question?.graph_path || isStudentResponse);
   const hasStimulus = hasTextStimulus || hasVisualStimulus;
   const orderedChoices = useMemo(() => {
     if (!question || question.format !== "multiple_choice") return [];
@@ -1321,8 +1417,10 @@ export default function TestPage() {
               }}
               ref={passagePanelRef}
             >
-              <div className="flex w-full max-w-[580px] flex-col gap-4">
-                {isNotesQuestion ? (
+              <div className={isStudentResponse ? "w-full" : "flex w-full max-w-[580px] flex-col gap-4"}>
+                {isStudentResponse ? (
+                  <StudentResponseDirections />
+                ) : isNotesQuestion ? (
                   <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
                     <p>A student is reviewing notes for a writing task.</p>
                     <section aria-labelledby="notes-label" className="border-b border-[#e5e7eb] pb-3">
@@ -1362,7 +1460,7 @@ export default function TestPage() {
                     onMouseUp={handlePassageMouseUp}
                   />
                 ) : null}
-                {hasTablePayload ? (
+                {!isStudentResponse && hasTablePayload ? (
                   <div className="mt-8 overflow-x-auto">
                     {question.data_payload?.title ? (
                       <div className="mb-2 text-center text-sm font-semibold text-slate-950">
@@ -1397,10 +1495,10 @@ export default function TestPage() {
                     </table>
                   </div>
                 ) : null}
-                {graphPayload ? (
+                {!isStudentResponse && graphPayload ? (
                   <DataGraph payload={graphPayload} />
                 ) : null}
-                {question.graph_path ? (
+                {!isStudentResponse && question.graph_path ? (
                   <Image
                     alt="SAT graph"
                     className="mt-8 h-auto max-h-[420px] w-full object-contain"
@@ -1462,7 +1560,7 @@ export default function TestPage() {
               </button>
             </div>
             <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
-            <h1 className="question-text text-center text-[20px] font-semibold leading-[1.45] text-slate-950">{question.prompt}</h1>
+            <h1 className={`${isStudentResponse ? "mb-8 text-left" : "question-text text-center"} text-[20px] font-semibold leading-[1.45] text-slate-950`}>{question.prompt}</h1>
 
             <div className="answers">
               {question.format === "multiple_choice" ? orderedChoices.map((choice, choiceIndex) => (
@@ -1519,11 +1617,9 @@ export default function TestPage() {
                   </button>
                 </div>
               )) : (
-                <input
+                <StudentResponseEntry
                   value={answers[question.id] || ""}
-                  onChange={(event) => save(question.id, event.target.value)}
-                  className="answer-option rounded-[10px] border border-[#e5e7eb] px-5 py-4 text-[16px] text-slate-950 outline-blue-700"
-                  placeholder="Enter answer"
+                  onChange={(value) => save(question.id, value)}
                 />
               )}
             </div>
