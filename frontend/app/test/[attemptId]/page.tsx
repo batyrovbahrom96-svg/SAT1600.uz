@@ -4,7 +4,8 @@ import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Ban, Bookmark, ChevronLeft, ChevronRight, Flag, X, Undo2 } from "lucide-react";
+import Script from "next/script";
+import { Ban, Bookmark, Calculator as CalculatorIcon, ChevronLeft, ChevronRight, Flag, X, Undo2 } from "lucide-react";
 import { API_URL, ApiError, Question, api } from "@/lib/api";
 
 type ModulePayload = {
@@ -52,6 +53,19 @@ type StoredAnswerState = {
 };
 
 type TestModal = "shortcuts" | "help" | null;
+type CalculatorMode = "graphing" | "scientific";
+type DesmosCalculatorInstance = {
+  destroy: () => void;
+};
+
+declare global {
+  interface Window {
+    Desmos?: {
+      GraphingCalculator: (element: HTMLElement, options?: Record<string, unknown>) => DesmosCalculatorInstance;
+      ScientificCalculator: (element: HTMLElement, options?: Record<string, unknown>) => DesmosCalculatorInstance;
+    };
+  }
+}
 
 const highlightStyles: Record<HighlightType, string> = {
   yellow: "background-color: #fde68a;",
@@ -167,6 +181,81 @@ function DataGraph({ payload }: { payload: GraphPayload }) {
   );
 }
 
+function CalculatorModal({
+  open,
+  onClose,
+  scriptReady
+}: {
+  open: boolean;
+  onClose: () => void;
+  scriptReady: boolean;
+}) {
+  const [mode, setMode] = useState<CalculatorMode>("graphing");
+  const calculatorRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open || !scriptReady || !window.Desmos || !calculatorRef.current) return;
+
+    calculatorRef.current.innerHTML = "";
+    const calculator = mode === "graphing"
+      ? window.Desmos.GraphingCalculator(calculatorRef.current, {
+        expressions: true,
+        settingsMenu: false,
+        zoomButtons: true,
+        keypad: true
+      })
+      : window.Desmos.ScientificCalculator(calculatorRef.current);
+
+    return () => {
+      calculator.destroy();
+      if (calculatorRef.current) calculatorRef.current.innerHTML = "";
+    };
+  }, [mode, open, scriptReady]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-end bg-slate-950/15 p-5" role="dialog" aria-modal="true" aria-label="Calculator">
+      <div className="flex h-[620px] w-full max-w-[560px] flex-col overflow-hidden rounded-md border border-[#d1d5db] bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[#e5e7eb] bg-slate-50 px-4 py-3">
+          <div className="inline-flex rounded-md border border-[#d1d5db] bg-white p-1 text-sm font-semibold text-slate-700">
+            <button
+              className={`rounded px-3 py-1.5 ${mode === "graphing" ? "bg-blue-700 text-white" : "hover:bg-slate-100"}`}
+              onClick={() => setMode("graphing")}
+              type="button"
+            >
+              Graphing
+            </button>
+            <button
+              className={`rounded px-3 py-1.5 ${mode === "scientific" ? "bg-blue-700 text-white" : "hover:bg-slate-100"}`}
+              onClick={() => setMode("scientific")}
+              type="button"
+            >
+              Scientific
+            </button>
+          </div>
+          <button
+            aria-label="Close calculator"
+            className="inline-flex h-9 w-9 items-center justify-center rounded hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+            onClick={onClose}
+            type="button"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <div className="relative min-h-0 flex-1">
+          {!scriptReady ? (
+            <div className="absolute inset-0 grid place-items-center text-sm font-semibold text-slate-600">
+              Loading calculator...
+            </div>
+          ) : null}
+          <div id="calculator" ref={calculatorRef} className="h-full w-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TestPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const router = useRouter();
@@ -186,6 +275,8 @@ export default function TestPage() {
   const [lineReaderY, setLineReaderY] = useState(120);
   const [largeFontMode, setLargeFontMode] = useState(false);
   const [isTimerHidden, setIsTimerHidden] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [desmosReady, setDesmosReady] = useState(false);
   const [highlightModeEnabled, setHighlightModeEnabled] = useState(true);
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
   const [focusedChoiceIndex, setFocusedChoiceIndex] = useState(0);
@@ -925,6 +1016,11 @@ export default function TestPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
+      <Script
+        src="https://www.desmos.com/api/v1.6/calculator.js?apiKey=desmos"
+        strategy="afterInteractive"
+        onLoad={() => setDesmosReady(true)}
+      />
       <header className="sticky top-0 z-20 bg-white">
         <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-[#e5e7eb] px-5">
           <div className="flex min-w-0 items-center gap-6">
@@ -952,6 +1048,13 @@ export default function TestPage() {
             </button>
           </div>
           <div className="flex justify-end gap-6 text-sm font-semibold text-slate-700">
+            <button
+              className="inline-flex items-center gap-2 hover:text-slate-950"
+              onClick={() => setIsCalculatorOpen(true)}
+              type="button"
+            >
+              <CalculatorIcon size={17} /> Calculator
+            </button>
             <button className="hover:text-slate-950" type="button">Highlights & Notes</button>
             <div className="relative" ref={moreMenuRef}>
               <button
@@ -1371,6 +1474,12 @@ export default function TestPage() {
           </div>
         </div>
       ) : null}
+
+      <CalculatorModal
+        open={isCalculatorOpen}
+        onClose={() => setIsCalculatorOpen(false)}
+        scriptReady={desmosReady || Boolean(typeof window !== "undefined" && window.Desmos)}
+      />
 
       <footer className="sticky bottom-0 z-20 border-t border-[#e5e7eb] bg-white">
         <div className="mx-auto grid h-14 max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5">
