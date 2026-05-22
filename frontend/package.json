@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "convex": "^1.39.1",
     "lucide-react": "0.468.0",
     "next": "latest",
     "react": "19.0.0",
