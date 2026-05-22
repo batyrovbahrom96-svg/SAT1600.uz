@@ -288,73 +288,91 @@ function CalculatorModal({
   );
 }
 
-function MiniDiagram({ type }: { type: "circle" | "rectangle" | "triangle" | "cylinder" | "sphere" | "cone" | "pyramid" | "pythagorean" | "45" | "30" | "angle" }) {
+type ReferenceDiagramType = "circle" | "rectangle" | "triangle" | "cylinder" | "sphere" | "cone" | "pyramid" | "pythagorean" | "45" | "30" | "angle";
+
+function MiniDiagram({ type }: { type: ReferenceDiagramType }) {
+  const labelClass = "fill-slate-700 text-[11px] font-bold";
+
   return (
-    <svg className="h-16 w-20 shrink-0 text-slate-700" viewBox="0 0 80 64" aria-hidden="true">
+    <svg className="h-20 w-24 shrink-0 text-slate-700" viewBox="0 0 96 80" aria-hidden="true">
       {type === "circle" ? (
         <>
-          <circle cx="40" cy="32" r="22" fill="none" stroke="currentColor" strokeWidth="2" />
-          <line x1="40" x2="62" y1="32" y2="32" stroke="currentColor" strokeWidth="2" />
-          <text x="48" y="27" className="fill-slate-700 text-[10px] font-bold">r</text>
+          <circle cx="48" cy="40" r="24" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <line x1="48" x2="72" y1="40" y2="40" stroke="currentColor" strokeWidth="2" />
+          <circle cx="48" cy="40" r="2" fill="currentColor" />
+          <text x="58" y="34" className={labelClass}>r</text>
         </>
       ) : type === "rectangle" ? (
         <>
-          <rect x="14" y="16" width="52" height="32" fill="none" stroke="currentColor" strokeWidth="2" />
-          <text x="36" y="59" className="fill-slate-700 text-[10px] font-bold">l</text>
-          <text x="69" y="34" className="fill-slate-700 text-[10px] font-bold">w</text>
+          <rect x="18" y="20" width="56" height="36" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <text x="44" y="72" className={labelClass}>l</text>
+          <text x="80" y="42" className={labelClass}>w</text>
         </>
       ) : type === "triangle" || type === "pythagorean" || type === "45" || type === "30" || type === "angle" ? (
         <>
-          <path d="M16 48 L64 48 L64 14 Z" fill="none" stroke="currentColor" strokeWidth="2" />
-          <path d="M54 48 L54 38 L64 38" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M18 60 L76 60 L76 18 Z" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <path d="M64 60 L64 48 L76 48" fill="none" stroke="currentColor" strokeWidth="2" />
           {type === "pythagorean" ? (
             <>
-              <text x="35" y="58" className="fill-slate-700 text-[10px] font-bold">a</text>
-              <text x="68" y="34" className="fill-slate-700 text-[10px] font-bold">b</text>
-              <text x="33" y="26" className="fill-slate-700 text-[10px] font-bold">c</text>
+              <text x="44" y="75" className={labelClass}>a</text>
+              <text x="82" y="42" className={labelClass}>b</text>
+              <text x="41" y="35" className={labelClass}>c</text>
             </>
           ) : type === "45" ? (
             <>
-              <text x="19" y="45" className="fill-slate-700 text-[10px] font-bold">45</text>
-              <text x="55" y="45" className="fill-slate-700 text-[10px] font-bold">45</text>
+              <text x="21" y="55" className={labelClass}>45°</text>
+              <text x="62" y="46" className={labelClass}>45°</text>
+              <text x="43" y="75" className={labelClass}>x</text>
+              <text x="82" y="42" className={labelClass}>x</text>
             </>
           ) : type === "30" ? (
             <>
-              <text x="18" y="45" className="fill-slate-700 text-[10px] font-bold">30</text>
-              <text x="55" y="45" className="fill-slate-700 text-[10px] font-bold">60</text>
+              <text x="21" y="55" className={labelClass}>30°</text>
+              <text x="62" y="46" className={labelClass}>60°</text>
+              <text x="82" y="42" className={labelClass}>x</text>
+              <text x="37" y="34" className={labelClass}>2x</text>
             </>
           ) : type === "angle" ? (
-            <text x="30" y="35" className="fill-slate-700 text-[10px] font-bold">180</text>
+            <>
+              <path d="M27 58 Q40 42 59 53" fill="none" stroke="currentColor" strokeWidth="1.8" />
+              <text x="37" y="48" className={labelClass}>180°</text>
+            </>
           ) : (
             <>
-              <line x1="64" x2="16" y1="14" y2="48" stroke="currentColor" strokeDasharray="3 3" strokeWidth="1.5" />
-              <text x="38" y="59" className="fill-slate-700 text-[10px] font-bold">b</text>
-              <text x="67" y="34" className="fill-slate-700 text-[10px] font-bold">h</text>
+              <line x1="76" x2="76" y1="18" y2="60" stroke="currentColor" strokeDasharray="4 3" strokeWidth="1.8" />
+              <text x="45" y="75" className={labelClass}>b</text>
+              <text x="82" y="42" className={labelClass}>h</text>
             </>
           )}
         </>
       ) : type === "sphere" ? (
         <>
-          <circle cx="40" cy="32" r="22" fill="none" stroke="currentColor" strokeWidth="2" />
-          <ellipse cx="40" cy="32" rx="22" ry="7" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          <line x1="40" x2="58" y1="32" y2="22" stroke="currentColor" strokeWidth="1.5" />
-          <text x="51" y="24" className="fill-slate-700 text-[10px] font-bold">r</text>
+          <circle cx="48" cy="40" r="24" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <ellipse cx="48" cy="40" rx="24" ry="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          <line x1="48" x2="70" y1="40" y2="31" stroke="currentColor" strokeWidth="1.8" />
+          <text x="62" y="28" className={labelClass}>r</text>
         </>
       ) : type === "cone" ? (
         <>
-          <path d="M40 9 L18 48 Q40 58 62 48 Z" fill="none" stroke="currentColor" strokeWidth="2" />
-          <ellipse cx="40" cy="48" rx="22" ry="8" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M48 10 L22 58" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <path d="M48 10 L74 58" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <ellipse cx="48" cy="58" rx="26" ry="9" fill="none" stroke="currentColor" strokeWidth="2" />
+          <line x1="48" x2="48" y1="10" y2="58" stroke="currentColor" strokeDasharray="4 3" strokeWidth="1.5" />
+          <text x="53" y="38" className={labelClass}>h</text>
         </>
       ) : type === "pyramid" ? (
         <>
-          <path d="M40 8 L15 47 L55 55 L67 34 Z" fill="none" stroke="currentColor" strokeWidth="2" />
-          <path d="M40 8 L55 55 M15 47 L67 34" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M48 9 L20 57 L58 68 L76 45 Z" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <path d="M48 9 L58 68 M48 9 L76 45 M20 57 L76 45" fill="none" stroke="currentColor" strokeWidth="1.7" />
+          <line x1="48" x2="48" y1="9" y2="57" stroke="currentColor" strokeDasharray="4 3" strokeWidth="1.4" />
         </>
       ) : (
         <>
-          <ellipse cx="40" cy="16" rx="22" ry="8" fill="none" stroke="currentColor" strokeWidth="2" />
-          <path d="M18 16 V48 Q40 62 62 48 V16" fill="none" stroke="currentColor" strokeWidth="2" />
-          <ellipse cx="40" cy="48" rx="22" ry="8" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <ellipse cx="48" cy="18" rx="24" ry="8" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <path d="M24 18 V58 Q48 72 72 58 V18" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <ellipse cx="48" cy="58" rx="24" ry="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          <line x1="48" x2="48" y1="18" y2="58" stroke="currentColor" strokeDasharray="4 3" strokeWidth="1.5" />
+          <text x="53" y="42" className={labelClass}>h</text>
         </>
       )}
     </svg>
@@ -398,7 +416,7 @@ function ReferenceModal({ open, onClose }: { open: boolean; onClose: () => void 
           {formulas.map((item) => (
             <section className="flex min-h-24 items-center gap-4 rounded-md border border-[#e5e7eb] bg-white p-4" key={item.title}>
               <MiniDiagram type={item.type} />
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-sm font-bold text-slate-900">{item.title}</h3>
                 <p className="mt-1 text-lg font-semibold tracking-normal text-slate-950">{item.formula}</p>
               </div>
@@ -487,6 +505,12 @@ export default function TestPage() {
   useEffect(() => {
     if (moduleData && secondsLeft === 0) void advance();
   }, [secondsLeft]);
+
+  useEffect(() => {
+    if (moduleData?.attempt.current_section !== "math") {
+      setIsReferenceOpen(false);
+    }
+  }, [moduleData?.attempt.current_section]);
 
   const question = moduleData?.questions[index];
   const isCrossTextQuestion = question?.data_payload?.type === "cross_text"
