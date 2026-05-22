@@ -426,7 +426,7 @@ RW_FIXED_MODULE1_SLOT_KEYS = [
     "quant_graph_support",
     "evidence_weaken",
     "evidence_support_harder",
-    "quant_table_mapping",
+    "quant_graph_trend",
     "inference_hypothesis",
     "grammar_sva",
     "grammar_modifier",
@@ -457,7 +457,7 @@ RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("quant_graph_support", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 6),
     RWModuleSlot("evidence_weaken", "Command of Evidence", "weaken_origin_claim", 6),
     RWModuleSlot("evidence_support_harder", "Command of Evidence", "textual_claim_strength", 7),
-    RWModuleSlot("quant_table_mapping", "Data Analysis", "data_mapping_table", 7),
+    RWModuleSlot("quant_graph_trend", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 7),
     RWModuleSlot("inference_hypothesis", "CROSS_TEXT_CONNECTION", "hypothesis_vs_revision", 7),
     RWModuleSlot("grammar_sva", "Standard English Conventions", "grammar_subject_verb", 7),
     RWModuleSlot("grammar_modifier", "Standard English Conventions", "grammar_modifier", 7),
@@ -478,8 +478,8 @@ MODULE2_HARD_ORDER = [
     "inference", "inference", "inference",
     "function", "function", "function",
     "cross_text", "cross_text", "cross_text",
-    "command_text", "command_text", "command_text",
-    "command_graph", "command_graph",
+    "command_text",
+    "command_graph", "command_graph", "command_graph", "command_graph",
     "transition", "transition",
     "central_idea", "central_idea", "central_idea",
     "rhetorical", "rhetorical", "rhetorical",
@@ -498,10 +498,10 @@ MODULE2_HARD_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("m2_cross_text_2", "CROSS_TEXT_CONNECTION", "model_vs_data", 9),
     RWModuleSlot("m2_cross_text_3", "CROSS_TEXT_CONNECTION", "hypothesis_vs_revision", 10),
     RWModuleSlot("m2_command_text_1", "Command of Evidence", "textual_claim_strength", 8),
-    RWModuleSlot("m2_command_text_2", "Command of Evidence", "weaken_origin_claim", 9),
-    RWModuleSlot("m2_command_text_3", "Command of Evidence", "causal_chain_support", 10),
     RWModuleSlot("m2_command_graph_1", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 8),
-    RWModuleSlot("m2_command_graph_2", "Command of Evidence", "quantitative_trend_value", 9),
+    RWModuleSlot("m2_command_graph_2", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 9),
+    RWModuleSlot("m2_command_graph_3", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 9),
+    RWModuleSlot("m2_command_graph_4", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 10),
     RWModuleSlot("m2_transition_1", "Transitions", "concession", 8),
     RWModuleSlot("m2_transition_2", "Transitions", "conclusion", 9),
     RWModuleSlot("m2_central_idea_1", "Main Idea", "study_vs_conclusion", 8),
@@ -618,6 +618,7 @@ def build_question_bank() -> list[QuestionSpec]:
         validate_answer_distribution(module_questions)
         validate_notes_task_count(module_questions)
         validate_graph_intent_distribution(module_questions)
+        validate_graph_coverage(module_questions, module)
         for question in module_questions:
             validate_reading_writing_spec(question)
             validate_choice_label_order(question)
@@ -736,6 +737,28 @@ def validate_graph_intent_distribution(module_questions: list[QuestionSpec]) -> 
         seen.add(pair)
 
 
+def validate_graph_coverage(module_questions: list[QuestionSpec], module: int) -> None:
+    graph_questions = [question for question in module_questions if question.data_type == "graph"]
+    if module == 1:
+        required_intents = {"claim_support", "trend_description"}
+        if len(graph_questions) < 2:
+            raise ValueError("Module 1 must include at least two graph questions.")
+    else:
+        required_intents = {"claim_support", "role_in_argument", "inference"}
+        if len(graph_questions) < 4:
+            raise ValueError("Module 2 must include at least four graph questions.")
+    intents = {str((question.data_payload or {}).get("question_intent")) for question in graph_questions}
+    if not required_intents.issubset(intents):
+        raise ValueError(f"Module {module} graph questions missing required intents: {required_intents - intents}.")
+    prompt_templates = [str((question.data_payload or {}).get("prompt_template")) for question in graph_questions]
+    if len(prompt_templates) != len(set(prompt_templates)):
+        raise ValueError(f"Module {module} graph prompt templates cannot repeat.")
+    reasoning_counts = Counter(str((question.data_payload or {}).get("reasoning_type")) for question in graph_questions)
+    repeated = {reasoning_type: count for reasoning_type, count in reasoning_counts.items() if count > 2}
+    if repeated:
+        raise ValueError(f"Module {module} uses the same graph reasoning type too often: {repeated}.")
+
+
 def validate_notes_task_count(module_questions: list[QuestionSpec]) -> None:
     count_notes = sum(
         1
@@ -804,8 +827,8 @@ def rw_slot_for(module: int, index: int) -> RWModuleSlot:
 def generate(question_type: str, pattern: str, *, module: int, index: int) -> QuestionSpec:
     if question_type == "Rhetorical Synthesis" and pattern == "notes_task_selection":
         item = rw_notes_task_selection_item(index)
-    elif question_type == "command_of_evidence_quantitative_graph" and module == 2 and MODULE2_MODE == "hard":
-        item = rw_module2_hard_graph_item(pattern)
+    elif question_type == "command_of_evidence_quantitative_graph":
+        item = rw_graph_item(pattern, module, index)
     else:
         item = rw_pattern_item(question_type, pattern)
     if module == 2 and MODULE2_MODE == "hard" and item.constraints_required < 2:
@@ -910,54 +933,168 @@ def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
     )
 
 
-def rw_module2_hard_graph_item(pattern: str) -> AmbiguityFirstItem:
-    return AmbiguityFirstItem(
-        generation_pattern=pattern,
-        ambiguous_passage=(
+def rw_graph_item(pattern: str, module: int, index: int) -> AmbiguityFirstItem:
+    module_one_variants = (
+        {
+            "graph_pattern": "crossover_point",
+            "question_intent": "claim_support",
+            "reasoning_type": "conditional_comparison",
+            "prompt_template": "supports_the_conclusion",
+            "prompt": "Which choice gives data from the graph that supports the researchers' conclusion?",
+            "passage": "Researchers studying rooftop gardens first found that increasing weekly watering often improved plant growth. Several early notes made watering frequency seem like the main explanation.",
+            "constraint": "However, after comparing soil-depth groups in the graph, they concluded that the advantage shifted under heavier watering.",
+            "answers": (
+                "Both soil groups show higher growth as watering increases, but that pattern focuses on watering rather than the revised shift between groups.",
+                "The deep-soil group has higher growth at one watering event, which partly fits the soil-depth claim but misses the later crossover.",
+                "The deep-soil series remains above the shallow-soil series at every watering level, misreading the trend after the crossover point.",
+                "The deep-soil group is higher at low watering, but the shallow-soil group is higher at three watering events, supporting the conclusion that the advantage shifts under heavier watering.",
+            ),
+            "correct": 3,
+            "series": [
+                {"name": "Deep soil", "values": [(1, 6), (2, 7), (3, 8)]},
+                {"name": "Shallow soil", "values": [(1, 4), (2, 7), (3, 11)]},
+            ],
+        },
+        {
+            "graph_pattern": "divergence",
+            "question_intent": "trend_description",
+            "reasoning_type": "trend_reading",
+            "prompt_template": "describes_the_relationship",
+            "prompt": "Which choice best describes the relationship shown in the graph?",
+            "passage": "Researchers comparing two classroom ventilation systems first expected both systems may perform similarly as room occupancy increased. Several setup notes describe fan size, although those notes do not determine the relationship shown in the graph.",
+            "constraint": "However, the graph is needed to describe how the systems' performance changes as occupancy rises.",
+            "answers": (
+                "System A starts with a slightly higher score, a true local detail that does not describe how the relationship changes.",
+                "Both systems are ventilation designs, which matches the study context but not the graph relationship.",
+                "The systems move farther apart as occupancy rises, with System B improving more sharply than System A.",
+                "System B is higher at every occupancy level, so the gap is constant across the graph.",
+            ),
+            "correct": 2,
+            "series": [
+                {"name": "System A", "values": [(10, 72), (20, 74), (30, 75), (40, 76)]},
+                {"name": "System B", "values": [(10, 70), (20, 76), (30, 83), (40, 91)]},
+            ],
+        },
+    )
+    module_two_variants = (
+        {
+            "graph_pattern": "threshold_reversal",
+            "question_intent": "claim_support",
+            "reasoning_type": "conditional_comparison",
+            "prompt_template": "supports_the_conclusion",
+            "prompt": "Which choice gives data from the graph that supports the researchers' conditional conclusion?",
+            "answer_role": "supporting",
+            "correct": "Panel T is strongest below the threshold, but Panel S overtakes it after the plateau while Panel R changes little, supporting the claim only for higher-noise conditions.",
+        },
+        {
+            "graph_pattern": "partial_support_region",
+            "question_intent": "role_in_argument",
+            "reasoning_type": "contradiction_detection",
+            "prompt_template": "weakens_the_conclusion",
+            "prompt": "Which choice gives data from the graph that weakens the researchers' broad conclusion?",
+            "answer_role": "weakening",
+            "correct": "The pattern supports the hypothesis only after the middle condition; below that range, Panel T remains stronger, weakening the claim that Panel S is generally superior.",
+        },
+        {
+            "graph_pattern": "conflicting_variable_dominance",
+            "question_intent": "inference",
+            "reasoning_type": "multi_point_synthesis",
+            "prompt_template": "completes_the_conclusion",
+            "prompt": "Which choice most logically completes the researchers' conclusion using the graph?",
+            "answer_role": "completing",
+            "correct": "The conclusion should be limited: Panel S becomes preferable only after the middle condition, while Panel T better fits the lower-noise cases and Panel R stays comparatively flat.",
+        },
+        {
+            "graph_pattern": "diminishing_returns",
+            "question_intent": "inference",
+            "reasoning_type": "exception_identification",
+            "prompt_template": "shows_a_limitation",
+            "prompt": "Which choice shows a limitation or exception to the researchers' reasoning?",
+            "answer_role": "limiting",
+            "correct": "The graph shows a plateau before the late increase, so the claim works only outside the middle condition rather than across the full range.",
+        },
+    )
+    variant = module_two_variants[(index - 10) % len(module_two_variants)] if module == 2 and MODULE2_MODE == "hard" else module_one_variants[index % len(module_one_variants)]
+    if module == 2 and MODULE2_MODE == "hard":
+        return rw_module2_hard_graph_item(pattern, variant)
+    return rw_graph_variant_item(pattern, variant, hard_mode=False)
+
+
+def rw_module2_hard_graph_item(pattern: str, variant: dict) -> AmbiguityFirstItem:
+    base = {
+        "passage": (
             "Researchers testing three sound-dampening panels first expected the thickest panel may be the best overall choice. "
             "A competing hypothesis was that material density mattered only when background noise passed a moderate level."
         ),
-        constraint_sentence=(
+        "constraint": (
             "However, the researchers argued only when performance at low and high noise levels is considered together, except for the middle condition, can the graph be used to evaluate that hypothesis."
         ),
-        prompt="Which choice best describes data from the graph that support the researchers' conditional conclusion?",
-        answer_options=(
+        "answers": (
             "Panel R has the highest score at the first noise level, a true local detail that does not address the conditional change across the range.",
             "All panels improve somewhere in the graph, which matches the early expectation but not the graph's threshold-dependent reversal.",
-            "Panel T is strongest below the threshold, but Panel S overtakes it after the plateau while Panel R changes little, supporting the claim only for higher-noise conditions.",
+            variant["correct"],
             "Panel S has the highest final score, so it is the best panel at every noise level.",
         ),
-        correct_index=2,
+    }
+    return rw_graph_variant_item(pattern, {**variant, **base}, hard_mode=True)
+
+
+def rw_graph_variant_item(pattern: str, variant: dict, *, hard_mode: bool) -> AmbiguityFirstItem:
+    series = variant.get("series") or [
+        {"name": "Panel R", "values": [(1, 7), (2, 7), (3, 8), (4, 8), (5, 8)]},
+        {"name": "Panel S", "values": [(1, 4), (2, 6), (3, 6), (4, 10), (5, 13)]},
+        {"name": "Panel T", "values": [(1, 8), (2, 9), (3, 9), (4, 9), (5, 10)]},
+    ]
+    complexity_features = (
+        ["threshold-dependent change", "plateau / non-linear behavior", "partial support only"]
+        if hard_mode
+        else ["crossover + divergence" if variant["graph_pattern"] == "crossover_point" else "conflicting trends across variables"]
+    )
+    answer_options = variant["answers"] if "answers" in variant else (
+        "Panel R has the highest score at the first noise level, a true local detail that does not address the conditional change across the range.",
+        "All panels improve somewhere in the graph, which matches the early expectation but not the graph's threshold-dependent reversal.",
+        variant["correct"],
+        "Panel S has the highest final score, so it is the best panel at every noise level.",
+    )
+    correct_index = variant.get("correct", 2)
+    if isinstance(correct_index, str):
+        correct_index = 2
+    return AmbiguityFirstItem(
+        generation_pattern=pattern,
+        ambiguous_passage=variant["passage"],
+        constraint_sentence=variant["constraint"],
+        prompt=variant["prompt"],
+        answer_options=answer_options,
+        correct_index=correct_index,
         topic="command_of_evidence_quantitative_graph",
-        subtopic="Pattern: graph_trend_claim_shift; hard graph pattern=threshold_reversal",
+        subtopic=f"Pattern: graph_trend_claim_shift; graph={variant['graph_pattern']}; intent={variant['question_intent']}",
         question_type="command_of_evidence_quantitative_graph",
-        trap_type="hard graph conditional reasoning trap",
+        trap_type="hard graph conditional reasoning trap" if hard_mode else "graph trend versus conclusion trap",
         explanation=(
-            "Graph evidence type=quantitative; pattern=threshold_reversal; hard_graph_features=threshold-dependent change,"
-            "plateau / non-linear behavior,partial support only; the correct answer combines early-vs-late ordering with a plateau constraint and does not rely on text alone."
+            f"Graph evidence type=quantitative; pattern={variant['graph_pattern']}; prompt_template={variant['prompt_template']}; "
+            f"reasoning_type={variant['reasoning_type']}; hard_graph_features={','.join(complexity_features)}; "
+            "the correct answer combines graph observations with the stated claim and does not rely on text alone."
         ),
-        constraints_required=3,
+        constraints_required=3 if hard_mode else 2,
         data_type="graph",
         data_payload={
-            "x_label": "Background noise level",
-            "y_label": "Sound reduction score",
-            "graph_pattern": "threshold_reversal",
-            "question_intent": "claim_support",
-            "reasoning_pattern": "threshold_reversal",
+            "x_label": "Background noise level" if hard_mode else "Study condition",
+            "y_label": "Sound reduction score" if hard_mode else "Measured result",
+            "graph_pattern": variant["graph_pattern"],
+            "question_intent": variant["question_intent"],
+            "prompt_template": variant["prompt_template"],
+            "reasoning_type": variant["reasoning_type"],
+            "reasoning_pattern": variant["graph_pattern"],
             "graph_dependency": "necessary",
-            "hard_mode": True,
-            "complexity_features": ["threshold-dependent change", "plateau / non-linear behavior", "partial support only"],
+            "hard_mode": hard_mode,
+            "complexity_features": complexity_features,
             "distractor_types": [
                 "globally_true_but_irrelevant",
                 "locally_true_but_incomplete",
                 "matches_text_not_graph",
                 "overgeneralizes_trend",
             ],
-            "series": [
-                {"name": "Panel R", "values": [(1, 7), (2, 7), (3, 8), (4, 8), (5, 8)]},
-                {"name": "Panel S", "values": [(1, 4), (2, 6), (3, 6), (4, 10), (5, 13)]},
-                {"name": "Panel T", "values": [(1, 8), (2, 9), (3, 9), (4, 9), (5, 10)]},
-            ],
+            "series": series,
         },
     )
 
@@ -2499,7 +2636,7 @@ def validate_command_evidence_length_contract(spec: QuestionSpec, sentence_count
     text = f"{spec.passage or ''} {spec.prompt}".lower()
     if sentence_count < 2:
         raise ValueError("Command of Evidence questions must be medium-long enough to require evidence alignment.")
-    if not re.search(r"\b(data|table|study|report|evidence|records?|fragment|review|claim)\b", text):
+    if not re.search(r"\b(data|graph|table|study|report|evidence|records?|fragment|review|claim)\b", text):
         raise ValueError("Command of Evidence questions must include explicit evidence or data context.")
 
 
@@ -2800,6 +2937,17 @@ def validate_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
     if spec.module == 2 and MODULE2_MODE == "hard":
         validate_hard_quantitative_graph_answer_design(spec)
         return
+    payload = spec.data_payload or {}
+    if payload.get("prompt_template") == "describes_the_relationship":
+        correct_choices = [choice for choice in spec.choices if choice.role == ChoiceTrapRole.correct]
+        if len(correct_choices) != 1:
+            raise ValueError("Graph question must have one correct answer.")
+        correct_text = correct_choices[0].text.lower()
+        if not re.search(r"\b(farther apart|relationship|rises|improving|sharply|gap)\b", correct_text):
+            raise ValueError("Trend-description graph answer must describe the graph relationship.")
+        if len([choice for choice in spec.choices if choice.role != ChoiceTrapRole.correct and re.search(r"\b(true local detail|study context|constant|relationship)\b", choice.text.lower())]) < 2:
+            raise ValueError("Trend-description graph distractors must include local, context, and overgeneralization traps.")
+        return
     combined_wrong = " ".join(choice.text.lower() for choice in spec.choices if choice.role != ChoiceTrapRole.correct)
     required_distractor_logic = (
         r"watering rather than|focuses on watering",
@@ -2840,7 +2988,7 @@ def validate_hard_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
     correct_text = correct_choices[0].text.lower()
     if not re.search(r"\b(but|while|except|only|after|below|above|threshold|plateau)\b", correct_text):
         raise ValueError("Hard graph correct answer must include a condition or constraint.")
-    observation_markers = ("below", "after", "plateau", "overtakes", "changes little", "highest", "first", "final")
+    observation_markers = ("below", "after", "plateau", "middle", "range", "overtakes", "changes little", "highest", "first", "final")
     if sum(1 for marker in observation_markers if marker in correct_text) < 2:
         raise ValueError("Hard graph correct answer must combine at least two graph observations.")
     combined_wrong = " ".join(choice.text.lower() for choice in spec.choices if choice.role != ChoiceTrapRole.correct)
@@ -2876,10 +3024,10 @@ def graph_is_text_solvable(spec: QuestionSpec) -> bool:
         "threshold_shift": ("threshold", "after", "before", "exceeds", "falls below"),
         "divergence": ("diverge", "gap", "farther apart", "closer together", "converge"),
         "threshold_reversal": ("threshold", "plateau", "overtakes", "below", "higher-noise", "changes little"),
-        "partial_support_region": ("only for", "region", "partial", "limited range"),
-        "conflicting_variable_dominance": ("dominates", "variable", "stronger than", "weaker than"),
+        "partial_support_region": ("only after", "below that range", "generally superior", "limited range"),
+        "conflicting_variable_dominance": ("limited", "lower-noise", "preferable", "comparatively flat"),
         "lag_effect": ("lag", "delayed", "one interval later"),
-        "diminishing_returns": ("diminishing", "levels off", "smaller gain"),
+        "diminishing_returns": ("plateau", "late increase", "outside the middle", "full range"),
     }
     graph_only_terms = graph_only_terms_by_pattern.get(graph_pattern, ())
     if any(term in text_without_graph for term in graph_only_terms):
@@ -3092,7 +3240,7 @@ def graph_answer_found_from_single_point(spec: QuestionSpec) -> bool:
     if len(correct_choices) != 1:
         return True
     correct_text = correct_choices[0].text.lower()
-    comparison_markers = ("but", "whereas", "while", "both", "each", "crossover", "shifts")
+    comparison_markers = ("but", "whereas", "while", "both", "each", "only", "after", "below", "plateau", "crossover", "shifts")
     return not any(marker in correct_text for marker in comparison_markers)
 
 
