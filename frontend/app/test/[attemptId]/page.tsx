@@ -1215,13 +1215,15 @@ export default function TestPage() {
             </button>
           </div>
           <div className="flex justify-end gap-6 text-sm font-semibold text-slate-700">
-            <button
-              className="inline-flex items-center gap-2 hover:text-slate-950"
-              onClick={() => setIsReferenceOpen(true)}
-              type="button"
-            >
-              <BookOpen size={17} /> Reference
-            </button>
+            {isMathSection ? (
+              <button
+                className="inline-flex items-center gap-2 hover:text-slate-950"
+                onClick={() => setIsReferenceOpen(true)}
+                type="button"
+              >
+                <BookOpen size={17} /> Reference
+              </button>
+            ) : null}
             <button
               className="inline-flex items-center gap-2 hover:text-slate-950"
               onClick={() => setIsCalculatorOpen(true)}
@@ -1657,7 +1659,7 @@ export default function TestPage() {
       />
 
       <ReferenceModal
-        open={isReferenceOpen}
+        open={isMathSection && isReferenceOpen}
         onClose={() => setIsReferenceOpen(false)}
       />
 
