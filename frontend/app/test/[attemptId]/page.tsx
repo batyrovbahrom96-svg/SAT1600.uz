@@ -251,6 +251,8 @@ export default function TestPage() {
   const graphPayload = question?.data_type === "graph" && isGraphPayload(question.data_payload)
     ? question.data_payload
     : null;
+  const hasTablePayload = Boolean(question?.data_type === "table" && question.data_payload?.columns?.length && question.data_payload?.rows?.length);
+  const hasStimulus = Boolean(isNotesQuestion || isCrossTextQuestion || question?.passage || hasTablePayload || graphPayload || question?.graph_path);
   const orderedChoices = useMemo(() => {
     if (!question || question.format !== "multiple_choice") return [];
     const choices = [...question.choices].sort((a, b) => a.label.localeCompare(b.label));
@@ -990,133 +992,140 @@ export default function TestPage() {
 
       <section
         ref={testBodyRef}
-        style={panelStyle}
-        className="mx-auto grid min-h-[calc(100vh-8.5rem)] max-w-[1280px] bg-white lg:grid-cols-[minmax(0,var(--left-panel))_1px_minmax(0,var(--right-panel))]"
+        style={hasStimulus ? panelStyle : undefined}
+        className={hasStimulus
+          ? "mx-auto grid min-h-[calc(100vh-8.5rem)] max-w-[1280px] bg-white lg:grid-cols-[minmax(0,var(--left-panel))_1px_minmax(0,var(--right-panel))]"
+          : "mx-auto flex min-h-[calc(100vh-8.5rem)] max-w-[1280px] justify-center bg-white"
+        }
       >
-        <article
-          className="relative bg-white px-10 py-9"
-          onMouseMove={(event) => {
-            if (!lineReaderEnabled || !passagePanelRef.current) return;
-            const rect = passagePanelRef.current.getBoundingClientRect();
-            setLineReaderY(Math.min(rect.height - 40, Math.max(0, event.clientY - rect.top - 20)));
-          }}
-          ref={passagePanelRef}
-        >
-          <div className="flex w-full max-w-[580px] flex-col gap-4">
-            {isNotesQuestion ? (
-              <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
-                <p>A student is reviewing notes for a writing task.</p>
-                <section aria-labelledby="notes-label" className="border-b border-[#e5e7eb] pb-3">
-                  <div id="notes-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
-                    Notes
+        {hasStimulus ? (
+          <>
+            <article
+              className="relative bg-white px-10 py-9"
+              onMouseMove={(event) => {
+                if (!lineReaderEnabled || !passagePanelRef.current) return;
+                const rect = passagePanelRef.current.getBoundingClientRect();
+                setLineReaderY(Math.min(rect.height - 40, Math.max(0, event.clientY - rect.top - 20)));
+              }}
+              ref={passagePanelRef}
+            >
+              <div className="flex w-full max-w-[580px] flex-col gap-4">
+                {isNotesQuestion ? (
+                  <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
+                    <p>A student is reviewing notes for a writing task.</p>
+                    <section aria-labelledby="notes-label" className="border-b border-[#e5e7eb] pb-3">
+                      <div id="notes-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
+                        Notes
+                      </div>
+                      <ul className="m-0 flex list-disc flex-col gap-2 pl-6">
+                        {question.data_payload?.notes?.map((note, noteIndex) => (
+                          <li key={`${question.id}-note-${noteIndex}`} className="pl-1">
+                            {note}
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
                   </div>
-                  <ul className="m-0 flex list-disc flex-col gap-2 pl-6">
-                    {question.data_payload?.notes?.map((note, noteIndex) => (
-                      <li key={`${question.id}-note-${noteIndex}`} className="pl-1">
-                        {note}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              </div>
-            ) : isCrossTextQuestion ? (
-              <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
-                <section aria-labelledby="text-1-label" className="mb-5 border-b border-[#e5e7eb] pb-3">
-                  <div id="text-1-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
-                    Text 1
+                ) : isCrossTextQuestion ? (
+                  <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
+                    <section aria-labelledby="text-1-label" className="mb-5 border-b border-[#e5e7eb] pb-3">
+                      <div id="text-1-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
+                        Text 1
+                      </div>
+                      <p>{question.data_payload?.text_1}</p>
+                    </section>
+                    <section aria-labelledby="text-2-label">
+                      <div id="text-2-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
+                        Text 2
+                      </div>
+                      <p>{question.data_payload?.text_2}</p>
+                    </section>
                   </div>
-                  <p>{question.data_payload?.text_1}</p>
-                </section>
-                <section aria-labelledby="text-2-label">
-                  <div id="text-2-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
-                    Text 2
-                  </div>
-                  <p>{question.data_payload?.text_2}</p>
-                </section>
-              </div>
-            ) : question.passage ? (
-              <p
-                ref={passageRef}
-                aria-label="Passage text"
-                className="mb-6 w-full max-w-[580px] select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]"
-                onClick={handlePassageClick}
-                onMouseUp={handlePassageMouseUp}
-              />
-            ) : null}
-            {question.data_type === "table" && question.data_payload?.columns?.length && question.data_payload?.rows?.length ? (
-              <div className="mt-8 overflow-x-auto">
-                {question.data_payload.title ? (
-                  <div className="mb-2 text-center text-sm font-semibold text-slate-950">
-                    {question.data_payload.title}
+                ) : question.passage ? (
+                  <p
+                    ref={passageRef}
+                    aria-label="Passage text"
+                    className="mb-6 w-full max-w-[580px] select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]"
+                    onClick={handlePassageClick}
+                    onMouseUp={handlePassageMouseUp}
+                  />
+                ) : null}
+                {hasTablePayload ? (
+                  <div className="mt-8 overflow-x-auto">
+                    {question.data_payload?.title ? (
+                      <div className="mb-2 text-center text-sm font-semibold text-slate-950">
+                        {question.data_payload.title}
+                      </div>
+                    ) : null}
+                    <table className="w-full border-collapse text-sm text-slate-950">
+                      <thead>
+                        <tr>
+                          {question.data_payload?.columns?.map((column) => (
+                            <th
+                              className="border border-slate-300 bg-slate-100 px-3 py-2 text-left font-semibold"
+                              key={column}
+                              scope="col"
+                            >
+                              {column}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {question.data_payload?.rows?.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {question.data_payload?.columns?.map((column) => (
+                              <td className="border border-slate-300 px-3 py-2" key={column}>
+                                {String(row[column] ?? "")}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 ) : null}
-                <table className="w-full border-collapse text-sm text-slate-950">
-                  <thead>
-                    <tr>
-                      {question.data_payload.columns.map((column) => (
-                        <th
-                          className="border border-slate-300 bg-slate-100 px-3 py-2 text-left font-semibold"
-                          key={column}
-                          scope="col"
-                        >
-                          {column}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {question.data_payload.rows.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {question.data_payload?.columns?.map((column) => (
-                          <td className="border border-slate-300 px-3 py-2" key={column}>
-                            {String(row[column] ?? "")}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {graphPayload ? (
+                  <DataGraph payload={graphPayload} />
+                ) : null}
+                {question.graph_path ? (
+                  <Image
+                    alt="SAT graph"
+                    className="mt-8 h-auto max-h-[420px] w-full object-contain"
+                    height={480}
+                    src={`${API_URL}${question.graph_path}`}
+                    width={640}
+                  />
+                ) : null}
               </div>
-            ) : null}
-            {graphPayload ? (
-              <DataGraph payload={graphPayload} />
-            ) : null}
-            {question.graph_path ? (
-              <Image
-                alt="SAT graph"
-                className="mt-8 h-auto max-h-[420px] w-full object-contain"
-                height={480}
-                src={`${API_URL}${question.graph_path}`}
-                width={640}
-              />
-            ) : null}
-          </div>
-          {lineReaderEnabled ? (
+              {lineReaderEnabled ? (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-0 right-0 z-10 h-10 bg-slate-950/10"
+                  style={{ top: lineReaderY }}
+                />
+              ) : null}
+            </article>
+
             <div
-              aria-hidden="true"
-              className="pointer-events-none absolute left-0 right-0 z-10 h-10 bg-slate-950/10"
-              style={{ top: lineReaderY }}
-            />
-          ) : null}
-        </article>
+              className="relative hidden w-px cursor-col-resize bg-[#e5e7eb] lg:block"
+              onMouseDown={() => {
+                resizingDivider.current = true;
+                document.body.style.cursor = "col-resize";
+                document.body.style.userSelect = "none";
+              }}
+              role="separator"
+              aria-orientation="vertical"
+              aria-valuemin={48}
+              aria-valuemax={68}
+              aria-valuenow={Math.round(leftPanelPercent)}
+            >
+              <div className="absolute left-1/2 top-1/2 h-12 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e5e7eb] bg-white hover:border-slate-400" />
+            </div>
+          </>
+        ) : null}
 
-        <div
-          className="relative hidden w-px cursor-col-resize bg-[#e5e7eb] lg:block"
-          onMouseDown={() => {
-            resizingDivider.current = true;
-            document.body.style.cursor = "col-resize";
-            document.body.style.userSelect = "none";
-          }}
-          role="separator"
-          aria-orientation="vertical"
-          aria-valuemin={48}
-          aria-valuemax={68}
-          aria-valuenow={Math.round(leftPanelPercent)}
-        >
-          <div className="absolute left-1/2 top-1/2 h-12 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e5e7eb] bg-white hover:border-slate-400" />
-        </div>
-
-        <aside className="page-container bg-white px-10 py-9">
+        <aside className={`page-container bg-white px-10 py-9 ${hasStimulus ? "" : "w-full max-w-[860px] pt-12"}`}>
           <div className="question-center">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -1141,7 +1150,7 @@ export default function TestPage() {
               </button>
             </div>
             <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
-            <h1 className="question-text text-[20px] font-semibold leading-[1.45] text-slate-950">{question.prompt}</h1>
+            <h1 className="question-text text-center text-[20px] font-semibold leading-[1.45] text-slate-950">{question.prompt}</h1>
 
             <div className="answers">
               {question.format === "multiple_choice" ? orderedChoices.map((choice, choiceIndex) => (
