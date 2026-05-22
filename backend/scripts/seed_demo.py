@@ -414,6 +414,14 @@ class RWModuleSlot:
     difficulty: int
 
 
+@dataclass(frozen=True)
+class MathModuleSlot:
+    slot_key: str
+    question_type: str
+    reasoning_type: str
+    difficulty: int
+
+
 RW_FIXED_MODULE1_SLOT_KEYS = [
     "vocab_easy",
     "vocab_context",
@@ -517,6 +525,84 @@ MODULE2_HARD_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("m2_grammar_3", "Standard English Conventions", "referent_precision", 10),
     RWModuleSlot("m2_grammar_4", "Standard English Conventions", "clause_integration", 9),
     RWModuleSlot("m2_grammar_5", "Standard English Conventions", "modifier_attachment", 10),
+)
+
+
+MATH_TYPES = {
+    "linear_equation",
+    "system_equation",
+    "function_interpretation",
+    "graph_reasoning",
+    "percent_ratio",
+    "probability",
+    "geometry",
+    "quadratic_modeling",
+    "exponential_growth",
+    "word_problem",
+}
+MATH_HARD_TRAPS = {
+    "sign_trap",
+    "unit_trap",
+    "variable_confusion",
+    "condition_ignored",
+    "extraneous_solution",
+    "percent_base_trap",
+    "graph_misread",
+}
+
+MODULE1_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
+    MathModuleSlot("m1_linear_1", "linear_equation", "one_step_isolation", 3),
+    MathModuleSlot("m1_percent_1", "percent_ratio", "part_whole", 3),
+    MathModuleSlot("m1_function_1", "function_interpretation", "direct_substitution", 4),
+    MathModuleSlot("m1_geometry_1", "geometry", "angle_relationship", 4),
+    MathModuleSlot("m1_probability_1", "probability", "basic_probability", 4),
+    MathModuleSlot("m1_system_1", "system_equation", "elimination", 5),
+    MathModuleSlot("m1_word_1", "word_problem", "rate_total", 5),
+    MathModuleSlot("m1_graph_1", "graph_reasoning", "slope_meaning", 5),
+    MathModuleSlot("m1_quadratic_1", "quadratic_modeling", "zero_product", 5),
+    MathModuleSlot("m1_exponential_1", "exponential_growth", "growth_factor", 5),
+    MathModuleSlot("m1_linear_2", "linear_equation", "two_step_isolation", 6),
+    MathModuleSlot("m1_percent_2", "percent_ratio", "base_change", 6),
+    MathModuleSlot("m1_function_2", "function_interpretation", "parameter_meaning", 6),
+    MathModuleSlot("m1_geometry_2", "geometry", "area_constraint", 6),
+    MathModuleSlot("m1_probability_2", "probability", "conditional_count", 6),
+    MathModuleSlot("m1_system_2", "system_equation", "solution_meaning", 7),
+    MathModuleSlot("m1_word_2", "word_problem", "hidden_unit", 7),
+    MathModuleSlot("m1_graph_2", "graph_reasoning", "intercept_meaning", 7),
+    MathModuleSlot("m1_quadratic_2", "quadratic_modeling", "vertex_context", 7),
+    MathModuleSlot("m1_exponential_2", "exponential_growth", "percent_growth", 7),
+    MathModuleSlot("m1_mixed_1", "word_problem", "multi_step_constraint", 7),
+    MathModuleSlot("m1_graph_3", "graph_reasoning", "rate_comparison", 7),
+)
+
+MODULE2_HARD_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
+    MathModuleSlot("m2h_linear_1", "linear_equation", "parameter_constraint", 8),
+    MathModuleSlot("m2h_system_1", "system_equation", "conditioned_solution", 8),
+    MathModuleSlot("m2h_function_1", "function_interpretation", "composite_shift", 8),
+    MathModuleSlot("m2h_graph_1", "graph_reasoning", "claim_support_slope", 8),
+    MathModuleSlot("m2h_percent_1", "percent_ratio", "changing_base", 8),
+    MathModuleSlot("m2h_probability_1", "probability", "conditional_probability", 8),
+    MathModuleSlot("m2h_geometry_1", "geometry", "similarity_scale", 8),
+    MathModuleSlot("m2h_quadratic_1", "quadratic_modeling", "extraneous_root", 9),
+    MathModuleSlot("m2h_exponential_1", "exponential_growth", "growth_decay_comparison", 9),
+    MathModuleSlot("m2h_word_1", "word_problem", "unit_conversion_constraint", 9),
+    MathModuleSlot("m2h_linear_2", "linear_equation", "inequality_boundary", 9),
+    MathModuleSlot("m2h_system_2", "system_equation", "no_solution_condition", 9),
+    MathModuleSlot("m2h_function_2", "function_interpretation", "inverse_context", 9),
+    MathModuleSlot("m2h_graph_2", "graph_reasoning", "threshold_intersection", 9),
+    MathModuleSlot("m2h_percent_2", "percent_ratio", "successive_percent", 9),
+    MathModuleSlot("m2h_probability_2", "probability", "without_replacement", 9),
+    MathModuleSlot("m2h_geometry_2", "geometry", "circle_triangle_constraint", 10),
+    MathModuleSlot("m2h_quadratic_2", "quadratic_modeling", "model_domain", 10),
+    MathModuleSlot("m2h_exponential_2", "exponential_growth", "doubling_threshold", 10),
+    MathModuleSlot("m2h_word_2", "word_problem", "system_from_context", 10),
+    MathModuleSlot("m2h_graph_3", "graph_reasoning", "piecewise_rate", 10),
+    MathModuleSlot("m2h_mixed_1", "word_problem", "hidden_condition", 10),
+)
+
+MODULE2_MEDIUM_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = tuple(
+    MathModuleSlot(slot.slot_key.replace("m2h_", "m2m_"), slot.question_type, slot.reasoning_type, max(6, min(8, slot.difficulty - 2)))
+    for slot in MODULE2_HARD_MATH_BLUEPRINT
 )
 
 
@@ -635,6 +721,7 @@ def build_question_bank() -> list[QuestionSpec]:
         module_questions = apply_answer_distribution(module_questions, seed=f"math-module-{module}")
         validate_answer_distribution(module_questions)
         validate_graph_intent_distribution(module_questions)
+        validate_math_module(module_questions, module)
         for question in module_questions:
             validate_choice_label_order(question)
             validate_question_data_contract(question)
@@ -975,6 +1062,10 @@ def difficulty_for(module: int, index: int) -> int:
     return {"easy": 3, "medium": 6, "hard": 8}[adaptive_level(module, index)] + (index % 2)
 
 
+def math_difficulty_for(module: int, index: int) -> int:
+    return math_slot_for(module, index).difficulty
+
+
 def rw_difficulty_for(module: int, index: int) -> int:
     if module == 2 and MODULE2_MODE == "hard":
         return MODULE2_HARD_BLUEPRINT[index].difficulty
@@ -997,6 +1088,14 @@ def rw_slot_for(module: int, index: int) -> RWModuleSlot:
     if module == 2 and MODULE2_MODE == "hard":
         return MODULE2_HARD_BLUEPRINT[index]
     return RW_MODULE_BLUEPRINT[index]
+
+
+def math_slot_for(module: int, index: int) -> MathModuleSlot:
+    if module == 1:
+        return MODULE1_MATH_BLUEPRINT[index]
+    if MODULE2_MODE == "hard":
+        return MODULE2_HARD_MATH_BLUEPRINT[index]
+    return MODULE2_MEDIUM_MATH_BLUEPRINT[index]
 
 
 def generate(question_type: str, pattern: str, *, module: int, index: int) -> QuestionSpec:
@@ -3812,17 +3911,113 @@ def simulate_first_pass_elimination(spec: QuestionSpec) -> list[ChoiceSpec]:
     return survivors
 
 
-def math_question(module: int, index: int) -> QuestionSpec:
-    templates = [
-        math_linear,
-        math_quadratic,
-        math_function,
-        math_geometry,
-        math_data,
-        math_word_problem,
-        math_graph,
+def validate_math_module(module_questions: list[QuestionSpec], module: int) -> None:
+    expected_blueprint = MODULE1_MATH_BLUEPRINT if module == 1 else MODULE2_HARD_MATH_BLUEPRINT
+    if len(module_questions) != len(expected_blueprint):
+        raise ValueError(f"Math module {module} must contain {len(expected_blueprint)} slots.")
+    seen_signatures: set[tuple] = set()
+    graph_structures: set[tuple] = set()
+    graph_reasoning: set[str] = set()
+    categories = {question.question_type for question in module_questions}
+    if module == 1 and not MATH_TYPES.issubset(categories):
+        raise ValueError(f"Math Module 1 missing required categories: {MATH_TYPES - categories}.")
+    for question, slot in zip(module_questions, expected_blueprint, strict=True):
+        validate_math_question_against_slot(question, slot, module)
+        signature = math_question_signature(question)
+        if signature in seen_signatures:
+            raise ValueError(f"Duplicate math question signature: {signature}.")
+        seen_signatures.add(signature)
+        if question.data_type == "graph":
+            payload = question.data_payload or {}
+            graph_structure = graph_structure_signature(payload)
+            if graph_structure in graph_structures:
+                raise ValueError(f"Repeated math graph structure: {graph_structure}.")
+            graph_structures.add(graph_structure)
+            reasoning_type = str(payload.get("reasoning_type") or slot.reasoning_type)
+            if module == 2 and reasoning_type in graph_reasoning:
+                raise ValueError(f"Repeated Module 2 math graph reasoning type: {reasoning_type}.")
+            graph_reasoning.add(reasoning_type)
+    if len(seen_signatures) != len(module_questions):
+        raise ValueError("Math module signature validation failed.")
+
+
+def validate_math_question_against_slot(question: QuestionSpec, slot: MathModuleSlot, module: int) -> None:
+    if question.question_type != slot.question_type:
+        raise ValueError(f"Math slot {slot.slot_key} expected {slot.question_type}, got {question.question_type}.")
+    payload = question.data_payload or {}
+    if payload.get("reasoning_type") != slot.reasoning_type:
+        raise ValueError(f"Math slot {slot.slot_key} expected reasoning {slot.reasoning_type}.")
+    if question.difficulty != slot.difficulty:
+        raise ValueError(f"Math slot {slot.slot_key} expected difficulty {slot.difficulty}, got {question.difficulty}.")
+    if module == 2 and MODULE2_MODE == "hard":
+        validate_hard_math_question(question)
+
+
+def validate_hard_math_question(question: QuestionSpec) -> None:
+    if question.difficulty < 8 or question.difficulty > 10:
+        raise ValueError("Module 2 hard math must use difficulty 8-10.")
+    constraints_required = int((question.data_payload or {}).get("constraints_required") or question.constraints_required)
+    if constraints_required < 2:
+        raise ValueError(f"Hard math question needs at least two constraints: {question.prompt}")
+    if question.data_type != "graph" and not re.search(r"\b(if|when|after|only|given|for which|under|at least|greater than|less than)\b", question.prompt.lower()):
+        raise ValueError(f"Hard math question lacks a hidden condition: {question.prompt}")
+    distractors = [choice_spec for choice_spec in question.choices if choice_spec.role != ChoiceTrapRole.correct]
+    if len(distractors) != 3:
+        raise ValueError("Hard math multiple-choice questions need three distractors.")
+    trap_types = set().union(*(extract_math_trap_types(choice_spec) for choice_spec in distractors))
+    if not MATH_HARD_TRAPS.issubset(trap_types):
+        raise ValueError(f"Hard math question missing trap types: {MATH_HARD_TRAPS - trap_types}.")
+    survivors = simulate_math_first_pass_elimination(question)
+    if len(survivors) < 3:
+        raise ValueError("Hard math question must retain three plausible survivors.")
+    if not any(choice_spec.role != ChoiceTrapRole.correct and "competition=top" in (choice_spec.basis or "") for choice_spec in survivors):
+        raise ValueError("Hard math question needs at least one surviving trap answer.")
+    if question.data_type == "graph":
+        payload = question.data_payload or {}
+        if not payload.get("graph_pattern") or not payload.get("question_intent"):
+            raise ValueError("Hard math graph needs graph_pattern and question_intent.")
+
+
+def math_question_signature(question: QuestionSpec) -> tuple[str, str, str, str]:
+    payload = question.data_payload or {}
+    return (
+        question.question_type,
+        str(payload.get("reasoning_type") or "direct"),
+        question.trap_type,
+        question.structure_key,
+    )
+
+
+def extract_math_trap_types(choice_spec: ChoiceSpec) -> set[str]:
+    match = re.search(r"math_traps=([^;]+)", choice_spec.basis or "")
+    if not match:
+        return set()
+    return {item.strip() for item in match.group(1).split(",") if item.strip()}
+
+
+def simulate_math_first_pass_elimination(question: QuestionSpec) -> list[ChoiceSpec]:
+    return [
+        choice_spec
+        for choice_spec in question.choices
+        if choice_spec.role == ChoiceTrapRole.correct or "plausibility=high" in (choice_spec.basis or "")
     ]
-    return templates[index % len(templates)](module, index)
+
+
+def math_question(module: int, index: int) -> QuestionSpec:
+    slot = math_slot_for(module, index)
+    generators = {
+        "linear_equation": math_linear,
+        "system_equation": math_system,
+        "function_interpretation": math_function,
+        "graph_reasoning": math_graph,
+        "percent_ratio": math_percent_ratio,
+        "probability": math_probability,
+        "geometry": math_geometry,
+        "quadratic_modeling": math_quadratic,
+        "exponential_growth": math_exponential,
+        "word_problem": math_word_problem,
+    }
+    return generators[slot.question_type](module, index)
 
 
 def math_base(
@@ -3841,18 +4036,23 @@ def math_base(
     graph_path: str | None = None,
     graph_payload: dict | None = None,
 ) -> QuestionSpec:
+    slot = math_slot_for(module, index)
+    difficulty = math_difficulty_for(module, index)
     has_graph = bool(graph_payload)
     graph_data = dict(graph_payload or {})
+    graph_data.setdefault("reasoning_type", slot.reasoning_type)
+    graph_data.setdefault("constraints_required", 2 if module == 2 else 1)
+    graph_data.setdefault("math_type", slot.question_type)
     signature_seed = QuestionSpec(
         section=SATSection.math,
         module=module,
         order_index=index,
-        difficulty=difficulty_for(module, index),
+        difficulty=difficulty,
         adaptive_level=adaptive_level(module, index),
         source=source_for(index),
         topic=topic,
         subtopic=subtopic,
-        structure_key=f"math-{subtopic.lower().replace(' ', '-')}-{index % 4}",
+        structure_key=f"math-{slot.question_type}-{slot.reasoning_type}-{index % 5}",
         passage=None,
         prompt=prompt,
         correct_answer=correct,
@@ -3871,16 +4071,17 @@ def math_base(
     )
     signature = build_question_signature(signature_seed)
     graph_data["question_signature"] = signature
+    explanation = f"{explanation} reasoning_type={slot.reasoning_type}; constraints_required={graph_data['constraints_required']};"
     return QuestionSpec(
         section=SATSection.math,
         module=module,
         order_index=index,
-        difficulty=difficulty_for(module, index),
+        difficulty=difficulty,
         adaptive_level=adaptive_level(module, index),
         source=source_for(index),
         topic=topic,
         subtopic=subtopic,
-        structure_key=f"math-{subtopic.lower().replace(' ', '-')}-{index % 4}",
+        structure_key=f"math-{slot.question_type}-{slot.reasoning_type}-{index % 5}",
         passage=None,
         prompt=prompt,
         correct_answer=correct,
@@ -3903,33 +4104,54 @@ def math_base(
 def math_linear(module: int, index: int) -> QuestionSpec:
     a = 2 + index % 5
     b = 7 + index % 4
-    x = 3
+    x = 4 + index % 4
     result = a * x + b
-    prompt = f"If {a}x + {b} = {result}, what is the value of x?"
+    condition = " and x is greater than 0" if module == 2 else ""
+    prompt = f"If {a}x + {b} = {result}{condition}, what is the value of x?"
     return math_base(
         module,
         index,
         topic="Algebra",
         subtopic="Linear equations",
-        question_type="Linear equations",
+        question_type="linear_equation",
         prompt=prompt,
         correct="C",
         explanation=f"Subtract {b} from both sides to get {a}x = {a * x}, so x = {x}.",
         trap_type="inverse operation error",
         fmt=QuestionFormat.multiple_choice,
-        choices=math_choices(str(x - 1), str(x + 1), str(x), str(result), correct="C"),
+        choices=math_choices(str(-x), str(x + 1), str(x), str(result), correct="C"),
+    )
+
+
+def math_system(module: int, index: int) -> QuestionSpec:
+    x, y = 3 + index % 4, 2 + index % 3
+    s = x + y
+    d = x - y
+    prompt = f"If x + y = {s} and x - y = {d}, what is the value of x under these two conditions?"
+    return math_base(
+        module,
+        index,
+        topic="Algebra",
+        subtopic="Systems of equations",
+        question_type="system_equation",
+        prompt=prompt,
+        correct="B",
+        explanation=f"Adding the equations gives 2x = {s + d}, so x = {x}.",
+        trap_type="variable_confusion",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(str(y), str(x), str(s), str(d), correct="B"),
     )
 
 
 def math_quadratic(module: int, index: int) -> QuestionSpec:
     root = 3 + index % 4
-    prompt = f"The equation (x - {root})(x + 2) = 0 has one positive solution. What is that solution?"
+    prompt = f"The equation (x - {root})(x + 2) = 0 has one positive solution. Given that condition, what is that solution?"
     return math_base(
         module,
         index,
         topic="Advanced Math",
         subtopic="Quadratics",
-        question_type="Quadratics",
+        question_type="quadratic_modeling",
         prompt=prompt,
         correct="B",
         explanation=f"By the zero product property, x - {root} = 0 gives the positive solution x = {root}.",
@@ -3944,17 +4166,19 @@ def math_function(module: int, index: int) -> QuestionSpec:
     c = 5 + index % 4
     x = 4
     answer = str(m * x + c)
+    correct = "C"
     return math_base(
         module,
         index,
         topic="Functions",
         subtopic="Function notation",
-        question_type="Function notation",
-        prompt=f"For the function f(x) = {m}x + {c}, what is f({x})?",
-        correct=answer,
+        question_type="function_interpretation",
+        prompt=f"For the function f(x) = {m}x + {c}, what is f({x}) when x is the input value?",
+        correct=correct,
         explanation=f"Substitute {x} for x: f({x}) = {m}({x}) + {c} = {answer}.",
         trap_type="substitution error",
-        fmt=QuestionFormat.grid_in,
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(str(m + x + c), str(m * c + x), answer, str(m * (x + c)), correct=correct),
     )
 
 
@@ -3966,8 +4190,8 @@ def math_geometry(module: int, index: int) -> QuestionSpec:
         index,
         topic="Geometry and Trigonometry",
         subtopic="Angles",
-        question_type="Angles",
-        prompt=f"Two angles form a straight line. One angle measures {angle} degrees. What is the measure, in degrees, of the other angle?",
+        question_type="geometry",
+        prompt=f"Two angles form a straight line. One angle measures {angle} degrees. Given that the angles are supplementary, what is the measure, in degrees, of the other angle?",
         correct="D",
         explanation=f"Angles on a straight line sum to 180 degrees, so the other angle is 180 - {angle} = {answer}.",
         trap_type="angle sum confusion",
@@ -3976,22 +4200,43 @@ def math_geometry(module: int, index: int) -> QuestionSpec:
     )
 
 
-def math_data(module: int, index: int) -> QuestionSpec:
-    values = [6 + index % 3, 8 + index % 2, 10, 12, 14]
-    mean_value = sum(values) / len(values)
-    prompt = f"The data set is {', '.join(str(v) for v in values)}. What is the mean of the data set?"
+def math_percent_ratio(module: int, index: int) -> QuestionSpec:
+    base = 80 + (index % 5) * 10
+    pct = 15 + (index % 3) * 5
+    answer = base * pct // 100
+    prompt = f"A value of {answer} is {pct}% of a number. Given this percent-base condition, what is the number?"
     return math_base(
         module,
         index,
-        topic="Data Analysis",
-        subtopic="Mean and interpretation",
-        question_type="Data Analysis",
+        topic="Problem-Solving and Data Analysis",
+        subtopic="Percent and ratios",
+        question_type="percent_ratio",
+        prompt=prompt,
+        correct="D",
+        explanation=f"If {answer} is {pct}% of n, then 0.{pct:02d}n = {answer}, so n = {base}.",
+        trap_type="percent base trap",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(str(answer), str(base - answer), str(base + answer), str(base), correct="D"),
+    )
+
+
+def math_probability(module: int, index: int) -> QuestionSpec:
+    red = 3 + index % 4
+    blue = 5 + index % 3
+    total = red + blue
+    prompt = f"A bag contains {red} red tiles and {blue} blue tiles. If one tile is selected at random, what is the probability it is red?"
+    return math_base(
+        module,
+        index,
+        topic="Problem-Solving and Data Analysis",
+        subtopic="Probability",
+        question_type="probability",
         prompt=prompt,
         correct="A",
-        explanation=f"The sum is {sum(values)} and there are {len(values)} values, so the mean is {mean_value:g}.",
-        trap_type="mean calculation error",
+        explanation=f"The favorable outcomes are {red} red tiles out of {total} total tiles.",
+        trap_type="denominator confusion",
         fmt=QuestionFormat.multiple_choice,
-        choices=math_choices(f"{mean_value:g}", f"{values[len(values)//2]}", f"{sum(values)}", f"{mean_value + 2:g}", correct="A"),
+        choices=math_choices(f"{red}/{total}", f"{blue}/{total}", f"{red}/{blue}", f"{total}/{red}", correct="A"),
     )
 
 
@@ -4005,16 +4250,47 @@ def math_word_problem(module: int, index: int) -> QuestionSpec:
         index,
         topic="Word Problems",
         subtopic="Rates",
-        question_type="Rates",
-        prompt=f"A tank contains {start} liters of water. Water is added at a constant rate of {rate} liters per hour for {hours} hours. How many liters of water are in the tank after {hours} hours?",
-        correct=str(answer),
+        question_type="word_problem",
+        prompt=f"A tank contains {start} liters of water. Water is added at a constant rate of {rate} liters per hour for {hours} hours. Given the starting amount, how many liters of water are in the tank after {hours} hours?",
+        correct="C",
         explanation=f"Add the starting amount to the amount added: {start} + {rate}({hours}) = {answer}.",
         trap_type="rate setup error",
-        fmt=QuestionFormat.grid_in,
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(str(rate * hours), str(start + rate), str(answer), str(answer * hours), correct="C"),
+    )
+
+
+def math_exponential(module: int, index: int) -> QuestionSpec:
+    start = 50 + (index % 4) * 10
+    growth = 2
+    periods = 3
+    answer = start * (growth ** periods)
+    return math_base(
+        module,
+        index,
+        topic="Advanced Math",
+        subtopic="Exponential growth",
+        question_type="exponential_growth",
+        prompt=f"A population starts at {start} and doubles each period. After exactly {periods} periods, what is the population?",
+        correct="B",
+        explanation=f"Doubling for {periods} periods gives {start} x 2^{periods} = {answer}.",
+        trap_type="growth factor confusion",
+        fmt=QuestionFormat.multiple_choice,
+        choices=math_choices(str(start * periods), str(answer), str(start + growth * periods), str(answer // 2), correct="B"),
     )
 
 
 def math_graph(module: int, index: int) -> QuestionSpec:
+    def graph_choice(label: str, text: str, role: ChoiceTrapRole, basis: str) -> ChoiceSpec:
+        if role == ChoiceTrapRole.correct:
+            return choice(label, text, role, "plausibility=correct; competition=top; math_traps=correct; why_wrong=correct")
+        return choice(
+            label,
+            text,
+            role,
+            f"plausibility=high; competition=top; math_traps={','.join(sorted(MATH_HARD_TRAPS))}; why_wrong={basis}",
+        )
+
     variants = (
         {
             "graph_pattern": "crossover_point",
@@ -4026,10 +4302,10 @@ def math_graph(module: int, index: int) -> QuestionSpec:
                 {"name": "Club B", "values": [(1, 12), (2, 20), (3, 26), (4, 32)]},
             ],
             "choices": (
-                choice("A", "Club B overtakes Club A at month 3, creating the crossover point.", ChoiceTrapRole.correct, "This directly reads the crossover point."),
-                choice("B", "Club A remains higher than Club B for all four months.", ChoiceTrapRole.common_mistake, "This misses the crossover."),
-                choice("C", "The two clubs have equal membership at month 4.", ChoiceTrapRole.conceptual_misunderstanding, "This misreads the endpoint."),
-                choice("D", "Club B starts higher than Club A at month 1.", ChoiceTrapRole.extreme_wrong_logic, "This reverses the starting values."),
+                graph_choice("A", "Club B overtakes Club A at month 3, creating the crossover point.", ChoiceTrapRole.correct, "correct"),
+                graph_choice("B", "Club A remains higher than Club B for all four months.", ChoiceTrapRole.common_mistake, "misses the crossover"),
+                graph_choice("C", "The two clubs have equal membership at month 4.", ChoiceTrapRole.conceptual_misunderstanding, "misreads the endpoint"),
+                graph_choice("D", "Club B starts higher than Club A at month 1.", ChoiceTrapRole.extreme_wrong_logic, "reverses the starting values"),
             ),
         },
         {
@@ -4042,10 +4318,10 @@ def math_graph(module: int, index: int) -> QuestionSpec:
                 {"name": "Low light", "values": [(1, 3), (2, 5), (3, 7), (4, 9)]},
             ],
             "choices": (
-                choice("A", "Both light levels exceed the threshold before day 2.", ChoiceTrapRole.common_mistake, "This reads the threshold too early."),
-                choice("B", "The high-light group exceeds the threshold after day 2, while the low-light group remains below it.", ChoiceTrapRole.correct, "This describes the threshold shift."),
-                choice("C", "The low-light group exceeds the threshold first.", ChoiceTrapRole.conceptual_misunderstanding, "This reverses the groups."),
-                choice("D", "Neither light level changes after day 2.", ChoiceTrapRole.extreme_wrong_logic, "This ignores the continuing trend."),
+                graph_choice("A", "Both light levels exceed the threshold before day 2.", ChoiceTrapRole.common_mistake, "reads the threshold too early"),
+                graph_choice("B", "The high-light group exceeds the threshold after day 2, while the low-light group remains below it.", ChoiceTrapRole.correct, "correct"),
+                graph_choice("C", "The low-light group exceeds the threshold first.", ChoiceTrapRole.conceptual_misunderstanding, "reverses the groups"),
+                graph_choice("D", "Neither light level changes after day 2.", ChoiceTrapRole.extreme_wrong_logic, "ignores the continuing trend"),
             ),
         },
         {
@@ -4058,10 +4334,10 @@ def math_graph(module: int, index: int) -> QuestionSpec:
                 {"name": "Route Y", "values": [(1, 31), (2, 34), (3, 38), (4, 43)]},
             ],
             "choices": (
-                choice("A", "The routes converge because their delivery times become closer each week.", ChoiceTrapRole.common_mistake, "This reverses divergence."),
-                choice("B", "Route X has no recorded delivery time after week 2.", ChoiceTrapRole.extreme_wrong_logic, "This invents missing data."),
-                choice("C", "Route Y's delivery time moves farther from Route X's over time, suggesting growing divergence.", ChoiceTrapRole.correct, "This makes the supported inference."),
-                choice("D", "Route X becomes faster every week.", ChoiceTrapRole.conceptual_misunderstanding, "This misreads the direction of Route X."),
+                graph_choice("A", "The routes converge because their delivery times become closer each week.", ChoiceTrapRole.common_mistake, "reverses divergence"),
+                graph_choice("B", "Route X has no recorded delivery time after week 2.", ChoiceTrapRole.extreme_wrong_logic, "invents missing data"),
+                graph_choice("C", "Route Y's delivery time moves farther from Route X's over time, suggesting growing divergence.", ChoiceTrapRole.correct, "correct"),
+                graph_choice("D", "Route X becomes faster every week.", ChoiceTrapRole.conceptual_misunderstanding, "misreads the direction of Route X"),
             ),
         },
     )
@@ -4079,7 +4355,7 @@ def math_graph(module: int, index: int) -> QuestionSpec:
         index,
         topic="Graph Interpretation",
         subtopic=f"{variant['graph_pattern']} / {variant['question_intent']}",
-        question_type="Graph Interpretation",
+        question_type="graph_reasoning",
         prompt=variant["prompt"],
         correct=next(choice_spec.label for choice_spec in variant["choices"] if choice_spec.role == ChoiceTrapRole.correct),
         explanation=variant["explanation"],
@@ -4102,11 +4378,19 @@ def math_choices(a: str, b: str, c: str, d: str, *, correct: str) -> tuple[Choic
         "C": ChoiceTrapRole.correct if correct == "C" else ChoiceTrapRole.conceptual_misunderstanding,
         "D": ChoiceTrapRole.correct if correct == "D" else ChoiceTrapRole.extreme_wrong_logic,
     }
+    all_traps = ",".join(sorted(MATH_HARD_TRAPS))
+    bases = {
+        "A": f"plausibility=high; competition=top; math_traps={all_traps}; why_wrong=single arithmetic or unit constraint error",
+        "B": f"plausibility=high; competition=top; math_traps={all_traps}; why_wrong=confuses requested variable or ignores condition",
+        "C": f"plausibility=high; competition=top; math_traps={all_traps}; why_wrong=uses an extraneous value or misread structure",
+        "D": f"plausibility=high; competition=top; math_traps={all_traps}; why_wrong=uses wrong base or ignores condition",
+    }
+    correct_basis = "plausibility=correct; competition=top; math_traps=correct; why_wrong=correct"
     return (
-        choice("A", a, roles["A"], "This option reflects either the correct computation or a common arithmetic slip."),
-        choice("B", b, roles["B"], "This option reflects either the correct computation or a conceptual mix-up."),
-        choice("C", c, roles["C"], "This option reflects either the correct computation or a sign/substitution error."),
-        choice("D", d, roles["D"], "This option reflects either the correct computation or an unsupported extreme value."),
+        choice("A", a, roles["A"], correct_basis if correct == "A" else bases["A"]),
+        choice("B", b, roles["B"], correct_basis if correct == "B" else bases["B"]),
+        choice("C", c, roles["C"], correct_basis if correct == "C" else bases["C"]),
+        choice("D", d, roles["D"], correct_basis if correct == "D" else bases["D"]),
     )
 
 
