@@ -540,7 +540,7 @@ MATH_TYPES = {
     "exponential_growth",
     "word_problem",
 }
-MATH_HARD_TRAPS = {
+MATH_TRAPS = {
     "sign_trap",
     "unit_trap",
     "variable_confusion",
@@ -549,11 +549,12 @@ MATH_HARD_TRAPS = {
     "percent_base_trap",
     "graph_misread",
 }
+MATH_HARD_TRAPS = set(MATH_TRAPS)
 
 MODULE1_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
-    MathModuleSlot("m1_linear_1", "linear_equation", "one_step_isolation", 3),
+    MathModuleSlot("m1_linear_1", "linear_equation", "context_isolation", 3),
     MathModuleSlot("m1_percent_1", "percent_ratio", "part_whole", 3),
-    MathModuleSlot("m1_function_1", "function_interpretation", "direct_substitution", 4),
+    MathModuleSlot("m1_function_1", "function_interpretation", "input_constraint", 4),
     MathModuleSlot("m1_geometry_1", "geometry", "angle_relationship", 4),
     MathModuleSlot("m1_probability_1", "probability", "basic_probability", 4),
     MathModuleSlot("m1_system_1", "system_equation", "elimination", 5),
@@ -604,6 +605,18 @@ MODULE2_MEDIUM_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = tuple(
     MathModuleSlot(slot.slot_key.replace("m2h_", "m2m_"), slot.question_type, slot.reasoning_type, max(6, min(8, slot.difficulty - 2)))
     for slot in MODULE2_HARD_MATH_BLUEPRINT
 )
+
+MATH_TRAP_SEQUENCE = sorted(MATH_TRAPS)
+MATH_STUDENT_RESPONSE_SLOT_KEYS = {"m1_quadratic_2", "m1_word_2", "m2h_quadratic_2", "m2h_word_2", "m2m_quadratic_2", "m2m_word_2"}
+MATH_PATTERN_REGISTRY = {
+    slot.slot_key: {
+        "type": slot.question_type,
+        "subtype": slot.reasoning_type,
+        "trap": MATH_TRAP_SEQUENCE[index % len(MATH_TRAP_SEQUENCE)],
+        "difficulty": slot.difficulty,
+    }
+    for index, slot in enumerate((*MODULE1_MATH_BLUEPRINT, *MODULE2_HARD_MATH_BLUEPRINT, *MODULE2_MEDIUM_MATH_BLUEPRINT))
+}
 
 
 def seed() -> None:
@@ -3919,10 +3932,27 @@ def validate_math_module(module_questions: list[QuestionSpec], module: int) -> N
     graph_structures: set[tuple] = set()
     graph_reasoning: set[str] = set()
     categories = {question.question_type for question in module_questions}
+    student_response_count = sum(1 for question in module_questions if question.format == QuestionFormat.grid_in)
+    if student_response_count != 2:
+        raise ValueError(f"Math module {module} must include exactly two student-response questions, got {student_response_count}.")
     if module == 1 and not MATH_TYPES.issubset(categories):
         raise ValueError(f"Math Module 1 missing required categories: {MATH_TYPES - categories}.")
+    subtype_counts: Counter[str] = Counter()
+    trap_window: list[str] = []
+    previous_subtype = ""
     for question, slot in zip(module_questions, expected_blueprint, strict=True):
         validate_math_question_against_slot(question, slot, module)
+        if slot.reasoning_type == previous_subtype:
+            raise ValueError(f"Math module {module} repeats subtype consecutively: {slot.reasoning_type}.")
+        previous_subtype = slot.reasoning_type
+        pattern = (question.data_payload or {}).get("pattern") or {}
+        primary_trap = str(pattern.get("trap") or "")
+        subtype_counts[slot.reasoning_type] += 1
+        trap_window.append(primary_trap)
+        if len(trap_window) > 7:
+            trap_window.pop(0)
+        if primary_trap and trap_window.count(primary_trap) > 2:
+            raise ValueError(f"Math module {module} repeats trap {primary_trap} too often in a short span.")
         signature = math_question_signature(question)
         if signature in seen_signatures:
             raise ValueError(f"Duplicate math question signature: {signature}.")
@@ -3939,6 +3969,9 @@ def validate_math_module(module_questions: list[QuestionSpec], module: int) -> N
             graph_reasoning.add(reasoning_type)
     if len(seen_signatures) != len(module_questions):
         raise ValueError("Math module signature validation failed.")
+    repeated_subtypes = {subtype: count for subtype, count in subtype_counts.items() if count > 2}
+    if repeated_subtypes:
+        raise ValueError(f"Math module repeats subtypes too often: {repeated_subtypes}.")
 
 
 def validate_math_question_against_slot(question: QuestionSpec, slot: MathModuleSlot, module: int) -> None:
@@ -3947,8 +3980,24 @@ def validate_math_question_against_slot(question: QuestionSpec, slot: MathModule
     payload = question.data_payload or {}
     if payload.get("reasoning_type") != slot.reasoning_type:
         raise ValueError(f"Math slot {slot.slot_key} expected reasoning {slot.reasoning_type}.")
+    pattern = payload.get("pattern")
+    if not isinstance(pattern, dict):
+        raise ValueError(f"Math slot {slot.slot_key} missing SAT pattern registry payload.")
+    for key in ("type", "subtype", "trap", "difficulty"):
+        if key not in pattern:
+            raise ValueError(f"Math pattern for {slot.slot_key} missing {key}.")
+    if pattern["type"] != slot.question_type or pattern["subtype"] != slot.reasoning_type or pattern["difficulty"] != slot.difficulty:
+        raise ValueError(f"Math pattern payload does not match slot {slot.slot_key}.")
+    if pattern["trap"] not in MATH_TRAPS:
+        raise ValueError(f"Math slot {slot.slot_key} uses unknown trap {pattern['trap']}.")
     if question.difficulty != slot.difficulty:
         raise ValueError(f"Math slot {slot.slot_key} expected difficulty {slot.difficulty}, got {question.difficulty}.")
+    if slot.reasoning_type in {"direct_substitution", "one_step_isolation"}:
+        raise ValueError(f"Math slot {slot.slot_key} is too simple for SAT pattern generation.")
+    if int(payload.get("constraints_required") or question.constraints_required) < 1:
+        raise ValueError(f"Math slot {slot.slot_key} must require at least one reasoning step beyond calculation.")
+    if question.format == QuestionFormat.grid_in:
+        validate_math_student_response(question, slot)
     if module == 2 and MODULE2_MODE == "hard":
         validate_hard_math_question(question)
 
@@ -3959,8 +4008,10 @@ def validate_hard_math_question(question: QuestionSpec) -> None:
     constraints_required = int((question.data_payload or {}).get("constraints_required") or question.constraints_required)
     if constraints_required < 2:
         raise ValueError(f"Hard math question needs at least two constraints: {question.prompt}")
-    if question.data_type != "graph" and not re.search(r"\b(if|when|after|only|given|for which|under|at least|greater than|less than)\b", question.prompt.lower()):
+    if question.data_type != "graph" and not re.search(r"\b(if|when|after|only|given|for which|under|at least|greater than|less than|positive|exact)\b", question.prompt.lower()):
         raise ValueError(f"Hard math question lacks a hidden condition: {question.prompt}")
+    if question.format == QuestionFormat.grid_in:
+        return
     distractors = [choice_spec for choice_spec in question.choices if choice_spec.role != ChoiceTrapRole.correct]
     if len(distractors) != 3:
         raise ValueError("Hard math multiple-choice questions need three distractors.")
@@ -3986,6 +4037,16 @@ def math_question_signature(question: QuestionSpec) -> tuple[str, str, str, str]
         question.trap_type,
         question.structure_key,
     )
+
+
+def validate_math_student_response(question: QuestionSpec, slot: MathModuleSlot) -> None:
+    if slot.slot_key not in MATH_STUDENT_RESPONSE_SLOT_KEYS:
+        raise ValueError(f"Unexpected student-response math slot: {slot.slot_key}.")
+    if question.choices:
+        raise ValueError("Student-response math questions must not include choices.")
+    text = f"{question.prompt} {question.explanation} {question.trap_type}".lower()
+    if not re.search(r"\b(round|nearest|fraction|decimal|exact)\b", text):
+        raise ValueError("Student-response math questions must include rounding, fraction, decimal, or exact-value traps.")
 
 
 def extract_math_trap_types(choice_spec: ChoiceSpec) -> set[str]:
@@ -4043,6 +4104,7 @@ def math_base(
     graph_data.setdefault("reasoning_type", slot.reasoning_type)
     graph_data.setdefault("constraints_required", 2 if module == 2 else 1)
     graph_data.setdefault("math_type", slot.question_type)
+    graph_data.setdefault("pattern", MATH_PATTERN_REGISTRY[slot.slot_key])
     signature_seed = QuestionSpec(
         section=SATSection.math,
         module=module,
@@ -4144,8 +4206,23 @@ def math_system(module: int, index: int) -> QuestionSpec:
 
 
 def math_quadratic(module: int, index: int) -> QuestionSpec:
+    slot = math_slot_for(module, index)
     root = 3 + index % 4
     prompt = f"The equation (x - {root})(x + 2) = 0 has one positive solution. Given that condition, what is that solution?"
+    if slot.slot_key in MATH_STUDENT_RESPONSE_SLOT_KEYS:
+        prompt = f"The equation (x - {root})(x + 2) = 0 has one positive solution. Give the exact numeric value of that solution as an integer."
+        return math_base(
+            module,
+            index,
+            topic="Advanced Math",
+            subtopic="Quadratics",
+            question_type="quadratic_modeling",
+            prompt=prompt,
+            correct=str(root),
+            explanation=f"The negative solution is an extraneous choice under the positive-solution condition; the exact integer answer is {root}.",
+            trap_type="exact fraction or extraneous solution trap",
+            fmt=QuestionFormat.grid_in,
+        )
     return math_base(
         module,
         index,
@@ -4164,8 +4241,9 @@ def math_quadratic(module: int, index: int) -> QuestionSpec:
 def math_function(module: int, index: int) -> QuestionSpec:
     m = 2 + index % 3
     c = 5 + index % 4
-    x = 4
-    answer = str(m * x + c)
+    x_high = 4
+    x_low = 2
+    answer = str(m * (x_high - x_low))
     correct = "C"
     return math_base(
         module,
@@ -4173,12 +4251,12 @@ def math_function(module: int, index: int) -> QuestionSpec:
         topic="Functions",
         subtopic="Function notation",
         question_type="function_interpretation",
-        prompt=f"For the function f(x) = {m}x + {c}, what is f({x}) when x is the input value?",
+        prompt=f"For the function f(x) = {m}x + {c}, how much greater is f({x_high}) than f({x_low}) when both input values are used?",
         correct=correct,
-        explanation=f"Substitute {x} for x: f({x}) = {m}({x}) + {c} = {answer}.",
+        explanation=f"The constant cancels when comparing outputs, so f({x_high}) - f({x_low}) = {m}({x_high - x_low}) = {answer}.",
         trap_type="substitution error",
         fmt=QuestionFormat.multiple_choice,
-        choices=math_choices(str(m + x + c), str(m * c + x), answer, str(m * (x + c)), correct=correct),
+        choices=math_choices(str(m + c), str(m * c), answer, str(m * x_high + c), correct=correct),
     )
 
 
@@ -4241,10 +4319,28 @@ def math_probability(module: int, index: int) -> QuestionSpec:
 
 
 def math_word_problem(module: int, index: int) -> QuestionSpec:
+    slot = math_slot_for(module, index)
     rate = 4 + index % 4
     hours = 3 + index % 3
     start = 5
     answer = rate * hours + start
+    if slot.slot_key in MATH_STUDENT_RESPONSE_SLOT_KEYS:
+        total_minutes = 45 + (index % 4) * 15
+        per_hour = 12 + index % 5
+        exact = per_hour * total_minutes / 60
+        exact_text = f"{exact:g}"
+        return math_base(
+            module,
+            index,
+            topic="Word Problems",
+            subtopic="Rates",
+            question_type="word_problem",
+            prompt=f"A pump moves {per_hour} liters per hour. It runs for {total_minutes} minutes. What is the exact number of liters moved? Do not round.",
+            correct=exact_text,
+            explanation=f"Convert minutes to hours before multiplying: {total_minutes}/60 hours times {per_hour} liters per hour = {exact_text}. This exact-value setup includes a decimal/fraction trap.",
+            trap_type="rounding and unit conversion trap",
+            fmt=QuestionFormat.grid_in,
+        )
     return math_base(
         module,
         index,
