@@ -53,6 +53,7 @@ TRANSITION_TYPES = {
     "conclusion": ("ultimately", "in conclusion"),
 }
 RHETORICAL_TASK_TYPES = {
+    "notes_task_selection",
     "compare",
     "contrast",
     "similarity",
@@ -424,7 +425,7 @@ RW_FIXED_MODULE1_SLOT_KEYS = [
     "grammar_ambiguous_boundary",
     "grammar_pronoun",
     "transition_logic",
-    "transition_subtle",
+    "notes_task_selection_hard",
     "transition_precision",
     "transition_hard",
     "rhetorical_contrast",
@@ -455,7 +456,7 @@ RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("grammar_ambiguous_boundary", "Standard English Conventions", "sentence_boundary_resolution", 8),
     RWModuleSlot("grammar_pronoun", "Standard English Conventions", "grammar_pronoun_reference", 8),
     RWModuleSlot("transition_logic", "Transitions", "reinforcement", 8),
-    RWModuleSlot("transition_subtle", "Transitions", "clarification", 9),
+    RWModuleSlot("notes_task_selection_hard", "Rhetorical Synthesis", "notes_task_selection", 9),
     RWModuleSlot("transition_precision", "Transitions", "concession", 9),
     RWModuleSlot("transition_hard", "Transitions", "conclusion", 9),
     RWModuleSlot("rhetorical_contrast", "Rhetorical Synthesis", "contrast", 10),
@@ -497,8 +498,8 @@ MODULE2_HARD_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("m2_central_idea_1", "Main Idea", "study_vs_conclusion", 8),
     RWModuleSlot("m2_central_idea_2", "Main Idea", "example_vs_general", 9),
     RWModuleSlot("m2_central_idea_3", "Main Idea", "study_vs_conclusion", 10),
-    RWModuleSlot("m2_rhetorical_1", "Rhetorical Synthesis", "contrast", 8),
-    RWModuleSlot("m2_rhetorical_2", "Rhetorical Synthesis", "compare", 9),
+    RWModuleSlot("m2_rhetorical_1", "Rhetorical Synthesis", "notes_task_selection", 8),
+    RWModuleSlot("m2_rhetorical_2", "Rhetorical Synthesis", "notes_task_selection", 9),
     RWModuleSlot("m2_rhetorical_3", "Rhetorical Synthesis", "present_conclusion", 10),
     RWModuleSlot("m2_grammar_1", "Standard English Conventions", "sentence_boundary_resolution", 8),
     RWModuleSlot("m2_grammar_2", "Standard English Conventions", "modifier_attachment", 9),
@@ -606,6 +607,7 @@ def build_question_bank() -> list[QuestionSpec]:
             module_questions.append(reading_writing_question(module, index))
         module_questions = apply_answer_distribution(module_questions, seed=f"rw-module-{module}")
         validate_answer_distribution(module_questions)
+        validate_notes_task_count(module_questions)
         validate_graph_intent_distribution(module_questions)
         for question in module_questions:
             validate_reading_writing_spec(question)
@@ -725,6 +727,18 @@ def validate_graph_intent_distribution(module_questions: list[QuestionSpec]) -> 
         seen.add(pair)
 
 
+def validate_notes_task_count(module_questions: list[QuestionSpec]) -> None:
+    count_notes = sum(
+        1
+        for question in module_questions
+        if question.question_type == "Rhetorical Synthesis"
+        and extract_metadata_value(question.explanation, "pattern") == "notes_task_selection"
+    )
+    print("NOTES QUESTIONS:", count_notes)
+    if count_notes < 2:
+        raise ValueError("Reading & Writing module must include at least two notes_task_selection questions.")
+
+
 def validate_choice_label_order(question: QuestionSpec) -> None:
     if question.format != QuestionFormat.multiple_choice:
         return
@@ -789,7 +803,7 @@ def generate(question_type: str, pattern: str, *, module: int, index: int) -> Qu
 
 
 def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
-    goal = ("contrast", "summarize", "support a claim", "describe difference", "highlight purpose")[index % 5]
+    goal = ("contrast", "summarize", "support")[index % 3]
     goal_payloads = {
         "contrast": {
             "notes": (
@@ -822,14 +836,14 @@ def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
             "constraint": "However, the student's goal is to summarize the main shared outcome of both programs, not list a single detail from one site.",
             "prompt": "Which choice best uses relevant information from the notes to summarize the programs' shared outcome?",
             "answers": (
-                "By combining guidance from experienced adults with extra studio time, both programs expanded students' design practice.",
+                "Both programs combined guidance from experienced adults and extra studio time to expand students' design practice.",
                 "The East program met in a library basement and displayed sketches in May.",
                 "The West program used donated tablets, a detail that made its posters more colorful.",
                 "The programs were different because one used mentors and the other used tablets.",
             ),
             "correct": 0,
         },
-        "support a claim": {
+        "support": {
             "notes": (
                 "- Visitors often added written responses beside artifacts.\n"
                 "- Visitors could compare their responses with comments from earlier visitors.\n"
@@ -848,46 +862,9 @@ def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
             ),
             "correct": 1,
         },
-        "describe difference": {
-            "notes": (
-                "- Researcher N used satellite records collected over many years.\n"
-                "- Researcher O relied on interviews from one fishing season.\n"
-                "- Both researchers studied migration patterns that may shift as coastal weather changes.\n"
-                "- Researcher O interviewed fishers in three towns along the same coast.\n"
-                "- Researcher N's maps were published before Researcher O began interviewing participants.\n"
-                "- Several publication dates overlap but are not the key evidence difference."
-            ),
-            "constraint": "However, the student's goal is to describe the difference in evidence sources, not the topic both researchers studied.",
-            "prompt": "Which choice best uses relevant information from the notes to describe a difference between the researchers' evidence?",
-            "answers": (
-                "Both researchers studied migration patterns that may shift as coastal weather changes.",
-                "One researcher drew on long-term remote measurements, whereas the other used short-term firsthand accounts.",
-                "Researcher O interviewed fishers in three towns along the same coast.",
-                "Researcher N's maps were published before Researcher O began interviewing participants.",
-            ),
-            "correct": 1,
-        },
-        "highlight purpose": {
-            "notes": (
-                "- The old entrance was narrow.\n"
-                "- The new layout added ramps.\n"
-                "- The new layout added clearer signs.\n"
-                "- The museum reopened in September after weather-related delays.\n"
-                "- The redesign used several locally produced materials.\n"
-                "- The changes may help more visitors move through the building independently."
-            ),
-            "constraint": "However, the student's goal is to highlight the purpose of the redesign, not discuss its cost or schedule.",
-            "prompt": "Which choice best uses relevant information from the notes to highlight the purpose of the redesign?",
-            "answers": (
-                "The redesign took six months and used several locally produced materials.",
-                "The changes turned a difficult entry sequence into one that supported more independent movement through the building.",
-                "The museum reopened in September after several weather-related delays.",
-                "Local materials made the redesign visually similar to nearby public buildings.",
-            ),
-            "correct": 1,
-        },
     }
     payload = goal_payloads[goal]
+    notes = [line.removeprefix("- ").strip() for line in payload["notes"].splitlines() if line.strip()]
     return AmbiguityFirstItem(
         generation_pattern="notes_task_selection",
         ambiguous_passage=(
@@ -908,6 +885,17 @@ def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
             "distractor_types=true_but_wrong_task,single_fact_only,irrelevant_detail_focus."
         ),
         constraints_required=2,
+        data_payload={
+            "type": "notes",
+            "task_goal": goal,
+            "entities": {
+                "contrast": ["Project Delta", "Project Mira"],
+                "summarize": ["East program", "West program"],
+                "support": ["visitor responses", "earlier visitor comments"],
+            }[goal],
+            "notes": notes,
+            "distractor_types": ["true_but_wrong_task", "single_fact_only", "irrelevant_detail_focus"],
+        },
     )
 
 
@@ -2496,6 +2484,19 @@ def validate_notes_task_selection(spec: QuestionSpec) -> None:
         raise ValueError("notes_task_selection requires at least four bullet notes.")
     if bullet_count > 6:
         raise ValueError("notes_task_selection must stay within 4-6 bullet notes.")
+    payload = spec.data_payload or {}
+    if payload.get("type") != "notes":
+        raise ValueError("notes_task_selection must expose data_payload.type='notes'.")
+    if payload.get("task_goal") not in {"contrast", "summarize", "support"}:
+        raise ValueError("notes_task_selection task_goal must be contrast, summarize, or support.")
+    notes = payload.get("notes")
+    if not isinstance(notes, list) or not 4 <= len(notes) <= 6 or not all(isinstance(note, str) and note.strip() for note in notes):
+        raise ValueError("notes_task_selection data_payload.notes must contain 4-6 bullet strings.")
+    entities = payload.get("entities")
+    if not isinstance(entities, list) or len([entity for entity in entities if isinstance(entity, str) and entity.strip()]) < 2:
+        raise ValueError("notes_task_selection must include at least two entities.")
+    if payload.get("distractor_types") != ["true_but_wrong_task", "single_fact_only", "irrelevant_detail_focus"]:
+        raise ValueError("notes_task_selection must classify each wrong answer by the required distractor rule.")
     explanation = spec.explanation
     for distractor_type in ("true_but_wrong_task", "single_fact_only", "irrelevant_detail_focus"):
         if distractor_type not in explanation:

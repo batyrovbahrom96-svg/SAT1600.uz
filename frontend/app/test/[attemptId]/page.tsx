@@ -245,6 +245,9 @@ export default function TestPage() {
   const isCrossTextQuestion = question?.data_payload?.type === "cross_text"
     && typeof question.data_payload.text_1 === "string"
     && typeof question.data_payload.text_2 === "string";
+  const isNotesQuestion = question?.data_payload?.type === "notes"
+    && Array.isArray(question.data_payload.notes)
+    && question.data_payload.notes.every((note) => typeof note === "string");
   const graphPayload = question?.data_type === "graph" && isGraphPayload(question.data_payload)
     ? question.data_payload
     : null;
@@ -1000,7 +1003,23 @@ export default function TestPage() {
           ref={passagePanelRef}
         >
           <div className="flex w-full max-w-[580px] flex-col gap-4">
-            {isCrossTextQuestion ? (
+            {isNotesQuestion ? (
+              <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
+                <p>A student is reviewing notes for a writing task.</p>
+                <section aria-labelledby="notes-label" className="border-b border-[#e5e7eb] pb-3">
+                  <div id="notes-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
+                    Notes
+                  </div>
+                  <ul className="m-0 flex list-disc flex-col gap-2 pl-6">
+                    {question.data_payload?.notes?.map((note, noteIndex) => (
+                      <li key={`${question.id}-note-${noteIndex}`} className="pl-1">
+                        {note}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </div>
+            ) : isCrossTextQuestion ? (
               <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
                 <section aria-labelledby="text-1-label" className="mb-5 border-b border-[#e5e7eb] pb-3">
                   <div id="text-1-label" className="mb-2 text-[14px] font-semibold text-[#374151]">

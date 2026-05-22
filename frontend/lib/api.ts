@@ -11,9 +11,12 @@ export type Question = {
   graph_path?: string | null;
   data_type: "none" | "text_data" | "table" | "graph";
   data_payload?: {
-    type?: "cross_text" | string;
+    type?: "cross_text" | "notes" | string;
     text_1?: string;
     text_2?: string;
+    task_goal?: "contrast" | "summarize" | "support" | string;
+    entities?: string[];
+    notes?: string[];
     title?: string;
     columns?: string[];
     rows?: Record<string, string | number>[];
