@@ -509,6 +509,7 @@ export default function TestPage() {
   useEffect(() => {
     if (moduleData?.attempt.current_section !== "math") {
       setIsReferenceOpen(false);
+      setIsCalculatorOpen(false);
     }
   }, [moduleData?.attempt.current_section]);
 
@@ -1248,13 +1249,15 @@ export default function TestPage() {
                 <BookOpen size={17} /> Reference
               </button>
             ) : null}
-            <button
-              className="inline-flex items-center gap-2 hover:text-slate-950"
-              onClick={() => setIsCalculatorOpen(true)}
-              type="button"
-            >
-              <CalculatorIcon size={17} /> Calculator
-            </button>
+            {isMathSection ? (
+              <button
+                className="inline-flex items-center gap-2 hover:text-slate-950"
+                onClick={() => setIsCalculatorOpen(true)}
+                type="button"
+              >
+                <CalculatorIcon size={17} /> Calculator
+              </button>
+            ) : null}
             <button className="hover:text-slate-950" type="button">Highlights & Notes</button>
             <div className="relative" ref={moreMenuRef}>
               <button
@@ -1676,7 +1679,7 @@ export default function TestPage() {
       ) : null}
 
       <CalculatorModal
-        open={isCalculatorOpen}
+        open={isMathSection && isCalculatorOpen}
         onClose={() => setIsCalculatorOpen(false)}
         scriptReady={desmosReady || Boolean(typeof window !== "undefined" && window.Desmos)}
         scriptFailed={desmosFailed}
