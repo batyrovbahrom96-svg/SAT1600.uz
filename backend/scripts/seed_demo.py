@@ -75,7 +75,8 @@ TABLE_CONSTRAINT_TYPES = {
     "exception_detection",
 }
 TABLE_REQUIRED_SKILLS = {"scan_multiple_rows", "apply_condition"}
-GRAPH_REASONING_PATTERNS = {"crossover_point", "threshold_shift", "divergence", "rate_change"}
+GRAPH_REASONING_PATTERNS = {"crossover_point", "threshold_shift", "divergence"}
+GRAPH_QUESTION_INTENTS = {"direct_read", "trend_description", "claim_support", "inference", "role_in_argument"}
 RW_PATTERN_REGISTRY = {
     "literal_vs_abstract": {
         "passage_template": "context redirects a word from literal sense to abstract sense",
@@ -605,6 +606,7 @@ def build_question_bank() -> list[QuestionSpec]:
             module_questions.append(reading_writing_question(module, index))
         module_questions = apply_answer_distribution(module_questions, seed=f"rw-module-{module}")
         validate_answer_distribution(module_questions)
+        validate_graph_intent_distribution(module_questions)
         for question in module_questions:
             validate_reading_writing_spec(question)
             validate_choice_label_order(question)
@@ -616,6 +618,7 @@ def build_question_bank() -> list[QuestionSpec]:
             module_questions.append(math_question(module, index))
         module_questions = apply_answer_distribution(module_questions, seed=f"math-module-{module}")
         validate_answer_distribution(module_questions)
+        validate_graph_intent_distribution(module_questions)
         for question in module_questions:
             validate_choice_label_order(question)
             validate_question_data_contract(question)
@@ -708,6 +711,18 @@ def validate_answer_distribution(module_questions: list[QuestionSpec]) -> None:
         raise ValueError(f"Answer distribution contains invalid labels: {counts}.")
     if max(counts.values()) - min(counts.get(label, 0) for label in ("A", "B", "C", "D")) > 1:
         raise ValueError(f"Answer distribution is too skewed in module: {counts}.")
+
+
+def validate_graph_intent_distribution(module_questions: list[QuestionSpec]) -> None:
+    seen: set[tuple[str, str]] = set()
+    for question in module_questions:
+        if question.data_type != "graph":
+            continue
+        payload = question.data_payload or {}
+        pair = (payload.get("graph_pattern"), payload.get("question_intent"))
+        if pair in seen:
+            raise ValueError(f"Graph pattern/intent pair repeats within module: {pair}.")
+        seen.add(pair)
 
 
 def validate_choice_label_order(question: QuestionSpec) -> None:
@@ -1602,6 +1617,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
                 "x_label": "Weekly watering events",
                 "y_label": "Average growth increase (cm)",
                 "graph_pattern": "crossover_point",
+                "question_intent": "claim_support",
                 "reasoning_pattern": "crossover_point",
                 "graph_dependency": "necessary",
                 "series": [
@@ -2690,6 +2706,9 @@ def validate_graph_payload_contract(spec: QuestionSpec) -> None:
     graph_pattern = payload.get("graph_pattern")
     if graph_pattern not in GRAPH_REASONING_PATTERNS:
         raise ValueError(f"Graph question needs graph_pattern in {sorted(GRAPH_REASONING_PATTERNS)}, got {graph_pattern!r}.")
+    question_intent = payload.get("question_intent")
+    if question_intent not in GRAPH_QUESTION_INTENTS:
+        raise ValueError(f"Graph question needs question_intent in {sorted(GRAPH_QUESTION_INTENTS)}, got {question_intent!r}.")
     if spec.graph_reasoning_type != graph_pattern:
         raise ValueError("Graph question must persist graph_pattern as graph_reasoning_type.")
     if payload.get("reasoning_pattern") and payload.get("reasoning_pattern") != graph_pattern:
@@ -2757,7 +2776,6 @@ def graph_is_text_solvable(spec: QuestionSpec) -> bool:
         "crossover_point": ("crossover", "overtakes", "higher at low", "higher at three", "three watering", "series", "advantage shifts"),
         "threshold_shift": ("threshold", "after", "before", "exceeds", "falls below"),
         "divergence": ("diverge", "gap", "farther apart", "closer together", "converge"),
-        "rate_change": ("rate", "slope", "increases by", "decreases by", "per additional", "for each"),
     }
     graph_only_terms = graph_only_terms_by_pattern.get(graph_pattern, ())
     if any(term in text_without_graph for term in graph_only_terms):
@@ -3069,14 +3087,23 @@ def math_question(module: int, index: int) -> QuestionSpec:
     return templates[index % len(templates)](module, index)
 
 
-def math_base(module: int, index: int, *, topic: str, subtopic: str, question_type: str, prompt: str, correct: str, explanation: str, trap_type: str, fmt: QuestionFormat, choices: tuple[ChoiceSpec, ...] = (), graph_path: str | None = None) -> QuestionSpec:
-    graph_payload = {
-        "graph_path": graph_path,
-        "graph_pattern": "rate_change",
-        "x_label": "Hours",
-        "y_label": "Total cost (dollars)",
-        "series": [{"name": "Total cost", "values": [(0, 3), (1, 6), (2, 9), (3, 12)]}],
-    } if graph_path else {}
+def math_base(
+    module: int,
+    index: int,
+    *,
+    topic: str,
+    subtopic: str,
+    question_type: str,
+    prompt: str,
+    correct: str,
+    explanation: str,
+    trap_type: str,
+    fmt: QuestionFormat,
+    choices: tuple[ChoiceSpec, ...] = (),
+    graph_path: str | None = None,
+    graph_payload: dict | None = None,
+) -> QuestionSpec:
+    graph_data = graph_payload or {}
     return QuestionSpec(
         section=SATSection.math,
         module=module,
@@ -3098,10 +3125,10 @@ def math_base(module: int, index: int, *, topic: str, subtopic: str, question_ty
         discrimination_score=round(0.44 + (index % 6) * 0.06, 2),
         choices=choices,
         graph_path=graph_path,
-        graph_reasoning_type="rate_change" if graph_path else None,
-        graph_required=bool(graph_path),
-        data_type="graph" if graph_path else "none",
-        data_payload=graph_payload,
+        graph_reasoning_type=graph_data.get("graph_pattern") if graph_data else None,
+        graph_required=bool(graph_data),
+        data_type="graph" if graph_data else "none",
+        data_payload=graph_data,
     )
 
 
@@ -3220,24 +3247,79 @@ def math_word_problem(module: int, index: int) -> QuestionSpec:
 
 
 def math_graph(module: int, index: int) -> QuestionSpec:
+    variants = (
+        {
+            "graph_pattern": "crossover_point",
+            "question_intent": "direct_read",
+            "prompt": "The graph compares memberships in Club A and Club B over four months. Which statement identifies the crossover point shown by the graph?",
+            "explanation": "The graph shows Club B overtaking Club A at month 3, so the crossover point occurs when Club B first becomes greater.",
+            "series": [
+                {"name": "Club A", "values": [(1, 18), (2, 21), (3, 24), (4, 27)]},
+                {"name": "Club B", "values": [(1, 12), (2, 20), (3, 26), (4, 32)]},
+            ],
+            "choices": (
+                choice("A", "Club B overtakes Club A at month 3, creating the crossover point.", ChoiceTrapRole.correct, "This directly reads the crossover point."),
+                choice("B", "Club A remains higher than Club B for all four months.", ChoiceTrapRole.common_mistake, "This misses the crossover."),
+                choice("C", "The two clubs have equal membership at month 4.", ChoiceTrapRole.conceptual_misunderstanding, "This misreads the endpoint."),
+                choice("D", "Club B starts higher than Club A at month 1.", ChoiceTrapRole.extreme_wrong_logic, "This reverses the starting values."),
+            ),
+        },
+        {
+            "graph_pattern": "threshold_shift",
+            "question_intent": "trend_description",
+            "prompt": "The graph shows a plant's growth under two light levels. Which statement best describes the threshold shift in the data?",
+            "explanation": "The graph shows the high-light series exceeds the threshold after day 2, while the low-light series does not.",
+            "series": [
+                {"name": "High light", "values": [(1, 4), (2, 7), (3, 11), (4, 14)]},
+                {"name": "Low light", "values": [(1, 3), (2, 5), (3, 7), (4, 9)]},
+            ],
+            "choices": (
+                choice("A", "Both light levels exceed the threshold before day 2.", ChoiceTrapRole.common_mistake, "This reads the threshold too early."),
+                choice("B", "The high-light group exceeds the threshold after day 2, while the low-light group remains below it.", ChoiceTrapRole.correct, "This describes the threshold shift."),
+                choice("C", "The low-light group exceeds the threshold first.", ChoiceTrapRole.conceptual_misunderstanding, "This reverses the groups."),
+                choice("D", "Neither light level changes after day 2.", ChoiceTrapRole.extreme_wrong_logic, "This ignores the continuing trend."),
+            ),
+        },
+        {
+            "graph_pattern": "divergence",
+            "question_intent": "inference",
+            "prompt": "The graph shows two delivery routes over four weeks. Which inference is best supported by the divergence between the two lines?",
+            "explanation": "The gap between the routes grows each week, so the graph supports an inference that their delivery times diverge over time.",
+            "series": [
+                {"name": "Route X", "values": [(1, 30), (2, 31), (3, 32), (4, 33)]},
+                {"name": "Route Y", "values": [(1, 31), (2, 34), (3, 38), (4, 43)]},
+            ],
+            "choices": (
+                choice("A", "The routes converge because their delivery times become closer each week.", ChoiceTrapRole.common_mistake, "This reverses divergence."),
+                choice("B", "Route X has no recorded delivery time after week 2.", ChoiceTrapRole.extreme_wrong_logic, "This invents missing data."),
+                choice("C", "Route Y's delivery time moves farther from Route X's over time, suggesting growing divergence.", ChoiceTrapRole.correct, "This makes the supported inference."),
+                choice("D", "Route X becomes faster every week.", ChoiceTrapRole.conceptual_misunderstanding, "This misreads the direction of Route X."),
+            ),
+        },
+    )
+    variant = variants[(index // 7) % len(variants)]
+    graph_payload = {
+        "graph_path": "/static/graphs/sample-linear.png",
+        "graph_pattern": variant["graph_pattern"],
+        "question_intent": variant["question_intent"],
+        "x_label": "Time",
+        "y_label": "Measured value",
+        "series": variant["series"],
+    }
     return math_base(
         module,
         index,
         topic="Graph Interpretation",
-        subtopic="Slope and intercepts",
+        subtopic=f"{variant['graph_pattern']} / {variant['question_intent']}",
         question_type="Graph Interpretation",
-        prompt="The graph shows a line modeling total cost y, in dollars, after x hours. Which statement best interprets the slope of the line?",
-        correct="B",
-        explanation="The slope represents the change in total cost for each additional hour.",
-        trap_type="slope interpretation error",
+        prompt=variant["prompt"],
+        correct=next(choice_spec.label for choice_spec in variant["choices"] if choice_spec.role == ChoiceTrapRole.correct),
+        explanation=variant["explanation"],
+        trap_type="graph pattern interpretation error",
         fmt=QuestionFormat.multiple_choice,
         graph_path="/static/graphs/sample-linear.png",
-        choices=(
-            choice("A", "The starting cost before any hours are added is 3 dollars.", ChoiceTrapRole.common_mistake, "This confuses slope with an intercept."),
-            choice("B", "The total cost increases by 3 dollars for each additional hour.", ChoiceTrapRole.correct, "This correctly interprets slope as rate of change."),
-            choice("C", "The total cost is always 3 dollars regardless of the number of hours.", ChoiceTrapRole.conceptual_misunderstanding, "This ignores the increasing line."),
-            choice("D", "The number of hours increases by 3 for each additional dollar.", ChoiceTrapRole.extreme_wrong_logic, "This reverses the units of the rate."),
-        ),
+        graph_payload=graph_payload,
+        choices=variant["choices"],
     )
 
 

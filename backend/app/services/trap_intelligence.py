@@ -13,7 +13,6 @@ GRAPH_REASONING_TYPES = {
     "crossover_point",
     "threshold_shift",
     "divergence",
-    "rate_change",
     "slope_meaning",
     "rate_of_change",
     "intersection_reasoning",
@@ -62,7 +61,7 @@ def has_graph_reasoning_binding(question: Question) -> bool:
     prompt = question.prompt.lower()
     if any(phrase in prompt for phrase in DIRECT_LOOKUP_PHRASES):
         return False
-    reasoning_words = ("meaning", "rate", "slope", "intersection", "solution", "shift", "transformation", "domain", "range", "compare", "model")
+    reasoning_words = ("meaning", "rate", "slope", "intersection", "solution", "shift", "crossover", "threshold", "divergence", "diverge", "transformation", "domain", "range", "compare", "model")
     return any(word in prompt for word in reasoning_words)
 
 
