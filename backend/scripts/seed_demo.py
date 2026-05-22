@@ -563,52 +563,52 @@ MATH_HARD_TRAPS = set(MATH_TRAPS)
 
 MODULE1_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
     MathModuleSlot("m1_linear_1", "linear_equation", "context_isolation", 3),
-    MathModuleSlot("m1_percent_1", "percent_ratio", "part_whole", 3),
+    MathModuleSlot("m1_ratio_scaling_1", "ratio_scaling", "basic_scale", 3),
     MathModuleSlot("m1_function_1", "function_interpretation", "input_constraint", 4),
     MathModuleSlot("m1_geometry_1", "geometry", "angle_relationship", 4),
-    MathModuleSlot("m1_probability_1", "probability", "basic_probability", 4),
-    MathModuleSlot("m1_system_1", "system_equation", "elimination", 5),
+    MathModuleSlot("m1_graph_1", "graph_reasoning", "slope_meaning", 4),
+    MathModuleSlot("m1_linear_2", "linear_equation", "two_step_isolation", 5),
     MathModuleSlot("m1_word_1", "word_problem", "rate_total", 5),
-    MathModuleSlot("m1_graph_1", "graph_reasoning", "slope_meaning", 5),
-    MathModuleSlot("m1_quadratic_1", "quadratic_modeling", "zero_product", 5),
-    MathModuleSlot("m1_exponential_1", "exponential_growth", "growth_factor", 5),
+    MathModuleSlot("m1_graph_2", "graph_reasoning", "intercept_meaning", 5),
     MathModuleSlot("m1_rational_1", "rational_equation_trap", "domain_restriction", 6),
     MathModuleSlot("m1_expression_1", "expression_rewrite", "isolate_expression", 6),
-    MathModuleSlot("m1_graph_transform_1", "graph_transformation", "vertical_horizontal_shift", 6),
-    MathModuleSlot("m1_parameter_1", "parameter_interpretation", "coefficient_meaning", 6),
-    MathModuleSlot("m1_ratio_scaling_1", "ratio_scaling", "inverse_scaling", 6),
-    MathModuleSlot("m1_absolute_1", "absolute_value_equation", "two_solution_check", 7),
-    MathModuleSlot("m1_geometry_correspondence_1", "geometry_correspondence", "vertex_mapping", 7),
+    MathModuleSlot("m1_ratio_scaling_2", "ratio_scaling", "inverse_scaling", 6),
+    MathModuleSlot("m1_function_2", "function_interpretation", "parameter_meaning", 6),
+    MathModuleSlot("m1_geometry_2", "geometry", "area_constraint", 6),
+    MathModuleSlot("m1_linear_3", "linear_equation", "equivalent_expression", 6),
+    MathModuleSlot("m1_parameter_1", "parameter_interpretation", "coefficient_meaning", 7),
+    MathModuleSlot("m1_expression_2", "expression_rewrite", "expression_comparison", 7),
     MathModuleSlot("m1_polynomial_grid_1", "polynomial_roots_gridin", "factorization_multiple_roots", 7),
-    MathModuleSlot("m1_circle_1", "circle_equation", "center_radius", 7),
+    MathModuleSlot("m1_graph_3", "graph_reasoning", "rate_comparison", 7),
     MathModuleSlot("m1_word_2", "word_problem", "hidden_unit", 7),
-    MathModuleSlot("m1_graph_2", "graph_reasoning", "rate_comparison", 7),
-    MathModuleSlot("m1_percent_2", "percent_ratio", "base_change", 7),
+    MathModuleSlot("m1_ratio_scaling_3", "ratio_scaling", "compound_scale", 7),
+    MathModuleSlot("m1_rational_2", "rational_equation_trap", "cancellation_domain", 7),
+    MathModuleSlot("m1_geometry_3", "geometry", "angle_sum_layered", 7),
 )
 
 MODULE2_HARD_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
     MathModuleSlot("m2h_linear_1", "linear_equation", "parameter_constraint", 8),
-    MathModuleSlot("m2h_system_1", "system_equation", "conditioned_solution", 8),
-    MathModuleSlot("m2h_function_1", "function_interpretation", "composite_shift", 8),
     MathModuleSlot("m2h_graph_1", "graph_reasoning", "claim_support_slope", 8),
-    MathModuleSlot("m2h_percent_1", "percent_ratio", "changing_base", 8),
-    MathModuleSlot("m2h_probability_1", "probability", "conditional_probability", 8),
     MathModuleSlot("m2h_geometry_1", "geometry", "similarity_scale", 8),
+    MathModuleSlot("m2h_ratio_scaling_1", "ratio_scaling", "inverse_scaling_hard", 8),
     MathModuleSlot("m2h_rational_1", "rational_equation_trap", "domain_restriction_hard", 9),
-    MathModuleSlot("m2h_expression_1", "expression_rewrite", "isolate_expression_hard", 9),
     MathModuleSlot("m2h_graph_transform_1", "graph_transformation", "vertical_horizontal_shift_hard", 9),
     MathModuleSlot("m2h_parameter_1", "parameter_interpretation", "coefficient_meaning_hard", 9),
-    MathModuleSlot("m2h_ratio_scaling_1", "ratio_scaling", "inverse_scaling_hard", 9),
     MathModuleSlot("m2h_absolute_1", "absolute_value_equation", "two_solution_check_hard", 9),
-    MathModuleSlot("m2h_geometry_correspondence_1", "geometry_correspondence", "vertex_mapping_hard", 9),
+    MathModuleSlot("m2h_geometry_3", "geometry", "vertex_mapping_hard", 9),
+    MathModuleSlot("m2h_linear_2", "linear_equation", "inequality_boundary", 9),
+    MathModuleSlot("m2h_graph_2", "graph_reasoning", "threshold_intersection", 9),
+    MathModuleSlot("m2h_rational_2", "rational_equation_trap", "cancellation_domain_hard", 9),
     MathModuleSlot("m2h_polynomial_grid_1", "polynomial_roots_gridin", "factorization_multiple_roots_hard", 10),
     MathModuleSlot("m2h_circle_1", "circle_equation", "center_radius_hard", 10),
-    MathModuleSlot("m2h_exponential_1", "exponential_growth", "growth_decay_comparison", 10),
-    MathModuleSlot("m2h_word_1", "word_problem", "unit_conversion_constraint", 10),
-    MathModuleSlot("m2h_quadratic_1", "quadratic_modeling", "model_domain", 10),
-    MathModuleSlot("m2h_word_2", "word_problem", "system_from_context", 10),
-    MathModuleSlot("m2h_graph_2", "graph_reasoning", "piecewise_rate", 10),
+    MathModuleSlot("m2h_parameter_2", "parameter_interpretation", "coefficient_comparison_hard", 10),
+    MathModuleSlot("m2h_graph_transform_2", "graph_transformation", "shape_vs_shift_hard", 10),
+    MathModuleSlot("m2h_geometry_2", "geometry", "circle_triangle_constraint", 10),
     MathModuleSlot("m2h_ratio_scaling_2", "ratio_scaling", "compound_scale_hard", 10),
+    MathModuleSlot("m2h_absolute_2", "absolute_value_equation", "solution_count_hard", 10),
+    MathModuleSlot("m2h_polynomial_grid_2", "polynomial_roots_gridin", "sum_distinct_roots_hard", 10),
+    MathModuleSlot("m2h_circle_2", "circle_equation", "radius_area_hard", 10),
+    MathModuleSlot("m2h_graph_3", "graph_reasoning", "piecewise_rate", 10),
 )
 
 MODULE2_MEDIUM_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = tuple(
@@ -617,7 +617,14 @@ MODULE2_MEDIUM_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = tuple(
 )
 
 MATH_TRAP_SEQUENCE = sorted(MATH_TRAPS)
-MATH_STUDENT_RESPONSE_SLOT_KEYS = {"m1_polynomial_grid_1", "m1_word_2", "m2h_polynomial_grid_1", "m2h_word_2", "m2m_polynomial_grid_1", "m2m_word_2"}
+MATH_STUDENT_RESPONSE_SLOT_KEYS = {
+    "m1_polynomial_grid_1",
+    "m1_word_2",
+    "m2h_polynomial_grid_1",
+    "m2h_polynomial_grid_2",
+    "m2m_polynomial_grid_1",
+    "m2m_polynomial_grid_2",
+}
 MATH_MISDIRECTION_TYPES = ("irrelevant_number", "misleading_phrasing", "alternate_interpretation", "extra_variable", "hidden_condition")
 MATH_MISDIRECTION_BY_TYPE = {
     "linear_equation": "irrelevant_number",
@@ -3968,8 +3975,15 @@ def validate_math_module(module_questions: list[QuestionSpec], module: int) -> N
     student_response_count = sum(1 for question in module_questions if question.format == QuestionFormat.grid_in)
     if student_response_count != 2:
         raise ValueError(f"Math module {module} must include exactly two student-response questions, got {student_response_count}.")
-    if module == 1 and not MATH_TYPES.issubset(categories):
-        raise ValueError(f"Math Module 1 missing required categories: {MATH_TYPES - categories}.")
+    if not 8 <= len(categories) <= 10:
+        raise ValueError(f"Math module {module} must use 8-10 unique patterns, got {len(categories)}: {sorted(categories)}.")
+    category_counts = Counter(question.question_type for question in module_questions)
+    invalid_counts = {category: count for category, count in category_counts.items() if count < 1 or count > 3}
+    if invalid_counts:
+        raise ValueError(f"Math module {module} pattern counts must stay between 1 and 3: {invalid_counts}.")
+    repeated_categories = {category for category, count in category_counts.items() if count >= 2}
+    if len(repeated_categories) < 3:
+        raise ValueError(f"Math module {module} needs at least three repeated patterns for depth.")
     subtype_counts: Counter[str] = Counter()
     trap_window: list[str] = []
     previous_subtype = ""
@@ -4729,7 +4743,8 @@ def math_graph(module: int, index: int) -> QuestionSpec:
             ),
         },
     )
-    variant = variants[(index // 7) % len(variants)]
+    graph_variant_indices = {(1, 4): 0, (1, 7): 1, (1, 17): 2, (2, 1): 0, (2, 10): 1, (2, 21): 2}
+    variant = variants[graph_variant_indices.get((module, index), index % len(variants))]
     graph_payload = {
         "graph_path": "/static/graphs/sample-linear.png",
         "graph_pattern": variant["graph_pattern"],
