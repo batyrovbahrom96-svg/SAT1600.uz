@@ -80,6 +80,7 @@ const passageLayoutContract = {
   lineHeight: 1.65,
   blockGapPx: 16
 };
+const BREAK_DURATION_SECONDS = 10 * 60;
 
 if (
   passageLayoutContract.maxWidthPx < passageLayoutContract.minReadableWidthPx
@@ -523,6 +524,57 @@ function StudentResponseEntry({
   );
 }
 
+function BreakScreen({
+  secondsLeft,
+  onResume
+}: {
+  secondsLeft: number;
+  onResume: () => void;
+}) {
+  const minutes = Math.floor(secondsLeft / 60);
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+
+  return (
+    <main className="min-h-screen bg-[#202020] text-white">
+      <div className="mx-auto grid min-h-screen max-w-[1280px] grid-cols-1 gap-10 px-8 py-16 md:grid-cols-[420px_1fr] md:items-center">
+        <section className="flex flex-col items-center gap-8 md:items-start">
+          <div className="rounded-lg border border-white/80 px-12 py-6 text-center">
+            <div className="mb-3 text-xl font-bold">Remaining Break Time:</div>
+            <div className="text-7xl font-bold tabular-nums tracking-tight">{minutes}:{seconds}</div>
+          </div>
+          <button
+            className="rounded-full bg-[#ffdf3f] px-8 py-4 text-base font-bold text-slate-950 hover:bg-[#f5d42f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            onClick={onResume}
+            type="button"
+          >
+            Resume Testing
+          </button>
+        </section>
+
+        <section className="max-w-xl text-white">
+          <h1 className="mb-8 text-4xl font-bold leading-tight">Practice Test Break</h1>
+          <p className="mb-10 text-xl leading-8 text-white/85">
+            You can resume this practice test as soon as you are ready to move on. On test day, you will wait until the clock counts down.
+          </p>
+          <div className="mb-10 border-t border-white/70" />
+          <h2 className="mb-8 text-4xl font-bold leading-tight">Take a Break: Do Not Close Your Device</h2>
+          <p className="mb-8 text-xl leading-8 text-white/85">
+            After the break, select <strong className="text-white">Resume Testing</strong> and you will start the next section.
+          </p>
+          <h3 className="mb-5 text-lg font-bold">Follow these rules during the break:</h3>
+          <ol className="space-y-5 text-lg leading-8 text-white/85">
+            <li>1. Do not disturb students who are still testing.</li>
+            <li>2. Do not exit the app or close your laptop.</li>
+            <li>3. Do not access phones, smartwatches, textbooks, notes, or the internet.</li>
+            <li>4. Do not eat or drink near any testing device.</li>
+            <li>5. Do not discuss the exam with anyone.</li>
+          </ol>
+        </section>
+      </div>
+    </main>
+  );
+}
+
 export default function TestPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const router = useRouter();
@@ -533,6 +585,8 @@ export default function TestPage() {
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [markedForReview, setMarkedForReview] = useState<Set<number>>(new Set());
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [isBreakActive, setIsBreakActive] = useState(false);
+  const [breakSecondsLeft, setBreakSecondsLeft] = useState(BREAK_DURATION_SECONDS);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<string>>(new Set());
   const [actionHistory, setActionHistory] = useState<AnswerAction[]>([]);
@@ -568,15 +622,20 @@ export default function TestPage() {
   const currentSection = moduleData?.attempt.current_section;
   const isMathSection = currentSection === "math";
 
+  function loadModulePayload(data: ModulePayload) {
+    setModuleData(data);
+    setSecondsLeft(data.duration_seconds);
+    setIndex(0);
+    setAnswers(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
+    setMarked(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.marked_for_review])));
+    spentByQuestion.current = Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
+    firstInteractionByQuestion.current = {};
+    interactionCountByQuestion.current = {};
+  }
+
   useEffect(() => {
     api<ModulePayload>(`/api/attempts/${attemptId}/module`).then((data) => {
-      setModuleData(data);
-      setSecondsLeft(data.duration_seconds);
-      setAnswers(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
-      setMarked(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.marked_for_review])));
-      spentByQuestion.current = Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
-      firstInteractionByQuestion.current = {};
-      interactionCountByQuestion.current = {};
+      loadModulePayload(data);
     }).catch((error) => {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         router.push("/login");
@@ -600,8 +659,14 @@ export default function TestPage() {
   }, [moduleData, secondsLeft]);
 
   useEffect(() => {
-    if (moduleData && secondsLeft === 0) void advance();
-  }, [secondsLeft]);
+    if (moduleData && secondsLeft === 0 && !isBreakActive) void advance();
+  }, [isBreakActive, secondsLeft]);
+
+  useEffect(() => {
+    if (!isBreakActive || breakSecondsLeft <= 0) return;
+    const timer = window.setInterval(() => setBreakSecondsLeft((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [breakSecondsLeft, isBreakActive]);
 
   useEffect(() => {
     if (!isMathSection) {
@@ -1249,30 +1314,36 @@ export default function TestPage() {
       if (moduleData?.attempt.current_module === 1) {
         await api(`/api/attempts/${attemptId}/finish-module-1`, { method: "POST" });
         const nextModule = await api<ModulePayload>(`/api/attempts/${attemptId}/start-module-2`, { method: "POST" });
-        setModuleData(nextModule);
-        setSecondsLeft(nextModule.duration_seconds);
-        setIndex(0);
-        setAnswers(Object.fromEntries(Object.entries(nextModule.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
-        setMarked(Object.fromEntries(Object.entries(nextModule.answers).map(([id, answer]) => [id, answer.marked_for_review])));
-        spentByQuestion.current = Object.fromEntries(Object.entries(nextModule.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
-        firstInteractionByQuestion.current = {};
-        interactionCountByQuestion.current = {};
+        loadModulePayload(nextModule);
         return;
       }
+      const previousSection = moduleData?.attempt.current_section;
       const result = await api<{ status: string; current_section: string; current_module: number }>(`/api/attempts/${attemptId}/advance`, { method: "POST" });
       if (result.status === "completed") {
         router.push(`/results/${attemptId}`);
         return;
       }
+      if (previousSection === "reading_writing" && result.current_section === "math") {
+        setBreakSecondsLeft(BREAK_DURATION_SECONDS);
+        setSecondsLeft(0);
+        setIsBreakActive(true);
+        setIsMoreOpen(false);
+        setActiveModal(null);
+        setIsNavigatorOpen(false);
+        return;
+      }
       const data = await api<ModulePayload>(`/api/attempts/${attemptId}/module`);
-      setModuleData(data);
-      setSecondsLeft(data.duration_seconds);
-      setIndex(0);
-      setAnswers(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
-      setMarked(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.marked_for_review])));
-      spentByQuestion.current = Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
-      firstInteractionByQuestion.current = {};
-      interactionCountByQuestion.current = {};
+      loadModulePayload(data);
+    } catch {
+      console.log("API unavailable, continue");
+    }
+  }
+
+  async function resumeFromBreak() {
+    try {
+      const data = await api<ModulePayload>(`/api/attempts/${attemptId}/module`);
+      loadModulePayload(data);
+      setIsBreakActive(false);
     } catch {
       console.log("API unavailable, continue");
     }
@@ -1280,6 +1351,10 @@ export default function TestPage() {
 
   if (!moduleData || !question) {
     return <main className="grid min-h-screen place-items-center bg-white font-bold text-slate-900">Loading test...</main>;
+  }
+
+  if (isBreakActive) {
+    return <BreakScreen secondsLeft={breakSecondsLeft} onResume={resumeFromBreak} />;
   }
 
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
