@@ -608,6 +608,19 @@ MODULE2_MEDIUM_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = tuple(
 
 MATH_TRAP_SEQUENCE = sorted(MATH_TRAPS)
 MATH_STUDENT_RESPONSE_SLOT_KEYS = {"m1_quadratic_2", "m1_word_2", "m2h_quadratic_2", "m2h_word_2", "m2m_quadratic_2", "m2m_word_2"}
+MATH_MISDIRECTION_TYPES = ("irrelevant_number", "misleading_phrasing", "alternate_interpretation", "extra_variable", "hidden_condition")
+MATH_MISDIRECTION_BY_TYPE = {
+    "linear_equation": "irrelevant_number",
+    "system_equation": "extra_variable",
+    "function_interpretation": "misleading_phrasing",
+    "graph_reasoning": "irrelevant_number",
+    "percent_ratio": "irrelevant_number",
+    "probability": "hidden_condition",
+    "geometry": "irrelevant_number",
+    "quadratic_modeling": "alternate_interpretation",
+    "exponential_growth": "hidden_condition",
+    "word_problem": "irrelevant_number",
+}
 MATH_PATTERN_REGISTRY = {
     slot.slot_key: {
         "type": slot.question_type,
@@ -4008,6 +4021,7 @@ def validate_hard_math_question(question: QuestionSpec) -> None:
     constraints_required = int((question.data_payload or {}).get("constraints_required") or question.constraints_required)
     if constraints_required < 2:
         raise ValueError(f"Hard math question needs at least two constraints: {question.prompt}")
+    validate_hard_math_misdirection(question)
     if question.data_type != "graph" and not re.search(r"\b(if|when|after|only|given|for which|under|at least|greater than|less than|positive|exact)\b", question.prompt.lower()):
         raise ValueError(f"Hard math question lacks a hidden condition: {question.prompt}")
     if question.format == QuestionFormat.grid_in:
@@ -4027,6 +4041,51 @@ def validate_hard_math_question(question: QuestionSpec) -> None:
         payload = question.data_payload or {}
         if not payload.get("graph_pattern") or not payload.get("question_intent"):
             raise ValueError("Hard math graph needs graph_pattern and question_intent.")
+
+
+def validate_hard_math_misdirection(question: QuestionSpec) -> None:
+    payload = question.data_payload or {}
+    misdirection = payload.get("misdirection")
+    if misdirection not in MATH_MISDIRECTION_TYPES:
+        raise ValueError(f"Hard math question needs one declared misdirection element: {question.prompt}")
+    text = f"{question.prompt} {question.explanation}".lower()
+    markers = {
+        "irrelevant_number": r"\b(extra|not needed|irrelevant|unused|also mentions)\b",
+        "misleading_phrasing": r"\b(how much greater|not the value|rather than|instead of|compared with)\b",
+        "alternate_interpretation": r"\b(could be read|interpret|positive|domain|model)\b",
+        "extra_variable": r"\b[a-z]\s*[+=-]|extra variable|another variable|where [a-z]\b",
+        "hidden_condition": r"\b(if|when|given|only|under|provided|condition)\b",
+    }
+    if not re.search(markers[misdirection], text):
+        raise ValueError(f"Hard math misdirection {misdirection} is declared but not present.")
+    if equation_directly_visible(question):
+        raise ValueError(f"Hard math equation is too directly visible: {question.prompt}")
+    if variable_mapping_obvious(question):
+        raise ValueError(f"Hard math variable mapping is too obvious: {question.prompt}")
+    if question.format == QuestionFormat.grid_in:
+        validate_grid_in_misdirection_upgrade(question)
+
+
+def equation_directly_visible(question: QuestionSpec) -> bool:
+    prompt = question.prompt.lower()
+    if question.data_type == "graph":
+        return False
+    equation_count = len(re.findall(r"[a-z]\s*[-+*/]?\s*\d*\s*=", prompt))
+    has_context = bool(re.search(r"\b(value|number|tank|pump|population|angle|tiles|function|solution|period|rate|minutes|liters)\b", prompt))
+    return equation_count >= 1 and not has_context
+
+
+def variable_mapping_obvious(question: QuestionSpec) -> bool:
+    prompt = question.prompt.lower()
+    if question.data_type == "graph":
+        return False
+    return bool(re.fullmatch(r"if [^?]+ what is (?:the value of )?[a-z]\\?", prompt.strip()))
+
+
+def validate_grid_in_misdirection_upgrade(question: QuestionSpec) -> None:
+    text = f"{question.prompt} {question.explanation} {question.trap_type}".lower()
+    if not re.search(r"\b(round|nearest|fraction|decimal|exact|convert|minutes|multi-step)\b", text):
+        raise ValueError("Hard grid-in must include rounding, fraction/decimal, or multi-step setup.")
 
 
 def math_question_signature(question: QuestionSpec) -> tuple[str, str, str, str]:
@@ -4105,6 +4164,8 @@ def math_base(
     graph_data.setdefault("constraints_required", 2 if module == 2 else 1)
     graph_data.setdefault("math_type", slot.question_type)
     graph_data.setdefault("pattern", MATH_PATTERN_REGISTRY[slot.slot_key])
+    if module == 2:
+        graph_data.setdefault("misdirection", MATH_MISDIRECTION_BY_TYPE[slot.question_type])
     signature_seed = QuestionSpec(
         section=SATSection.math,
         module=module,
@@ -4168,7 +4229,7 @@ def math_linear(module: int, index: int) -> QuestionSpec:
     b = 7 + index % 4
     x = 4 + index % 4
     result = a * x + b
-    condition = " and x is greater than 0" if module == 2 else ""
+    condition = " and x is greater than 0; the worksheet also lists 12 as an unused check value" if module == 2 else ""
     prompt = f"If {a}x + {b} = {result}{condition}, what is the value of x?"
     return math_base(
         module,
@@ -4178,7 +4239,7 @@ def math_linear(module: int, index: int) -> QuestionSpec:
         question_type="linear_equation",
         prompt=prompt,
         correct="C",
-        explanation=f"Subtract {b} from both sides to get {a}x = {a * x}, so x = {x}.",
+        explanation=f"Subtract {b} from both sides to get {a}x = {a * x}, so x = {x}; the extra check value is irrelevant and not needed.",
         trap_type="inverse operation error",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(str(-x), str(x + 1), str(x), str(result), correct="C"),
@@ -4189,7 +4250,7 @@ def math_system(module: int, index: int) -> QuestionSpec:
     x, y = 3 + index % 4, 2 + index % 3
     s = x + y
     d = x - y
-    prompt = f"If x + y = {s} and x - y = {d}, what is the value of x under these two conditions?"
+    prompt = f"If x + y = {s} and x - y = {d}, and z = {x + y + 4} is recorded but not used, what is the value of x under these two conditions?"
     return math_base(
         module,
         index,
@@ -4198,7 +4259,7 @@ def math_system(module: int, index: int) -> QuestionSpec:
         question_type="system_equation",
         prompt=prompt,
         correct="B",
-        explanation=f"Adding the equations gives 2x = {s + d}, so x = {x}.",
+        explanation=f"Adding the equations gives 2x = {s + d}, so x = {x}; z is an extra variable and is not part of the required system.",
         trap_type="variable_confusion",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(str(y), str(x), str(s), str(d), correct="B"),
@@ -4208,9 +4269,9 @@ def math_system(module: int, index: int) -> QuestionSpec:
 def math_quadratic(module: int, index: int) -> QuestionSpec:
     slot = math_slot_for(module, index)
     root = 3 + index % 4
-    prompt = f"The equation (x - {root})(x + 2) = 0 has one positive solution. Given that condition, what is that solution?"
+    prompt = f"The equation (x - {root})(x + 2) = 0 has one positive solution, though the negative solution could be read as another answer. Given that condition, what is that solution?"
     if slot.slot_key in MATH_STUDENT_RESPONSE_SLOT_KEYS:
-        prompt = f"The equation (x - {root})(x + 2) = 0 has one positive solution. Give the exact numeric value of that solution as an integer."
+        prompt = f"The equation (x - {root})(x + 2) = 0 has one positive solution, though the negative solution could be read as another answer. Give the exact numeric value of that solution as an integer."
         return math_base(
             module,
             index,
@@ -4219,7 +4280,7 @@ def math_quadratic(module: int, index: int) -> QuestionSpec:
             question_type="quadratic_modeling",
             prompt=prompt,
             correct=str(root),
-            explanation=f"The negative solution is an extraneous choice under the positive-solution condition; the exact integer answer is {root}.",
+            explanation=f"The negative solution is an extraneous choice under the positive-solution condition; the exact integer answer is {root}. This alternate interpretation is the trap.",
             trap_type="exact fraction or extraneous solution trap",
             fmt=QuestionFormat.grid_in,
         )
@@ -4231,7 +4292,7 @@ def math_quadratic(module: int, index: int) -> QuestionSpec:
         question_type="quadratic_modeling",
         prompt=prompt,
         correct="B",
-        explanation=f"By the zero product property, x - {root} = 0 gives the positive solution x = {root}.",
+        explanation=f"By the zero product property, x - {root} = 0 gives the positive solution x = {root}; the alternate interpretation using the negative root is rejected.",
         trap_type="sign error",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(str(-2), str(root), str(-root), str(root + 2), correct="B"),
@@ -4251,9 +4312,9 @@ def math_function(module: int, index: int) -> QuestionSpec:
         topic="Functions",
         subtopic="Function notation",
         question_type="function_interpretation",
-        prompt=f"For the function f(x) = {m}x + {c}, how much greater is f({x_high}) than f({x_low}) when both input values are used?",
+        prompt=f"For the function f(x) = {m}x + {c}, how much greater is f({x_high}) than f({x_low}) when both input values are used, rather than finding a single output?",
         correct=correct,
-        explanation=f"The constant cancels when comparing outputs, so f({x_high}) - f({x_low}) = {m}({x_high - x_low}) = {answer}.",
+        explanation=f"The misleading phrasing asks for how much greater one output is compared with another, not the value of one output; f({x_high}) - f({x_low}) = {m}({x_high - x_low}) = {answer}.",
         trap_type="substitution error",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(str(m + c), str(m * c), answer, str(m * x_high + c), correct=correct),
@@ -4269,9 +4330,9 @@ def math_geometry(module: int, index: int) -> QuestionSpec:
         topic="Geometry and Trigonometry",
         subtopic="Angles",
         question_type="geometry",
-        prompt=f"Two angles form a straight line. One angle measures {angle} degrees. Given that the angles are supplementary, what is the measure, in degrees, of the other angle?",
+        prompt=f"Two angles form a straight line. One angle measures {angle} degrees, and a nearby triangle label of 60 degrees is extra information. Given that the angles are supplementary, what is the measure, in degrees, of the other angle?",
         correct="D",
-        explanation=f"Angles on a straight line sum to 180 degrees, so the other angle is 180 - {angle} = {answer}.",
+        explanation=f"Angles on a straight line sum to 180 degrees, so the other angle is 180 - {angle} = {answer}; the 60-degree label is irrelevant.",
         trap_type="angle sum confusion",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(str(angle), str(90 - angle), str(answer - 10), str(answer), correct="D"),
@@ -4282,7 +4343,7 @@ def math_percent_ratio(module: int, index: int) -> QuestionSpec:
     base = 80 + (index % 5) * 10
     pct = 15 + (index % 3) * 5
     answer = base * pct // 100
-    prompt = f"A value of {answer} is {pct}% of a number. Given this percent-base condition, what is the number?"
+    prompt = f"A value of {answer} is {pct}% of a number. A second note says {pct + 10}% was used in another class, but that is not needed. Given this percent-base condition, what is the number?"
     return math_base(
         module,
         index,
@@ -4291,7 +4352,7 @@ def math_percent_ratio(module: int, index: int) -> QuestionSpec:
         question_type="percent_ratio",
         prompt=prompt,
         correct="D",
-        explanation=f"If {answer} is {pct}% of n, then 0.{pct:02d}n = {answer}, so n = {base}.",
+        explanation=f"If {answer} is {pct}% of n, then 0.{pct:02d}n = {answer}, so n = {base}; the second percent is irrelevant.",
         trap_type="percent base trap",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(str(answer), str(base - answer), str(base + answer), str(base), correct="D"),
@@ -4302,7 +4363,7 @@ def math_probability(module: int, index: int) -> QuestionSpec:
     red = 3 + index % 4
     blue = 5 + index % 3
     total = red + blue
-    prompt = f"A bag contains {red} red tiles and {blue} blue tiles. If one tile is selected at random, what is the probability it is red?"
+    prompt = f"A bag contains {red} red tiles and {blue} blue tiles. If one tile is selected at random, and the color order is not considered, what is the probability it is red?"
     return math_base(
         module,
         index,
@@ -4311,7 +4372,7 @@ def math_probability(module: int, index: int) -> QuestionSpec:
         question_type="probability",
         prompt=prompt,
         correct="A",
-        explanation=f"The favorable outcomes are {red} red tiles out of {total} total tiles.",
+        explanation=f"The favorable outcomes are {red} red tiles out of {total} total tiles; the condition is that only one tile is selected.",
         trap_type="denominator confusion",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(f"{red}/{total}", f"{blue}/{total}", f"{red}/{blue}", f"{total}/{red}", correct="A"),
@@ -4335,9 +4396,9 @@ def math_word_problem(module: int, index: int) -> QuestionSpec:
             topic="Word Problems",
             subtopic="Rates",
             question_type="word_problem",
-            prompt=f"A pump moves {per_hour} liters per hour. It runs for {total_minutes} minutes. What is the exact number of liters moved? Do not round.",
+            prompt=f"A pump moves {per_hour} liters per hour. It runs for {total_minutes} minutes, and a second pump rate is listed but not used. What is the exact number of liters moved? Do not round.",
             correct=exact_text,
-            explanation=f"Convert minutes to hours before multiplying: {total_minutes}/60 hours times {per_hour} liters per hour = {exact_text}. This exact-value setup includes a decimal/fraction trap.",
+            explanation=f"Convert minutes to hours before multiplying: {total_minutes}/60 hours times {per_hour} liters per hour = {exact_text}. This exact-value setup includes a decimal/fraction trap, and the second pump rate is irrelevant.",
             trap_type="rounding and unit conversion trap",
             fmt=QuestionFormat.grid_in,
         )
@@ -4347,9 +4408,9 @@ def math_word_problem(module: int, index: int) -> QuestionSpec:
         topic="Word Problems",
         subtopic="Rates",
         question_type="word_problem",
-        prompt=f"A tank contains {start} liters of water. Water is added at a constant rate of {rate} liters per hour for {hours} hours. Given the starting amount, how many liters of water are in the tank after {hours} hours?",
+        prompt=f"A tank contains {start} liters of water. Water is added at a constant rate of {rate} liters per hour for {hours} hours, while a drain rate from a different tank is also mentioned but not used. Given the starting amount, how many liters of water are in the tank after {hours} hours?",
         correct="C",
-        explanation=f"Add the starting amount to the amount added: {start} + {rate}({hours}) = {answer}.",
+        explanation=f"Add the starting amount to the amount added: {start} + {rate}({hours}) = {answer}; the drain rate from the different tank is irrelevant.",
         trap_type="rate setup error",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(str(rate * hours), str(start + rate), str(answer), str(answer * hours), correct="C"),
@@ -4367,9 +4428,9 @@ def math_exponential(module: int, index: int) -> QuestionSpec:
         topic="Advanced Math",
         subtopic="Exponential growth",
         question_type="exponential_growth",
-        prompt=f"A population starts at {start} and doubles each period. After exactly {periods} periods, what is the population?",
+        prompt=f"A population starts at {start} and doubles each period. After exactly {periods} periods, not including the initial count as a growth period, what is the population?",
         correct="B",
-        explanation=f"Doubling for {periods} periods gives {start} x 2^{periods} = {answer}.",
+        explanation=f"Doubling for {periods} periods gives {start} x 2^{periods} = {answer}; the hidden condition is not counting the initial amount as a period.",
         trap_type="growth factor confusion",
         fmt=QuestionFormat.multiple_choice,
         choices=math_choices(str(start * periods), str(answer), str(start + growth * periods), str(answer // 2), correct="B"),
@@ -4391,8 +4452,8 @@ def math_graph(module: int, index: int) -> QuestionSpec:
         {
             "graph_pattern": "crossover_point",
             "question_intent": "direct_read",
-            "prompt": "The graph compares memberships in Club A and Club B over four months. Which statement identifies the crossover point shown by the graph?",
-            "explanation": "The graph shows Club B overtaking Club A at month 3, so the crossover point occurs when Club B first becomes greater.",
+            "prompt": "The graph compares memberships in Club A and Club B over four months. An annotation gives last year's total, but it is not needed. Which statement identifies the crossover point shown by the graph?",
+            "explanation": "The graph shows Club B overtaking Club A at month 3, so the crossover point occurs when Club B first becomes greater; the annotation is irrelevant.",
             "series": [
                 {"name": "Club A", "values": [(1, 18), (2, 21), (3, 24), (4, 27)]},
                 {"name": "Club B", "values": [(1, 12), (2, 20), (3, 26), (4, 32)]},
@@ -4407,8 +4468,8 @@ def math_graph(module: int, index: int) -> QuestionSpec:
         {
             "graph_pattern": "threshold_shift",
             "question_intent": "trend_description",
-            "prompt": "The graph shows a plant's growth under two light levels. Which statement best describes the threshold shift in the data?",
-            "explanation": "The graph shows the high-light series exceeds the threshold after day 2, while the low-light series does not.",
+            "prompt": "The graph shows a plant's growth under two light levels. A label for fertilizer amount is extra information. Which statement best describes the threshold shift in the data?",
+            "explanation": "The graph shows the high-light series exceeds the threshold after day 2, while the low-light series does not; the fertilizer label is irrelevant.",
             "series": [
                 {"name": "High light", "values": [(1, 4), (2, 7), (3, 11), (4, 14)]},
                 {"name": "Low light", "values": [(1, 3), (2, 5), (3, 7), (4, 9)]},
@@ -4423,8 +4484,8 @@ def math_graph(module: int, index: int) -> QuestionSpec:
         {
             "graph_pattern": "divergence",
             "question_intent": "inference",
-            "prompt": "The graph shows two delivery routes over four weeks. Which inference is best supported by the divergence between the two lines?",
-            "explanation": "The gap between the routes grows each week, so the graph supports an inference that their delivery times diverge over time.",
+            "prompt": "The graph shows two delivery routes over four weeks, while a third route is mentioned in the caption but not graphed. Which inference is best supported by the divergence between the two lines?",
+            "explanation": "The gap between the routes grows each week, so the graph supports an inference that their delivery times diverge over time; the third route is irrelevant.",
             "series": [
                 {"name": "Route X", "values": [(1, 30), (2, 31), (3, 32), (4, 33)]},
                 {"name": "Route Y", "values": [(1, 31), (2, 34), (3, 38), (4, 43)]},
