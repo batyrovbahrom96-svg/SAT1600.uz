@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Script from "next/script";
-import { Ban, Bookmark, Calculator as CalculatorIcon, ChevronLeft, ChevronRight, Flag, X, Undo2 } from "lucide-react";
+import { Ban, Bookmark, BookOpen, Calculator as CalculatorIcon, ChevronLeft, ChevronRight, Flag, X, Undo2 } from "lucide-react";
 import { API_URL, ApiError, Question, api } from "@/lib/api";
 
 type ModulePayload = {
@@ -288,6 +288,128 @@ function CalculatorModal({
   );
 }
 
+function MiniDiagram({ type }: { type: "circle" | "rectangle" | "triangle" | "cylinder" | "sphere" | "cone" | "pyramid" | "pythagorean" | "45" | "30" | "angle" }) {
+  return (
+    <svg className="h-16 w-20 shrink-0 text-slate-700" viewBox="0 0 80 64" aria-hidden="true">
+      {type === "circle" ? (
+        <>
+          <circle cx="40" cy="32" r="22" fill="none" stroke="currentColor" strokeWidth="2" />
+          <line x1="40" x2="62" y1="32" y2="32" stroke="currentColor" strokeWidth="2" />
+          <text x="48" y="27" className="fill-slate-700 text-[10px] font-bold">r</text>
+        </>
+      ) : type === "rectangle" ? (
+        <>
+          <rect x="14" y="16" width="52" height="32" fill="none" stroke="currentColor" strokeWidth="2" />
+          <text x="36" y="59" className="fill-slate-700 text-[10px] font-bold">l</text>
+          <text x="69" y="34" className="fill-slate-700 text-[10px] font-bold">w</text>
+        </>
+      ) : type === "triangle" || type === "pythagorean" || type === "45" || type === "30" || type === "angle" ? (
+        <>
+          <path d="M16 48 L64 48 L64 14 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M54 48 L54 38 L64 38" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          {type === "pythagorean" ? (
+            <>
+              <text x="35" y="58" className="fill-slate-700 text-[10px] font-bold">a</text>
+              <text x="68" y="34" className="fill-slate-700 text-[10px] font-bold">b</text>
+              <text x="33" y="26" className="fill-slate-700 text-[10px] font-bold">c</text>
+            </>
+          ) : type === "45" ? (
+            <>
+              <text x="19" y="45" className="fill-slate-700 text-[10px] font-bold">45</text>
+              <text x="55" y="45" className="fill-slate-700 text-[10px] font-bold">45</text>
+            </>
+          ) : type === "30" ? (
+            <>
+              <text x="18" y="45" className="fill-slate-700 text-[10px] font-bold">30</text>
+              <text x="55" y="45" className="fill-slate-700 text-[10px] font-bold">60</text>
+            </>
+          ) : type === "angle" ? (
+            <text x="30" y="35" className="fill-slate-700 text-[10px] font-bold">180</text>
+          ) : (
+            <>
+              <line x1="64" x2="16" y1="14" y2="48" stroke="currentColor" strokeDasharray="3 3" strokeWidth="1.5" />
+              <text x="38" y="59" className="fill-slate-700 text-[10px] font-bold">b</text>
+              <text x="67" y="34" className="fill-slate-700 text-[10px] font-bold">h</text>
+            </>
+          )}
+        </>
+      ) : type === "sphere" ? (
+        <>
+          <circle cx="40" cy="32" r="22" fill="none" stroke="currentColor" strokeWidth="2" />
+          <ellipse cx="40" cy="32" rx="22" ry="7" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <line x1="40" x2="58" y1="32" y2="22" stroke="currentColor" strokeWidth="1.5" />
+          <text x="51" y="24" className="fill-slate-700 text-[10px] font-bold">r</text>
+        </>
+      ) : type === "cone" ? (
+        <>
+          <path d="M40 9 L18 48 Q40 58 62 48 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+          <ellipse cx="40" cy="48" rx="22" ry="8" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </>
+      ) : type === "pyramid" ? (
+        <>
+          <path d="M40 8 L15 47 L55 55 L67 34 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M40 8 L55 55 M15 47 L67 34" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </>
+      ) : (
+        <>
+          <ellipse cx="40" cy="16" rx="22" ry="8" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M18 16 V48 Q40 62 62 48 V16" fill="none" stroke="currentColor" strokeWidth="2" />
+          <ellipse cx="40" cy="48" rx="22" ry="8" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function ReferenceModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const formulas = [
+    { title: "Circle", formula: "A = πr²   C = 2πr", type: "circle" as const },
+    { title: "Rectangle", formula: "A = lw", type: "rectangle" as const },
+    { title: "Triangle", formula: "A = 1/2 bh", type: "triangle" as const },
+    { title: "Cylinder", formula: "V = πr²h", type: "cylinder" as const },
+    { title: "Sphere", formula: "V = 4/3 πr³", type: "sphere" as const },
+    { title: "Cone", formula: "V = 1/3 πr²h", type: "cone" as const },
+    { title: "Pyramid", formula: "V = 1/3 lwh", type: "pyramid" as const },
+    { title: "Pythagorean Theorem", formula: "a² + b² = c²", type: "pythagorean" as const },
+    { title: "45-45-90 Triangle", formula: "x, x, x√2", type: "45" as const },
+    { title: "30-60-90 Triangle", formula: "x, x√3, 2x", type: "30" as const },
+    { title: "Angle Sum", formula: "triangle = 180°", type: "angle" as const }
+  ];
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed right-5 top-20 z-50 w-[min(760px,calc(100vw-2.5rem))] rounded-md border border-[#d1d5db] bg-white shadow-2xl" role="dialog" aria-modal="false" aria-label="Math reference sheet">
+      <div className="flex items-center justify-between border-b border-[#e5e7eb] bg-slate-50 px-4 py-3">
+        <div className="flex items-center gap-2 text-base font-bold text-slate-900">
+          <BookOpen size={18} /> Reference
+        </div>
+        <button
+          aria-label="Close reference"
+          className="inline-flex h-9 w-9 items-center justify-center rounded hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+          onClick={onClose}
+          type="button"
+        >
+          <X size={20} />
+        </button>
+      </div>
+      <div className="max-h-[min(680px,calc(100vh-8rem))] overflow-y-auto p-5">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {formulas.map((item) => (
+            <section className="flex min-h-24 items-center gap-4 rounded-md border border-[#e5e7eb] bg-white p-4" key={item.title}>
+              <MiniDiagram type={item.type} />
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">{item.title}</h3>
+                <p className="mt-1 text-lg font-semibold tracking-normal text-slate-950">{item.formula}</p>
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TestPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const router = useRouter();
@@ -308,6 +430,7 @@ export default function TestPage() {
   const [largeFontMode, setLargeFontMode] = useState(false);
   const [isTimerHidden, setIsTimerHidden] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [isReferenceOpen, setIsReferenceOpen] = useState(false);
   const [desmosReady, setDesmosReady] = useState(false);
   const [desmosFailed, setDesmosFailed] = useState(false);
   const [highlightModeEnabled, setHighlightModeEnabled] = useState(true);
@@ -1094,6 +1217,13 @@ export default function TestPage() {
           <div className="flex justify-end gap-6 text-sm font-semibold text-slate-700">
             <button
               className="inline-flex items-center gap-2 hover:text-slate-950"
+              onClick={() => setIsReferenceOpen(true)}
+              type="button"
+            >
+              <BookOpen size={17} /> Reference
+            </button>
+            <button
+              className="inline-flex items-center gap-2 hover:text-slate-950"
               onClick={() => setIsCalculatorOpen(true)}
               type="button"
             >
@@ -1524,6 +1654,11 @@ export default function TestPage() {
         onClose={() => setIsCalculatorOpen(false)}
         scriptReady={desmosReady || Boolean(typeof window !== "undefined" && window.Desmos)}
         scriptFailed={desmosFailed}
+      />
+
+      <ReferenceModal
+        open={isReferenceOpen}
+        onClose={() => setIsReferenceOpen(false)}
       />
 
       <footer className="sticky bottom-0 z-20 border-t border-[#e5e7eb] bg-white">
