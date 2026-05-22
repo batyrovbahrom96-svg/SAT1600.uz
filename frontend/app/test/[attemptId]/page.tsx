@@ -184,30 +184,46 @@ function DataGraph({ payload }: { payload: GraphPayload }) {
 function CalculatorModal({
   open,
   onClose,
-  scriptReady
+  scriptReady,
+  scriptFailed
 }: {
   open: boolean;
   onClose: () => void;
   scriptReady: boolean;
+  scriptFailed: boolean;
 }) {
   const [mode, setMode] = useState<CalculatorMode>("graphing");
+  const [initError, setInitError] = useState<string | null>(null);
   const calculatorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open || !scriptReady || !window.Desmos || !calculatorRef.current) return;
 
+    let disposed = false;
+    let calculator: DesmosCalculatorInstance | null = null;
     calculatorRef.current.innerHTML = "";
-    const calculator = mode === "graphing"
-      ? window.Desmos.GraphingCalculator(calculatorRef.current, {
-        expressions: true,
-        settingsMenu: false,
-        zoomButtons: true,
-        keypad: true
-      })
-      : window.Desmos.ScientificCalculator(calculatorRef.current);
+    setInitError(null);
+
+    const frame = window.requestAnimationFrame(() => {
+      if (disposed || !window.Desmos || !calculatorRef.current) return;
+      try {
+        calculator = mode === "graphing"
+          ? window.Desmos.GraphingCalculator(calculatorRef.current, {
+            expressions: true,
+            settingsMenu: false,
+            zoomButtons: true,
+            keypad: true
+          })
+          : window.Desmos.ScientificCalculator(calculatorRef.current);
+      } catch (error) {
+        setInitError(error instanceof Error ? error.message : "Calculator could not be initialized.");
+      }
+    });
 
     return () => {
-      calculator.destroy();
+      disposed = true;
+      window.cancelAnimationFrame(frame);
+      calculator?.destroy();
       if (calculatorRef.current) calculatorRef.current.innerHTML = "";
     };
   }, [mode, open, scriptReady]);
@@ -244,9 +260,17 @@ function CalculatorModal({
           </button>
         </div>
         <div className="relative min-h-0 flex-1">
-          {!scriptReady ? (
+          {scriptFailed ? (
+            <div className="absolute inset-0 grid place-items-center px-8 text-center text-sm font-semibold leading-6 text-red-700">
+              Desmos could not load. Check the network connection and reload the page.
+            </div>
+          ) : !scriptReady ? (
             <div className="absolute inset-0 grid place-items-center text-sm font-semibold text-slate-600">
               Loading calculator...
+            </div>
+          ) : initError ? (
+            <div className="absolute inset-0 grid place-items-center px-8 text-center text-sm font-semibold leading-6 text-red-700">
+              {initError}
             </div>
           ) : null}
           <div id="calculator" ref={calculatorRef} className="h-full w-full" />
@@ -277,6 +301,7 @@ export default function TestPage() {
   const [isTimerHidden, setIsTimerHidden] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [desmosReady, setDesmosReady] = useState(false);
+  const [desmosFailed, setDesmosFailed] = useState(false);
   const [highlightModeEnabled, setHighlightModeEnabled] = useState(true);
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
   const [focusedChoiceIndex, setFocusedChoiceIndex] = useState(0);
@@ -1017,9 +1042,16 @@ export default function TestPage() {
   return (
     <main className="min-h-screen bg-white text-slate-950">
       <Script
-        src="https://www.desmos.com/api/v1.6/calculator.js?apiKey=desmos"
+        src="https://www.desmos.com/api/v1.6/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"
         strategy="afterInteractive"
-        onLoad={() => setDesmosReady(true)}
+        onLoad={() => {
+          setDesmosFailed(false);
+          setDesmosReady(true);
+        }}
+        onError={() => {
+          setDesmosReady(false);
+          setDesmosFailed(true);
+        }}
       />
       <header className="sticky top-0 z-20 bg-white">
         <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-[#e5e7eb] px-5">
@@ -1479,6 +1511,7 @@ export default function TestPage() {
         open={isCalculatorOpen}
         onClose={() => setIsCalculatorOpen(false)}
         scriptReady={desmosReady || Boolean(typeof window !== "undefined" && window.Desmos)}
+        scriptFailed={desmosFailed}
       />
 
       <footer className="sticky bottom-0 z-20 border-t border-[#e5e7eb] bg-white">
