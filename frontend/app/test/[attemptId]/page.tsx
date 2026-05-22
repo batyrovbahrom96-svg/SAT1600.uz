@@ -252,7 +252,10 @@ export default function TestPage() {
     ? question.data_payload
     : null;
   const hasTablePayload = Boolean(question?.data_type === "table" && question.data_payload?.columns?.length && question.data_payload?.rows?.length);
-  const hasStimulus = Boolean(isNotesQuestion || isCrossTextQuestion || question?.passage || hasTablePayload || graphPayload || question?.graph_path);
+  const isMathSection = moduleData?.attempt.current_section === "math";
+  const hasTextStimulus = Boolean(isNotesQuestion || isCrossTextQuestion || (!isMathSection && question?.passage?.trim()));
+  const hasVisualStimulus = Boolean(hasTablePayload || graphPayload || question?.graph_path);
+  const hasStimulus = hasTextStimulus || hasVisualStimulus;
   const orderedChoices = useMemo(() => {
     if (!question || question.format !== "multiple_choice") return [];
     const choices = [...question.choices].sort((a, b) => a.label.localeCompare(b.label));
