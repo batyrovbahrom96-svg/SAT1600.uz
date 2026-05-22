@@ -75,7 +75,7 @@ TABLE_CONSTRAINT_TYPES = {
     "exception_detection",
 }
 TABLE_REQUIRED_SKILLS = {"scan_multiple_rows", "apply_condition"}
-GRAPH_REASONING_PATTERNS = {"crossover_point", "threshold_shift", "divergence_convergence"}
+GRAPH_REASONING_PATTERNS = {"crossover_point", "threshold_shift", "divergence", "rate_change"}
 RW_PATTERN_REGISTRY = {
     "literal_vs_abstract": {
         "passage_template": "context redirects a word from literal sense to abstract sense",
@@ -1601,6 +1601,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             data_payload={
                 "x_label": "Weekly watering events",
                 "y_label": "Average growth increase (cm)",
+                "graph_pattern": "crossover_point",
                 "reasoning_pattern": "crossover_point",
                 "graph_dependency": "necessary",
                 "series": [
@@ -1671,6 +1672,8 @@ def rw_base(
         discrimination_score=round(0.42 + (index % 6) * 0.07, 2),
         constraints_required=constraints_required,
         choices=choices,
+        graph_reasoning_type=(data_payload or {}).get("graph_pattern") if data_type == "graph" else None,
+        graph_required=data_type == "graph",
         data_type=data_type,
         data_payload=data_payload or {},
     )
@@ -2684,9 +2687,13 @@ def validate_graph_payload_contract(spec: QuestionSpec) -> None:
     series = payload.get("series")
     if not isinstance(series, list) or not series:
         raise ValueError(f"Graph question missing data_payload.series: {spec.question_type}.")
-    reasoning_pattern = payload.get("reasoning_pattern")
-    if spec.question_type == "command_of_evidence_quantitative_graph" and reasoning_pattern not in GRAPH_REASONING_PATTERNS:
-        raise ValueError(f"Graph question needs crossover, threshold, or divergence/convergence pattern, got {reasoning_pattern!r}.")
+    graph_pattern = payload.get("graph_pattern")
+    if graph_pattern not in GRAPH_REASONING_PATTERNS:
+        raise ValueError(f"Graph question needs graph_pattern in {sorted(GRAPH_REASONING_PATTERNS)}, got {graph_pattern!r}.")
+    if spec.graph_reasoning_type != graph_pattern:
+        raise ValueError("Graph question must persist graph_pattern as graph_reasoning_type.")
+    if payload.get("reasoning_pattern") and payload.get("reasoning_pattern") != graph_pattern:
+        raise ValueError("Graph reasoning_pattern must match graph_pattern when both are present.")
     for item in series:
         if not isinstance(item, dict) or not isinstance(item.get("name"), str):
             raise ValueError(f"Graph series must include a name: {spec.question_type}.")
@@ -2702,6 +2709,8 @@ def validate_graph_payload_contract(spec: QuestionSpec) -> None:
                 raise ValueError(f"Graph values must be numeric (x, y) pairs: {spec.question_type}.")
     if spec.question_type == "command_of_evidence_quantitative_graph":
         validate_quantitative_graph_answer_design(spec)
+    if graph_is_text_solvable(spec):
+        raise ValueError("Graph question is answerable without interpreting graph data.")
 
 
 def validate_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
@@ -2743,7 +2752,14 @@ def graph_is_text_solvable(spec: QuestionSpec) -> bool:
     if len(correct_choices) != 1:
         return True
     correct_text = correct_choices[0].text.lower()
-    graph_only_terms = ("crossover", "overtakes", "higher at low", "higher at three", "three watering", "series")
+    graph_pattern = (spec.data_payload or {}).get("graph_pattern")
+    graph_only_terms_by_pattern = {
+        "crossover_point": ("crossover", "overtakes", "higher at low", "higher at three", "three watering", "series", "advantage shifts"),
+        "threshold_shift": ("threshold", "after", "before", "exceeds", "falls below"),
+        "divergence": ("diverge", "gap", "farther apart", "closer together", "converge"),
+        "rate_change": ("rate", "slope", "increases by", "decreases by", "per additional", "for each"),
+    }
+    graph_only_terms = graph_only_terms_by_pattern.get(graph_pattern, ())
     if any(term in text_without_graph for term in graph_only_terms):
         return True
     correct_specifics = ("deep-soil group is higher at low", "shallow-soil group is higher", "three watering events")
@@ -2896,8 +2912,8 @@ def validate_module2_graph_hard_mode(spec: QuestionSpec) -> None:
         raise ValueError("Module 2 hard quantitative slots must include graph or table data.")
     if spec.data_type == "graph":
         payload = spec.data_payload or {}
-        if payload.get("reasoning_pattern") not in GRAPH_REASONING_PATTERNS:
-            raise ValueError("Module 2 hard graph must use crossover, threshold, or divergence/convergence.")
+        if payload.get("graph_pattern") not in GRAPH_REASONING_PATTERNS:
+            raise ValueError("Module 2 hard graph must declare a valid graph_pattern.")
         if graph_answer_found_from_single_point(spec):
             raise ValueError("Module 2 hard graph cannot be answerable from a single point.")
 
@@ -3054,6 +3070,13 @@ def math_question(module: int, index: int) -> QuestionSpec:
 
 
 def math_base(module: int, index: int, *, topic: str, subtopic: str, question_type: str, prompt: str, correct: str, explanation: str, trap_type: str, fmt: QuestionFormat, choices: tuple[ChoiceSpec, ...] = (), graph_path: str | None = None) -> QuestionSpec:
+    graph_payload = {
+        "graph_path": graph_path,
+        "graph_pattern": "rate_change",
+        "x_label": "Hours",
+        "y_label": "Total cost (dollars)",
+        "series": [{"name": "Total cost", "values": [(0, 3), (1, 6), (2, 9), (3, 12)]}],
+    } if graph_path else {}
     return QuestionSpec(
         section=SATSection.math,
         module=module,
@@ -3075,10 +3098,10 @@ def math_base(module: int, index: int, *, topic: str, subtopic: str, question_ty
         discrimination_score=round(0.44 + (index % 6) * 0.06, 2),
         choices=choices,
         graph_path=graph_path,
-        graph_reasoning_type="slope_meaning" if graph_path else None,
+        graph_reasoning_type="rate_change" if graph_path else None,
         graph_required=bool(graph_path),
         data_type="graph" if graph_path else "none",
-        data_payload={"graph_path": graph_path, "graph_reasoning_type": "slope_meaning"} if graph_path else {},
+        data_payload=graph_payload,
     )
 
 

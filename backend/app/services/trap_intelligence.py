@@ -10,6 +10,10 @@ REQUIRED_TRAP_ROLES = {
 }
 
 GRAPH_REASONING_TYPES = {
+    "crossover_point",
+    "threshold_shift",
+    "divergence",
+    "rate_change",
     "slope_meaning",
     "rate_of_change",
     "intersection_reasoning",
