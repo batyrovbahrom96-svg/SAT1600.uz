@@ -575,6 +575,123 @@ function BreakScreen({
   );
 }
 
+function CheckYourWorkScreen({
+  answers,
+  marked,
+  moduleData,
+  onBack,
+  onContinue,
+  onGoToQuestion,
+  sectionTitle
+}: {
+  answers: Record<string, string>;
+  marked: Record<string, boolean>;
+  moduleData: ModulePayload;
+  onBack: () => void;
+  onContinue: () => void;
+  onGoToQuestion: (questionNumber: number) => void;
+  sectionTitle: string;
+}) {
+  const unansweredCount = moduleData.questions.filter((item) => !answers[item.id]).length;
+  const markedCount = moduleData.questions.filter((item) => marked[item.id]).length;
+
+  return (
+    <main className="min-h-screen bg-[#f7f7f8] text-[#202124]">
+      <div className="bg-[#10215c] py-2 text-center text-sm font-bold tracking-wide text-white">
+        THIS IS A PRACTICE TEST
+      </div>
+
+      <section className="mx-auto flex min-h-[calc(100vh-7rem)] max-w-[1120px] flex-col px-8 py-16">
+        <div className="mx-auto mb-10 max-w-[760px] text-center">
+          <h1 className="mb-10 text-[44px] font-normal leading-tight text-[#202124]">Check Your Work</h1>
+          <p className="mb-5 text-left text-[22px] leading-8 text-[#202124]">
+            On test day, you won&apos;t be able to move on to the next module until time expires.
+          </p>
+          <p className="text-left text-[22px] leading-8 text-[#202124]">
+            For these practice questions, you can click <strong>Next</strong> when you&apos;re ready to move on.
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-white px-12 py-11 shadow-[0_14px_40px_rgba(15,23,42,0.12)]">
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
+            <h2 className="text-[26px] font-bold leading-tight text-[#202124]">
+              {sectionTitle} Questions
+            </h2>
+            <div className="flex flex-wrap items-center gap-8 text-[20px] text-[#202124]">
+              <div className="flex items-center gap-3">
+                <span className="h-6 w-6 border-2 border-dashed border-[#202124]" aria-hidden="true" />
+                <span>Unanswered</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Flag size={30} className="fill-[#c53046] text-[#c53046]" aria-hidden="true" />
+                <span>For Review</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-10 border-t border-[#a7a7a7]" />
+
+          <div className="grid grid-cols-5 gap-x-10 gap-y-9 sm:grid-cols-7 lg:grid-cols-10">
+            {moduleData.questions.map((item, itemIndex) => {
+              const questionNumber = itemIndex + 1;
+              const answered = Boolean(answers[item.id]);
+              const forReview = Boolean(marked[item.id]);
+              return (
+                <button
+                  aria-label={`Question ${questionNumber}${answered ? ", answered" : ", unanswered"}${forReview ? ", marked for review" : ""}`}
+                  className={`relative flex h-[58px] w-[58px] items-center justify-center text-[30px] font-bold text-[#2f55d4] transition-colors hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-700 ${
+                    answered ? "border-2 border-solid border-[#2f55d4] bg-white" : "border-2 border-dashed border-[#202124] bg-white"
+                  }`}
+                  key={item.id}
+                  onClick={() => onGoToQuestion(questionNumber)}
+                  type="button"
+                >
+                  {questionNumber}
+                  {forReview ? (
+                    <Flag size={18} className="absolute -right-2 -top-2 fill-[#c53046] text-[#c53046]" />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-10 flex flex-wrap gap-6 text-sm font-semibold text-slate-600">
+            <span>{moduleData.questions.length - unansweredCount} answered</span>
+            <span>{unansweredCount} unanswered</span>
+            <span>{markedCount} for review</span>
+          </div>
+        </div>
+      </section>
+
+      <footer className="sticky bottom-0 z-20 border-t border-[#d7dbe3] bg-white">
+        <div className="mx-auto grid h-16 max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center px-8">
+          <div>
+            <button
+              className="inline-flex items-center gap-2 rounded px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-100"
+              onClick={onBack}
+              type="button"
+            >
+              <ChevronLeft size={20} /> Back
+            </button>
+          </div>
+          <div className="text-base font-semibold text-slate-700">
+            Review
+          </div>
+          <div className="flex justify-end">
+            <button
+              className="inline-flex items-center gap-2 rounded bg-blue-700 px-7 py-3 text-base font-semibold text-white hover:bg-blue-800"
+              onClick={onContinue}
+              type="button"
+            >
+              Next <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+      </footer>
+    </main>
+  );
+}
+
 export default function TestPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const router = useRouter();
@@ -587,6 +704,7 @@ export default function TestPage() {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [isBreakActive, setIsBreakActive] = useState(false);
   const [breakSecondsLeft, setBreakSecondsLeft] = useState(BREAK_DURATION_SECONDS);
+  const [isCheckWorkActive, setIsCheckWorkActive] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<string>>(new Set());
   const [actionHistory, setActionHistory] = useState<AnswerAction[]>([]);
@@ -626,6 +744,7 @@ export default function TestPage() {
     setModuleData(data);
     setSecondsLeft(data.duration_seconds);
     setIndex(0);
+    setIsCheckWorkActive(false);
     setAnswers(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
     setMarked(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.marked_for_review])));
     spentByQuestion.current = Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
@@ -1161,6 +1280,7 @@ export default function TestPage() {
     setCurrentQuestion(questionNumber);
     setIndex(questionNumber - 1);
     setIsNavigatorOpen(false);
+    setIsCheckWorkActive(false);
   }
 
   function isNavigatorQuestionAnswered(item: Question) {
@@ -1339,6 +1459,24 @@ export default function TestPage() {
     }
   }
 
+  function openCheckWork() {
+    setIsCheckWorkActive(true);
+    setIsMoreOpen(false);
+    setActiveModal(null);
+    setIsNavigatorOpen(false);
+    setHighlightToolbar((current) => ({ ...current, visible: false }));
+  }
+
+  function returnFromCheckWork() {
+    setIsCheckWorkActive(false);
+    setIndex(moduleData ? moduleData.questions.length - 1 : index);
+  }
+
+  async function continueFromCheckWork() {
+    setIsCheckWorkActive(false);
+    await advance();
+  }
+
   async function resumeFromBreak() {
     try {
       const data = await api<ModulePayload>(`/api/attempts/${attemptId}/module`);
@@ -1353,15 +1491,30 @@ export default function TestPage() {
     return <main className="grid min-h-screen place-items-center bg-white font-bold text-slate-900">Loading test...</main>;
   }
 
+  const sectionTitle = moduleData.attempt.current_section === "reading_writing" ? "Reading and Writing" : "Math";
+  const sectionNumber = moduleData.attempt.current_section === "reading_writing" ? 1 : 2;
+  const fullSectionTitle = `Section ${sectionNumber}, Module ${moduleData.attempt.current_module}: ${sectionTitle}`;
+
   if (isBreakActive) {
     return <BreakScreen secondsLeft={breakSecondsLeft} onResume={resumeFromBreak} />;
   }
 
+  if (isCheckWorkActive) {
+    return (
+      <CheckYourWorkScreen
+        answers={answers}
+        marked={marked}
+        moduleData={moduleData}
+        onBack={returnFromCheckWork}
+        onContinue={continueFromCheckWork}
+        onGoToQuestion={goToQuestion}
+        sectionTitle={fullSectionTitle}
+      />
+    );
+  }
+
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
-  const sectionTitle = moduleData.attempt.current_section === "reading_writing" ? "Reading and Writing" : "Math";
-  const sectionNumber = moduleData.attempt.current_section === "reading_writing" ? 1 : 2;
-  const fullSectionTitle = `Section ${sectionNumber}, Module ${moduleData.attempt.current_module}: ${sectionTitle}`;
   const panelStyle = {
     "--left-panel": `${leftPanelPercent}%`,
     "--right-panel": `${100 - leftPanelPercent}%`
@@ -1886,8 +2039,8 @@ export default function TestPage() {
           </div>
           <div className="flex justify-end">
             {index === moduleData.questions.length - 1 ? (
-              <button onClick={advance} className="rounded bg-blue-700 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800">
-                Submit
+              <button onClick={openCheckWork} className="rounded bg-blue-700 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800">
+                Next
               </button>
             ) : (
               <button
