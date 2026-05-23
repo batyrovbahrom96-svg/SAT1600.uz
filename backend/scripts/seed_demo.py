@@ -1380,23 +1380,23 @@ def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
 def rw_graph_item(pattern: str, module: int, index: int) -> AmbiguityFirstItem:
     module_one_variants = (
         {
-            "graph_pattern": "crossover_point",
+            "graph_pattern": "divergence",
             "question_intent": "claim_support",
-            "reasoning_type": "conditional_comparison",
+            "reasoning_type": "multi_point_synthesis",
             "prompt_template": "supports_the_conclusion",
-            "prompt": "Which choice gives data from the graph that supports the researchers' conclusion?",
-            "passage": "Researchers studying rooftop gardens first found that increasing weekly watering often improved plant growth. Several early notes made watering frequency seem like the main explanation.",
-            "constraint": "However, after comparing soil-depth groups in the graph, they concluded that the advantage shifted under heavier watering.",
+            "prompt": "Which choice best describes data from the graph that support the researchers' conclusion?",
+            "passage": "Researchers presented participants with descriptions of fictional candidates whose traits were either broadly admirable or broadly undesirable. At first, the team expected participants' own trait scores may affect likability ratings for both kinds of candidates.",
+            "constraint": "However, after comparing the two candidate groups in the graph, they revised their conclusion about how participants' own trait scores related to candidate likability.",
             "answers": (
-                "Both soil groups show higher growth as watering increases, but that pattern focuses on watering rather than the revised shift between groups.",
-                "The deep-soil group has higher growth at one watering event, which partly fits the soil-depth claim but misses the later crossover.",
-                "The deep-soil series remains above the shallow-soil series at every watering level, misreading the trend after the crossover point.",
-                "The deep-soil group is higher at low watering, but the shallow-soil group is higher at three watering events, supporting the conclusion that the advantage shifts under heavier watering.",
+                "Ratings for the two candidate groups diverge as participants' undesirable-trait scores rise: ratings for undesirable-trait candidates increase sharply, while ratings for admirable-trait candidates remain nearly flat, providing support for the revised conclusion.",
+                "Ratings for admirable-trait candidates are high overall, which partly fits the study context but misses the later crossover in the researchers' reasoning about trait scores.",
+                "Both candidate groups become much more likable as participants' scores rise, misreading the graph trend for admirable-trait candidates.",
+                "Undesirable-trait candidates receive lower ratings than admirable-trait candidates at the first score level, focusing on the first score rather than the full trend.",
             ),
-            "correct": 3,
+            "correct": 0,
             "series": [
-                {"name": "Deep soil", "values": [(1, 6), (2, 7), (3, 8)]},
-                {"name": "Shallow soil", "values": [(1, 4), (2, 7), (3, 11)]},
+                {"name": "Admirable-trait candidates", "values": [(1, 68), (2, 68), (3, 68), (4, 68), (5, 68), (6, 69), (7, 69)]},
+                {"name": "Undesirable-trait candidates", "values": [(1, 22), (2, 31), (3, 41), (4, 50), (5, 61), (6, 70), (7, 82)]},
             ],
         },
         {
@@ -1622,63 +1622,68 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Vocabulary in Context", "literal_vs_abstract"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, the curator described the restored mural as bright, although the pigments often remained muted after cleaning and the gallery lighting was intentionally soft."
+                "At first, botanist Mara Sato noted that paper birches grow across many climates and thus may ___ temperature shifts better than related tree species can."
             ),
-            constraint_sentence="However, by arranging the figures around a single repeated emblem, the restoration made the once-confusing political symbols easier for visitors to interpret.",
-            prompt="As used in the text, what does \"bright\" most nearly mean?",
-            answer_options=("visually intense", "newly polished", "optimistic in tone", "easy to understand"),
+            constraint_sentence="However, the changes birches undergo in response to a warming climate often appear small and achievable rather than requiring movement to an entirely new habitat.",
+            prompt="Which choice completes the text with the most logical and precise word or phrase?",
+            answer_options=("relocate from", "refer to", "originate from", "adapt to"),
             correct_index=3,
             topic="Vocabulary in Context",
             subtopic="Pattern: literal_vs_abstract",
             question_type="Vocabulary in Context",
-            trap_type="literal meaning trap",
-            explanation="The opening makes a literal color sense tempting, but the correction sentence shifts bright toward abstract clarity.",
+            trap_type="precise phrase completion trap",
+            explanation="The later sentence rules out movement or origin and points to adjusting to climate shifts.",
         ),
         ("Vocabulary in Context", "functional_precision"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Early field notes called the sensor's reading sharp, although the plain display offered no unusually crisp image and the change being measured was often small."
+                "Although morning clouds often made the shoreline difficult to judge from above, the lagoon water was so clear that the shells on the bottom seemed almost suspended in air."
             ),
-            constraint_sentence="However, the researchers valued the reading because it distinguished neighboring temperature changes that older tools tended to merge into a single average.",
-            prompt="As used in the text, what does \"sharp\" most nearly mean?",
-            answer_options=("severe", "finely precise", "sudden", "visually crisp"),
-            correct_index=1,
+            constraint_sentence="However, when the boat crossed the shallows, the passengers could see grasses and fish through the water as if there were no surface at all.",
+            prompt="As used in the text, what does \"clear\" most nearly mean?",
+            answer_options=("simple", "understandable", "obvious", "transparent"),
+            correct_index=3,
             topic="Vocabulary in Context",
             subtopic="Pattern: functional_precision",
             question_type="Vocabulary in Context",
-            trap_type="precision versus intensity trap",
-            explanation="The passage delays clarity until the function of distinguishing close values makes precision the controlling sense.",
+            trap_type="multiple-meaning vocabulary trap",
+            explanation="The visual details force the transparent sense of clear, not the intellectual senses simple, understandable, or obvious.",
         ),
         ("Vocabulary in Context", "tone_alignment"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, the review called the memoir restrained, which may sound like criticism because the book avoids dramatic scene-setting and rarely names the narrator's emotions directly."
+                "A recently observed radio burst lasted nearly three minutes, ___ for a signal thought to come from a merger that usually produces emissions lasting only a few seconds."
             ),
-            constraint_sentence="However, the reviewer argued that this quiet control made the final chapter feel more trustworthy rather than emotionally empty.",
-            prompt="As used in the text, what does \"restrained\" most nearly mean?",
-            answer_options=("prevented from acting", "emotionally limited", "sparse in factual detail", "controlled in expression"),
+            constraint_sentence="However, astronomers often avoid calling such results impossible until more observations confirm whether the source was correctly identified.",
+            prompt="Which choice completes the text with the most logical and precise word or phrase?",
+            answer_options=("a coincidence", "a reprieve", "an incident", "an oddity"),
             correct_index=3,
             topic="Vocabulary in Context",
             subtopic="Pattern: tone_alignment",
             question_type="Vocabulary in Context",
-            trap_type="tone misread trap",
-            explanation="The positive tone of the review makes controlled expression a better fit than a negative sense of limitation.",
+            trap_type="tone and precision trap",
+            explanation="The unusual duration makes the burst an oddity; the other nouns are grammatical but do not capture the scientific surprise.",
         ),
         ("Function", "setup_refutation"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Several archaeologists expected the broken pottery to be ordinary kitchen waste. "
-                "The passage initially describes that expectation in some detail, although it may seem like background."
+                "In the early years of television, many broadcasters thought programs would be funded mostly by advertisers, much as radio programs had been. "
+                "But advertisers hesitated to enter the new medium, particularly while wartime limits slowed the manufacture of home television sets."
             ),
-            constraint_sentence="However, the next sentence notes traces of rare pigment on the pieces, challenging the kitchen-waste explanation.",
-            prompt="What is the main function of the expectation described in the first sentence?",
-            answer_options=("It summarizes the author's final claim.", "It identifies a view the later evidence complicates.", "It gives an example unrelated to the evidence.", "It provides a setup that the later evidence partly refutes."),
+            constraint_sentence="However, networks often still had to persuade sponsors to support programs before anyone knew whether a large viewing audience would develop.",
+            prompt="Which choice best describes the function of the underlined phrase in the text as a whole?",
+            answer_options=("It compares radio and television as equally successful advertising markets.", "It identifies one reason advertisers were cautious about supporting television.", "It explains why broadcasters no longer needed commercial sponsors.", "It presents the final evidence that advertisers preferred radio to television."),
             correct_index=3,
             topic="Function",
             subtopic="Pattern: setup_refutation",
             question_type="Function",
-            trap_type="setup-refutation trap",
-            explanation="The expectation is not the conclusion; it is a setup that later evidence pushes against.",
+            trap_type="local function trap",
+            explanation="The underlined phrase supplies a specific reason for hesitation rather than making the broader claim by itself.",
+            constraints_required=2,
+            data_payload={
+                "target_sentence": "But advertisers hesitated to enter the new medium, particularly while wartime limits slowed the manufacture of home television sets.",
+                "target_role": "evidence",
+            },
         ),
         ("Function", "local_explanation"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -1705,7 +1710,7 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             constraint_sentence="However, the repeated pattern supports the claim that the sound came from a scheduled rail-cleaning machine.",
             prompt="What is the main function of the neighborhood recordings?",
             answer_options=("They create a contrast with rail schedules.", "They provide evidence for the source of the sound.", "They describe residents' reactions to noise.", "They support the claim by showing the pattern was repeated."),
-            correct_index=3,
+            correct_index=1,
             topic="Function",
             subtopic="Pattern: evidence_support",
             question_type="Function",
@@ -1715,33 +1720,33 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Main Idea", "example_vs_general"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The text begins with a study of one library that added evening hours and saw more student visits. "
-                "At first, the example may seem to be the whole point."
+                "At first, conservation groups may seem to protect ecosystems mainly by building new infrastructure, but many work by restoring natural features. "
+                "In one river project, a tribal government and a conservation organization restored naturally occurring logjams that create shady pools where salmon can rest and spawn."
             ),
-            constraint_sentence="However, the author uses it to argue that public services often work best when schedules reflect users' actual routines.",
+            constraint_sentence="However, the example is used to show that nature-based interventions may help achieve conservation goals when they restore processes animals already rely on.",
             prompt="Which choice best states the main idea of the text?",
-            answer_options=("One library increased student visits by adding evening hours.", "Libraries may need longer hours when student demand is high.", "Student routines are difficult for libraries to measure.", "A specific library example supports a broader claim about adapting services to users' routines."),
-            correct_index=3,
+            answer_options=("A river project restored logjams that make shady pools for salmon.", "Nature-based approaches can be effective ways to address conservation challenges.", "Salmon need shady pools to rest and spawn in restored rivers.", "A partnership between conservation groups shows how collaboration may support habitat restoration."),
+            correct_index=1,
             topic="Main Idea",
             subtopic="Pattern: example_vs_general",
             question_type="Main Idea",
             trap_type="example versus general claim trap",
-            explanation="The example is tempting, but the final sentence shifts from one library to a general service-design claim.",
+            explanation="The details about one project support the broader claim about nature-based conservation approaches.",
         ),
         ("Main Idea", "study_vs_conclusion"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A study tracked urban bees visiting balcony gardens as well as park and roadside plants, and several measurements may seem important on their own."
+                "At first, marine biologists often described pteropods as highly vulnerable to ocean acidification because their thin shells contain calcium carbonate."
             ),
-            constraint_sentence="However, the researchers concluded that small scattered habitats can often function together as a connected food network.",
+            constraint_sentence="However, one study found that pteropods may slow or repair some shell damage.",
             prompt="Which choice best states the main idea of the text?",
-            answer_options=("Urban bees visit balcony gardens, parks, and roadside plants.", "The study measured more than one type of urban habitat.", "Roadside plants are the most important food source for bees.", "A study of bee visits suggests scattered city habitats may operate as a connected network."),
-            correct_index=3,
+            answer_options=("Pteropods are sometimes described as vulnerable because calcium carbonate can dissolve in acidic water.", "A study suggests that pteropods may have protective responses that complicate assumptions about their vulnerability.", "The outer coating of a pteropod shell is more important than any inner shell-repair process.", "Researchers have shown that ocean acidification does not affect pteropods when their outer coating remains intact."),
+            correct_index=1,
             topic="Main Idea",
             subtopic="Pattern: study_vs_conclusion",
             question_type="Main Idea",
             trap_type="study detail versus conclusion trap",
-            explanation="The measurements matter because they support the broader conclusion about connected habitats.",
+            explanation="The study details support a qualified conclusion about biological protection, not a denial of vulnerability.",
         ),
         ("Cross-Text Connections", "claim_vs_evidence"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -1820,21 +1825,21 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("TEXT_STRUCTURE_FUNCTION", "setup_vs_result"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, engineers expected a lightweight bridge panel could vibrate more than the older steel panel because the new material was thinner and less dense."
+                "At first, many scientists often held the belief that the ocean floor was mostly flat."
             ),
-            constraint_sentence="However, embedded ribs distributed force across the panel, and measurements showed less vibration than in the older design.",
+            constraint_sentence="However, later sonar evidence revealed ridges and trenches and overturned that view.",
             prompt="Which choice best describes the function of the underlined sentence in the text as a whole?",
-            answer_options=("It states the final result of the engineering test.", "It provides unrelated information about material cost.", "It offers evidence that the older panel was badly designed.", "It sets up an expectation that the later measurements challenge."),
-            correct_index=3,
+            answer_options=("It identifies a scientific belief that later evidence showed to be wrong.", "It describes the method used to map the ocean floor.", "It emphasizes a disagreement between two named researchers.", "It presents data that support the later sonar surveys."),
+            correct_index=0,
             topic="TEXT_STRUCTURE_FUNCTION",
             subtopic="Pattern: setup_vs_result",
             question_type="TEXT_STRUCTURE_FUNCTION",
             trap_type="setup versus result trap",
-            explanation="The target is not the result; it sets up an expectation that later evidence reverses.",
+            explanation="The target sentence states the earlier belief that the later sonar evidence overturns.",
             constraints_required=2,
             data_payload={
-                "target_sentence": "At first, engineers expected a lightweight bridge panel could vibrate more than the older steel panel because the new material was thinner and less dense.",
-                "target_role": "hypothesis",
+                "target_sentence": "At first, many scientists often held the belief that the ocean floor was mostly flat.",
+                "target_role": "belief / claim",
             },
         ),
         ("CROSS_TEXT_CONNECTION", "claim_vs_empirical_evidence"): AmbiguityFirstItem(
@@ -1864,15 +1869,15 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("CROSS_TEXT_CONNECTION", "model_vs_data"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Text 1: A climate model proposes that urban trees cool nearby streets mostly by casting shade during midday. "
-                "The model emphasizes shade because pavement temperatures tend to peak when direct sunlight is strongest. "
-                "Text 2: Although midday shade may explain part of the cooling, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening. "
-                "The pattern suggests that moisture and time of day constrain the model, indicating that shade captures only one part of the cooling effect."
+                "Text 1: Some geologists contend that plate movement on early Earth began around three billion years ago. "
+                "They often cite computer models suggesting that mantle temperatures then may have been high enough to allow large slabs of crust to move. "
+                "Text 2: Although those models may identify one plausible condition for movement, mineral evidence from ancient crystals suggests that some crust was still too chemically stable to be regularly recycled at that time. "
+                "This finding indicates that the modeled temperatures alone may not be sufficient to establish widespread plate movement."
             ),
-            constraint_sentence="Although Text 2 does not reject the model entirely, it reframes the cooling effect as depending partly on moisture and time of day.",
+            constraint_sentence="Although Text 2 does not dismiss modeling, it limits Text 1's claim by requiring geological evidence in addition to temperature estimates.",
             prompt="Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
-            answer_options=("By noting that the block-level sensor data are relevant to evaluating the model.", "By agreeing that shade may matter while giving less weight to evening moisture effects.", "By suggesting that the model may describe midday cooling better than evening cooling.", "By suggesting that the model tends to understate factors besides shade in the cooling pattern."),
-            correct_index=3,
+            answer_options=("By suggesting that simulations can inform the claim but cannot settle the timing without independent geological support.", "By arguing that crystal evidence can determine the exact time plate movement began.", "By agreeing that the model evidence would confirm widespread movement if the temperature estimates are internally consistent.", "By treating the chemical evidence as relevant mainly to crystal formation rather than to the plate-movement claim."),
+            correct_index=0,
             topic="CROSS_TEXT_CONNECTION",
             subtopic="Pattern: model_vs_data",
             question_type="CROSS_TEXT_CONNECTION",
@@ -1881,8 +1886,8 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             constraints_required=2,
             data_payload={
                 "type": "cross_text",
-                "text_1": "A climate model proposes that urban trees cool nearby streets mostly by casting shade during midday. The model emphasizes shade because pavement temperatures tend to peak when direct sunlight is strongest.",
-                "text_2": "Although midday shade may explain part of the cooling, sensor data from several blocks show that streets with sparse shade but high leaf moisture often stayed cooler into the evening. The pattern suggests that moisture and time of day constrain the model, indicating that shade captures only one part of the cooling effect.",
+                "text_1": "Some geologists contend that plate movement on early Earth began around three billion years ago. They often cite computer models suggesting that mantle temperatures then may have been high enough to allow large slabs of crust to move.",
+                "text_2": "Although those models may identify one plausible condition for movement, mineral evidence from ancient crystals suggests that some crust was still too chemically stable to be regularly recycled at that time. This finding indicates that the modeled temperatures alone may not be sufficient to establish widespread plate movement.",
             },
         ),
         ("CROSS_TEXT_CONNECTION", "hypothesis_vs_revision"): AmbiguityFirstItem(
@@ -2019,17 +2024,17 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Command of Evidence", "weaken_origin_claim"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A historian proposed that a weaving style originated in Harbor City. At first, the claim seemed likely because Harbor City records often mention that style in trade inventories."
+                "Archaeologists know that guinea pigs were raised on Isla Verde about 1,700 years ago. At first, trade-route evidence seemed to suggest that the animals were brought from the mainland city of Calama, since documented routes connected Calama with the island but did not connect the island with a second mainland region, Luma."
             ),
-            constraint_sentence="However, a dated village fragment using the same pattern was found from fifty years before the earliest Harbor City inventory.",
+            constraint_sentence="However, the origin claim may depend on ancestry, not merely on which trade routes are easiest to document.",
             prompt="Which choice would most weaken the historian's origin claim?",
-            answer_options=("Harbor City traded woven goods with several villages.", "Inventories often preserve commercial names rather than makers' names.", "Some Harbor City records mention expensive dyes.", "Evidence places the pattern outside Harbor City before the city records can establish it there."),
-            correct_index=3,
+            answer_options=("Ancient island guinea pigs were genetically less similar to guinea pigs from Calama than to guinea pigs from Luma.", "Guinea pig bones are common in ancient island pottery workshops and household refuse.", "Modern guinea pig breeds on Isla Verde differ from both mainland populations because of recent selective breeding.", "Calama traders also exchanged shells and dyed cloth with several island communities."),
+            correct_index=0,
             topic="Command of Evidence",
             subtopic="Pattern: weaken_origin_claim",
             question_type="Command of Evidence",
             trap_type="origin evidence trap",
-            explanation="Earlier matching evidence from elsewhere weakens the proposed origin more directly than trade details do.",
+            explanation="Genetic evidence pointing away from the proposed source weakens the route-based origin claim most directly.",
         ),
         ("Standard English Conventions", "grammar_subject_verb"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -2404,17 +2409,17 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Command of Evidence", "textual_claim_strength"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A critic claims that a novelist's brief scenic descriptions often slow the plot only slightly while sharpening the reader's sense of place. Several reviews mention scenery, although not all address pacing."
+                "At first, advertising researchers defined ad recall as how well people remember a campaign after encountering it online. They hypothesized that interactions requiring more cognitive effort, such as commenting on or sharing a post, would often produce higher recall than quick interactions such as clicking a link or a like button."
             ),
-            constraint_sentence="However, the strongest evidence must address both the limited effect on pace and the clearer sense of setting.",
-            prompt="Which finding would best support the critic's claim?",
-            answer_options=("Some readers remembered the novel's city streets but disliked its ending.", "A review praised the descriptions as beautiful without discussing plot movement.", "Several readers said the plot felt slow whenever descriptions appeared.", "Readers reported that the descriptions briefly paused the action but made the locations easier to imagine."),
-            correct_index=3,
+            constraint_sentence="However, the strongest evidence must compare levels of engagement while keeping the focus on recall rather than purchase intention or popularity.",
+            prompt="Which finding, if true, would most directly support the researchers' hypothesis?",
+            answer_options=("Users who shared or commented on an ad were more likely to remember it later than users who only clicked an embedded link or like button.", "Users who clicked a like button on an ad were more likely to purchase the product than users who merely viewed the ad.", "Ads that received many comments were sometimes rated as more entertaining than ads that received fewer comments.", "Users who remembered an ad were often unable to identify whether they had clicked, shared, or commented on it."),
+            correct_index=0,
             topic="Command of Evidence",
             subtopic="Pattern: textual_claim_strength",
             question_type="Command of Evidence",
             trap_type="claim strength trap",
-            explanation="Hard evidence type=textual; the answer must match both parts of the qualified claim rather than merely mentioning related information.",
+            explanation="Hard evidence type=textual; the answer must match the cognitive-engagement comparison and the recall outcome rather than a related popularity or purchase measure.",
             constraints_required=2,
         ),
     }
@@ -3576,7 +3581,7 @@ def validate_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
         return
     combined_wrong = " ".join(choice.text.lower() for choice in spec.choices if choice.role != ChoiceTrapRole.correct)
     required_distractor_logic = (
-        r"watering rather than|focuses on watering",
+        r"watering rather than|focuses on watering|full trend|rather than the full trend",
         r"partly fits|misses the later crossover",
         r"misreading|misread",
     )
