@@ -575,6 +575,22 @@ function BreakScreen({
   );
 }
 
+function ModuleOverScreen() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-[#f8f8f8] px-8 text-center text-[#222]">
+      <section className="flex max-w-[760px] flex-col items-center">
+        <h1 className="mb-12 text-[44px] font-light leading-tight text-[#3154d4]">
+          This Module Is Over
+        </h1>
+        <p className="mb-8 text-[28px] leading-tight">All your work has been saved.</p>
+        <p className="mb-8 text-[28px] leading-tight">You&apos;ll move on automatically in just a moment.</p>
+        <p className="mb-28 text-[28px] leading-tight">Do not refresh this page or quit the app.</p>
+        <div className="h-28 w-28 animate-spin rounded-full border-[10px] border-transparent border-r-[#222] border-t-[#222]" aria-label="Loading next module" />
+      </section>
+    </main>
+  );
+}
+
 function CheckYourWorkScreen({
   answers,
   marked,
@@ -705,6 +721,7 @@ export default function TestPage() {
   const [isBreakActive, setIsBreakActive] = useState(false);
   const [breakSecondsLeft, setBreakSecondsLeft] = useState(BREAK_DURATION_SECONDS);
   const [isCheckWorkActive, setIsCheckWorkActive] = useState(false);
+  const [isModuleOverActive, setIsModuleOverActive] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<string>>(new Set());
   const [actionHistory, setActionHistory] = useState<AnswerAction[]>([]);
@@ -745,6 +762,7 @@ export default function TestPage() {
     setSecondsLeft(data.duration_seconds);
     setIndex(0);
     setIsCheckWorkActive(false);
+    setIsModuleOverActive(false);
     setAnswers(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
     setMarked(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.marked_for_review])));
     spentByQuestion.current = Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
@@ -1410,6 +1428,7 @@ export default function TestPage() {
         })
       });
     } catch {
+      setIsModuleOverActive(false);
       console.log("API unavailable, continue");
     }
   }
@@ -1446,6 +1465,7 @@ export default function TestPage() {
       if (previousSection === "reading_writing" && result.current_section === "math") {
         setBreakSecondsLeft(BREAK_DURATION_SECONDS);
         setSecondsLeft(0);
+        setIsModuleOverActive(false);
         setIsBreakActive(true);
         setIsMoreOpen(false);
         setActiveModal(null);
@@ -1474,6 +1494,8 @@ export default function TestPage() {
 
   async function continueFromCheckWork() {
     setIsCheckWorkActive(false);
+    setIsModuleOverActive(true);
+    await new Promise((resolve) => window.setTimeout(resolve, 1600));
     await advance();
   }
 
@@ -1497,6 +1519,10 @@ export default function TestPage() {
 
   if (isBreakActive) {
     return <BreakScreen secondsLeft={breakSecondsLeft} onResume={resumeFromBreak} />;
+  }
+
+  if (isModuleOverActive) {
+    return <ModuleOverScreen />;
   }
 
   if (isCheckWorkActive) {
