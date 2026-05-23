@@ -1181,6 +1181,269 @@ def generate(question_type: str, pattern: str, *, module: int, index: int) -> Qu
 def module2_unique_variant(item: AmbiguityFirstItem, module: int, index: int) -> AmbiguityFirstItem:
     if module != 2 or MODULE2_MODE != "hard":
         return item
+    if item.question_type == "Inference" and index == 0:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "In the 1990s, astronomers used extensive calculations to predict that a collision involving two neutron stars may release a brief but massive burst of gamma rays. "
+                "At first, the prediction seemed difficult to test directly, since such events were expected to be rare and hard to observe."
+            ),
+            constraint_sentence=(
+                "However, observations in 2017 matched the predicted signal closely enough that this ____ was treated as confirmed."
+            ),
+            prompt="Which choice completes the text with the most logical and precise word or phrase?",
+            answer_options=(
+                "theory",
+                "evidence",
+                "constant",
+                "experiment",
+            ),
+            correct_index=0,
+            trap_type="prediction-versus-proof vocabulary trap",
+            explanation=(
+                "The blank refers to the earlier prediction or explanatory account that later observations confirmed, not to the evidence or the observation itself."
+            ),
+        )
+    if item.question_type == "Inference" and index == 1:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Taking photographs in the mid-1800s was often complicated and costly, although the 1854 invention of the carte de visite made small portraits inexpensive to produce. "
+                "The format soon circulated through shops and family albums, and people tended to exchange the images as ordinary social objects rather than rare luxuries."
+            ),
+            constraint_sentence=(
+                "This change suggests that cartes de visite helped to ____ photography, making it familiar to a much wider public."
+            ),
+            prompt="Which choice completes the text with the most logical and precise word or phrase?",
+            answer_options=(
+                "weaken",
+                "praise",
+                "popularize",
+                "isolate",
+            ),
+            correct_index=2,
+            trap_type="effect versus attitude vocabulary trap",
+            explanation=(
+                "The context points to expanding public use of photography, so the precise verb is popularize."
+            ),
+        )
+    if item.question_type == "Inference" and index == 2:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Painter Alma W. Thomas was fascinated by colors and forms in the natural world, although she did not simply copy garden scenes. "
+                "In several works, broken bands of color echo the way sunlight may pass through leaves, turning a familiar view into an abstract pattern."
+            ),
+            constraint_sentence=(
+                "The flowers and trees near her Washington, DC, home therefore ____ the visual decisions she made in her art."
+            ),
+            prompt="Which choice completes the text with the most logical and precise word or phrase?",
+            answer_options=(
+                "restricted",
+                "announced",
+                "distracted",
+                "influenced",
+            ),
+            correct_index=3,
+            trap_type="source of inspiration versus limitation trap",
+            explanation=(
+                "The garden supplied ideas for Thomas's visual choices, so influenced best captures the relationship."
+            ),
+        )
+    if item.question_type == "Function" and index == 3:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "In the 1990s, conservationists began planting native trees in the habitat of the Azores bullfinch, a bird whose numbers had fallen sharply. "
+                "At first, the effort may have seemed unlikely to reverse decades of decline, and several other threats to the species remained."
+            ),
+            constraint_sentence=(
+                "However, the population increased from roughly 100 birds in the late 1980s to about 1,300 in 2023, suggesting that the approach was apparently ____."
+            ),
+            prompt="Which choice completes the text with the most logical and precise word or phrase?",
+            answer_options=(
+                "amusing",
+                "costly",
+                "successful",
+                "disastrous",
+            ),
+            correct_index=2,
+            trap_type="outcome evaluation vocabulary trap",
+            explanation=(
+                "The numerical increase shows that the conservation approach worked; successful is the only choice that fits that outcome."
+            ),
+        )
+    if item.question_type == "Function" and index == 4:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "At first, most plastics today often end up in landfills or are recycled into materials with a limited range of uses. "
+                "However, chemist Guoliang Liu and colleagues designed a reactor that can melt polyethylene and polypropylene--two widely used plastics--into a wax."
+            ),
+            constraint_sentence=(
+                "The wax can then be transformed into a surfactant, a chemical compound usable as a detergent, so the parenthetical detail tells readers what the unfamiliar term means."
+            ),
+            prompt="Which choice best states the function of the underlined portion of the text?",
+            answer_options=(
+                "It clarifies the meaning of a scientific term.",
+                "It describes an environmental concern.",
+                "It explains the significance of a scientific discovery.",
+                "It identifies a result that confused the team.",
+            ),
+            correct_index=0,
+            trap_type="definition versus broader significance trap",
+            explanation=(
+                "The phrase defines surfactant locally; it does not explain the whole discovery or introduce a new environmental problem."
+            ),
+        )
+    if item.question_type == "Function" and index == 5:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Archaeologists studying Pompeii recently uncovered a well-preserved food shop known as a thermopolium. "
+                "The site contains food remains, artworks, and decorations, although any single object may reveal only a narrow detail about daily life."
+            ),
+            constraint_sentence=(
+                "Taken together, these materials help researchers reconstruct how some residents may have bought and consumed prepared food."
+            ),
+            prompt="Which choice best states the main purpose of the text?",
+            answer_options=(
+                "To compare ancient artworks with modern ones",
+                "To discuss the political system of Italy",
+                "To present a recent archaeological discovery and explain what it may reveal",
+                "To describe a region's climate",
+            ),
+            correct_index=2,
+            trap_type="specific detail versus main purpose trap",
+            explanation=(
+                "The text introduces the thermopolium discovery and explains its value for understanding daily life in Pompeii."
+            ),
+        )
+    if item.question_type == "CROSS_TEXT_CONNECTION" and index == 6:
+        text_1 = (
+            "Technology investors sometimes predict that conventional books will be displaced by newer interactive media. "
+            "They often treat reader interaction as a feature that belongs mainly to digital platforms."
+        )
+        text_2 = (
+            "Although digital formats may expand reader participation, literary scholar Jeremy Douglass notes that interactive reading has older precedents, such as marginal annotations. "
+            "This limit suggests that new media refine rather than replace earlier forms, with books and digital works often coexisting."
+        )
+        return replace(
+            item,
+            ambiguous_passage=f"Text 1\n{text_1}\n\nText 2\n{text_2}",
+            constraint_sentence=(
+                "However, the response must account for Text 2's concession, its limiting condition, and its refined conclusion."
+            ),
+            prompt='Based on the texts, how would the author of Text 2 most likely respond to the claim about books in Text 1?',
+            answer_options=(
+                "By suggesting that digital platforms may be less interactive than conventional books in some older reading practices",
+                "By suggesting that the claim may overlook older forms of reader participation and overstate the likelihood of replacement",
+                "By agreeing with the replacement claim but adding that printed books may need to imitate digital media",
+                "By suggesting that investors may have a useful claim about media adoption but less evidence about older reading habits",
+            ),
+            correct_index=1,
+            trap_type="refinement versus replacement trap",
+            explanation=(
+                "Text 2 partly acknowledges digital interactivity but limits Text 1's replacement claim by pointing to older interactive practices and coexistence."
+            ),
+            data_payload={
+                "type": "cross_text",
+                "text_1": text_1,
+                "text_2": text_2,
+                "relationship": "limitation_refinement",
+            },
+        )
+    if item.question_type == "CROSS_TEXT_CONNECTION" and index == 7:
+        text_1 = (
+            "Rubber production from Hevea brasiliensis is sometimes explained mainly by the quality of the tree's latex. "
+            "On this view, the substance itself may be the key feature that makes the tree commercially useful."
+        )
+        text_2 = (
+            "Although latex quality matters, botanists emphasize a limiting condition: the bark contains inner tubes that may let latex flow when small cuts are made. "
+            "This suggests that the tree's usefulness depends not only on producing latex but also on a structure that makes the latex easy to collect."
+        )
+        return replace(
+            item,
+            ambiguous_passage=f"Text 1\n{text_1}\n\nText 2\n{text_2}",
+            constraint_sentence=(
+                "However, the response must account for Text 2's concession, its limiting condition, and its refined conclusion."
+            ),
+            prompt="Based on the texts, how would the author of Text 2 most likely respond to the explanation in Text 1?",
+            answer_options=(
+                "By suggesting that latex may have a role in making rubber but is less relevant than climate",
+                "By suggesting that the explanation may need to shift from latex quality alone to the bark structure that helps people collect latex",
+                "By claiming that Hevea brasiliensis may be useful because it grows in many climates",
+                "By suggesting that latex production may matter mainly because several Amazon trees produce it",
+            ),
+            correct_index=1,
+            trap_type="feature versus collection mechanism trap",
+            explanation=(
+                "Text 2 refines Text 1 by adding that collectability, not latex alone, explains the tree's value."
+            ),
+            data_payload={
+                "type": "cross_text",
+                "text_1": text_1,
+                "text_2": text_2,
+                "relationship": "mechanism_refinement",
+            },
+        )
+    if item.question_type == "CROSS_TEXT_CONNECTION" and index == 8:
+        text_1 = (
+            "The Nacional cacao tree was thought to have disappeared after a fungus infected many cacao populations in the twentieth century. "
+            "Because the fungus can spread through the air from nearby trees, researchers expected any surviving Nacional trees to be unlikely."
+        )
+        text_2 = (
+            "Although that expectation seemed reasonable, cacao expert Servio Pachard later located Nacional trees in the isolated Piedra de Plata valley. "
+            "This implies that there was a limit on the earlier assumption: distance from infected trees may have reduced exposure enough for the valley trees to survive."
+        )
+        return replace(
+            item,
+            ambiguous_passage=f"Text 1\n{text_1}\n\nText 2\n{text_2}",
+            constraint_sentence=(
+                "However, the response must account for Text 2's concession, its limiting condition, and its refined conclusion."
+            ),
+            prompt="Based on the texts, which response would the author of Text 2 most likely make to the expectation described in Text 1?",
+            answer_options=(
+                "The fungus's ability to spread through the air may have been relevant but was not the whole explanation.",
+                "The isolated location of some Nacional trees may have limited their exposure to the fungus.",
+                "The chocolate made from Nacional cacao pods may explain why researchers still valued the trees.",
+                "Early researchers may have had evidence that Nacional trees could become infected in nearby forests.",
+            ),
+            correct_index=1,
+            trap_type="isolation condition versus disease fact trap",
+            explanation=(
+                "Text 2 does not deny the fungus threat; it refines the expectation by adding that isolation may have limited exposure."
+            ),
+            data_payload={
+                "type": "cross_text",
+                "text_1": text_1,
+                "text_2": text_2,
+                "relationship": "limitation_refinement",
+            },
+        )
+    if item.question_type == "Command of Evidence" and index == 9:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Robert Frost's poem The Mountain describes a speaker visiting a town beside a mountain. "
+                "Although the mountain may be physically distant from the speaker at moments, the speaker claims to feel protected by it."
+            ),
+            constraint_sentence=(
+                "However, the best evidence must show not merely that the mountain is present but that the speaker experiences it as shelter."
+            ),
+            prompt='Which quotation from "The Mountain" most effectively illustrates the claim?',
+            answer_options=(
+                "\"A dry ravine emerged under boughs / Into the pasture.\"",
+                "\"The mountain stood there to be pointed at.\"",
+                "\"I felt it like a wall / Behind which I was sheltered from a wind.\"",
+                "\"I crossed the river and swung round the mountain.\"",
+            ),
+            correct_index=2,
+            trap_type="related image versus exact evidence trap",
+            explanation=(
+                "The correct quotation directly supports the claim of feeling protected by comparing the mountain to a sheltering wall."
+            ),
+        )
     if item.question_type == "Main Idea" and item.generation_pattern == "study_vs_conclusion" and index >= 18:
         return replace(
             item,
