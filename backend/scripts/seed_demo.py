@@ -1622,11 +1622,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Vocabulary in Context", "literal_vs_abstract"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, the curator described the restored mural as bright, though the pigments often remained muted after cleaning."
+                "At first, the curator described the restored mural as bright, although the pigments often remained muted after cleaning and the gallery lighting was intentionally soft."
             ),
-            constraint_sentence="However, the arrangement made the once-confusing political symbols easier for visitors to interpret.",
+            constraint_sentence="However, by arranging the figures around a single repeated emblem, the restoration made the once-confusing political symbols easier for visitors to interpret.",
             prompt="As used in the text, what does \"bright\" most nearly mean?",
-            answer_options=("visually intense", "not dull in color", "cheerful in tone", "intellectually clear"),
+            answer_options=("visually intense", "newly polished", "optimistic in tone", "easy to understand"),
             correct_index=3,
             topic="Vocabulary in Context",
             subtopic="Pattern: literal_vs_abstract",
@@ -1637,12 +1637,12 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Vocabulary in Context", "functional_precision"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Early field notes called the sensor's reading sharp, though the plain display often made the word seem visual."
+                "Early field notes called the sensor's reading sharp, although the plain display offered no unusually crisp image and the change being measured was often small."
             ),
-            constraint_sentence="However, the researchers valued the reading because it distinguished neighboring temperature changes that older tools merged.",
+            constraint_sentence="However, the researchers valued the reading because it distinguished neighboring temperature changes that older tools tended to merge into a single average.",
             prompt="As used in the text, what does \"sharp\" most nearly mean?",
             answer_options=("severe", "finely precise", "sudden", "visually crisp"),
-            correct_index=3,
+            correct_index=1,
             topic="Vocabulary in Context",
             subtopic="Pattern: functional_precision",
             question_type="Vocabulary in Context",
@@ -1652,11 +1652,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Vocabulary in Context", "tone_alignment"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, the review called the memoir restrained, which may sound like criticism despite the reviewer's often admiring tone."
+                "At first, the review called the memoir restrained, which may sound like criticism because the book avoids dramatic scene-setting and rarely names the narrator's emotions directly."
             ),
-            constraint_sentence="However, the quiet tone made the final chapter feel more trustworthy rather than less emotional.",
+            constraint_sentence="However, the reviewer argued that this quiet control made the final chapter feel more trustworthy rather than emotionally empty.",
             prompt="As used in the text, what does \"restrained\" most nearly mean?",
-            answer_options=("prevented from acting", "emotionally limited", "lacking detail", "controlled in expression"),
+            answer_options=("prevented from acting", "emotionally limited", "sparse in factual detail", "controlled in expression"),
             correct_index=3,
             topic="Vocabulary in Context",
             subtopic="Pattern: tone_alignment",
@@ -2064,11 +2064,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "sentence_boundary_resolution"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The mural's surface looked uniform at first ___ later imaging often revealed two separate paint layers."
+                "The mural's surface looked uniform at first ___ later imaging often revealed two separate paint layers beneath the restored section."
             ),
-            constraint_sentence="However, both clauses can stand independently, and the second complicates the first observation.",
+            constraint_sentence="However, both clauses can stand independently, and the second complicates the first observation rather than merely adding a phrase to it.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
-            answer_options=(",", "which", "and later", ";"),
+            answer_options=(", but", "which", ", later", ";"),
             correct_index=3,
             topic="Standard English Conventions",
             subtopic="Pattern: sentence_boundary_resolution",
@@ -2095,11 +2095,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "grammar_pronoun_reference"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, Maya told Lina that the archive's map was missing a label, and ___ often made the catalog confusing."
+                "At first, Maya told Lina that the archive's map was missing a label, and ___ often made the catalog confusing for researchers using the map."
             ),
-            constraint_sentence="However, the intended antecedent is the missing label, not either researcher.",
+            constraint_sentence="However, the intended antecedent is the missing label, not either researcher or the map itself.",
             prompt="Which choice completes the text so that it conforms to Standard English and makes the reference clear?",
-            answer_options=("she", "they", "this", "the missing label"),
+            answer_options=("she", "the map", "this", "the missing label"),
             correct_index=3,
             topic="Standard English Conventions",
             subtopic="Pattern: grammar_pronoun_reference",
@@ -2111,9 +2111,9 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Transitions", "reinforcement"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A survey of migratory birds found that several species often paused near small urban wetlands, although the sites were omitted from regional conservation maps. The researchers also recorded repeated overnight stays at those same wetlands."
+                "A survey of migratory birds found that several species often paused near small urban wetlands, although the sites were omitted from regional conservation maps. The researchers also recorded repeated overnight stays at those same wetlands, a result that could still be explained as temporary overflow from larger marshes."
             ),
-            constraint_sentence="___, the team found that the birds returned to the sites even when larger marshes nearby were available.",
+            constraint_sentence="___, the team found that the birds returned to the sites even when larger marshes nearby were available, strengthening the case that the smaller wetlands had independent value.",
             prompt="Which choice completes the text with the most logical transition?",
             answer_options=("Moreover,", "Therefore,", "Admittedly,", "Indeed,"),
             correct_index=3,
@@ -2127,11 +2127,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Transitions", "clarification"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The historian argues that the archive's silence is not proof that the craft disappeared, although early readers may assume that missing records mean missing activity. Later tax lists often mention the same tools under a broader household category."
+                "The historian argues that the archive's silence is not proof that the craft disappeared, although early readers may assume that missing records mean missing activity. Later tax lists often mention the same tools under a broader household category, which could make the evidence seem only loosely related."
             ),
-            constraint_sentence="___, the records do not name the craft directly but preserve indirect evidence that it continued.",
+            constraint_sentence="___, the records do not name the craft directly but preserve indirect evidence that it continued under a different administrative label.",
             prompt="Which choice completes the text with the most logical transition?",
-            answer_options=("Nevertheless,", "Similarly,", "Therefore,", "Specifically,"),
+            answer_options=("Nevertheless,", "In other words,", "Therefore,", "Specifically,"),
             correct_index=3,
             topic="Transitions",
             subtopic="Pattern: clarification",
@@ -2145,25 +2145,25 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             ambiguous_passage=(
                 "The ceramic coating was costly to apply and, at first, several engineers questioned whether the added step would be practical. The coating often reduced heat loss, however, even on older equipment with uneven surfaces."
             ),
-            constraint_sentence="___, the team recommended testing the coating in a small set of factories before rejecting it.",
+            constraint_sentence="___, the team recommended testing the coating in a small set of factories before rejecting it, despite the added expense.",
             prompt="Which choice completes the text with the most logical transition?",
-            answer_options=("Therefore,", "Specifically,", "In fact,", "Admittedly,"),
+            answer_options=("Therefore,", "Specifically,", "In fact,", "Nevertheless,"),
             correct_index=3,
             topic="Transitions",
             subtopic="Pattern: concession",
             question_type="Transitions",
             trap_type="fine-grained transition trap",
-            explanation="Hard transition category=concession; the sentence admits a limitation before preserving the recommendation.",
+            explanation="Hard transition category=concession; the sentence preserves the recommendation despite the limitation already introduced.",
             constraints_required=2,
         ),
         ("Transitions", "conclusion"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The excavation team found imported beads, local pottery, and repair marks on several tools, although no single object proved how the settlement was used. Taken together, the finds often point to both trade and everyday residence."
+                "The excavation team found imported beads, local pottery, and repair marks on several tools, although no single object proved how the settlement was used. Taken together, the finds often point to both trade and everyday residence rather than to a temporary market alone."
             ),
             constraint_sentence="___, the site was likely not just a trading stop but a place where people lived for extended periods.",
             prompt="Which choice completes the text with the most logical transition?",
-            answer_options=("Specifically,", "Meanwhile,", "Admittedly,", "Ultimately,"),
+            answer_options=("Specifically,", "Meanwhile,", "For example,", "Ultimately,"),
             correct_index=3,
             topic="Transitions",
             subtopic="Pattern: conclusion",
@@ -2175,11 +2175,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "referent_precision"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, when Dr. Mensah gave Rivera the revised catalog entry, ___ often still contained an unclear date range."
+                "At first, when Dr. Mensah gave Rivera the revised catalog entry, ___ often still contained an unclear date range, even though the surrounding notes had been corrected."
             ),
-            constraint_sentence="However, the sentence must refer precisely to the catalog entry, not to either researcher.",
+            constraint_sentence="However, the sentence must refer precisely to the catalog entry, not to either researcher or the broader set of notes.",
             prompt="Which choice completes the text so that it conforms to Standard English and resolves the reference?",
-            answer_options=("she", "they", "that", "the entry"),
+            answer_options=("she", "the notes", "that", "the entry"),
             correct_index=3,
             topic="Standard English Conventions",
             subtopic="Pattern: referent_precision",
@@ -2191,11 +2191,11 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "clause_integration"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, the satellite detected a faint heat signal over the ridge ___ the research team often treated the result cautiously because cloud cover can distort readings."
+                "At first, the satellite detected a faint heat signal over the ridge ___ the research team often treated the result cautiously because cloud cover can distort readings from that area."
             ),
             constraint_sentence="However, the second clause explains why the team qualified the first observation.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
-            answer_options=(", the research team", "; although the research team", "which the research team", ", but the research team"),
+            answer_options=(", the research team", "; although the research team", "which led the research team to", ", but the research team"),
             correct_index=3,
             topic="Standard English Conventions",
             subtopic="Pattern: clause_integration",
@@ -2223,11 +2223,22 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Rhetorical Synthesis", "compare"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A student is comparing two restoration projects.\nNotes:\n- Project A often reused original stone but required longer closures.\n- Project B used newer stone and reopened sooner.\n- Both projects preserved the buildings' original outlines.\n- Several budget details are available but not relevant."
+                "A student is comparing two restoration projects.\nNotes:\n"
+                "- Project A often reused original stone, even when doing so required longer building closures.\n"
+                "- Project B used newly quarried stone in damaged sections and reopened sooner.\n"
+                "- Both projects preserved the buildings' original outlines.\n"
+                "- Project A received more public comments about historical continuity.\n"
+                "- Project B had lower short-term maintenance costs.\n"
+                "- Several budget details may seem relevant but do not address preservation approach."
             ),
             constraint_sentence="However, the student's goal is to compare the projects' preservation approaches while acknowledging one shared outcome.",
             prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
-            answer_options=("Project A took longer than Project B, and both had budget records.", "Project B reopened sooner because it used newer stone.", "Both projects involved historic buildings, although Project A took longer.", "One project emphasized material continuity, the other prioritized replacement, and both maintained the same basic architectural form."),
+            answer_options=(
+                "Project A required longer closures, whereas Project B reopened sooner and had lower short-term maintenance costs.",
+                "Project B used newly quarried stone in damaged sections, while Project A received more public comments about historical continuity.",
+                "Both projects preserved the original outlines of historic buildings, although their budgets and reopening timelines differed.",
+                "One project emphasized material continuity, the other prioritized replacement, and both maintained the same basic architectural form.",
+            ),
             correct_index=3,
             topic="Rhetorical Synthesis",
             subtopic="Pattern: compare",
@@ -2235,15 +2246,38 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             trap_type="rhetorical task filtering trap",
             explanation="Hard synthesis task=compare; the answer filters irrelevant budget detail, recognizes the difference in approach, and compresses the shared outcome.",
             constraints_required=3,
+            data_payload={
+                "type": "notes",
+                "task_goal": "compare",
+                "notes": [
+                    "Project A often reused original stone, even when doing so required longer building closures.",
+                    "Project B used newly quarried stone in damaged sections and reopened sooner.",
+                    "Both projects preserved the buildings' original outlines.",
+                    "Project A received more public comments about historical continuity.",
+                    "Project B had lower short-term maintenance costs.",
+                    "Several budget details may seem relevant but do not address preservation approach.",
+                ],
+            },
         ),
         ("Rhetorical Synthesis", "contrast"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A student is contrasting two community archives.\nNotes:\n- Archive A often invites residents to annotate photographs online.\n- Archive B relies on staff-written labels and in-person exhibits.\n- Both preserve neighborhood images.\n- Several funding details may seem relevant at first."
+                "A student is contrasting two community archives.\nNotes:\n"
+                "- Archive A often invites residents to annotate photographs online.\n"
+                "- Archive B relies on staff-written labels for photographs shown in in-person exhibits.\n"
+                "- Both archives preserve neighborhood images from the same period.\n"
+                "- Archive A's annotations sometimes include personal memories from residents.\n"
+                "- Archive B's exhibit labels usually emphasize verified dates and locations.\n"
+                "- Several funding details may seem relevant at first but do not show how the public is involved."
             ),
             constraint_sentence="However, the student's goal is to emphasize the difference in how each archive involves the public.",
             prompt="Which choice best uses the notes to emphasize the contrast between the two archives?",
-            answer_options=("Both archives preserve historical photographs for community members.", "Archive A and Archive B received grants in different years.", "Archive B has in-person exhibits, so it is more historically accurate than Archive A.", "One archive gives residents a direct interpretive role, whereas the other keeps interpretation mainly with staff."),
+            answer_options=(
+                "Both archives preserve neighborhood photographs, but Archive B presents its photographs in physical exhibits.",
+                "Archive A includes residents' memories online, whereas Archive B received support for staff-written exhibit labels.",
+                "Archive B emphasizes verified dates and locations, which may make its labels more formal than Archive A's annotations.",
+                "One archive gives residents a direct interpretive role, whereas the other keeps interpretation mainly with staff.",
+            ),
             correct_index=3,
             topic="Rhetorical Synthesis",
             subtopic="Pattern: contrast",
@@ -2251,15 +2285,38 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             trap_type="rhetorical contrast trap",
             explanation="Hard synthesis task=contrast; the subtle distinction is filtering true but irrelevant funding details and emphasizing the public-involvement difference.",
             constraints_required=3,
+            data_payload={
+                "type": "notes",
+                "task_goal": "contrast",
+                "notes": [
+                    "Archive A often invites residents to annotate photographs online.",
+                    "Archive B relies on staff-written labels for photographs shown in in-person exhibits.",
+                    "Both archives preserve neighborhood images from the same period.",
+                    "Archive A's annotations sometimes include personal memories from residents.",
+                    "Archive B's exhibit labels usually emphasize verified dates and locations.",
+                    "Several funding details may seem relevant at first but do not show how the public is involved.",
+                ],
+            },
         ),
         ("Rhetorical Synthesis", "present_conclusion"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A student is reviewing notes about a school garden.\nNotes:\n- Pollinator counts often rose near native flowers.\n- Vegetable yields changed little.\n- Maintenance took fewer hours after paths were redesigned.\n- A local newspaper praised the garden's appearance."
+                "A student is reviewing notes about a school garden.\nNotes:\n"
+                "- Pollinator counts often rose near native flowers planted during the redesign.\n"
+                "- Vegetable yields changed little after the redesign.\n"
+                "- Maintenance took fewer hours after paths were widened and resurfaced.\n"
+                "- A local newspaper praised the garden's appearance.\n"
+                "- Students observed more bee and butterfly visits in the native-flower section than near the vegetable beds.\n"
+                "- The student's conclusion should focus on ecological impact, not popularity or labor."
             ),
             constraint_sentence="However, the student's goal is to present a conclusion about ecological impact, not appearance or labor.",
             prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
-            answer_options=("The garden became easier to maintain after its paths were redesigned.", "A local newspaper praised the garden's appearance.", "Vegetable yields changed little after the redesign.", "Greater pollinator activity around native plantings supports an ecological-benefit conclusion."),
+            answer_options=(
+                "The garden became easier to maintain after its paths were redesigned, even though vegetable yields changed little.",
+                "The redesign was popular enough that a local newspaper praised the garden's appearance.",
+                "Because vegetable yields changed little, the redesign's most important effect was probably aesthetic rather than ecological.",
+                "Greater pollinator activity around native plantings supports an ecological-benefit conclusion.",
+            ),
             correct_index=3,
             topic="Rhetorical Synthesis",
             subtopic="Pattern: present_conclusion",
@@ -2267,6 +2324,18 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
             trap_type="rhetorical task filtering trap",
             explanation="Hard synthesis task=present_conclusion; the answer filters true but irrelevant notes and compresses the ecological evidence into a conclusion.",
             constraints_required=3,
+            data_payload={
+                "type": "notes",
+                "task_goal": "support",
+                "notes": [
+                    "Pollinator counts often rose near native flowers planted during the redesign.",
+                    "Vegetable yields changed little after the redesign.",
+                    "Maintenance took fewer hours after paths were widened and resurfaced.",
+                    "A local newspaper praised the garden's appearance.",
+                    "Students observed more bee and butterfly visits in the native-flower section than near the vegetable beds.",
+                    "The student's conclusion should focus on ecological impact, not popularity or labor.",
+                ],
+            },
         ),
         ("Command of Evidence", "quantitative_trend_value"): AmbiguityFirstItem(
             generation_pattern=pattern,
@@ -2888,6 +2957,8 @@ def validate_ambiguity_first_item(item: AmbiguityFirstItem) -> None:
         raise ValueError("Ambiguity-first passage must start with at least one ambiguous sentence.")
     max_final_sentences = 6 if item.question_type in {"CROSS_TEXT_CONNECTION", "Rhetorical Synthesis"} else 4
     if item.generation_pattern == "notes_task_selection":
+        return
+    if item.question_type == "Rhetorical Synthesis" and "Notes:" in item.ambiguous_passage:
         return
     if final_sentence_count < 2 or final_sentence_count > max_final_sentences:
         raise ValueError(f"Constrained final passage must be 2-{max_final_sentences} sentences.")
