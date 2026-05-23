@@ -26,7 +26,7 @@ RW_GENERATION_PATTERNS = {
     "TEXT_STRUCTURE_FUNCTION": {"belief_vs_evidence", "claim_vs_refutation", "setup_vs_result"},
     "CROSS_TEXT_CONNECTION": {"claim_vs_empirical_evidence", "model_vs_data", "hypothesis_vs_revision"},
     "Inference": {"contradiction_inference", "expectation_violation", "causal_gap"},
-    "Transitions": {"reinforcement", "clarification", "concession", "conclusion"},
+    "Transitions": {"addition", "cause_effect", "reinforcement", "clarification", "concession", "conclusion"},
     "Rhetorical Synthesis": {"notes_task_selection", "compare", "contrast", "present_conclusion"},
     "Standard English Conventions": {
         "grammar_subject_verb",
@@ -233,6 +233,18 @@ RW_PATTERN_REGISTRY = {
         "logic_rule": "compare the original hypothesis with the revised limitation",
         "correct_answer_rule": "must identify Text 2's modification of Text 1's claim",
         "distractor_generators": ("irrelevant_detail", "partial_agreement", "wrong_direction"),
+    },
+    "addition": {
+        "passage_template": "second sentence adds a parallel function or effect",
+        "logic_rule": "choose a transition that adds a related function rather than contrasting or concluding",
+        "correct_answer_rule": "must signal addition without implying sequence or reversal",
+        "distractor_generators": ("sequence_valid_syntax", "conclusion_valid_syntax", "contrast_valid_syntax"),
+    },
+    "cause_effect": {
+        "passage_template": "second sentence presents a consequence of the first",
+        "logic_rule": "choose a transition that marks result rather than similarity or example",
+        "correct_answer_rule": "must signal consequence while preserving the causal relationship",
+        "distractor_generators": ("similarity_valid_syntax", "example_valid_syntax", "contrast_valid_syntax"),
     },
     "reinforcement": {
         "passage_template": "second sentence strengthens an already stated claim",
@@ -468,17 +480,17 @@ RW_MODULE_BLUEPRINT: tuple[RWModuleSlot, ...] = (
     RWModuleSlot("quant_graph_support", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 6),
     RWModuleSlot("evidence_weaken", "Command of Evidence", "weaken_origin_claim", 6),
     RWModuleSlot("evidence_support_harder", "Command of Evidence", "textual_claim_strength", 7),
-    RWModuleSlot("quant_graph_trend", "command_of_evidence_quantitative_graph", "graph_trend_claim_shift", 7),
-    RWModuleSlot("inference_hypothesis", "CROSS_TEXT_CONNECTION", "hypothesis_vs_revision", 7),
+    RWModuleSlot("quant_graph_trend", "Data Analysis", "data_mapping_table", 7),
+    RWModuleSlot("inference_hypothesis", "Inference", "contradiction_inference", 7),
     RWModuleSlot("grammar_sva", "Standard English Conventions", "grammar_subject_verb", 7),
     RWModuleSlot("grammar_modifier", "Standard English Conventions", "grammar_modifier", 7),
     RWModuleSlot("grammar_boundary", "Standard English Conventions", "grammar_clause_boundary", 7),
     RWModuleSlot("grammar_ambiguous_boundary", "Standard English Conventions", "sentence_boundary_resolution", 8),
     RWModuleSlot("grammar_pronoun", "Standard English Conventions", "grammar_pronoun_reference", 8),
-    RWModuleSlot("transition_logic", "Transitions", "reinforcement", 8),
-    RWModuleSlot("notes_task_selection_hard", "Rhetorical Synthesis", "notes_task_selection", 9),
-    RWModuleSlot("transition_precision", "Transitions", "concession", 9),
-    RWModuleSlot("transition_hard", "Transitions", "conclusion", 9),
+    RWModuleSlot("transition_logic", "Transitions", "cause_effect", 8),
+    RWModuleSlot("notes_task_selection_hard", "Transitions", "addition", 9),
+    RWModuleSlot("transition_precision", "Transitions", "reinforcement", 9),
+    RWModuleSlot("transition_hard", "Transitions", "clarification", 9),
     RWModuleSlot("rhetorical_contrast", "Rhetorical Synthesis", "contrast", 10),
     RWModuleSlot("rhetorical_conclusion", "Rhetorical Synthesis", "present_conclusion", 10),
     RWModuleSlot("rhetorical_comparison", "Rhetorical Synthesis", "compare", 10),
@@ -883,9 +895,9 @@ def validate_graph_intent_distribution(module_questions: list[QuestionSpec]) -> 
 def validate_graph_coverage(module_questions: list[QuestionSpec], module: int) -> None:
     graph_questions = [question for question in module_questions if question.data_type == "graph"]
     if module == 1:
-        required_intents = {"claim_support", "trend_description"}
-        if len(graph_questions) < 2:
-            raise ValueError("Module 1 must include at least two graph questions.")
+        required_intents = {"claim_support"}
+        if len(graph_questions) < 1:
+            raise ValueError("Module 1 must include at least one graph question.")
     else:
         required_intents = {"claim_support", "role_in_argument", "inference"}
         if len(graph_questions) < 4:
@@ -1078,7 +1090,10 @@ def validate_notes_task_count(module_questions: list[QuestionSpec]) -> None:
         1
         for question in module_questions
         if question.question_type == "Rhetorical Synthesis"
-        and extract_metadata_value(question.explanation, "pattern") == "notes_task_selection"
+        and (
+            extract_metadata_value(question.explanation, "pattern") == "notes_task_selection"
+            or (question.data_payload or {}).get("type") == "notes"
+        )
     )
     print("NOTES QUESTIONS:", count_notes)
     if count_notes < 2:
@@ -1978,46 +1993,48 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Inference", "contradiction_inference"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "Researchers expected a quieter classroom to improve recall on every task. At first, that prediction seemed reasonable because students often report fewer distractions in quiet rooms."
+                "Narwhals are shy Arctic whales, and some of them have a long tusk with sensitive nerves. At first, one group of scientists proposed in 2014 that the tusk may help narwhals determine when nearby water is likely to start freezing and become dangerous."
             ),
-            constraint_sentence="However, students in moderately noisy rooms remembered spoken examples nearly as well as students in quiet rooms, though they did worse on silent reading tasks.",
-            prompt="Which inference is best supported by the text?",
-            answer_options=("Quiet rooms may help some recall tasks more than others.", "Moderate noise may not affect all kinds of recall in the same way.", "Students prefer noisy rooms for spoken examples.", "The results contradict the prediction for spoken examples more than for silent reading."),
-            correct_index=3,
+            constraint_sentence="However, marine biologist Kristin Laidre disagrees, reasoning that if the tusk served such an important survival function, the trait would likely be more consistently present among narwhals than observations suggest.",
+            prompt="Which choice most logically completes the text?",
+            answer_options=("some narwhals would seek a new habitat when water begins freezing.", "fewer Arctic marine animals would rely on sensory organs to detect environmental change.", "the trait would appear in a larger share of the population.", "narwhals would become less shy over time."),
+            correct_index=2,
             topic="Inference",
             subtopic="Pattern: contradiction_inference",
             question_type="Inference",
             trap_type="contradiction scope trap",
-            explanation="The result contradicts the broad prediction only in a limited part of the task set.",
+            explanation="The disagreement depends on a limited inference: if the tusk had an essential function, it would likely be more widespread among narwhals.",
         ),
         ("Data Analysis", "data_mapping_table"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The table lists survey results for three museums. Several unrelated details about exhibit size may seem relevant at first."
+                "A student is researching rotating radio transients (RRATs), a subclass of pulsar stars characterized by short pulses of radio waves. Although frequency may seem like the most direct measure of pulse timing, the table lists several properties of five select RRATs."
             ),
-            constraint_sentence="However, when only weekend responses are considered, West had the highest satisfaction rating, while East led only in total repeat visitors.",
-            prompt="Which statement correctly maps the data in the table?",
-            answer_options=("East had the strongest weekend approval result.", "West and East showed equal return-visitor totals.", "North was strongest on both measured outcomes.", "The weekend approval comparison favors West, whereas the visitor-count comparison favors East."),
-            correct_index=3,
+            constraint_sentence="In this context, period refers to the interval separating one pulse from the next, so the student must use that column rather than the frequency column to identify the briefest interval.",
+            prompt="Which choice most effectively uses data from the table to complete the statement?",
+            answer_options=("Of the listed objects, J0614-03 has the smallest period value and therefore the briefest pulse interval.", "J0545-03 and J0121+53 have equal pulse intervals once frequency is considered.", "J1654-2335 has the longest pulse interval because its right ascension is greatest.", "J0103+54 has the highest frequency but the longest period among the RRATs listed."),
+            correct_index=0,
             topic="Data Analysis",
             subtopic="Pattern: data_mapping_table",
             question_type="Data Analysis",
             trap_type="wrong row or column trap",
-            explanation="The answer must use the weekend satisfaction column and the total repeat visitor column separately.",
+            explanation="The answer must map the definition of period to the correct column and compare all rows, not substitute frequency or right ascension.",
             constraints_required=2,
             data_type="table",
             data_payload={
-                "title": "Museum Survey Results",
-                "reasoning_pattern": "multi_row_inference",
+                "title": "Properties of Select Rotating Radio Transients",
+                "reasoning_pattern": "conditional_comparison",
                 "required_constraints": 2,
-                "constraint_types": ["comparison_across_rows_columns", "exception_detection"],
+                "constraint_types": ["subset_filtering", "comparison_across_rows_columns"],
                 "required_skills": ["scan_multiple_rows", "apply_condition"],
                 "reject_shortcuts": ["max_min_lookup", "single_value_reading", "direct_row_match"],
-                "columns": ["Museum", "Total repeat visitors", "Weekend satisfaction rating"],
+                "columns": ["Name", "Right ascension (hours)", "Period (seconds)", "Frequency (hertz)"],
                 "rows": [
-                    {"Museum": "East", "Total repeat visitors": 42, "Weekend satisfaction rating": "82%"},
-                    {"Museum": "North", "Total repeat visitors": 38, "Weekend satisfaction rating": "79%"},
-                    {"Museum": "West", "Total repeat visitors": 35, "Weekend satisfaction rating": "91%"},
+                    {"Name": "J0545-03", "Right ascension (hours)": "5:45", "Period (seconds)": 1.074, "Frequency (hertz)": 0.931},
+                    {"Name": "J1654-2335", "Right ascension (hours)": "16:54:03", "Period (seconds)": 0.545, "Frequency (hertz)": 1.834},
+                    {"Name": "J0103+54", "Right ascension (hours)": "1:03:37", "Period (seconds)": 0.354, "Frequency (hertz)": 2.822},
+                    {"Name": "J0121+53", "Right ascension (hours)": "1:21", "Period (seconds)": 2.725, "Frequency (hertz)": 0.367},
+                    {"Name": "J0614-03", "Right ascension (hours)": "6:15", "Period (seconds)": 0.136, "Frequency (hertz)": 7.353},
                 ],
             },
         ),
@@ -2039,110 +2056,142 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Standard English Conventions", "grammar_subject_verb"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, the collection of field notes, along with several sketches from the trip, ___ often stored in the archive's climate-controlled room."
+                "Although zydeco music originated in the French Creole community of southwest Louisiana, one instrument often credited with giving zydeco its unique sound is the vest frottoir."
             ),
-            constraint_sentence="However, the grammatical subject is collection, not sketches.",
+            constraint_sentence="The vest frottoir ___ a wearable washboard that is played by rubbing spoons or bottle openers against it.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
-            answer_options=("are", "were", "have been", "is"),
-            correct_index=3,
+            answer_options=("have been", "is", "were", "are"),
+            correct_index=1,
             topic="Standard English Conventions",
             subtopic="Pattern: grammar_subject_verb",
             question_type="Standard English Conventions",
             trap_type="subject-verb agreement trap",
-            explanation="This pattern tests only subject-verb agreement; the singular subject collection requires is.",
+            explanation="This pattern tests only subject-verb agreement; the singular subject vest frottoir requires is.",
         ),
         ("Standard English Conventions", "grammar_clause_boundary"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The prototype seemed simple at first ___ however, its internal sensors often required careful calibration."
+                "Although in his Naturalis historia Pliny the Elder praised Hipparchus's star catalog, a second-century BCE list of roughly 850 different stars' celestial positions, scholars often lacked a surviving copy."
             ),
-            constraint_sentence="However, both sides of the boundary are independent clauses.",
+            constraint_sentence="For centuries, scholars dreamed about locating a copy of this legendary lost ___ fantasy partially became reality in 2022, when researchers uncovered traces of the star catalog on a palimpsest, a reused parchment.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
-            answer_options=(",", "and", "which", ";"),
-            correct_index=3,
+            answer_options=("work, that", "work that", "work. That", "work and that"),
+            correct_index=1,
             topic="Standard English Conventions",
             subtopic="Pattern: grammar_clause_boundary",
             question_type="Standard English Conventions",
             trap_type="clause boundary trap",
-            explanation="This pattern tests only clause boundaries; a semicolon correctly separates two independent clauses before however.",
+            explanation="This pattern tests only clause boundaries; work that keeps the noun and relative clause integrated without an unnecessary comma, sentence break, or compound structure.",
         ),
         ("Standard English Conventions", "sentence_boundary_resolution"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The mural's surface looked uniform at first ___ later imaging often revealed two separate paint layers beneath the restored section."
+                "Although some interiors use traditional design elements, such as arched Gothic ceilings, and modern ones, such as floor-to-ceiling ___ design often splits the difference between old and new, a mixture increasingly seen in US homes."
             ),
-            constraint_sentence="However, both clauses can stand independently, and the second complicates the first observation rather than merely adding a phrase to it.",
+            constraint_sentence="The phrase after the blank begins a new independent clause that describes the design as a whole.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
-            answer_options=(", but", "which", ", later", ";"),
-            correct_index=3,
+            answer_options=("windows; transitional", "windows--transitional", "windows. Transitional", "windows, transitional"),
+            correct_index=0,
             topic="Standard English Conventions",
             subtopic="Pattern: sentence_boundary_resolution",
             question_type="Standard English Conventions",
             trap_type="ambiguous boundary trap",
-            explanation="This pattern tests only sentence_boundary_resolution; the subtle issue is resolving two independent clauses without a comma splice or fragment.",
+            explanation="This pattern tests only sentence_boundary_resolution; a semicolon correctly joins two related independent clauses without a comma splice or abrupt sentence break.",
             constraints_required=2,
         ),
         ("Standard English Conventions", "grammar_modifier"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "After often comparing the fossil under angled light, ___ noticed a faint ridge along its edge."
+                "Although Zhang Daqian's 1983 painting Panorama of Mount Lu features jagged peaks of black ink, it is often associated with the tradition of qingli shanshui."
             ),
-            constraint_sentence="However, the opening modifier must describe the person doing the comparing.",
+            constraint_sentence="Qingli shanshui is a type of Chinese landscape painting ___ by the use of blue and green hues to depict ethereal, otherworldly landscapes.",
             prompt="Which choice completes the text so that it conforms to Standard English?",
-            answer_options=("a faint ridge was noticed by the researcher", "the fossil's edge became visible", "the ridge along the fossil appeared", "the researcher noticed a faint ridge"),
-            correct_index=3,
+            answer_options=("has been characterized", "will be characterized", "characterized", "is characterized"),
+            correct_index=2,
             topic="Standard English Conventions",
             subtopic="Pattern: grammar_modifier",
             question_type="Standard English Conventions",
             trap_type="modifier placement trap",
-            explanation="This pattern tests only modifier placement; the noun after the modifier must be the researcher.",
+            explanation="This pattern tests only modifier placement; characterized creates a reduced relative clause that describes the painting type without adding an unnecessary finite verb.",
         ),
         ("Standard English Conventions", "grammar_pronoun_reference"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "At first, Maya told Lina that the archive's map was missing a label, and ___ often made the catalog confusing for researchers using the map."
+                "Although a given industry--water and electricity are two well-known examples--may carry high infrastructural start-up costs and other barriers that discourage competition, ___ of just one or two suppliers per municipality."
             ),
-            constraint_sentence="However, the intended antecedent is the missing label, not either researcher or the map itself.",
+            constraint_sentence="Such industries are known as natural monopolies.",
             prompt="Which choice completes the text so that it conforms to Standard English and makes the reference clear?",
-            answer_options=("she", "the map", "this", "the missing label"),
-            correct_index=3,
+            answer_options=("these often consist", "they often consist", "it often consists", "this often consists"),
+            correct_index=1,
             topic="Standard English Conventions",
             subtopic="Pattern: grammar_pronoun_reference",
             question_type="Standard English Conventions",
             trap_type="pronoun reference trap",
-            explanation="This pattern tests only pronoun reference; repeating the noun removes the ambiguous pronoun.",
+            explanation="This pattern tests only pronoun reference; they clearly refers to plural industries and agrees with consist.",
+            constraints_required=2,
+        ),
+        ("Transitions", "cause_effect"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "At first, famous for its four-degree tilt, the leaning Garisenda Tower was treated mainly as a popular attraction in Bologna's city center. However, measurements taken in 2023 showed that the tower was rotating in a concerning way."
+            ),
+            constraint_sentence="___ city officials closed the area around the tower so experts could explore solutions to stabilize the historical twelfth-century structure.",
+            prompt="Which choice completes the text with the most logical transition?",
+            answer_options=("Similarly,", "As a result,", "For example,", "In comparison,"),
+            correct_index=1,
+            topic="Transitions",
+            subtopic="Pattern: cause_effect",
+            question_type="Transitions",
+            trap_type="fine-grained transition trap",
+            explanation="Hard transition category=cause_effect; the closure is a result of the concerning measurements, not a similarity, example, or comparison.",
+            constraints_required=2,
+        ),
+        ("Transitions", "addition"): AmbiguityFirstItem(
+            generation_pattern=pattern,
+            ambiguous_passage=(
+                "At first, guard cells were described mainly as specialized cells that are part of a plant's pores. However, researchers found that these cells often help regulate the amount of carbon dioxide a plant takes in."
+            ),
+            constraint_sentence="___ they help regulate a plant's water loss.",
+            prompt="Which choice completes the text with the most logical transition?",
+            answer_options=("Additionally,", "Previously,", "In conclusion,", "Instead,"),
+            correct_index=0,
+            topic="Transitions",
+            subtopic="Pattern: addition",
+            question_type="Transitions",
+            trap_type="fine-grained transition trap",
+            explanation="Hard transition category=addition; the second sentence adds another related function of guard cells rather than marking time, conclusion, or replacement.",
             constraints_required=2,
         ),
         ("Transitions", "reinforcement"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A survey of migratory birds found that several species often paused near small urban wetlands, although the sites were omitted from regional conservation maps. The researchers also recorded repeated overnight stays at those same wetlands, a result that could still be explained as temporary overflow from larger marshes."
+                "Although Marcel Duchamp intended his 1917 so-called ready-made sculpture Fountain to challenge then-prevailing conceptions about the nature of art, at first some viewers saw the work mainly as a rejection of traditional artistic skill. Some critics may have treated the object itself as less important than the debate it provoked."
             ),
-            constraint_sentence="___, the team found that the birds returned to the sites even when larger marshes nearby were available, strengthening the case that the smaller wetlands had independent value.",
+            constraint_sentence="___ Duchamp's Fountain did just that, raising the question of whether displaying any object in an art gallery could be said to transform the object--even, as Duchamp's sculpture was, a urinal--into a legitimate work of art.",
             prompt="Which choice completes the text with the most logical transition?",
-            answer_options=("Moreover,", "Therefore,", "Admittedly,", "Indeed,"),
-            correct_index=3,
+            answer_options=("Similarly,", "Indeed,", "Instead,", "In addition,"),
+            correct_index=1,
             topic="Transitions",
             subtopic="Pattern: reinforcement",
             question_type="Transitions",
             trap_type="fine-grained transition trap",
-            explanation="Hard transition category=reinforcement; the second finding strengthens the first rather than merely adding, conceding, or concluding from it.",
+            explanation="Hard transition category=reinforcement; the second sentence confirms that Fountain achieved the stated aim rather than adding a separate example or reversing the idea.",
             constraints_required=2,
         ),
         ("Transitions", "clarification"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "The historian argues that the archive's silence is not proof that the craft disappeared, although early readers may assume that missing records mean missing activity. Later tax lists often mention the same tools under a broader household category, which could make the evidence seem only loosely related."
+                "In 2021, a model developed by astrophysicist Catherine Zucker and her research team revealed that the same supernovas responsible for the creation and ongoing expansion of the Local Bubble--a 14-million-year-old cavity in the Milky Way--are likely responsible for the formation of new stars. At first, the bubble had often been described mainly as a cavity rather than as a star-forming structure."
             ),
-            constraint_sentence="___, the records do not name the craft directly but preserve indirect evidence that it continued under a different administrative label.",
+            constraint_sentence="___ this model detailed how the bubble's expansion trapped interstellar clouds of gas and dust that became stars upon their eventual collapse.",
             prompt="Which choice completes the text with the most logical transition?",
-            answer_options=("Nevertheless,", "In other words,", "Therefore,", "Specifically,"),
+            answer_options=("Hence,", "However,", "Admittedly,", "Specifically,"),
             correct_index=3,
             topic="Transitions",
             subtopic="Pattern: clarification",
             question_type="Transitions",
             trap_type="fine-grained transition trap",
-            explanation="Hard transition category=clarification; the final sentence restates the archival point more precisely rather than contrasting, concluding, or comparing.",
+            explanation="Hard transition category=clarification; the second sentence gives the specific mechanism behind the model's broad claim, rather than contrasting or drawing a separate conclusion.",
             constraints_required=2,
         ),
         ("Transitions", "concession"): AmbiguityFirstItem(
@@ -2228,117 +2277,117 @@ def rw_pattern_item(question_type: str, pattern: str) -> AmbiguityFirstItem:
         ("Rhetorical Synthesis", "compare"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A student is comparing two restoration projects.\nNotes:\n"
-                "- Project A often reused original stone, even when doing so required longer building closures.\n"
-                "- Project B used newly quarried stone in damaged sections and reopened sooner.\n"
-                "- Both projects preserved the buildings' original outlines.\n"
-                "- Project A received more public comments about historical continuity.\n"
-                "- Project B had lower short-term maintenance costs.\n"
-                "- Several budget details may seem relevant but do not address preservation approach."
+                "While researching a topic, a student has taken the following notes:\nNotes:\n"
+                "- Bike-share programs often provide bicycles for shared use.\n"
+                "- In docked bike sharing, riders rent a bike and return it to designated docking stations.\n"
+                "- Docked programs are orderly and offer consistency to riders but require significant space and money to implement.\n"
+                "- In dockless bike sharing, riders locate a bike and leave it wherever they choose.\n"
+                "- Dockless programs are relatively simple and inexpensive to implement and offer flexibility to riders.\n"
+                "- Dockless programs can be disorganized."
             ),
-            constraint_sentence="However, the student's goal is to compare the projects' preservation approaches while acknowledging one shared outcome.",
-            prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
+            constraint_sentence="However, the student's goal is to compare some disadvantages of docked and dockless bike-share programs.",
+            prompt="Which choice most effectively uses relevant information from the notes to accomplish this goal?",
             answer_options=(
-                "Project A required longer closures, whereas Project B reopened sooner and had lower short-term maintenance costs.",
-                "Project B used newly quarried stone in damaged sections, while Project A received more public comments about historical continuity.",
-                "Both projects preserved the original outlines of historic buildings, although their budgets and reopening timelines differed.",
-                "One project emphasized material continuity, the other prioritized replacement, and both maintained the same basic architectural form.",
+                "Dockless programs can be disorganized; docked programs, on the other hand, offer order and consistency.",
+                "Worth noting is that while dockless programs are relatively easy and inexpensive to implement, they are less predictable than docked programs.",
+                "Docked bike sharing requires designated stations, whereas dockless bike sharing lets riders leave bikes wherever they choose.",
+                "Station-based systems demand substantial infrastructure, whereas dockless systems may create order problems.",
             ),
             correct_index=3,
             topic="Rhetorical Synthesis",
             subtopic="Pattern: compare",
             question_type="Rhetorical Synthesis",
             trap_type="rhetorical task filtering trap",
-            explanation="Hard synthesis task=compare; the answer filters irrelevant budget detail, recognizes the difference in approach, and compresses the shared outcome.",
+            explanation="Hard synthesis task=compare; the correct answer filters for disadvantages of both systems and avoids advantages or neutral definitions.",
             constraints_required=3,
             data_payload={
                 "type": "notes",
                 "task_goal": "compare",
                 "notes": [
-                    "Project A often reused original stone, even when doing so required longer building closures.",
-                    "Project B used newly quarried stone in damaged sections and reopened sooner.",
-                    "Both projects preserved the buildings' original outlines.",
-                    "Project A received more public comments about historical continuity.",
-                    "Project B had lower short-term maintenance costs.",
-                    "Several budget details may seem relevant but do not address preservation approach.",
+                    "Bike-share programs often provide bicycles for shared use.",
+                    "In docked bike sharing, riders rent a bike and return it to designated docking stations.",
+                    "Docked programs are orderly and offer consistency to riders but require significant space and money to implement.",
+                    "In dockless bike sharing, riders locate a bike and leave it wherever they choose.",
+                    "Dockless programs are relatively simple and inexpensive to implement and offer flexibility to riders.",
+                    "Dockless programs can be disorganized.",
                 ],
             },
         ),
         ("Rhetorical Synthesis", "contrast"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A student is contrasting two community archives.\nNotes:\n"
-                "- Archive A often invites residents to annotate photographs online.\n"
-                "- Archive B relies on staff-written labels for photographs shown in in-person exhibits.\n"
-                "- Both archives preserve neighborhood images from the same period.\n"
-                "- Archive A's annotations sometimes include personal memories from residents.\n"
-                "- Archive B's exhibit labels usually emphasize verified dates and locations.\n"
-                "- Several funding details may seem relevant at first but do not show how the public is involved."
+                "While researching a topic, a student has taken the following notes:\nNotes:\n"
+                "- Musicians around the world have often used protest songs to raise awareness about human rights violations.\n"
+                "- US folk singer Aunt Molly Jackson released the protest song \"Poor Miner's Farewell\" in 1932.\n"
+                "- It exposed the unlivable wages and dangerous working conditions coal miners faced in Kentucky during the 1920s and 1930s.\n"
+                "- South African singer-songwriter Hugh Masekela released the protest song \"Bring Him Back Home\" in 1987.\n"
+                "- It called on the South African government to free Nelson Mandela, an anti-apartheid leader who had been unjustly imprisoned.\n"
+                "- Both songs are examples of music used to address human rights issues."
             ),
-            constraint_sentence="However, the student's goal is to emphasize the difference in how each archive involves the public.",
-            prompt="Which choice best uses the notes to emphasize the contrast between the two archives?",
+            constraint_sentence="However, the student's goal is to contrast the song \"Poor Miner's Farewell\" with the song \"Bring Him Back Home.\"",
+            prompt="Which choice most effectively uses relevant information from the notes to accomplish this goal?",
             answer_options=(
-                "Both archives preserve neighborhood photographs, but Archive B presents its photographs in physical exhibits.",
-                "Archive A includes residents' memories online, whereas Archive B received support for staff-written exhibit labels.",
-                "Archive B emphasizes verified dates and locations, which may make its labels more formal than Archive A's annotations.",
-                "One archive gives residents a direct interpretive role, whereas the other keeps interpretation mainly with staff.",
+                "The songs \"Poor Miner's Farewell\" and \"Bring Him Back Home\" both raised awareness about human rights violations.",
+                "While both songs are protest works, one targets coal miners' working conditions in Kentucky and the other urges Mandela's release in South Africa.",
+                "Hugh Masekela's song \"Bring Him Back Home,\" released in 1987, called on the South African government to free Nelson Mandela.",
+                "Released in 1932 by Aunt Molly Jackson, the song \"Poor Miner's Farewell\" was a protest against dangerous working conditions faced by Kentucky coal miners.",
             ),
-            correct_index=3,
+            correct_index=1,
             topic="Rhetorical Synthesis",
             subtopic="Pattern: contrast",
             question_type="Rhetorical Synthesis",
             trap_type="rhetorical contrast trap",
-            explanation="Hard synthesis task=contrast; the subtle distinction is filtering true but irrelevant funding details and emphasizing the public-involvement difference.",
+            explanation="Hard synthesis task=contrast; the correct answer uses relevant details about both songs and foregrounds their different subjects rather than only a similarity or one-song detail.",
             constraints_required=3,
             data_payload={
                 "type": "notes",
                 "task_goal": "contrast",
                 "notes": [
-                    "Archive A often invites residents to annotate photographs online.",
-                    "Archive B relies on staff-written labels for photographs shown in in-person exhibits.",
-                    "Both archives preserve neighborhood images from the same period.",
-                    "Archive A's annotations sometimes include personal memories from residents.",
-                    "Archive B's exhibit labels usually emphasize verified dates and locations.",
-                    "Several funding details may seem relevant at first but do not show how the public is involved.",
+                    "Musicians around the world have often used protest songs to raise awareness about human rights violations.",
+                    "US folk singer Aunt Molly Jackson released the protest song \"Poor Miner's Farewell\" in 1932.",
+                    "\"Poor Miner's Farewell\" exposed the unlivable wages and dangerous working conditions coal miners faced in Kentucky during the 1920s and 1930s.",
+                    "South African singer-songwriter Hugh Masekela released the protest song \"Bring Him Back Home\" in 1987.",
+                    "\"Bring Him Back Home\" called on the South African government to free Nelson Mandela, an anti-apartheid leader who had been unjustly imprisoned.",
+                    "Both songs are examples of music used to address human rights issues.",
                 ],
             },
         ),
         ("Rhetorical Synthesis", "present_conclusion"): AmbiguityFirstItem(
             generation_pattern=pattern,
             ambiguous_passage=(
-                "A student is reviewing notes about a school garden.\nNotes:\n"
-                "- Pollinator counts often rose near native flowers planted during the redesign.\n"
-                "- Vegetable yields changed little after the redesign.\n"
-                "- Maintenance took fewer hours after paths were widened and resurfaced.\n"
-                "- A local newspaper praised the garden's appearance.\n"
-                "- Students observed more bee and butterfly visits in the native-flower section than near the vegetable beds.\n"
-                "- The student's conclusion should focus on ecological impact, not popularity or labor."
+                "While researching a topic, a student has taken the following notes:\nNotes:\n"
+                "- Tibetan mastiffs are often large dogs native to the Himalayas.\n"
+                "- A mutation in their EPAS1 gene prevents excess hemoglobin production.\n"
+                "- A mutation in their HBB gene boosts hemoglobin's oxygen-carrying ability.\n"
+                "- These mutations enable the dogs to withstand hypoxic (low-oxygen) conditions at high altitudes.\n"
+                "- In a 2016 study, Zhen Wang and colleagues noted that Tibetan wolves' DNA has the same EPAS1 and HBB mutations.\n"
+                "- Wang and colleagues determined that the dogs first acquired these mutations by interbreeding with Tibetan wolves around 24,000 years ago."
             ),
-            constraint_sentence="However, the student's goal is to present a conclusion about ecological impact, not appearance or labor.",
+            constraint_sentence="However, the student's goal is to present the conclusion of Zhen Wang and colleagues' 2016 study about the relationship between Tibetan mastiffs and Tibetan wolves.",
             prompt="Which choice best uses relevant information from the notes to accomplish the student's goal?",
             answer_options=(
-                "The garden became easier to maintain after its paths were redesigned, even though vegetable yields changed little.",
-                "The redesign was popular enough that a local newspaper praised the garden's appearance.",
-                "Because vegetable yields changed little, the redesign's most important effect was probably aesthetic rather than ecological.",
-                "Greater pollinator activity around native plantings supports an ecological-benefit conclusion.",
+                "Like Tibetan mastiffs, Tibetan wolves can withstand hypoxic conditions at high altitudes.",
+                "Both Tibetan mastiffs and Tibetan wolves have mutations in their EPAS1 and HBB genes, which help them withstand low-oxygen conditions.",
+                "The researchers concluded that genetic exchange with Tibetan wolves supplied Tibetan mastiffs with high-altitude adaptations.",
+                "Tibetan mastiffs are large Himalayan dogs with genetic adaptations that help regulate hemoglobin in low-oxygen environments.",
             ),
-            correct_index=3,
+            correct_index=2,
             topic="Rhetorical Synthesis",
             subtopic="Pattern: present_conclusion",
             question_type="Rhetorical Synthesis",
             trap_type="rhetorical task filtering trap",
-            explanation="Hard synthesis task=present_conclusion; the answer filters true but irrelevant notes and compresses the ecological evidence into a conclusion.",
+            explanation="Hard synthesis task=present_conclusion; the correct answer states the study's conclusion, not just background about the dogs, wolves, or the mutations' effects.",
             constraints_required=3,
             data_payload={
                 "type": "notes",
-                "task_goal": "support",
+                "task_goal": "summarize",
                 "notes": [
-                    "Pollinator counts often rose near native flowers planted during the redesign.",
-                    "Vegetable yields changed little after the redesign.",
-                    "Maintenance took fewer hours after paths were widened and resurfaced.",
-                    "A local newspaper praised the garden's appearance.",
-                    "Students observed more bee and butterfly visits in the native-flower section than near the vegetable beds.",
-                    "The student's conclusion should focus on ecological impact, not popularity or labor.",
+                    "Tibetan mastiffs are often large dogs native to the Himalayas.",
+                    "A mutation in their EPAS1 gene prevents excess hemoglobin production.",
+                    "A mutation in their HBB gene boosts hemoglobin's oxygen-carrying ability.",
+                    "These mutations enable the dogs to withstand hypoxic conditions at high altitudes.",
+                    "In a 2016 study, Zhen Wang and colleagues noted that Tibetan wolves' DNA has the same EPAS1 and HBB mutations.",
+                    "Wang and colleagues determined that the dogs first acquired these mutations by interbreeding with Tibetan wolves around 24,000 years ago.",
                 ],
             },
         ),
@@ -3046,6 +3095,8 @@ def validate_rw_pattern_registry() -> None:
         "claim_vs_empirical_evidence",
         "model_vs_data",
         "hypothesis_vs_revision",
+        "addition",
+        "cause_effect",
         "reinforcement",
         "clarification",
         "concession",
