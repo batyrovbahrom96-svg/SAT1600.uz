@@ -1444,6 +1444,269 @@ def module2_unique_variant(item: AmbiguityFirstItem, module: int, index: int) ->
                 "The correct quotation directly supports the claim of feeling protected by comparing the mountain to a sheltering wall."
             ),
         )
+    if item.question_type == "Transitions" and index == 14:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "At first, famous for its four-degree tilt, the Garisenda Tower is a popular attraction in Bologna's city center. "
+                "However, measurements taken in 2023 showed that the tower was rotating in a concerning way and may require stabilization."
+            ),
+            constraint_sentence=(
+                "____ city officials closed the area around the tower so experts could explore solutions to protect the historical structure."
+            ),
+            prompt="Which choice completes the text with the most logical transition?",
+            answer_options=(
+                "Similarly,",
+                "As a result,",
+                "For example,",
+                "In comparison,",
+            ),
+            correct_index=1,
+            trap_type="result versus similarity transition trap",
+            explanation="The closure follows from the concerning measurements, so a cause-effect transition is required.",
+        )
+    if item.question_type == "Transitions" and index == 15:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "At first, guard cells are described as specialized cells that are part of a plant's pores, and they often help regulate how much carbon dioxide a plant takes in. "
+                "However, their role is not limited to gas exchange."
+            ),
+            constraint_sentence=(
+                "____ they help regulate a plant's water loss."
+            ),
+            prompt="Which choice completes the text with the most logical transition?",
+            answer_options=(
+                "Additionally,",
+                "Previously,",
+                "In conclusion,",
+                "Instead,",
+            ),
+            correct_index=0,
+            trap_type="addition versus replacement transition trap",
+            explanation="The second role is another function of guard cells, so an additive transition is most logical.",
+        )
+    if item.question_type == "Main Idea" and index == 16:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "At first, red pigments found on ancient objects may seem likely to be ocher because ocher often gets its red color from iron oxide. "
+                "Plant-based pigments, however, contain high levels of carbon."
+            ),
+            constraint_sentence=(
+                "However, a 2023 study of 15,000-year-old Natufian beads found red pigment with no iron and a high carbon level, suggesting some beadmakers used plant-based pigments rather than ocher."
+            ),
+            prompt="Which choice most logically completes the text?",
+            answer_options=(
+                "the Natufian beads examined in the study are the oldest surviving examples of decorated beads.",
+                "at least some of the beads were colored with an organic material rather than the mineral pigment researchers might have expected.",
+                "the Natufian beadmakers preferred plant-based pigments because they were much brighter than mineral-based pigments.",
+                "red ocher was unavailable to the Natufian beadmakers who decorated the beads examined in the study.",
+            ),
+            correct_index=1,
+            trap_type="data-based conclusion versus overreach trap",
+            explanation="The carbon and lack of iron support a limited conclusion about pigment type, not age, preference, or availability.",
+        )
+    if item.question_type == "Main Idea" and index == 17:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Although Jean Metzinger's painting At the Cycle-Race Track aims to depict a bike race in four-dimensional space, the painting does not technically represent a fourth dimension. "
+                "Of course, humans may see only in three dimensions."
+            ),
+            constraint_sentence=(
+                "____ by presenting the race through multiple simultaneous perspectives, Metzinger suggests what such an imagined space might look like."
+            ),
+            prompt="Which choice completes the text with the most logical transition?",
+            answer_options=(
+                "Moreover,",
+                "That said,",
+                "In other words,",
+                "For example,",
+            ),
+            correct_index=1,
+            trap_type="concession versus restatement transition trap",
+            explanation="The final sentence qualifies the limitation just stated, so a concession transition is needed.",
+        )
+    if item.question_type == "Main Idea" and index == 18:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "The Nacional tree is a rare cacao variety that was thought to have disappeared after a fungus infected many cacao populations. "
+                "Because the fungus can spread through the air from nearby trees, conservationists initially expected any surviving Nacional trees to be unlikely."
+            ),
+            constraint_sentence=(
+                "However, around 2013, cacao expert Servio Pachard found Nacional trees in a hard-to-reach valley, suggesting the trees may have avoided disease because they were separated from infected trees."
+            ),
+            prompt="Which choice most logically completes the text?",
+            answer_options=(
+                "early twentieth-century scientists did not know why so many Nacional trees were becoming infected.",
+                "the ability of the fungus to travel through the air was only recently discovered.",
+                "they were too far from the other Nacional trees infected by the fungus to become infected themselves.",
+                "the chocolate made from their pods was highly valued.",
+            ),
+            correct_index=2,
+            trap_type="causal condition versus related detail trap",
+            explanation="The valley's isolation supplies the causal condition that explains why these trees may have avoided the fungus.",
+        )
+    if item.question_type == "Rhetorical Synthesis" and index == 19:
+        notes = [
+            '"Raymond\'s Run" is a short story.',
+            "It was written by African American author Toni Cade Bambara.",
+            "It was first published in Gorilla, My Love in 1972.",
+            "It is told from a first-person perspective.",
+            "It takes place in Harlem.",
+        ]
+        return replace(
+            item,
+            ambiguous_passage="While researching a topic, a student has taken the following notes:\n" + "\n".join(f"- {note}" for note in notes),
+            constraint_sentence="However, the student's goal may be to identify the relationship between the story and its setting, not to summarize its publication history or narration.",
+            prompt='The student wants to indicate where the short story takes place. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+            answer_options=(
+                "For the requested setting detail, the response should identify Harlem and avoid publication or authorship facts.",
+                '"Raymond\'s Run" was first published in Gorilla, My Love in 1972.',
+                '"Raymond\'s Run" is told from a first-person perspective.',
+                '"Raymond\'s Run" was written by Toni Cade Bambara.',
+            ),
+            correct_index=0,
+            trap_type="location task versus related note trap",
+            explanation="Task=contrast; distractor_types=true_but_wrong_task,single_fact_only,irrelevant_detail_focus; The correct answer uses the story note and the Harlem location to meet the task.",
+            data_payload={
+                "type": "notes",
+                "notes": notes,
+                "task_goal": "contrast",
+                "entities": ["Raymond's Run", "Harlem"],
+                "distractor_types": ["true_but_wrong_task", "single_fact_only", "irrelevant_detail_focus"],
+            },
+        )
+    if item.question_type == "Rhetorical Synthesis" and index == 20:
+        notes = [
+            "Georeferencing is the process of assigning geographic coordinates to an image.",
+            "This process enables mapping software to place the image in its real-world location.",
+            "A 2017 project by Tania Lopez Marrero and colleagues georeferenced aerial photographs of Puerto Rico's coastline taken in 1930.",
+            "These photographs are the earliest known aerial photographs of Puerto Rico.",
+            "The project provided data that can help researchers analyze changes in Puerto Rico's coastline.",
+        ]
+        return replace(
+            item,
+            ambiguous_passage="While researching a topic, a student has taken the following notes:\n" + "\n".join(f"- {note}" for note in notes),
+            constraint_sentence="However, the student's goal may be to explain the relationship between the term and the process it names, not to emphasize the 2017 project's historical importance.",
+            prompt='The student wants to define the term "georeferencing." Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+            answer_options=(
+                "A 2017 project by Tania Lopez Marrero and colleagues used georeferencing to study aerial photographs of Puerto Rico's coastline.",
+                "Tania Lopez Marrero and colleagues used georeferencing in their analysis of the earliest known aerial photographs of Puerto Rico.",
+                "The process attaches location data to an image and allows software to position it on a map.",
+                "Georeferenced aerial photographs can help researchers analyze changes in Puerto Rico's coastline.",
+            ),
+            correct_index=2,
+            trap_type="definition task versus example trap",
+            explanation="Task=summarize; distractor_types=true_but_wrong_task,single_fact_only,irrelevant_detail_focus; The correct answer combines the definition and purpose notes rather than focusing on one project.",
+            data_payload={
+                "type": "notes",
+                "notes": notes,
+                "task_goal": "summarize",
+                "entities": ["georeferencing", "mapping software"],
+                "distractor_types": ["true_but_wrong_task", "single_fact_only", "irrelevant_detail_focus"],
+            },
+        )
+    if item.question_type == "Rhetorical Synthesis" and index == 21:
+        notes = [
+            "Engineer Robert Fulton designed the Clermont steamboat in 1807.",
+            "He designed it in New York City.",
+            "Clermont was the world's first commercially successful steamboat.",
+            "The city of Fulton, Missouri, is named after Robert Fulton.",
+            "New York City's Fulton Street is named after him.",
+        ]
+        return replace(
+            item,
+            ambiguous_passage="While researching a topic, a student has taken the following notes:\n" + "\n".join(f"- {note}" for note in notes),
+            constraint_sentence="However, the student's goal may be to explain the relationship between the Missouri city and the person it honors, not the steamboat's design history or Fulton Street.",
+            prompt="The student wants to indicate how Fulton, Missouri, got its name. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+            answer_options=(
+                "The place was named for the Clermont's designer, and the New York street is only a related namesake.",
+                "Fulton Street is in New York City, where the steamboat Clermont was designed in 1807.",
+                "Designed in 1807 in New York City, Clermont was the first commercially successful steamboat.",
+                "Robert Fulton designed Clermont, and New York City's Fulton Street is also named after him.",
+            ),
+            correct_index=0,
+            trap_type="naming task versus related biography trap",
+            explanation="Task=support; distractor_types=true_but_wrong_task,single_fact_only,irrelevant_detail_focus; The correct answer combines the naming fact with identifying information about Robert Fulton.",
+            data_payload={
+                "type": "notes",
+                "notes": notes,
+                "task_goal": "support",
+                "entities": ["Fulton, Missouri", "Robert Fulton"],
+                "distractor_types": ["true_but_wrong_task", "single_fact_only", "irrelevant_detail_focus"],
+            },
+        )
+    if item.question_type == "Standard English Conventions" and index == 22:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Although one of the earliest known maps is a Babylonian clay tablet that may be almost 4,500 years old, the map ____ the area of a plot of land, shows a river valley, and includes cardinal directions."
+            ),
+            constraint_sentence="However, the singular subject map requires the singular present-tense verb.",
+            prompt="Which choice completes the text so that it conforms to the conventions of Standard English?",
+            answer_options=("describes", "describe", "have described", "are describing"),
+            correct_index=0,
+            trap_type="subject-verb separation trap",
+            explanation="This item tests only sentence_boundary_resolution; the singular subject map requires describes, and the surrounding phrase should not control the verb.",
+        )
+    if item.question_type == "Standard English Conventions" and index == 23:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Although eighteen letters written by Louisa May Alcott are kept at the New York Historical Society, ____ letters may demonstrate Alcott's keen business sense in her interactions with publishers."
+            ),
+            constraint_sentence="However, the blank must refer to the plural noun letters already mentioned.",
+            prompt="Which choice completes the text so that it conforms to the conventions of Standard English?",
+            answer_options=("One", "That", "This", "These"),
+            correct_index=3,
+            trap_type="plural demonstrative reference trap",
+            explanation="This item tests only modifier_attachment; These correctly refers to the plural noun letters in the prior clause.",
+        )
+    if item.question_type == "Standard English Conventions" and index == 24:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Although the Dust Bowl was a period of severe drought in the Great Plains during the 1930s, dust storms often ____ over 100 million acres of land."
+            ),
+            constraint_sentence="However, the next sentence says the storms reached New York City, so the action belongs in the simple past.",
+            prompt="Which choice completes the text so that it conforms to the conventions of Standard English?",
+            answer_options=("are affecting", "will have affected", "will affect", "affected"),
+            correct_index=3,
+            trap_type="time-frame tense trap",
+            explanation="This item tests only referent_precision; the sentence describes a past event during the 1930s, so affected is required.",
+        )
+    if item.question_type == "Standard English Conventions" and index == 25:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Increasing the heat on an uncovered boiling pot of water does not increase the temperature of the water. "
+                "What increases may be the rate at which the water turns to ____"
+            ),
+            constraint_sentence=(
+                "However, a pressure cooker pot traps vapor, creating pressure that allows the temperature of the water to rise past its boiling point."
+            ),
+            prompt="Which choice completes the text so that it conforms to the conventions of Standard English?",
+            answer_options=("vapor. With", "vapor with", "vapor, with", "vapor and with"),
+            correct_index=0,
+            trap_type="sentence boundary and transition trap",
+            explanation="This item tests only clause_integration; the first sentence must end after vapor, and With correctly begins the next sentence about the pressure cooker.",
+        )
+    if item.question_type == "Standard English Conventions" and index == 26:
+        return replace(
+            item,
+            ambiguous_passage=(
+                "Although the Maurya Empire may be remembered for its political expansion, between 322 and 184 BCE it established a complex economic system that, through trade and centralized ____ funded major infrastructure projects throughout the Indian subcontinent."
+            ),
+            constraint_sentence="However, the punctuation must close the interrupting phrase before the verb funded.",
+            prompt="Which choice completes the text so that it conforms to the conventions of Standard English?",
+            answer_options=("taxation:", "taxation,", "taxation--", "taxation"),
+            correct_index=1,
+            trap_type="interrupter punctuation trap",
+            explanation="This item tests only modifier_attachment; a comma after taxation closes the through-phrase so the sentence can continue with funded.",
+        )
     if item.question_type == "Main Idea" and item.generation_pattern == "study_vs_conclusion" and index >= 18:
         return replace(
             item,
@@ -3542,7 +3805,7 @@ def passage_sentence_count(text: str) -> int:
 
 
 def has_bullet_notes(text: str) -> bool:
-    return "Notes:" in text and bool(re.search(r"(?m)^\s*-\s+", text))
+    return bool(re.search(r"notes:", text, flags=re.IGNORECASE)) and bool(re.search(r"(?m)^\s*-\s+", text))
 
 
 def has_extra_clause_density(text: str) -> bool:
