@@ -1208,9 +1208,17 @@ def module2_unique_variant(item: AmbiguityFirstItem, module: int, index: int) ->
 
 def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
     goal = ("contrast", "summarize", "support")[index % 3]
+    hard_zone = index >= 18
     goal_payloads = {
         "contrast": {
             "notes": (
+                "- Composers in several countries have written public works responding to environmental change.\n"
+                "- In 1998, Canadian composer Rina Okafor premiered Shore Ledger, a chamber piece based on recorded fishing logs from Nova Scotia.\n"
+                "- Shore Ledger focuses on families adapting to smaller seasonal catches after ocean temperatures shifted.\n"
+                "- In 2016, Peruvian composer Mateo Ibarra premiered Glacier Letters, an orchestral work incorporating testimony from mountain villages.\n"
+                "- Glacier Letters emphasizes communities losing access to reliable meltwater as nearby glaciers retreated.\n"
+                "- Both works were later performed at university climate festivals, where audiences discussed local conservation efforts."
+            ) if hard_zone else (
                 "- Project Delta often hosted weekend workshops for residents.\n"
                 "- Project Mira was designed mainly for quiet individual study.\n"
                 "- Both projects used recycled materials.\n"
@@ -1218,18 +1226,49 @@ def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
                 "- Project Mira won a regional design award.\n"
                 "- Several cost estimates may seem relevant but do not address the writing task."
             ),
-            "constraint": "However, the student's goal is to contrast the two projects' community use, not summarize their awards or materials.",
-            "prompt": "Which choice best uses relevant information from the notes to contrast the two projects?",
+            "constraint": (
+                "However, the student's goal is to contrast the specific environmental problems the two works may represent, not merely identify their shared public purpose."
+                if hard_zone
+                else "However, the student's goal is to contrast the two projects' community use, not summarize their awards or materials."
+            ),
+            "prompt": (
+                "The student wants to contrast Shore Ledger with Glacier Letters. Which choice most effectively uses relevant information from the notes to accomplish this goal?"
+                if hard_zone
+                else "The student wants to contrast the two projects' community use. Which choice most effectively uses relevant information from the notes to accomplish this goal?"
+            ),
             "answers": (
-                "Both projects used recycled materials and received regional design awards.",
-                "One project invited collective public participation, whereas the other centered on independent use.",
-                "Project Delta had a rooftop garden that opened in 2021.",
-                "Project Mira won a regional design award, although both projects used recycled materials.",
+                (
+                    "Both Shore Ledger and Glacier Letters were public works about environmental change that were later discussed at university climate festivals."
+                    if hard_zone
+                    else "Both projects used recycled materials and received regional design awards."
+                ),
+                (
+                    "Shore Ledger concerns fishing families adjusting to reduced seasonal catches, whereas Glacier Letters concerns mountain villages facing less reliable glacier-fed water."
+                    if hard_zone
+                    else "One project invited collective public participation, whereas the other centered on independent use."
+                ),
+                (
+                    "Glacier Letters, which premiered in 2016, incorporates testimony from mountain villages affected by retreating glaciers."
+                    if hard_zone
+                    else "Project Delta had a rooftop garden that opened in 2021."
+                ),
+                (
+                    "Rina Okafor and Mateo Ibarra both used community records or testimony to connect music with climate-related concerns."
+                    if hard_zone
+                    else "Project Mira won a regional design award, although both projects used recycled materials."
+                ),
             ),
             "correct": 1,
         },
         "summarize": {
             "notes": (
+                "- A researcher compared two city programs intended to increase teenagers' access to design education.\n"
+                "- The East program paired students with local architects and provided studio space after school.\n"
+                "- The West program paired students with local product designers and provided studio space after school.\n"
+                "- Students in both programs revised projects after receiving adult feedback.\n"
+                "- The East program held a public sketch display in May, while the West program used donated tablets for digital modeling.\n"
+                "- Organizers reported that participants in both programs spent more time refining design ideas than students without access to the programs."
+            ) if hard_zone else (
                 "- The East program paired local mentors with after-school studio access.\n"
                 "- The West program paired local mentors with after-school studio access.\n"
                 "- The East program displayed sketches in May.\n"
@@ -1237,18 +1276,45 @@ def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
                 "- Both programs often gave students extra time to practice design skills.\n"
                 "- Several room locations may seem relevant but are only background details."
             ),
-            "constraint": "However, the student's goal is to summarize the main shared outcome of both programs, not list a single detail from one site.",
-            "prompt": "Which choice best uses relevant information from the notes to summarize the programs' shared outcome?",
+            "constraint": (
+                "However, the student's goal is to summarize the shared result the two programs may have produced, not emphasize a site-specific feature."
+                if hard_zone
+                else "However, the student's goal is to summarize the main shared outcome of both programs, not list a single detail from one site."
+            ),
+            "prompt": (
+                "The student wants to summarize the shared effect of the two programs. Which choice most effectively uses relevant information from the notes to accomplish this goal?"
+                if hard_zone
+                else "The student wants to summarize the programs' shared outcome. Which choice most effectively uses relevant information from the notes to accomplish this goal?"
+            ),
             "answers": (
-                "Both programs combined guidance from experienced adults and extra studio time to expand students' design practice.",
-                "The East program met in a library basement and displayed sketches in May.",
-                "The West program used donated tablets, a detail that made its posters more colorful.",
-                "The programs were different because one used mentors and the other used tablets.",
+                "Both programs combined guidance from experienced adults with dedicated studio time, giving students more opportunity to revise and develop design ideas.",
+                (
+                    "The East program culminated in a public sketch display, whereas the West program emphasized digital modeling with donated tablets."
+                    if hard_zone
+                    else "The East program met in a library basement and displayed sketches in May."
+                ),
+                (
+                    "The West program's use of donated tablets gave students a technology resource not mentioned in the description of the East program."
+                    if hard_zone
+                    else "The West program used donated tablets, a detail that made its posters more colorful."
+                ),
+                (
+                    "Because both programs worked with local professionals, they were designed primarily to introduce students to career options."
+                    if hard_zone
+                    else "The programs were different because one used mentors and the other used tablets."
+                ),
             ),
             "correct": 0,
         },
         "support": {
             "notes": (
+                "- The exhibit invited visitors to write short responses beside selected artifacts.\n"
+                "- Visitors could read and respond to comments left earlier by other visitors.\n"
+                "- The exhibit opened in June and included objects borrowed from three regional museums.\n"
+                "- Attendance rose during the exhibit's first month.\n"
+                "- The curator selected rare objects that may have attracted first-time visitors.\n"
+                "- Some wall labels asked questions rather than supplying a single interpretation of each object."
+            ) if hard_zone else (
                 "- Visitors often added written responses beside artifacts.\n"
                 "- Visitors could compare their responses with comments from earlier visitors.\n"
                 "- The exhibit opened in June.\n"
@@ -1256,13 +1322,21 @@ def rw_notes_task_selection_item(index: int) -> AmbiguityFirstItem:
                 "- Attendance rose during the exhibit's first month.\n"
                 "- The curator selected rare objects that may have attracted first-time visitors."
             ),
-            "constraint": "However, the student's goal is to support the claim that the exhibit encouraged active public interpretation, not merely attendance.",
-            "prompt": "Which choice best uses relevant information from the notes to support the student's claim?",
+            "constraint": (
+                "However, the student's goal is to support the claim that the exhibit encouraged visitors to help interpret the objects, not simply to show that the exhibit was popular."
+                if hard_zone
+                else "However, the student's goal is to support the claim that the exhibit encouraged active public interpretation, not merely attendance."
+            ),
+            "prompt": (
+                "The student wants to support a conclusion about the relationship between visitor participation and interpretation in the exhibit. Which choice most effectively uses relevant information from the notes to accomplish this goal?"
+                if hard_zone
+                else "The student wants to support the claim that the exhibit encouraged active public interpretation. Which choice most effectively uses relevant information from the notes to accomplish this goal?"
+            ),
             "answers": (
-                "The exhibit opened in June and included objects borrowed from three museums.",
-                "The exhibit asked visitors to contribute interpretations and place them in conversation with other viewers' responses.",
-                "The curator selected several rare objects that may have attracted first-time visitors.",
-                "The exhibit was popular because attendance rose during its first month.",
+                "The exhibit opened in June and included rare objects borrowed from three regional museums.",
+                "The exhibit asked visitors to contribute interpretations and place those interpretations in conversation with responses from other viewers.",
+                "The curator's selection of rare objects may have helped attract first-time visitors during the exhibit's first month.",
+                "Because some wall labels asked questions, the exhibit avoided giving visitors any historical information about the objects.",
             ),
             "correct": 1,
         },
