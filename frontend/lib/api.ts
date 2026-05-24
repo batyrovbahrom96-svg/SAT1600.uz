@@ -53,19 +53,21 @@ export class ApiError extends Error {
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
+  const hasBody = options.body !== undefined;
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...options,
       headers: {
-        "Content-Type": "application/json",
+        ...(hasBody ? { "Content-Type": "application/json" } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers
       }
     });
   } catch (error) {
-    console.log("API unavailable, continue");
-    throw new ApiError("API unavailable", undefined);
+    const message = error instanceof Error ? error.message : "Unknown network error";
+    console.log("API unavailable:", error);
+    throw new ApiError(`API unavailable: ${message}`, undefined);
   }
 
   if (!response.ok) {
