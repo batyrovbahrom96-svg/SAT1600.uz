@@ -526,9 +526,11 @@ function StudentResponseEntry({
 
 function BreakScreen({
   secondsLeft,
+  message,
   onResume
 }: {
   secondsLeft: number;
+  message?: string;
   onResume: () => void;
 }) {
   const minutes = Math.floor(secondsLeft / 60);
@@ -549,6 +551,7 @@ function BreakScreen({
           >
             Resume Testing
           </button>
+          {message ? <p className="max-w-sm text-center text-sm font-semibold leading-6 text-red-200 md:text-left">{message}</p> : null}
         </section>
 
         <section className="max-w-xl text-white">
@@ -720,6 +723,7 @@ export default function TestPage() {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [isBreakActive, setIsBreakActive] = useState(false);
   const [breakSecondsLeft, setBreakSecondsLeft] = useState(BREAK_DURATION_SECONDS);
+  const [breakMessage, setBreakMessage] = useState("");
   const [isCheckWorkActive, setIsCheckWorkActive] = useState(false);
   const [isModuleOverActive, setIsModuleOverActive] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -1464,6 +1468,7 @@ export default function TestPage() {
       }
       if (previousSection === "reading_writing" && result.current_section === "math") {
         setBreakSecondsLeft(BREAK_DURATION_SECONDS);
+        setBreakMessage("");
         setSecondsLeft(0);
         setIsModuleOverActive(false);
         setIsBreakActive(true);
@@ -1501,11 +1506,13 @@ export default function TestPage() {
 
   async function resumeFromBreak() {
     try {
+      setBreakMessage("");
       const data = await api<ModulePayload>(`/api/attempts/${attemptId}/module`);
       loadModulePayload(data);
       setIsBreakActive(false);
-    } catch {
-      console.log("API unavailable, continue");
+    } catch (error) {
+      console.log("Resume error:", error);
+      setBreakMessage(error instanceof Error ? error.message : "Unable to resume testing. Please try again.");
     }
   }
 
@@ -1518,7 +1525,7 @@ export default function TestPage() {
   const fullSectionTitle = `Section ${sectionNumber}, Module ${moduleData.attempt.current_module}: ${sectionTitle}`;
 
   if (isBreakActive) {
-    return <BreakScreen secondsLeft={breakSecondsLeft} onResume={resumeFromBreak} />;
+    return <BreakScreen secondsLeft={breakSecondsLeft} message={breakMessage} onResume={resumeFromBreak} />;
   }
 
   if (isModuleOverActive) {

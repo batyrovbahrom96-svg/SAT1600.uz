@@ -361,6 +361,8 @@ def _record_exposures(db: Session, attempt: TestAttempt, questions: list[Questio
         ).all()
     }
     for question in questions:
+        if getattr(question, "is_generated", False):
+            continue
         if question.id not in existing:
             db.add(
                 QuestionExposure(

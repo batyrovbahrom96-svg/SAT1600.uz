@@ -1,6 +1,8 @@
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
+from types import SimpleNamespace
 from uuid import UUID
+import uuid
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -20,6 +22,7 @@ MODULE_RULES = {
 }
 
 MODULE2_HARD_THRESHOLD = 0.75
+GENERATED_QUESTION_NAMESPACE = uuid.UUID("2e3a4e50-52fd-4f66-9702-8e1f2f8c0a11")
 
 
 def start_attempt(db: Session, user: User, test_id: UUID) -> TestAttempt:
@@ -131,7 +134,7 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
         except ModuleNotFoundError:
             from scripts.seed_demo import math_module1_bluebook_question
 
-        return [math_module1_bluebook_question(i) for i in range(1, 23)]
+        return [_generated_question(math_module1_bluebook_question(i)) for i in range(1, 23)]
 
     if section == SATSection.math and module == 2:
         try:
@@ -139,7 +142,7 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
         except ModuleNotFoundError:
             from scripts.seed_demo import math_question
 
-        return [math_question(2, i) for i in range(1, 23)]
+        return [_generated_question(math_question(2, i)) for i in range(1, 23)]
 
     if module == 2 and not attempt.module2_started:
         raise HTTPException(status_code=409, detail="Module 2 cannot start before Module 1 is finished")
@@ -178,11 +181,83 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
     return _avoid_adjacent_repetition(_sort_module_progression(questions, "medium", []))[:required_count]
 
 
+def _generated_question(spec):
+    return SimpleNamespace(
+        id=_generated_question_id(spec),
+        section=spec.section,
+        module=spec.module,
+        difficulty=spec.difficulty,
+        adaptive_level=spec.adaptive_level,
+        source=spec.source,
+        topic=spec.topic,
+        subtopic=spec.subtopic,
+        structure_key=spec.structure_key,
+        graph_path=spec.graph_path,
+        graph_reasoning_type=spec.graph_reasoning_type,
+        graph_required=spec.graph_required,
+        data_type=spec.data_type,
+        data_payload=spec.data_payload or {},
+        passage=spec.passage,
+        prompt=spec.prompt,
+        correct_answer=spec.correct_answer,
+        explanation=spec.explanation,
+        trap_type=spec.trap_type,
+        question_type=spec.question_type,
+        format=spec.format,
+        estimated_time=spec.estimated_time,
+        discrimination_score=spec.discrimination_score,
+        order_index=spec.order_index,
+        choices=[SimpleNamespace(label=choice.label, text=choice.text) for choice in spec.choices],
+        is_generated=True,
+    )
+
+
+def _generated_question_id(spec) -> uuid.UUID:
+    section = spec.section.value if hasattr(spec.section, "value") else str(spec.section)
+    return uuid.uuid5(GENERATED_QUESTION_NAMESPACE, f"{section}:{spec.module}:{spec.order_index}")
+
+
+def _generated_question_for_id(question_id: UUID, section: SATSection, module: int):
+    if section != SATSection.math:
+        return None
+    if module == 1:
+        try:
+            from backend.scripts.seed_demo import math_module1_bluebook_question
+        except ModuleNotFoundError:
+            from scripts.seed_demo import math_module1_bluebook_question
+
+        questions = [_generated_question(math_module1_bluebook_question(i)) for i in range(1, 23)]
+    elif module == 2:
+        try:
+            from backend.scripts.seed_demo import math_question
+        except ModuleNotFoundError:
+            from scripts.seed_demo import math_question
+
+        questions = [_generated_question(math_question(2, i)) for i in range(1, 23)]
+    else:
+        return None
+    return next((question for question in questions if question.id == question_id), None)
+
+
 def save_answer(db: Session, attempt: TestAttempt, answer) -> QuestionResult:
     enforce_deadline(db, attempt)
     question = db.get(Question, answer.question_id)
     if not question or question.test_id != attempt.test_id:
-        raise HTTPException(status_code=404, detail="Question not found")
+        generated_question = _generated_question_for_id(answer.question_id, attempt.current_section, attempt.current_module)
+        if generated_question is None:
+            raise HTTPException(status_code=404, detail="Question not found")
+
+        selected = (answer.selected_answer or "").strip()
+        return SimpleNamespace(
+            question=generated_question,
+            question_id=generated_question.id,
+            selected_answer=selected or None,
+            is_correct=selected.lower() == generated_question.correct_answer.strip().lower(),
+            marked_for_review=answer.marked_for_review,
+            time_spent_seconds=answer.time_spent_seconds,
+            module_snapshot=attempt.current_module,
+            answered_at=datetime.utcnow(),
+        )
     if question.section != attempt.current_section or question.module != attempt.current_module:
         raise HTTPException(status_code=409, detail="Previous modules are locked")
 
