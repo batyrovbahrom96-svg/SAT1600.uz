@@ -134,7 +134,7 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
         except ModuleNotFoundError:
             from scripts.seed_demo import math_module1_bluebook_question
 
-        return [_generated_question(math_module1_bluebook_question(i)) for i in range(1, 23)]
+        return [_generated_question(math_module1_bluebook_question(i)) for i in range(22)]
 
     if section == SATSection.math and module == 2:
         try:
@@ -142,7 +142,7 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
         except ModuleNotFoundError:
             from scripts.seed_demo import math_question
 
-        return [_generated_question(math_question(2, i)) for i in range(1, 23)]
+        return [_generated_question(math_question(2, i)) for i in range(22)]
 
     if module == 2 and not attempt.module2_started:
         raise HTTPException(status_code=409, detail="Module 2 cannot start before Module 1 is finished")
@@ -226,14 +226,14 @@ def _generated_question_for_id(question_id: UUID, section: SATSection, module: i
         except ModuleNotFoundError:
             from scripts.seed_demo import math_module1_bluebook_question
 
-        questions = [_generated_question(math_module1_bluebook_question(i)) for i in range(1, 23)]
+        questions = [_generated_question(math_module1_bluebook_question(i)) for i in range(22)]
     elif module == 2:
         try:
             from backend.scripts.seed_demo import math_question
         except ModuleNotFoundError:
             from scripts.seed_demo import math_question
 
-        questions = [_generated_question(math_question(2, i)) for i in range(1, 23)]
+        questions = [_generated_question(math_question(2, i)) for i in range(22)]
     else:
         return None
     return next((question for question in questions if question.id == question_id), None)
