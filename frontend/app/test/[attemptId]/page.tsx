@@ -2,36 +2,50 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ApiError, Question, api } from "@/lib/api";
 
-const API_BASE = "https://gleaming-perfection.up.railway.app";
+type ModulePayload = {
+  questions: Question[];
+};
 
 export default function TestPage({ params }: { params: Promise<{ attemptId: string }> }) {
   const { attemptId } = use(params);
   const router = useRouter();
 
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
   // =========================
   // LOAD MODULE
   // =========================
   useEffect(() => {
     async function load() {
+      setLoading(true);
+      setMessage("");
+
       try {
-        const res = await fetch(`${API_BASE}/api/attempts/${attemptId}/module`);
-
-        if (!res.ok) throw new Error("Failed to load module");
-
-        const data = await res.json();
+        const data = await api<ModulePayload>(`/api/attempts/${attemptId}/module`);
         setQuestions(data.questions);
-
+        if (!data.questions.length) {
+          setMessage("No questions are available for this module yet.");
+        }
       } catch (err) {
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          router.push("/login");
+          return;
+        }
+
         console.log("Load error:", err);
+        setMessage(err instanceof Error ? err.message : "Unable to load this test module.");
+      } finally {
+        setLoading(false);
       }
     }
 
     if (attemptId) load();
-  }, [attemptId]);
+  }, [attemptId, router]);
 
   // =========================
   // SAVE ANSWER
@@ -40,11 +54,8 @@ export default function TestPage({ params }: { params: Promise<{ attemptId: stri
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
 
     try {
-      await fetch(`${API_BASE}/api/attempts/${attemptId}/answers`, {
+      await api(`/api/attempts/${attemptId}/answers`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify({
           question_id: questionId,
           selected_answer: value
@@ -60,37 +71,44 @@ export default function TestPage({ params }: { params: Promise<{ attemptId: stri
   // =========================
   async function advance() {
     try {
-      const res = await fetch(`${API_BASE}/api/attempts/${attemptId}/advance`, {
+      setMessage("");
+
+      const result = await api<{ status?: string }>(`/api/attempts/${attemptId}/advance`, {
         method: "POST"
       });
-
-      const result = await res.json();
 
       if (result.status === "completed") {
         router.push(`/results/${attemptId}`);
         return;
       }
 
-      const moduleRes = await fetch(`${API_BASE}/api/attempts/${attemptId}/module`);
-      const data = await moduleRes.json();
-
+      const data = await api<ModulePayload>(`/api/attempts/${attemptId}/module`);
       setQuestions(data.questions);
+      if (!data.questions.length) {
+        setMessage("No questions are available for this module yet.");
+      }
 
     } catch (err) {
       console.log("Advance error:", err);
+      setMessage(err instanceof Error ? err.message : "Unable to advance to the next module.");
     }
   }
 
   // =========================
   // UI
   // =========================
-  if (!questions.length) {
+  if (loading) {
     return <div style={{ padding: 40 }}>Loading...</div>;
+  }
+
+  if (message && !questions.length) {
+    return <div style={{ padding: 40 }}>{message}</div>;
   }
 
   return (
     <div style={{ padding: 40 }}>
       <h1>Test</h1>
+      {message ? <p style={{ color: "#b45309" }}>{message}</p> : null}
 
       {questions.map((q, index) => (
         <div key={q.id} style={{ marginBottom: 20 }}>
