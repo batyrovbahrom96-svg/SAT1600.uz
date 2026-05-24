@@ -8,8 +8,16 @@ type ModulePayload = {
   questions: Question[];
 };
 
+function resolveParams(params: Promise<{ attemptId: string }> | { attemptId: string }) {
+  if ("then" in params && typeof params.then === "function") {
+    return use(params);
+  }
+
+  return params as { attemptId: string };
+}
+
 export default function TestPage({ params }: { params: Promise<{ attemptId: string }> }) {
-  const { attemptId } = use(params);
+  const { attemptId } = resolveParams(params);
   const router = useRouter();
 
   const [questions, setQuestions] = useState<Question[]>([]);
