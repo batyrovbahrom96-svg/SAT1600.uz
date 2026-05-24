@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models import Analytics, AttemptStatus, Question, QuestionResult, QuestionSource, SATSection, Test, TestAttempt, User
 from app.services.difficulty_calibration import update_question_calibration
+from app.services.math_module1_bluebook import ensure_math_module1_bluebook_questions
 from app.services.telemetry import build_test_telemetry_summary, log_question_telemetry
 from app.services.trap_intelligence import is_deliverable_question, trap_sequence_priority
 
@@ -126,6 +127,14 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
     if module == 2 and not attempt.module2_started:
         raise HTTPException(status_code=409, detail="Module 2 cannot start before Module 1 is finished")
     required_count = MODULE_RULES[(section, module)]["count"]
+    if (section == "math" or section == SATSection.math) and module == 1:
+        try:
+            from backend.scripts.seed_demo import math_module1_bluebook_question
+        except ModuleNotFoundError:
+            from scripts.seed_demo import math_module1_bluebook_question
+        print("🔥 USING CURATED MATH MODULE 1 🔥")
+        return [math_module1_bluebook_question(i) for i in range(1, 23)]
+
     query = (
         select(Question)
         .where(
