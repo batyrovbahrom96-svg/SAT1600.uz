@@ -18,13 +18,20 @@ app = FastAPI(
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(SecureHeadersMiddleware)
+
+origins = [
+    "https://sattest.uz",
+    "https://www.sattest.uz",
+    "https://sat-1600-uz.vercel.app",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_origin_regex=settings.cors_origin_regex,
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=[""],
+    allow_headers=[""],
 )
 
 app.include_router(router)
