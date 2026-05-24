@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const API_BASE = "https://gleaming-perfection.up.railway.app";
 
-export default function TestPage({ params }: { params: { attemptId: string } }) {
-  const attemptId = params.attemptId;
+export default function TestPage({ params }: { params: Promise<{ attemptId: string }> }) {
+  const { attemptId } = use(params);
   const router = useRouter();
 
   const [questions, setQuestions] = useState<any[]>([]);
@@ -120,4 +120,3 @@ export default function TestPage({ params }: { params: { attemptId: string } }) 
     </div>
   );
 }
-
