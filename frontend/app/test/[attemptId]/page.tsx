@@ -1,25 +1,18 @@
-// 🔴 REMOVE THIS IMPORT
-// import { API_URL, ApiError, Question, api } from "@/lib/api";
+// ✅ FINAL BACKEND CONNECTION (NO CONVEX, NO OLD API)
 
 import { Question } from "@/lib/api";
 
 const API_BASE = "https://gleaming-perfection.up.railway.app";
 
 // ---------------------------
-// LOAD MODULE (FULLY WORKING)
+// LOAD MODULE
 // ---------------------------
 useEffect(() => {
   async function load() {
     try {
-      const res = await fetch(`${API_BASE}/module`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          attempt_id: attemptId
-        })
-      });
+      const res = await fetch(`${API_BASE}/api/attempts/${attemptId}/module`);
+
+      if (!res.ok) throw new Error("Failed to load module");
 
       const data = await res.json();
       loadModulePayload(data);
@@ -29,7 +22,7 @@ useEffect(() => {
     }
   }
 
-  load();
+  if (attemptId) load();
 }, [attemptId]);
 
 // ---------------------------
@@ -38,17 +31,20 @@ useEffect(() => {
 async function save(questionId: string, value: string) {
   setAnswers((current) => ({ ...current, [questionId]: value }));
 
-  await fetch(`${API_BASE}/answers`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      attempt_id: attemptId,
-      question_id: questionId,
-      selected_answer: value
-    })
-  });
+  try {
+    await fetch(`${API_BASE}/api/attempts/${attemptId}/answers`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        question_id: questionId,
+        selected_answer: value
+      })
+    });
+  } catch (err) {
+    console.log("Save error", err);
+  }
 }
 
 // ---------------------------
@@ -57,39 +53,24 @@ async function save(questionId: string, value: string) {
 async function advance() {
   try {
     if (moduleData?.attempt.current_module === 1) {
-      await fetch(`${API_BASE}/finish-module-1`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          attempt_id: attemptId
-        })
+
+      await fetch(`${API_BASE}/api/attempts/${attemptId}/finish-module-1`, {
+        method: "POST"
       });
 
-      const res = await fetch(`${API_BASE}/start-module-2`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          attempt_id: attemptId
-        })
+      const res = await fetch(`${API_BASE}/api/attempts/${attemptId}/start-module-2`, {
+        method: "POST"
       });
+
+      if (!res.ok) throw new Error("Failed to start module 2");
 
       const data = await res.json();
       loadModulePayload(data);
       return;
     }
 
-    const res = await fetch(`${API_BASE}/advance`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        attempt_id: attemptId
-      })
+    const res = await fetch(`${API_BASE}/api/attempts/${attemptId}/advance`, {
+      method: "POST"
     });
 
     const result = await res.json();
@@ -99,17 +80,9 @@ async function advance() {
       return;
     }
 
-    const moduleRes = await fetch(`${API_BASE}/module`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        attempt_id: attemptId
-      })
-    });
-
+    const moduleRes = await fetch(`${API_BASE}/api/attempts/${attemptId}/module`);
     const data = await moduleRes.json();
+
     loadModulePayload(data);
 
   } catch (err) {
@@ -122,21 +95,16 @@ async function advance() {
 // ---------------------------
 async function resumeFromBreak() {
   try {
-    const res = await fetch(`${API_BASE}/module`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        attempt_id: attemptId
-      })
-    });
+    const res = await fetch(`${API_BASE}/api/attempts/${attemptId}/module`);
+
+    if (!res.ok) throw new Error("Failed to resume");
 
     const data = await res.json();
     loadModulePayload(data);
+
     setIsBreakActive(false);
 
-  } catch {
-    console.log("Backend error");
+  } catch (err) {
+    console.log("Resume error", err);
   }
 }
