@@ -449,7 +449,7 @@ function StudentResponseDirections() {
   ];
 
   return (
-    <div className="mx-auto max-w-[620px] px-8 py-9 text-slate-950">
+    <div className="mx-auto max-w-[620px] px-8 py-9 text-[#a1a1a1] transition-all duration-200 ease-in-out">
       <h2 className="mb-6 text-[22px] font-bold leading-tight">Student-produced response directions</h2>
       <ul className="mb-10 list-disc space-y-2 pl-7 text-[17px] leading-7">
         <li>If you find <strong>more than one correct answer</strong>, enter only one answer.</li>
@@ -464,26 +464,26 @@ function StudentResponseDirections() {
       <table className="w-full border-collapse text-center text-[15px]">
         <thead>
           <tr>
-            <th className="border border-slate-600 px-3 py-4 font-semibold">Answer</th>
-            <th className="border border-slate-600 px-3 py-4 font-semibold">Acceptable ways to enter answer</th>
-            <th className="border border-slate-600 px-3 py-4 font-semibold">Unacceptable: will NOT receive credit</th>
+            <th className="border border-[#2a2a2a] px-3 py-4 font-semibold">Answer</th>
+            <th className="border border-[#2a2a2a] px-3 py-4 font-semibold">Acceptable ways to enter answer</th>
+            <th className="border border-[#2a2a2a] px-3 py-4 font-semibold">Unacceptable: will NOT receive credit</th>
           </tr>
         </thead>
         <tbody>
           {examples.map((example) => (
             <tr key={example.answer}>
-              <td className="border border-slate-600 px-3 py-5 text-lg font-semibold">{example.answer}</td>
-              <td className="border border-slate-600 px-3 py-5">
+              <td className="border border-[#2a2a2a] px-3 py-5 text-lg font-semibold">{example.answer}</td>
+              <td className="border border-[#2a2a2a] px-3 py-5">
                 <div className="flex flex-col items-center gap-2">
                   {example.acceptable.map((value) => (
-                    <code className="bg-slate-100 px-1.5 py-0.5 text-[15px]" key={value}>{value}</code>
+                    <code className="bg-[#181818] px-1.5 py-0.5 text-[15px] text-[#a1a1a1]" key={value}>{value}</code>
                   ))}
                 </div>
               </td>
-              <td className="border border-slate-600 px-3 py-5">
+              <td className="border border-[#2a2a2a] px-3 py-5">
                 <div className="flex flex-col items-center gap-2">
                   {example.unacceptable.map((value) => (
-                    <code className="bg-slate-100 px-1.5 py-0.5 text-[15px]" key={value}>{value}</code>
+                    <code className="bg-[#181818] px-1.5 py-0.5 text-[15px] text-[#a1a1a1]" key={value}>{value}</code>
                   ))}
                 </div>
               </td>
@@ -503,20 +503,20 @@ function StudentResponseEntry({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="mt-8">
+    <div className="mt-8 transition-all duration-200 ease-in-out">
       <label className="block w-36">
         <span className="sr-only">Enter answer</span>
         <input
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-16 w-36 rounded-lg border-2 border-slate-900 px-4 text-center text-2xl font-semibold tracking-[0.2em] text-slate-950 outline-blue-700"
+          className="h-16 w-36 border border-[#2a2a2a] bg-[#181818] px-4 text-center text-2xl font-semibold tracking-[0.2em] text-[#a1a1a1] outline-white transition-all duration-[250ms] ease-in-out hover:border-white focus:border-white"
           inputMode="decimal"
           maxLength={6}
         />
       </label>
       <div className="mt-12">
-        <h2 className="mb-4 text-[22px] font-bold text-slate-950">Answer Preview:</h2>
-        <div className="min-h-12 text-[28px] font-semibold text-slate-950">
+        <h2 className="mb-4 text-[22px] font-bold text-[#a1a1a1]">Answer Preview:</h2>
+        <div className="min-h-12 text-[28px] font-semibold text-[#a1a1a1]">
           {value || ""}
         </div>
       </div>
@@ -1554,7 +1554,7 @@ export default function TestPage() {
   } as CSSProperties;
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <main className="min-h-screen bg-[#0f0f0f] text-[#a1a1a1]">
       {isMathSection ? (
         <Script
           src="/desmos/calculator.js"
@@ -1573,36 +1573,36 @@ export default function TestPage() {
           }}
         />
       ) : null}
-      <header className="sticky top-0 z-20 bg-white">
-        <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-[#e5e7eb] px-5">
+      <header className="sticky top-0 z-20 bg-[#0f0f0f] text-[#a1a1a1]">
+        <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-[#2a2a2a] px-5 transition-all duration-200 ease-in-out">
           <div className="flex min-w-0 items-center gap-6">
-            <div className="truncate text-sm font-semibold text-slate-900">{fullSectionTitle}</div>
+            <div className="truncate text-sm font-semibold text-[#a1a1a1]">{fullSectionTitle}</div>
             <details className="relative">
-              <summary className="cursor-pointer list-none text-sm font-semibold text-slate-700 hover:text-slate-950">
+              <summary className="cursor-pointer list-none text-sm font-semibold text-[#a1a1a1] transition-all duration-200 ease-in-out hover:text-white">
                 Directions
               </summary>
-              <div className="absolute left-0 top-7 z-30 w-80 border border-[#d1d5db] bg-white p-4 text-sm leading-6 text-slate-800">
+              <div className="absolute left-0 top-7 z-30 w-80 border border-[#2a2a2a] bg-[#181818] p-4 text-sm leading-6 text-[#a1a1a1]">
                 Answer each question in this module. You may move among questions in this module until time expires.
               </div>
             </details>
           </div>
           <div className="flex items-center justify-center gap-3">
-            <div className="px-3 py-2 text-center text-base font-bold tabular-nums text-slate-950" aria-label="Time remaining">
+            <div className="px-3 py-2 text-center text-base font-bold tabular-nums text-[#a1a1a1]" aria-label="Time remaining">
               {isTimerHidden ? "--:--" : `${minutes}:${seconds}`}
             </div>
             <button
               aria-pressed={isTimerHidden}
-              className="rounded px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+              className="px-2 py-1 text-xs font-semibold text-[#a1a1a1] transition-all duration-200 ease-in-out hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-white"
               onClick={() => setIsTimerHidden((hidden) => !hidden)}
               type="button"
             >
               {isTimerHidden ? "Show" : "Hide"}
             </button>
           </div>
-          <div className="flex justify-end gap-6 text-sm font-semibold text-slate-700">
+          <div className="flex justify-end gap-6 text-sm font-semibold text-[#a1a1a1]">
             {isMathSection ? (
               <button
-                className="inline-flex items-center gap-2 hover:text-slate-950"
+                className="inline-flex items-center gap-2 transition-all duration-200 ease-in-out hover:text-white"
                 onClick={() => setIsReferenceOpen(true)}
                 type="button"
               >
@@ -1611,19 +1611,19 @@ export default function TestPage() {
             ) : null}
             {isMathSection ? (
               <button
-                className="inline-flex items-center gap-2 hover:text-slate-950"
+                className="inline-flex items-center gap-2 transition-all duration-200 ease-in-out hover:text-white"
                 onClick={() => setIsCalculatorOpen(true)}
                 type="button"
               >
                 <CalculatorIcon size={17} /> Calculator
               </button>
             ) : null}
-            <button className="hover:text-slate-950" type="button">Highlights & Notes</button>
+            <button className="transition-all duration-200 ease-in-out hover:text-white" type="button">Highlights & Notes</button>
             <div className="relative" ref={moreMenuRef}>
               <button
                 aria-expanded={isMoreOpen}
                 aria-haspopup="menu"
-                className="hover:text-slate-950"
+                className="transition-all duration-200 ease-in-out hover:text-white"
                 onClick={() => setIsMoreOpen((open) => !open)}
                 type="button"
               >
@@ -1631,22 +1631,22 @@ export default function TestPage() {
               </button>
               {isMoreOpen ? (
                 <div
-                  className="absolute right-0 top-7 z-40 w-56 rounded-md border border-[#d1d5db] bg-white py-2 text-sm font-semibold text-slate-800 shadow-lg"
+                  className="absolute right-0 top-7 z-40 w-56 border border-[#2a2a2a] bg-[#181818] py-2 text-sm font-semibold text-[#a1a1a1] shadow-[0_8px_20px_rgba(0,0,0,0.18)]"
                   role="menu"
                 >
-                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={() => openTestModal("shortcuts")} role="menuitem" type="button">
+                  <button className="block w-full px-4 py-2 text-left transition-all duration-200 ease-in-out hover:bg-[#0f0f0f] hover:text-white" onClick={() => openTestModal("shortcuts")} role="menuitem" type="button">
                     Shortcuts
                   </button>
-                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={toggleLineReader} role="menuitem" type="button">
+                  <button className="block w-full px-4 py-2 text-left transition-all duration-200 ease-in-out hover:bg-[#0f0f0f] hover:text-white" onClick={toggleLineReader} role="menuitem" type="button">
                     {lineReaderEnabled ? "Hide Line Reader" : "Line Reader"}
                   </button>
-                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={saveAndExit} role="menuitem" type="button">
+                  <button className="block w-full px-4 py-2 text-left transition-all duration-200 ease-in-out hover:bg-[#0f0f0f] hover:text-white" onClick={saveAndExit} role="menuitem" type="button">
                     Save and Exit
                   </button>
-                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={() => openTestModal("help")} role="menuitem" type="button">
+                  <button className="block w-full px-4 py-2 text-left transition-all duration-200 ease-in-out hover:bg-[#0f0f0f] hover:text-white" onClick={() => openTestModal("help")} role="menuitem" type="button">
                     Help
                   </button>
-                  <button className="block w-full px-4 py-2 text-left hover:bg-slate-100" onClick={toggleLargeFontMode} role="menuitem" type="button">
+                  <button className="block w-full px-4 py-2 text-left transition-all duration-200 ease-in-out hover:bg-[#0f0f0f] hover:text-white" onClick={toggleLargeFontMode} role="menuitem" type="button">
                     {largeFontMode ? "Standard Text" : "Assistive Technology"}
                   </button>
                 </div>
@@ -1654,7 +1654,7 @@ export default function TestPage() {
             </div>
           </div>
         </div>
-        <div className="bg-[#10294f] px-5 py-2 text-center text-xs font-bold tracking-wide text-white">
+        <div className="bg-[#181818] px-5 py-2 text-center text-xs font-bold tracking-wide text-[#a1a1a1]">
           THIS IS A PRACTICE TEST
         </div>
       </header>
@@ -1662,157 +1662,137 @@ export default function TestPage() {
       <section
         ref={testBodyRef}
         style={hasStimulus ? panelStyle : undefined}
-        className={hasStimulus
-          ? "mx-auto grid min-h-[calc(100vh-8.5rem)] max-w-[1280px] bg-white lg:grid-cols-[minmax(0,var(--left-panel))_1px_minmax(0,var(--right-panel))]"
-          : "mx-auto flex min-h-[calc(100vh-8.5rem)] max-w-[1280px] justify-center bg-white"
-        }
+        className="mx-auto grid min-h-[calc(100vh-8.5rem)] max-w-[1280px] bg-[#0f0f0f] transition-all duration-200 ease-in-out lg:grid-cols-[60%_40%]"
       >
-        {hasStimulus ? (
-          <>
-            <article
-              className="relative bg-white px-10 py-9"
-              onMouseMove={(event) => {
-                if (!lineReaderEnabled || !passagePanelRef.current) return;
-                const rect = passagePanelRef.current.getBoundingClientRect();
-                setLineReaderY(Math.min(rect.height - 40, Math.max(0, event.clientY - rect.top - 20)));
-              }}
-              ref={passagePanelRef}
-            >
-              <div className={isStudentResponse ? "w-full" : "flex w-full max-w-[580px] flex-col gap-4"}>
-                {isStudentResponse ? (
-                  <StudentResponseDirections />
-                ) : isNotesQuestion ? (
-                  <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
-                    <p>A student is reviewing notes for a writing task.</p>
-                    <section aria-labelledby="notes-label" className="border-b border-[#e5e7eb] pb-3">
-                      <div id="notes-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
-                        Notes
-                      </div>
-                      <ul className="m-0 flex list-disc flex-col gap-2 pl-6">
-                        {question.data_payload?.notes?.map((note, noteIndex) => (
-                          <li key={`${question.id}-note-${noteIndex}`} className="pl-1">
-                            {note}
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
+        <article
+          className="relative flex flex-col items-center bg-[#0f0f0f] px-10 py-12 text-[#a1a1a1] transition-all duration-200 ease-in-out lg:px-14"
+          onMouseMove={(event) => {
+            if (!lineReaderEnabled || !passagePanelRef.current) return;
+            const rect = passagePanelRef.current.getBoundingClientRect();
+            setLineReaderY(Math.min(rect.height - 40, Math.max(0, event.clientY - rect.top - 20)));
+          }}
+          ref={passagePanelRef}
+        >
+          <div className={isStudentResponse ? "w-full max-w-[620px] text-[#a1a1a1]" : "flex w-full max-w-[620px] flex-col gap-5 text-[#a1a1a1]"}>
+            {isStudentResponse ? (
+              <StudentResponseDirections />
+            ) : isNotesQuestion ? (
+              <div className="mb-6 flex w-full max-w-[620px] flex-col gap-4 select-text text-[17px] leading-8 tracking-normal text-[#a1a1a1] [text-wrap:pretty]">
+                <p>A student is reviewing notes for a writing task.</p>
+                <section aria-labelledby="notes-label" className="pb-3">
+                  <div id="notes-label" className="mb-2 text-[14px] font-semibold text-[#a1a1a1]">
+                    Notes
                   </div>
-                ) : isCrossTextQuestion ? (
-                  <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
-                    <section aria-labelledby="text-1-label" className="mb-5 border-b border-[#e5e7eb] pb-3">
-                      <div id="text-1-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
-                        Text 1
-                      </div>
-                      <p>{question.data_payload?.text_1}</p>
-                    </section>
-                    <section aria-labelledby="text-2-label">
-                      <div id="text-2-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
-                        Text 2
-                      </div>
-                      <p>{question.data_payload?.text_2}</p>
-                    </section>
-                  </div>
-                ) : question.passage ? (
-                  <p
-                    ref={passageRef}
-                    aria-label="Passage text"
-                    className="mb-6 w-full max-w-[580px] select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]"
-                    onClick={handlePassageClick}
-                    onMouseUp={handlePassageMouseUp}
-                  />
-                ) : null}
-                {!isStudentResponse && hasTablePayload ? (
-                  <div className="mt-8 overflow-x-auto">
-                    {question.data_payload?.title ? (
-                      <div className="mb-2 text-center text-sm font-semibold text-slate-950">
-                        {question.data_payload.title}
-                      </div>
-                    ) : null}
-                    <table className="w-full border-collapse text-sm text-slate-950">
-                      <thead>
-                        <tr>
-                          {question.data_payload?.columns?.map((column) => (
-                            <th
-                              className="border border-slate-300 bg-slate-100 px-3 py-2 text-left font-semibold"
-                              key={column}
-                              scope="col"
-                            >
-                              {column}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {question.data_payload?.rows?.map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {question.data_payload?.columns?.map((column) => (
-                              <td className="border border-slate-300 px-3 py-2" key={column}>
-                                {String(row[column] ?? "")}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : null}
-                {!isStudentResponse && graphPayload ? (
-                  <DataGraph payload={graphPayload} />
-                ) : null}
-                {!isStudentResponse && question.graph_path ? (
-                  <Image
-                    alt="SAT graph"
-                    className="mt-8 h-auto max-h-[420px] w-full object-contain"
-                    height={480}
-                    src={`${API_URL}${question.graph_path}`}
-                    width={640}
-                  />
-                ) : null}
+                  <ul className="m-0 flex list-disc flex-col gap-2 pl-6">
+                    {question.data_payload?.notes?.map((note, noteIndex) => (
+                      <li key={`${question.id}-note-${noteIndex}`} className="pl-1">
+                        {note}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               </div>
-              {lineReaderEnabled ? (
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-0 right-0 z-10 h-10 bg-slate-950/10"
-                  style={{ top: lineReaderY }}
-                />
-              ) : null}
-            </article>
-
+            ) : isCrossTextQuestion ? (
+              <div className="mb-6 flex w-full max-w-[620px] flex-col gap-4 select-text text-[17px] leading-8 tracking-normal text-[#a1a1a1] [text-wrap:pretty]">
+                <section aria-labelledby="text-1-label" className="mb-5 pb-3">
+                  <div id="text-1-label" className="mb-2 text-[14px] font-semibold text-[#a1a1a1]">
+                    Text 1
+                  </div>
+                  <p>{question.data_payload?.text_1}</p>
+                </section>
+                <section aria-labelledby="text-2-label">
+                  <div id="text-2-label" className="mb-2 text-[14px] font-semibold text-[#a1a1a1]">
+                    Text 2
+                  </div>
+                  <p>{question.data_payload?.text_2}</p>
+                </section>
+              </div>
+            ) : question.passage ? (
+              <p
+                ref={passageRef}
+                aria-label="Passage text"
+                className="mb-6 w-full max-w-[620px] select-text text-[17px] leading-8 tracking-normal text-[#a1a1a1] [text-wrap:pretty]"
+                onClick={handlePassageClick}
+                onMouseUp={handlePassageMouseUp}
+              />
+            ) : null}
+            {!isStudentResponse && hasTablePayload ? (
+              <div className="mt-8 overflow-x-auto">
+                {question.data_payload?.title ? (
+                  <div className="mb-2 text-center text-sm font-semibold text-[#a1a1a1]">
+                    {question.data_payload.title}
+                  </div>
+                ) : null}
+                <table className="w-full border-collapse text-sm text-[#a1a1a1]">
+                  <thead>
+                    <tr>
+                      {question.data_payload?.columns?.map((column) => (
+                        <th
+                          className="border border-[#2a2a2a] bg-[#181818] px-3 py-2 text-left font-semibold"
+                          key={column}
+                          scope="col"
+                        >
+                          {column}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {question.data_payload?.rows?.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {question.data_payload?.columns?.map((column) => (
+                          <td className="border border-[#2a2a2a] px-3 py-2" key={column}>
+                            {String(row[column] ?? "")}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+            {!isStudentResponse && graphPayload ? (
+              <DataGraph payload={graphPayload} />
+            ) : null}
+            {!isStudentResponse && question.graph_path ? (
+              <Image
+                alt="SAT graph"
+                className="mt-8 h-auto max-h-[420px] w-full object-contain opacity-90 transition-all duration-200 ease-in-out"
+                height={480}
+                src={`${API_URL}${question.graph_path}`}
+                width={640}
+              />
+            ) : null}
+          </div>
+          <h1 className="mt-8 max-w-[620px] text-center text-[20px] font-semibold leading-8 text-[#a1a1a1] transition-all duration-200 ease-in-out">
+            {question.prompt}
+          </h1>
+          {lineReaderEnabled ? (
             <div
-              className="relative hidden w-px cursor-col-resize bg-[#e5e7eb] lg:block"
-              onMouseDown={() => {
-                resizingDivider.current = true;
-                document.body.style.cursor = "col-resize";
-                document.body.style.userSelect = "none";
-              }}
-              role="separator"
-              aria-orientation="vertical"
-              aria-valuemin={48}
-              aria-valuemax={68}
-              aria-valuenow={Math.round(leftPanelPercent)}
-            >
-              <div className="absolute left-1/2 top-1/2 h-12 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e5e7eb] bg-white hover:border-slate-400" />
-            </div>
-          </>
-        ) : null}
+              aria-hidden="true"
+              className="pointer-events-none absolute left-0 right-0 z-10 h-10 bg-white/5"
+              style={{ top: lineReaderY }}
+            />
+          ) : null}
+        </article>
 
-        <aside className={`page-container bg-white px-10 py-9 ${hasStimulus ? "" : "w-full max-w-[860px] pt-12"}`}>
+        <aside className="page-container border-l border-[#2a2a2a] bg-[#181818] px-10 py-12 text-[#a1a1a1] transition-all duration-200 ease-in-out">
           <div className="question-center">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 min-w-9 items-center justify-center bg-slate-950 text-base font-bold text-white">
+                <div className="flex h-9 min-w-9 items-center justify-center border border-[#2a2a2a] bg-[#0f0f0f] text-base font-bold text-[#a1a1a1] transition-all duration-200 ease-in-out">
                   {index + 1}
                 </div>
                 <button
                   onClick={() => toggleMark(question.id)}
-                  className={`inline-flex items-center gap-2 text-sm font-semibold hover:text-blue-800 ${marked[question.id] ? "text-blue-700" : "text-slate-700"}`}
+                  className={`inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 ease-in-out hover:text-white ${marked[question.id] ? "text-white" : "text-[#a1a1a1]"}`}
                   title="Mark for review"
                 >
                   <Bookmark size={17} fill={marked[question.id] ? "currentColor" : "none"} /> Mark for Review
                 </button>
               </div>
               <button
-                className="inline-flex items-center gap-2 rounded px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950 disabled:opacity-40"
+                className="inline-flex items-center gap-2 px-2 py-1 text-sm font-semibold text-[#a1a1a1] transition-all duration-200 ease-in-out hover:text-white disabled:opacity-40"
                 disabled={actionHistory.length === 0}
                 onClick={undoLastAnswerAction}
                 type="button"
@@ -1820,25 +1800,28 @@ export default function TestPage() {
                 <Undo2 size={16} /> Undo
               </button>
             </div>
-            <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
-            <h1 className={`${isStudentResponse ? "mb-8 text-left" : "question-text text-center"} text-[20px] font-semibold leading-[1.45] text-slate-950`}>{question.prompt}</h1>
+            <div className="mb-6 border-t border-[#2a2a2a]" />
 
             <div className="answers">
               {question.format === "multiple_choice" ? orderedChoices.map((choice, choiceIndex) => (
                 <div
                   key={choice.label}
-                  className={`answer-option flex items-stretch rounded-md border text-left text-[16px] leading-6 transition-colors hover:bg-slate-50 ${
+                  className={`answer-option flex items-stretch border p-0 text-left text-[16px] leading-7 transition-all duration-[250ms] ease-in-out hover:border-white ${
                     selectedAnswer === choice.label
-                      ? "border-blue-700 bg-blue-50"
-                      : "border-[#e5e7eb]"
+                      ? "border-white bg-white text-black"
+                      : "border-[#2a2a2a] bg-[#181818] text-[#a1a1a1]"
                   }`}
                   role="radio"
                   aria-checked={selectedAnswer === choice.label}
                   aria-disabled={eliminatedAnswers.has(choice.label)}
                 >
                   <button
-                    className={`flex min-w-0 flex-1 items-start gap-4 px-4 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
-                      eliminatedAnswers.has(choice.label) ? "cursor-not-allowed text-slate-400 opacity-60" : "text-slate-950"
+                    className={`flex min-w-0 flex-1 items-start gap-4 p-4 text-left transition-all duration-[250ms] ease-in-out focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-0 focus-visible:outline-white ${
+                      eliminatedAnswers.has(choice.label)
+                        ? "cursor-not-allowed text-[#666666] opacity-60"
+                        : selectedAnswer === choice.label
+                          ? "text-black"
+                          : "text-[#a1a1a1]"
                     }`}
                     data-choice-index={choiceIndex}
                     disabled={eliminatedAnswers.has(choice.label)}
@@ -1851,24 +1834,24 @@ export default function TestPage() {
                     type="button"
                   >
                     <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center border text-sm font-bold transition-all duration-[250ms] ease-in-out ${
                         selectedAnswer === choice.label
-                          ? "border-blue-700 bg-blue-700 text-white"
+                          ? "border-black bg-black text-white"
                           : eliminatedAnswers.has(choice.label)
-                            ? "border-slate-400 bg-white text-slate-400"
-                            : "border-slate-500 bg-white text-slate-950"
+                            ? "border-[#555555] bg-transparent text-[#666666]"
+                            : "border-[#2a2a2a] bg-transparent text-[#a1a1a1]"
                       }`}
                     >
                       {choice.label}
                     </span>
-                    <span className={eliminatedAnswers.has(choice.label) ? "text-slate-500 line-through decoration-slate-500 decoration-2" : "text-slate-950"}>
+                    <span className={eliminatedAnswers.has(choice.label) ? "text-[#666666] line-through decoration-[#666666] decoration-2" : selectedAnswer === choice.label ? "text-black" : "text-[#a1a1a1]"}>
                       {choice.text}
                     </span>
                   </button>
                   <button
                     aria-pressed={eliminatedAnswers.has(choice.label)}
-                    className={`m-3 ml-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-white hover:border-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${
-                      eliminatedAnswers.has(choice.label) ? "border-slate-700 text-slate-800" : "border-[#e5e7eb] text-slate-500"
+                    className={`m-3 ml-0 flex h-9 w-9 shrink-0 items-center justify-center border bg-transparent transition-all duration-[250ms] ease-in-out hover:border-white hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-0 focus-visible:outline-white ${
+                      eliminatedAnswers.has(choice.label) ? "border-white text-white" : selectedAnswer === choice.label ? "border-black text-black" : "border-[#2a2a2a] text-[#a1a1a1]"
                     }`}
                     onClick={() => toggleEliminate(choice.label)}
                     title={eliminatedAnswers.has(choice.label) ? `Undo elimination for ${choice.label}` : `Eliminate ${choice.label}`}
@@ -2050,20 +2033,20 @@ export default function TestPage() {
         onClose={() => setIsReferenceOpen(false)}
       />
 
-      <footer className="sticky bottom-0 z-20 border-t border-[#e5e7eb] bg-white">
+      <footer className="sticky bottom-0 z-20 border-t border-[#2a2a2a] bg-[#0f0f0f] text-[#a1a1a1]">
         <div className="mx-auto grid h-14 max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5">
           <div>
             <button
               disabled={index === 0}
               onClick={() => setIndex((value) => Math.max(0, value - 1))}
-              className="inline-flex items-center gap-2 rounded px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40"
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#a1a1a1] transition-all duration-200 ease-in-out hover:text-white disabled:opacity-40"
             >
               <ChevronLeft size={18} /> Back
             </button>
           </div>
           <div className="relative flex justify-center">
             <button
-              className="rounded px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+              className="px-4 py-2 text-sm font-semibold text-[#a1a1a1] transition-all duration-200 ease-in-out hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-white"
               onClick={() => setIsNavigatorOpen(true)}
               type="button"
             >
@@ -2072,13 +2055,13 @@ export default function TestPage() {
           </div>
           <div className="flex justify-end">
             {index === moduleData.questions.length - 1 ? (
-              <button onClick={openCheckWork} className="rounded bg-blue-700 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800">
+              <button onClick={openCheckWork} className="border border-[#2a2a2a] bg-[#181818] px-5 py-2 text-sm font-semibold text-[#a1a1a1] transition-all duration-200 ease-in-out hover:border-white hover:text-white">
                 Next
               </button>
             ) : (
               <button
                 onClick={() => setIndex((value) => Math.min(moduleData.questions.length - 1, value + 1))}
-                className="inline-flex items-center gap-2 rounded bg-blue-700 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800"
+                className="inline-flex items-center gap-2 border border-[#2a2a2a] bg-[#181818] px-5 py-2 text-sm font-semibold text-[#a1a1a1] transition-all duration-200 ease-in-out hover:border-white hover:text-white"
               >
                 Next <ChevronRight size={18} />
               </button>
