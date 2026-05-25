@@ -81,6 +81,7 @@ const passageLayoutContract = {
   blockGapPx: 16
 };
 const BREAK_DURATION_SECONDS = 10 * 60;
+const INTEGRITY_MAX_WARNINGS = 3;
 
 if (
   passageLayoutContract.maxWidthPx < passageLayoutContract.minReadableWidthPx
@@ -290,6 +291,11 @@ function CalculatorModal({
 }
 
 type ReferenceDiagramType = "circle" | "rectangle" | "triangle" | "cylinder" | "sphere" | "cone" | "pyramid" | "pythagorean" | "45" | "30" | "angle";
+type IntegrityEventType = "tab_hidden" | "window_blur" | "fullscreen_exit" | "copy" | "cut" | "paste" | "context_menu";
+type IntegrityNotice = {
+  message: string;
+  violationCount: number;
+};
 
 function MiniDiagram({ type }: { type: ReferenceDiagramType }) {
   const labelClass = "fill-slate-700 text-[11px] font-bold";
@@ -594,6 +600,82 @@ function ModuleOverScreen() {
   );
 }
 
+function IntegrityStartScreen({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/95 px-5 text-white" role="dialog" aria-modal="true" aria-labelledby="integrity-start-title">
+      <section className="w-full max-w-[620px] border border-white/15 bg-[#101112] p-7 shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Secure test mode</p>
+        <h1 id="integrity-start-title" className="mt-5 text-4xl font-light leading-tight text-white">
+          Start the mock test in one browser tab.
+        </h1>
+        <div className="mt-6 space-y-3 text-sm font-light leading-6 text-white/58">
+          <p>The test will enter fullscreen and monitor focus changes to protect score validity.</p>
+          <p>Do not open another tab, leave fullscreen, copy, paste, right-click, or use outside websites during the test.</p>
+        </div>
+        <button
+          className="mt-8 h-14 w-full border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.24em] text-black transition-colors hover:bg-transparent hover:text-white"
+          onClick={onStart}
+          type="button"
+        >
+          Start Secure Test
+        </button>
+      </section>
+    </div>
+  );
+}
+
+function IntegrityWarning({
+  notice,
+  onContinue
+}: {
+  notice: IntegrityNotice;
+  onContinue: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/85 px-5 text-white" role="alertdialog" aria-modal="true" aria-labelledby="integrity-warning-title">
+      <section className="w-full max-w-[560px] border border-red-300/40 bg-[#1d1010] p-7 shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.42em] text-red-200/70">
+          Test integrity warning {notice.violationCount} of {INTEGRITY_MAX_WARNINGS}
+        </p>
+        <h2 id="integrity-warning-title" className="mt-5 text-3xl font-light leading-tight text-white">
+          Stay inside the test window.
+        </h2>
+        <p className="mt-5 text-base font-light leading-7 text-red-100/80">{notice.message}</p>
+        <button
+          className="mt-8 h-13 w-full border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white"
+          onClick={onContinue}
+          type="button"
+        >
+          Return to Test
+        </button>
+      </section>
+    </div>
+  );
+}
+
+function IntegrityLockedScreen({ onExit }: { onExit: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950 px-5 text-white" role="alertdialog" aria-modal="true" aria-labelledby="integrity-lock-title">
+      <section className="w-full max-w-[620px] border border-red-300/45 bg-[#160d0d] p-8 text-center shadow-[0_30px_90px_rgba(0,0,0,0.5)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.42em] text-red-200/70">Attempt locked</p>
+        <h1 id="integrity-lock-title" className="mt-5 text-4xl font-light leading-tight text-white">
+          This test attempt needs review.
+        </h1>
+        <p className="mx-auto mt-6 max-w-lg text-base font-light leading-7 text-red-100/75">
+          The test detected repeated exits from the secure testing environment. Your saved work remains connected to your account.
+        </p>
+        <button
+          className="mt-8 h-14 w-full max-w-sm border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.24em] text-black transition-colors hover:bg-transparent hover:text-white"
+          onClick={onExit}
+          type="button"
+        >
+          Return to Dashboard
+        </button>
+      </section>
+    </div>
+  );
+}
+
 function CheckYourWorkScreen({
   answers,
   marked,
@@ -741,6 +823,10 @@ export default function TestPage() {
   const [desmosFailed, setDesmosFailed] = useState(false);
   const [highlightModeEnabled, setHighlightModeEnabled] = useState(true);
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
+  const [secureModeActive, setSecureModeActive] = useState(false);
+  const [integrityNotice, setIntegrityNotice] = useState<IntegrityNotice | null>(null);
+  const [integrityLocked, setIntegrityLocked] = useState(false);
+  const [integrityViolationCount, setIntegrityViolationCount] = useState(0);
   const [focusedChoiceIndex, setFocusedChoiceIndex] = useState(0);
   const [leftPanelPercent, setLeftPanelPercent] = useState(60);
   const [highlightToolbar, setHighlightToolbar] = useState<HighlightToolbar>({ visible: false, x: 0, y: 0 });
@@ -758,8 +844,28 @@ export default function TestPage() {
   const spentByQuestion = useRef<Record<string, number>>({});
   const firstInteractionByQuestion = useRef<Record<string, number>>({});
   const interactionCountByQuestion = useRef<Record<string, number>>({});
+  const secureModeActiveRef = useRef(false);
+  const integrityLockedRef = useRef(false);
+  const isBreakActiveRef = useRef(false);
+  const integrityViolationCountRef = useRef(0);
   const currentSection = moduleData?.attempt.current_section;
   const isMathSection = currentSection === "math";
+
+  useEffect(() => {
+    secureModeActiveRef.current = secureModeActive;
+  }, [secureModeActive]);
+
+  useEffect(() => {
+    integrityLockedRef.current = integrityLocked;
+  }, [integrityLocked]);
+
+  useEffect(() => {
+    isBreakActiveRef.current = isBreakActive;
+  }, [isBreakActive]);
+
+  useEffect(() => {
+    integrityViolationCountRef.current = integrityViolationCount;
+  }, [integrityViolationCount]);
 
   function loadModulePayload(data: ModulePayload) {
     setModuleData(data);
@@ -772,6 +878,61 @@ export default function TestPage() {
     spentByQuestion.current = Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.time_spent_seconds || 0]));
     firstInteractionByQuestion.current = {};
     interactionCountByQuestion.current = {};
+  }
+
+  function integrityMessage(type: IntegrityEventType) {
+    const messages: Record<IntegrityEventType, string> = {
+      tab_hidden: "Changing tabs or minimizing the browser is not allowed during the mock test.",
+      window_blur: "The test window lost focus. Keep the test as the active window until you finish.",
+      fullscreen_exit: "Fullscreen mode was exited. Stay in fullscreen while the mock test is running.",
+      copy: "Copying test content is disabled during the mock test.",
+      cut: "Cutting test content is disabled during the mock test.",
+      paste: "Pasting outside content is disabled during the mock test.",
+      context_menu: "Right-click actions are disabled during the mock test."
+    };
+    return messages[type];
+  }
+
+  function recordIntegrityEvent(type: IntegrityEventType) {
+    if (!secureModeActiveRef.current || integrityLockedRef.current || isBreakActiveRef.current) return;
+
+    const nextCount = integrityViolationCountRef.current + 1;
+    integrityViolationCountRef.current = nextCount;
+    setIntegrityViolationCount(nextCount);
+    setIsMoreOpen(false);
+    setActiveModal(null);
+    setIsNavigatorOpen(false);
+    setIsCalculatorOpen(false);
+    setIsReferenceOpen(false);
+    setHighlightToolbar((current) => ({ ...current, visible: false }));
+
+    if (nextCount >= INTEGRITY_MAX_WARNINGS) {
+      setIntegrityLocked(true);
+      setIntegrityNotice(null);
+      return;
+    }
+
+    setIntegrityNotice({
+      message: integrityMessage(type),
+      violationCount: nextCount
+    });
+  }
+
+  async function enterSecureMode() {
+    try {
+      if (document.fullscreenEnabled && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (error) {
+      console.log("Fullscreen unavailable:", error);
+    } finally {
+      setSecureModeActive(true);
+      setIntegrityNotice(null);
+    }
+  }
+
+  async function continueAfterIntegrityWarning() {
+    await enterSecureMode();
   }
 
   useEffect(() => {
@@ -794,10 +955,53 @@ export default function TestPage() {
   }, []);
 
   useEffect(() => {
-    if (!moduleData || secondsLeft <= 0) return;
+    const blockClipboard = (event: ClipboardEvent) => {
+      if (!secureModeActiveRef.current || integrityLockedRef.current || isBreakActiveRef.current) return;
+      const type = event.type as "copy" | "cut" | "paste";
+      event.preventDefault();
+      recordIntegrityEvent(type);
+    };
+    const blockContextMenu = (event: MouseEvent) => {
+      if (!secureModeActiveRef.current || integrityLockedRef.current || isBreakActiveRef.current) return;
+      event.preventDefault();
+      recordIntegrityEvent("context_menu");
+    };
+    const handleVisibilityChange = () => {
+      if (document.hidden) recordIntegrityEvent("tab_hidden");
+    };
+    const handleWindowBlur = () => {
+      window.setTimeout(() => {
+        if (document.hidden || document.fullscreenElement) return;
+        recordIntegrityEvent("window_blur");
+      }, 150);
+    };
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) recordIntegrityEvent("fullscreen_exit");
+    };
+
+    document.addEventListener("copy", blockClipboard);
+    document.addEventListener("cut", blockClipboard);
+    document.addEventListener("paste", blockClipboard);
+    document.addEventListener("contextmenu", blockContextMenu);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    window.addEventListener("blur", handleWindowBlur);
+    return () => {
+      document.removeEventListener("copy", blockClipboard);
+      document.removeEventListener("cut", blockClipboard);
+      document.removeEventListener("paste", blockClipboard);
+      document.removeEventListener("contextmenu", blockContextMenu);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!moduleData || secondsLeft <= 0 || !secureModeActive || integrityLocked) return;
     const timer = window.setInterval(() => setSecondsLeft((value) => value - 1), 1000);
     return () => window.clearInterval(timer);
-  }, [moduleData, secondsLeft]);
+  }, [integrityLocked, moduleData, secondsLeft, secureModeActive]);
 
   useEffect(() => {
     if (moduleData && secondsLeft === 0 && !isBreakActive) void advance();
@@ -1555,6 +1759,15 @@ export default function TestPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
+      {!secureModeActive ? (
+        <IntegrityStartScreen onStart={enterSecureMode} />
+      ) : null}
+      {integrityNotice ? (
+        <IntegrityWarning notice={integrityNotice} onContinue={continueAfterIntegrityWarning} />
+      ) : null}
+      {integrityLocked ? (
+        <IntegrityLockedScreen onExit={() => router.push("/dashboard")} />
+      ) : null}
       {isMathSection ? (
         <Script
           src="/desmos/calculator.js"
