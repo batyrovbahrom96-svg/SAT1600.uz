@@ -1,3 +1,7 @@
+from datetime import datetime, timedelta
+from email.message import EmailMessage
+import random
+import smtplib
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,10 +11,11 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_user, require_admin
+from app.core.config import get_settings
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db, get_engine
 from app.models import Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, Test, TestAttempt, TestTelemetrySummary, User
-from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, ResultsOut, TokenResponse
+from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, ResultsOut, TokenResponse, VerificationCodeRequest
 from app.services.graph_engine import generate_linear_graph, generate_sat_graph_set
 from app.services.sat_engine import (
     advance_module,
@@ -25,6 +30,7 @@ from app.services.sat_engine import (
 )
 
 router = APIRouter(prefix="/api")
+verification_codes: dict[str, dict[str, datetime | str]] = {}
 
 
 @router.get("/health")
@@ -51,14 +57,49 @@ def ready() -> dict:
 
 @router.post("/auth/register", response_model=TokenResponse)
 def register(payload: AuthRegister, db: Session = Depends(get_db)) -> TokenResponse:
-    existing = db.execute(select(User).where(User.email == payload.email.lower())).scalar_one_or_none()
+    email = payload.email.lower()
+    stored_code = verification_codes.get(email)
+    if (
+        not stored_code
+        or stored_code["code"] != payload.verification_code.strip()
+        or datetime.utcnow() > stored_code["expires_at"]
+    ):
+        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+
+    existing = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
     if existing:
         raise HTTPException(status_code=409, detail="Email already registered")
-    user = User(email=payload.email.lower(), full_name=payload.full_name, password_hash=hash_password(payload.password))
+    user = User(email=email, full_name=payload.full_name, password_hash=hash_password(payload.password))
     db.add(user)
     db.commit()
     db.refresh(user)
+    verification_codes.pop(email, None)
     return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role)
+
+
+@router.post("/auth/request-verification-code")
+def request_verification_code(payload: VerificationCodeRequest, db: Session = Depends(get_db)) -> dict:
+    email = payload.email.lower()
+    existing = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=409, detail="Email already registered")
+
+    now = datetime.utcnow()
+    current = verification_codes.get(email)
+    if current and now < current["expires_at"] and now < current["created_at"] + timedelta(seconds=45):
+        raise HTTPException(status_code=429, detail="Please wait before requesting another code")
+
+    code = f"{random.SystemRandom().randint(100000, 999999)}"
+    verification_codes[email] = {
+        "code": code,
+        "created_at": now,
+        "expires_at": now + timedelta(minutes=10),
+    }
+    dev_code = _send_verification_email(email, code)
+    response = {"sent": True, "expires_in_minutes": 10}
+    if dev_code:
+        response["dev_code"] = code
+    return response
 
 
 @router.post("/auth/login", response_model=TokenResponse)
@@ -67,6 +108,34 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> TokenResponse:
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role)
+
+
+def _send_verification_email(email: str, code: str) -> bool:
+    settings = get_settings()
+    if not settings.smtp_host:
+        if settings.environment.lower() == "production":
+            raise HTTPException(status_code=500, detail="Email verification is not configured")
+        print(f"SATTEST.UZ verification code for {email}: {code}")
+        return True
+
+    message = EmailMessage()
+    message["Subject"] = "Your SATTEST.UZ verification code"
+    message["From"] = f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
+    message["To"] = email
+    message.set_content(
+        f"Your SATTEST.UZ verification code is {code}.\n\n"
+        "This code expires in 10 minutes. If you did not request it, you can ignore this email."
+    )
+
+    try:
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
+            smtp.starttls()
+            if settings.smtp_username and settings.smtp_password:
+                smtp.login(settings.smtp_username, settings.smtp_password)
+            smtp.send_message(message)
+    except OSError as exc:
+        raise HTTPException(status_code=502, detail="Unable to send verification email") from exc
+    return False
 
 
 @router.get("/tests")

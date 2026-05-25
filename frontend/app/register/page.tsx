@@ -8,6 +8,8 @@ import { api, saveAuth } from "@/lib/api";
 export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSendingCode, setIsSendingCode] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -15,12 +17,40 @@ export default function RegisterPage() {
     try {
       const result = await api<{ access_token: string }>("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify({ full_name: form.get("full_name"), email: form.get("email"), password: form.get("password") })
+        body: JSON.stringify({
+          full_name: form.get("full_name"),
+          email: form.get("email"),
+          password: form.get("password"),
+          verification_code: form.get("verification_code")
+        })
       });
       saveAuth(result.access_token);
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
+    }
+  }
+
+  async function sendCode(form: HTMLFormElement) {
+    const email = new FormData(form).get("email");
+    setError("");
+    setMessage("");
+    setIsSendingCode(true);
+
+    try {
+      const result = await api<{ sent: boolean; dev_code?: string }>("/api/auth/request-verification-code", {
+        method: "POST",
+        body: JSON.stringify({ email })
+      });
+      setMessage(
+        result.dev_code
+          ? `Verification code sent. Local test code: ${result.dev_code}`
+          : "Verification code sent. Check your email and paste the 6-digit code below."
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to send verification code");
+    } finally {
+      setIsSendingCode(false);
     }
   }
 
@@ -45,8 +75,19 @@ export default function RegisterPage() {
           <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="full_name" required />
           <label className="mt-5 block text-xs font-black uppercase tracking-[0.2em] text-[#9f9f9f]">Email</label>
           <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="email" type="email" required />
+          <button
+            className="mt-3 w-full border border-white/15 bg-[#0b0b0b] px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-[#d8d8d8] transition-all duration-200 ease-in-out hover:border-white hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={isSendingCode}
+            onClick={(event) => sendCode(event.currentTarget.form as HTMLFormElement)}
+            type="button"
+          >
+            {isSendingCode ? "Sending code..." : "Send email code"}
+          </button>
+          <label className="mt-5 block text-xs font-black uppercase tracking-[0.2em] text-[#9f9f9f]">Email code</label>
+          <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" inputMode="numeric" maxLength={6} minLength={6} name="verification_code" placeholder="6-digit code" required />
           <label className="mt-5 block text-xs font-black uppercase tracking-[0.2em] text-[#9f9f9f]">Password</label>
-          <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="password" type="password" minLength={6} required />
+          <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="password" type="password" minLength={8} required />
+          {message ? <p className="mt-5 border border-emerald-300/25 bg-emerald-950/20 p-3 text-sm font-semibold text-emerald-100">{message}</p> : null}
           {error ? <p className="mt-5 border border-red-400/30 bg-red-950/20 p-3 text-sm font-semibold text-red-200">{error}</p> : null}
           <button className="mt-8 w-full border border-white bg-white px-4 py-4 font-black uppercase tracking-[0.16em] text-black transition-all duration-200 ease-in-out hover:bg-[#151515] hover:text-white">Register</button>
           <Link className="mt-5 block text-center text-sm font-bold text-[#d8d8d8] transition-all duration-200 ease-in-out hover:text-white" href="/login">Already have account?</Link>

@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 120
     log_level: str = "INFO"
     trust_proxy_headers: bool = True
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str = "no-reply@sattest.uz"
+    smtp_from_name: str = "SATTEST.UZ"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
