@@ -13,6 +13,10 @@ body {
   background: #ffffff;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 button, input {
   font: inherit;
 }
@@ -51,6 +55,70 @@ button, input {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
+}
+
+.rotor-stage {
+  position: absolute;
+  inset: -18vh -18vw -20vh 18vw;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  animation: rotor-stage-spin 26s linear infinite;
+}
+
+.rotor-stage-compact {
+  inset: -16vh -10vw -14vh -8vw;
+  opacity: 0.85;
+}
+
+.rotor-rib {
+  position: absolute;
+  left: 62%;
+  top: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-left-color: rgba(255, 255, 255, 0.03);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-radius: 48% 52% 46% 54%;
+  box-shadow:
+    inset 0 0 18px rgba(255, 255, 255, 0.018),
+    0 0 16px rgba(255, 255, 255, 0.014);
+  transform-origin: center;
+}
+
+.motion-circle {
+  display: inline-flex;
+  height: 86px;
+  width: 86px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  color: white;
+  transition: all 0.25s ease;
+}
+
+.motion-circle:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-3px);
+}
+
+.advantage-card {
+  animation: advantage-rise 8s ease-in-out infinite;
+}
+
+.advantage-card:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.advantage-card:nth-child(3) {
+  animation-delay: 1s;
+}
+
+.advantage-card:nth-child(4) {
+  animation-delay: 1.5s;
 }
 
 .motion-grid {
@@ -99,6 +167,54 @@ button, input {
 
 .scan-line {
   animation: scan-line 4.8s ease-in-out infinite;
+}
+
+.orbit-ring {
+  animation: orbit-ring 5.2s ease-in-out infinite;
+}
+
+.orbit-ring-delayed {
+  animation-delay: 1.4s;
+}
+
+.orbit-dot {
+  animation: orbit-dot 3.2s linear infinite;
+  transform-origin: -44px -44px;
+}
+
+.flow-bar {
+  width: 42%;
+  animation: flow-bar 3.6s ease-in-out infinite;
+}
+
+.flow-bar-delayed {
+  animation-delay: 0.55s;
+}
+
+.flow-bar-late {
+  animation-delay: 1.1s;
+}
+
+@keyframes rotor-stage-spin {
+  0% {
+    transform: rotateX(58deg) rotateY(-18deg) rotateZ(0deg) scale(1.02);
+  }
+  50% {
+    transform: rotateX(58deg) rotateY(-18deg) rotateZ(180deg) scale(1.08);
+  }
+  100% {
+    transform: rotateX(58deg) rotateY(-18deg) rotateZ(360deg) scale(1.02);
+  }
+}
+
+@keyframes advantage-rise {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes grid-drift {
@@ -163,18 +279,68 @@ button, input {
   }
 }
 
+@keyframes orbit-ring {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(0.86);
+  }
+  50% {
+    opacity: 0.88;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes orbit-dot {
+  0% {
+    transform: rotate(0deg) translateX(44px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(44px) rotate(-360deg);
+  }
+}
+
+@keyframes flow-bar {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateX(-35%);
+    width: 34%;
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(120%);
+    width: 58%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .motion-grid,
   .score-line,
   .score-dot,
   .floating-panel,
   .floating-panel-delayed,
-  .scan-line {
+  .scan-line,
+  .orbit-ring,
+  .orbit-dot,
+  .flow-bar,
+  .rotor-stage,
+  .advantage-card {
     animation: none;
   }
 }
 
 @media (max-width: 768px) {
+  .rotor-stage {
+    inset: 4vh -62vw 8vh 2vw;
+    opacity: 0.55;
+  }
+
+  .motion-circle {
+    height: 66px;
+    width: 66px;
+  }
+
   .question-center,
   .answer-option {
     max-width: 100%;

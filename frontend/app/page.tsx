@@ -1,135 +1,153 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, BrainCircuit, CheckCircle2, Timer } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  ChevronDown,
+  ChevronUp,
+  Gauge,
+  LineChart,
+  ShieldCheck,
+  Target,
+  Trophy
+} from "lucide-react";
 
-const principles = [
+const advantages = [
   {
     label: "01",
-    title: "Precision",
-    body: "Full-length modules that keep the pressure, pacing, and structure close to the real Digital SAT."
+    title: "Bluebook-level practice",
+    body: "Timed modules, review marks, grid-ins, locked sections, and a calm testing flow that feels familiar before exam day.",
+    Icon: ShieldCheck
   },
   {
     label: "02",
-    title: "Execution",
-    body: "Bluebook-style testing, locked sections, review marks, auto-submit, and a clean testing workspace."
+    title: "Adaptive score engine",
+    body: "Module 1 performance routes the next math module, so students practice under the same pressure pattern as the real SAT.",
+    Icon: Gauge
   },
   {
     label: "03",
-    title: "Progress",
-    body: "Score reports, topic accuracy, missed-question review, and clear next steps after every test."
+    title: "Post-test analytics",
+    body: "A clear report shows score range, accuracy, missed questions, trap patterns, and the next study priorities.",
+    Icon: BarChart3
+  },
+  {
+    label: "04",
+    title: "Growth dashboard",
+    body: "Students can see where points are being lost and what to fix next, turning every full mock test into a plan.",
+    Icon: LineChart
   }
 ];
 
-const metrics = [
-  { value: "98", label: "live questions" },
-  { value: "4", label: "adaptive modules" },
-  { value: "1600", label: "score scale" }
-];
+const steps = ["Institutional", "Commercial", "Mortgage"];
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#0b0b0b] text-[#d8d8d8]">
-      <header className="mx-auto flex max-w-[1440px] items-center justify-between border-b border-white/10 px-6 py-5 md:px-10">
-        <Link href="/" className="text-lg font-black tracking-tight text-white">
-          SAT1600.uz
-        </Link>
-        <nav className="hidden items-center gap-8 text-xs font-bold uppercase tracking-[0.22em] text-[#9b9b9b] md:flex">
-          <Link className="transition-all duration-200 ease-in-out hover:text-white" href="/login">Login</Link>
-          <Link className="transition-all duration-200 ease-in-out hover:text-white" href="/register">Start</Link>
-        </nav>
-      </header>
+    <main className="min-h-screen overflow-hidden bg-[#0b0b0b] text-white">
+      <section id="top" className="relative min-h-screen overflow-hidden">
+        <RibbedMotionGraphic />
+        <div className="absolute inset-0 z-[1] bg-[radial-gradient(circle_at_22%_26%,rgba(255,255,255,0.08),transparent_24%),linear-gradient(90deg,rgba(11,11,11,0.98)_0%,rgba(11,11,11,0.9)_43%,rgba(11,11,11,0.66)_100%)]" />
 
-      <section className="relative mx-auto grid min-h-[calc(100vh-73px)] max-w-[1440px] lg:grid-cols-[60%_40%]">
-        <div className="motion-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
+        <header className="relative z-10 mx-auto flex max-w-[1440px] items-center justify-between px-6 py-8 md:px-12 lg:px-20">
+          <Link href="/" className="text-2xl font-black tracking-tight">
+            SAT1600.uz
+          </Link>
+          <nav className="hidden items-center gap-9 text-xs font-black uppercase tracking-[0.24em] text-white/55 md:flex">
+            <Link className="transition-all duration-200 hover:text-white" href="#advantages">Advantages</Link>
+            <Link className="transition-all duration-200 hover:text-white" href="/login">Login</Link>
+            <Link className="transition-all duration-200 hover:text-white" href="/register">Start</Link>
+          </nav>
+        </header>
 
-        <div className="relative flex flex-col justify-center px-6 py-16 md:px-10 lg:px-16 xl:px-24">
-          <p className="mb-8 text-xs font-black uppercase tracking-[0.36em] text-[#8f8f8f]">
-            Digital SAT platform for Uzbekistan
-          </p>
-          <h1 className="max-w-4xl text-[54px] font-black leading-[0.95] tracking-normal text-white md:text-[86px] lg:text-[102px]">
-            Serious SAT practice, built for score growth.
-          </h1>
-          <p className="mt-8 max-w-2xl text-lg font-semibold leading-8 text-[#a8a8a8] md:text-xl">
-            A focused mock-test platform with adaptive modules, Bluebook-style pacing, math grid-ins, and post-test analytics that tell students what to fix next.
-          </p>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Link
-              className="inline-flex items-center gap-3 border border-white bg-white px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-black transition-all duration-200 ease-in-out hover:bg-[#0b0b0b] hover:text-white"
-              href="/register"
-            >
-              Start mock test <ArrowRight size={18} />
-            </Link>
-            <Link
-              className="border border-white/15 bg-transparent px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white transition-all duration-200 ease-in-out hover:border-white"
-              href="/login"
-            >
-              Login
-            </Link>
-          </div>
-
-          <div className="mt-14 max-w-2xl border border-white/10 bg-[#101010]/90 p-5">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <p className="text-xs font-black uppercase tracking-[0.26em] text-[#8f8f8f]">Score trajectory</p>
-              <span className="text-sm font-black text-white">400 → 1600</span>
-            </div>
-            <ScoreMotionGraphic />
-          </div>
-        </div>
-
-        <div className="relative border-l border-white/10 bg-[#151515] px-6 py-12 md:px-10 lg:px-12">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/40 scan-line" aria-hidden="true" />
-          <div className="flex h-full flex-col justify-between gap-12">
-            <div className="space-y-0">
-              {principles.map((item, index) => (
-                <section className={`${index === 1 ? "floating-panel" : index === 2 ? "floating-panel-delayed" : ""} border-b border-white/10 bg-[#151515] py-8 first:pt-0 last:border-b-0`} key={item.title}>
-                  <div className="mb-5 flex items-center justify-between gap-6">
-                    <span className="text-xs font-black uppercase tracking-[0.3em] text-[#777777]">{item.label}</span>
-                    <CheckCircle2 className="text-[#d8d8d8]" size={19} />
-                  </div>
-                  <h2 className="text-3xl font-black text-white">{item.title}</h2>
-                  <p className="mt-4 text-base font-semibold leading-7 text-[#9f9f9f]">{item.body}</p>
-                </section>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-3 border border-white/10">
-              {metrics.map((metric) => (
-                <div className="border-r border-white/10 p-4 last:border-r-0" key={metric.label}>
-                  <div className="text-2xl font-black text-white">{metric.value}</div>
-                  <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8f8f8f]">{metric.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-white/10 bg-[#f3f1eb] text-[#171717]">
-        <div className="mx-auto grid max-w-[1440px] gap-10 px-6 py-20 md:px-10 lg:grid-cols-[0.8fr_1.2fr] lg:px-16 xl:px-24">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-[#66615a]">What students get</p>
-            <h2 className="mt-5 text-4xl font-black leading-tight md:text-5xl">A test experience that becomes a study plan.</h2>
-          </div>
-          <div className="grid gap-0 md:grid-cols-3">
-            <Feature Icon={BrainCircuit} title="Adaptive route" body="Module 2 responds to Module 1 performance." />
-            <Feature Icon={Timer} title="Timed mode" body="Built for pacing, review, and endurance." />
-            <Feature Icon={BarChart3} title="Score report" body="Mistakes, traps, strengths, and weaknesses." />
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-white/10 bg-[#0b0b0b] text-white">
-        <div className="mx-auto grid max-w-[1440px] gap-10 px-6 py-20 md:px-10 lg:grid-cols-[1fr_1fr] lg:px-16 xl:px-24">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-[#8f8f8f]">Live feedback loop</p>
-            <h2 className="mt-5 text-4xl font-black leading-tight md:text-5xl">Every answer moves the next decision.</h2>
-            <p className="mt-6 max-w-xl text-lg font-semibold leading-8 text-[#a8a8a8]">
-              The interface now feels alive before the test starts, while the exam itself stays stable, readable, and Bluebook-like.
+        <div className="relative z-10 mx-auto flex min-h-[calc(100vh-104px)] max-w-[1440px] flex-col justify-center px-6 pb-36 pt-8 md:px-12 lg:px-20">
+          <div className="max-w-3xl">
+            <p className="mb-10 text-xs font-black uppercase tracking-[0.34em] text-white/55">
+              Digital SAT platform for Uzbekistan
             </p>
+            <h1 className="text-[54px] font-black leading-[0.9] tracking-normal md:text-[88px] lg:text-[116px]">
+              Practice moves with your score.
+            </h1>
+            <p className="mt-10 max-w-2xl text-xl font-semibold leading-9 text-white/54 md:text-2xl">
+              Full mock tests, adaptive modules, math grid-ins, and score reports inside one premium SAT training experience.
+            </p>
+            <div className="mt-12 flex flex-wrap gap-4">
+              <Link
+                className="inline-flex items-center gap-3 bg-white px-7 py-4 text-sm font-black uppercase tracking-[0.16em] text-black transition-all duration-200 hover:bg-transparent hover:text-white hover:outline hover:outline-1 hover:outline-white"
+                href="/register"
+              >
+                Start mock test <ArrowRight size={18} />
+              </Link>
+              <Link
+                className="inline-flex items-center gap-3 border border-white/20 px-7 py-4 text-sm font-black uppercase tracking-[0.16em] text-white transition-all duration-200 hover:border-white"
+                href="#advantages"
+              >
+                Learn more
+              </Link>
+            </div>
+          </div>
+
+          <div className="absolute bottom-9 left-6 right-6 z-10 flex items-end justify-between gap-6 md:left-12 md:right-12 lg:left-20 lg:right-20">
+            <div className="hidden items-center gap-10 text-[11px] font-black uppercase tracking-[0.45em] text-white/34 md:flex">
+              {steps.map((step, index) => (
+                <span className={index === 1 ? "text-white" : ""} key={step}>{step}</span>
+              ))}
+            </div>
+            <div className="flex gap-5">
+              <Link className="motion-circle" href="#top" aria-label="Back to top">
+                <ChevronUp size={20} />
+              </Link>
+              <Link className="motion-circle" href="#advantages" aria-label="Scroll to advantages">
+                <ChevronDown size={20} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="advantages" className="relative overflow-hidden border-t border-white/10 bg-[#111111]">
+        <div className="absolute inset-y-0 right-[-22vw] hidden w-[64vw] opacity-60 lg:block">
+          <RibbedMotionGraphic compact />
+        </div>
+        <div className="relative mx-auto grid max-w-[1440px] gap-12 px-6 py-24 md:px-12 lg:grid-cols-[0.86fr_1.14fr] lg:px-20 lg:py-32">
+          <div className="lg:sticky lg:top-20 lg:self-start">
+            <p className="text-xs font-black uppercase tracking-[0.34em] text-white/45">Why it wins</p>
+            <h2 className="mt-6 max-w-xl text-5xl font-black leading-[0.95] tracking-normal md:text-7xl">
+              More than a test. A score machine.
+            </h2>
+            <p className="mt-8 max-w-lg text-lg font-semibold leading-8 text-white/50">
+              The homepage now moves like a premium product. As visitors scroll down, the design reveals the real value: better practice, smarter feedback, and clearer progress.
+            </p>
+            <div className="mt-10 grid max-w-sm grid-cols-3 border border-white/10">
+              <Metric value="98" label="Questions" />
+              <Metric value="4" label="Modules" />
+              <Metric value="1600" label="Scale" />
+            </div>
+          </div>
+
+          <div className="grid gap-5">
+            {advantages.map((item) => (
+              <article className="advantage-card group border border-white/10 bg-[#181818]/86 p-7 backdrop-blur transition-all duration-300 hover:border-white/45 hover:bg-[#202020]" key={item.title}>
+                <div className="mb-8 flex items-start justify-between gap-6">
+                  <span className="text-xs font-black uppercase tracking-[0.28em] text-white/36">{item.label}</span>
+                  <item.Icon className="text-white/70 transition-all duration-300 group-hover:text-white" size={28} />
+                </div>
+                <h3 className="text-3xl font-black">{item.title}</h3>
+                <p className="mt-5 max-w-2xl text-base font-semibold leading-8 text-white/50">{item.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-white/10 bg-[#f3f1eb] text-[#141414]">
+        <div className="mx-auto grid max-w-[1440px] gap-10 px-6 py-20 md:px-12 lg:grid-cols-[1fr_1fr] lg:px-20">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-[#686058]">Ready for students</p>
+            <h2 className="mt-5 text-4xl font-black leading-tight md:text-6xl">Turn traffic into paid mock tests.</h2>
           </div>
           <div className="grid gap-4">
-            <MotionModule label="Module 1" value="Routing" width="72%" />
-            <MotionModule label="Module 2" value="Adaptive" width="86%" />
-            <MotionModule label="Report" value="Analysis" width="64%" />
+            <ActionRow Icon={Target} title="Find weak points" body="Show students the exact areas costing them points." />
+            <ActionRow Icon={Trophy} title="Sell improvement" body="A strong report page makes the platform feel valuable after every test." />
+            <ActionRow Icon={ArrowRight} title="Start fast" body="The first action stays clear: register, take a mock test, see your score." />
           </div>
         </div>
       </section>
@@ -137,75 +155,51 @@ export default function Home() {
   );
 }
 
-function ScoreMotionGraphic() {
+function RibbedMotionGraphic({ compact = false }: { compact?: boolean }) {
   return (
-    <svg className="h-auto w-full" viewBox="0 0 640 240" role="img" aria-label="Animated score growth chart">
-      <line x1="20" y1="208" x2="620" y2="208" stroke="rgba(255,255,255,0.16)" />
-      <line x1="20" y1="32" x2="20" y2="208" stroke="rgba(255,255,255,0.16)" />
-      {[72, 120, 168].map((y) => (
-        <line key={y} x1="20" y1={y} x2="620" y2={y} stroke="rgba(255,255,255,0.07)" />
+    <div className={compact ? "rotor-stage rotor-stage-compact" : "rotor-stage"} aria-hidden="true">
+      {Array.from({ length: 28 }).map((_, index) => (
+        <span
+          className="rotor-rib"
+          key={index}
+          style={{
+            height: `${56 + index * 3.2}%`,
+            width: `${34 + index * 2.45}%`,
+            transform: `translate(-50%, -50%) rotate(${index * 5.2}deg) skewY(-12deg)`
+          }}
+        />
       ))}
-      {[140, 260, 380, 500].map((x) => (
-        <line key={x} x1={x} y1="32" x2={x} y2="208" stroke="rgba(255,255,255,0.07)" />
-      ))}
-      <path
-        className="score-line"
-        d="M32 190 C110 184 132 150 196 150 C272 150 286 108 352 108 C424 108 440 70 512 70 C562 70 590 48 612 42"
-        fill="none"
-        stroke="white"
-        strokeLinecap="round"
-        strokeWidth="4"
-      />
-      <circle className="score-dot" cx="32" cy="190" r="7" fill="white" />
-      <circle className="score-dot" cx="196" cy="150" r="7" fill="white" />
-      <circle className="score-dot" cx="352" cy="108" r="7" fill="white" />
-      <circle className="score-dot" cx="512" cy="70" r="7" fill="white" />
-      <circle className="score-dot" cx="612" cy="42" r="7" fill="white" />
-      <text x="28" y="226" fill="#8f8f8f" fontSize="12" fontWeight="700">Start</text>
-      <text x="538" y="226" fill="#8f8f8f" fontSize="12" fontWeight="700">Score growth</text>
-    </svg>
+    </div>
   );
 }
 
-function MotionModule({
-  label,
-  value,
-  width
-}: {
-  label: string;
-  value: string;
-  width: string;
-}) {
+function Metric({ value, label }: { value: string; label: string }) {
   return (
-    <article className="floating-panel border border-white/10 bg-[#151515] p-5">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#8f8f8f]">{label}</p>
-          <h3 className="mt-2 text-2xl font-black">{value}</h3>
-        </div>
-        <div className="h-12 w-12 border border-white/15 bg-[#0b0b0b]" />
-      </div>
-      <div className="mt-5 h-2 bg-white/10">
-        <div className="h-full bg-white transition-all duration-200 ease-in-out" style={{ width }} />
-      </div>
-    </article>
+    <div className="border-r border-white/10 p-4 last:border-r-0">
+      <div className="text-2xl font-black text-white">{value}</div>
+      <div className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">{label}</div>
+    </div>
   );
 }
 
-function Feature({
+function ActionRow({
   Icon,
   title,
   body
 }: {
-  Icon: typeof BrainCircuit;
+  Icon: typeof Target;
   title: string;
   body: string;
 }) {
   return (
-    <article className="border border-[#d8d1c4] bg-transparent p-6 md:border-r-0 md:last:border-r">
-      <Icon size={24} />
-      <h3 className="mt-8 text-xl font-black">{title}</h3>
-      <p className="mt-3 text-sm font-semibold leading-6 text-[#625d55]">{body}</p>
+    <article className="grid grid-cols-[48px_1fr] gap-5 border border-[#d8d1c4] p-5">
+      <div className="flex h-12 w-12 items-center justify-center bg-[#141414] text-white">
+        <Icon size={21} />
+      </div>
+      <div>
+        <h3 className="text-xl font-black">{title}</h3>
+        <p className="mt-2 text-sm font-semibold leading-6 text-[#625d55]">{body}</p>
+      </div>
     </article>
   );
 }
