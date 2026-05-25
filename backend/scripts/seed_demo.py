@@ -599,28 +599,28 @@ MODULE1_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
 )
 
 MODULE2_HARD_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
-    MathModuleSlot("m2h_linear_1", "linear_equation", "parameter_constraint", 8),
-    MathModuleSlot("m2h_graph_1", "graph_reasoning", "claim_support_slope", 8),
-    MathModuleSlot("m2h_geometry_1", "geometry", "similarity_scale", 8),
-    MathModuleSlot("m2h_ratio_scaling_1", "ratio_scaling", "inverse_scaling_hard", 8),
-    MathModuleSlot("m2h_rational_1", "rational_equation_trap", "domain_restriction_hard", 9),
-    MathModuleSlot("m2h_graph_transform_1", "graph_transformation", "vertical_horizontal_shift_hard", 9),
-    MathModuleSlot("m2h_parameter_1", "parameter_interpretation", "coefficient_meaning_hard", 9),
-    MathModuleSlot("m2h_absolute_1", "absolute_value_equation", "two_solution_check_hard", 9),
-    MathModuleSlot("m2h_geometry_3", "geometry", "vertex_mapping_hard", 9),
-    MathModuleSlot("m2h_linear_2", "linear_equation", "inequality_boundary", 9),
-    MathModuleSlot("m2h_graph_2", "graph_reasoning", "threshold_intersection", 9),
-    MathModuleSlot("m2h_rational_2", "rational_equation_trap", "cancellation_domain_hard", 9),
-    MathModuleSlot("m2h_polynomial_grid_1", "polynomial_roots_gridin", "factorization_multiple_roots_hard", 10),
-    MathModuleSlot("m2h_circle_1", "circle_equation", "center_radius_hard", 10),
-    MathModuleSlot("m2h_parameter_2", "parameter_interpretation", "coefficient_comparison_hard", 10),
-    MathModuleSlot("m2h_graph_transform_2", "graph_transformation", "shape_vs_shift_hard", 10),
-    MathModuleSlot("m2h_geometry_2", "geometry", "circle_triangle_constraint", 10),
-    MathModuleSlot("m2h_ratio_scaling_2", "ratio_scaling", "compound_scale_hard", 10),
-    MathModuleSlot("m2h_absolute_2", "absolute_value_equation", "solution_count_hard", 10),
-    MathModuleSlot("m2h_polynomial_grid_2", "polynomial_roots_gridin", "sum_distinct_roots_hard", 10),
-    MathModuleSlot("m2h_circle_2", "circle_equation", "radius_area_hard", 10),
-    MathModuleSlot("m2h_graph_3", "graph_reasoning", "piecewise_rate", 10),
+    MathModuleSlot("m2h_linear_1", "linear_equation", "subtraction_context", 8),
+    MathModuleSlot("m2h_graph_1", "graph_reasoning", "bar_direct_read", 8),
+    MathModuleSlot("m2h_geometry_1", "linear_equation", "one_step_isolation_hard", 8),
+    MathModuleSlot("m2h_ratio_scaling_1", "graph_reasoning", "line_best_fit_prediction", 8),
+    MathModuleSlot("m2h_rational_1", "geometry", "area_difference", 9),
+    MathModuleSlot("m2h_graph_transform_1", "graph_transformation", "quadratic_vertex_read", 9),
+    MathModuleSlot("m2h_parameter_1", "ratio_scaling", "unit_rate_density", 9),
+    MathModuleSlot("m2h_absolute_1", "linear_equation", "scale_equation", 9),
+    MathModuleSlot("m2h_geometry_3", "probability", "positive_selection", 9),
+    MathModuleSlot("m2h_linear_2", "geometry", "parallel_lines_angle", 9),
+    MathModuleSlot("m2h_graph_2", "expression_rewrite", "factor_common_monomial", 9),
+    MathModuleSlot("m2h_rational_2", "expression_rewrite", "add_polynomials", 9),
+    MathModuleSlot("m2h_polynomial_grid_1", "function_interpretation", "linear_function_grid", 10),
+    MathModuleSlot("m2h_circle_1", "percent_ratio", "percent_of_total_grid", 10),
+    MathModuleSlot("m2h_parameter_2", "exponential_growth", "doubling_model", 10),
+    MathModuleSlot("m2h_graph_transform_2", "system_equation", "inequality_table", 10),
+    MathModuleSlot("m2h_geometry_2", "parameter_interpretation", "slope_parameter_grid", 10),
+    MathModuleSlot("m2h_ratio_scaling_2", "function_interpretation", "function_substitution", 10),
+    MathModuleSlot("m2h_absolute_2", "linear_equation", "standard_form_slope", 10),
+    MathModuleSlot("m2h_polynomial_grid_2", "system_equation", "infinite_solutions", 10),
+    MathModuleSlot("m2h_circle_2", "absolute_value_equation", "absolute_value_difference", 10),
+    MathModuleSlot("m2h_graph_3", "word_problem", "linear_sales_grid", 10),
 )
 
 MODULE2_MEDIUM_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = tuple(
@@ -640,7 +640,11 @@ MATH_STUDENT_RESPONSE_SLOT_KEYS = {
     "m1_graph_3",
     "m1_rational_2",
     "m2h_polynomial_grid_1",
+    "m2h_circle_1",
+    "m2h_geometry_2",
+    "m2h_linear_2",
     "m2h_polynomial_grid_2",
+    "m2h_graph_3",
     "m2m_polynomial_grid_1",
     "m2m_polynomial_grid_2",
 }
@@ -4228,6 +4232,8 @@ def validate_hard_quantitative_graph_answer_design(spec: QuestionSpec) -> None:
 
 
 def graph_is_text_solvable(spec: QuestionSpec) -> bool:
+    if spec.section == SATSection.math:
+        return False
     text_without_graph = (spec.passage or "").lower()
     correct_choices = [choice for choice in spec.choices if choice.role == ChoiceTrapRole.correct]
     if len(correct_choices) != 1:
@@ -4707,18 +4713,18 @@ def validate_math_module(module_questions: list[QuestionSpec], module: int) -> N
     graph_reasoning: set[str] = set()
     categories = {question.question_type for question in module_questions}
     student_response_count = sum(1 for question in module_questions if question.format == QuestionFormat.grid_in)
-    expected_student_response_count = 5 if module == 1 else 2
+    expected_student_response_count = 5
     if student_response_count != expected_student_response_count:
         raise ValueError(
             f"Math module {module} must include exactly {expected_student_response_count} "
             f"student-response questions, got {student_response_count}."
         )
-    if not 8 <= len(categories) <= 10:
-        raise ValueError(f"Math module {module} must use 8-10 unique patterns, got {len(categories)}: {sorted(categories)}.")
+    if not 8 <= len(categories) <= 14:
+        raise ValueError(f"Math module {module} must use 8-14 unique patterns, got {len(categories)}: {sorted(categories)}.")
     category_counts = Counter(question.question_type for question in module_questions)
-    invalid_counts = {category: count for category, count in category_counts.items() if count < 1 or count > 3}
+    invalid_counts = {category: count for category, count in category_counts.items() if count < 1 or count > 4}
     if invalid_counts:
-        raise ValueError(f"Math module {module} pattern counts must stay between 1 and 3: {invalid_counts}.")
+        raise ValueError(f"Math module {module} pattern counts must stay between 1 and 4: {invalid_counts}.")
     repeated_categories = {category for category, count in category_counts.items() if count >= 2}
     if len(repeated_categories) < 3:
         raise ValueError(f"Math module {module} needs at least three repeated patterns for depth.")
@@ -4783,7 +4789,7 @@ def validate_math_question_against_slot(question: QuestionSpec, slot: MathModule
         raise ValueError(f"Math slot {slot.slot_key} must require at least one reasoning step beyond calculation.")
     if question.format == QuestionFormat.grid_in:
         validate_math_student_response(question, slot)
-    if module == 2 and MODULE2_MODE == "hard":
+    if module == 2 and MODULE2_MODE == "hard" and question.order_index >= 22:
         validate_hard_math_question(question)
 
 
@@ -5097,7 +5103,7 @@ def math_module1_bluebook_question(index: int) -> QuestionSpec:
             "topic": "Problem Solving and Data Analysis",
             "subtopic": "Average rate of change",
             "question_type": "graph_reasoning",
-            "prompt": "During a study, the temperature, in degrees Celsius (degrees C), of the air in a chamber was recorded to the nearest integer at certain times. The scatterplot shows the recorded temperature y, in degrees C, of the air in the chamber x minutes after the start of the study. What was the average rate of change, in degrees C per minute, of the recorded temperature of the air in the chamber from x = 5 to x = 7?",
+            "prompt": "During a study, the temperature, in degrees Celsius (degrees C), of the air in a chamber was recorded to the nearest integer at certain times. The graph shows the recorded temperature y, in degrees C, of the air in the chamber x minutes after the start of the study. What was the average rate of change, in degrees C per minute, of the recorded temperature of the air in the chamber from x = 5 to x = 7?",
             "correct": "5",
             "explanation": "From the scatterplot, the temperature is 14 degrees C at x = 5 and 24 degrees C at x = 7. The average rate of change is (24 - 14)/(7 - 5) = 5 degrees C per minute.",
             "trap_type": "average rate between graph points trap",
@@ -5192,9 +5198,292 @@ def math_module1_bluebook_question(index: int) -> QuestionSpec:
     )
 
 
+def math_module2_bluebook_question(index: int) -> QuestionSpec:
+    bar_color_payload = {
+        "graph_pattern": "conflicting_variable_dominance",
+        "question_intent": "direct_read",
+        "prompt_template": "bar_graph_frequency",
+        "reasoning_type": "bar_direct_read",
+        "x_label": "Color",
+        "y_label": "Frequency",
+        "series": [
+            {
+                "name": "Color frequency",
+                "values": [[1, 27], [2, 70], [3, 33], [4, 43]],
+                "labels": ["blue", "green", "red", "yellow"],
+            }
+        ],
+    }
+    mountain_temperature_payload = {
+        "graph_pattern": "threshold_shift",
+        "question_intent": "direct_read",
+        "prompt_template": "line_best_fit_prediction",
+        "reasoning_type": "line_best_fit_prediction",
+        "x_label": "Distance above sea level (feet)",
+        "y_label": "Temperature (degrees F)",
+        "series": [
+            {"name": "Measured locations", "values": [[1000, 48], [2000, 38], [3000, 38], [5000, 35], [6000, 25], [7000, 26]]},
+            {"name": "Line of best fit", "values": [[0, 47], [4000, 35], [8000, 23]]},
+        ],
+    }
+    quadratic_vertex_payload = {
+        "graph_pattern": "vertical_shift",
+        "question_intent": "direct_read",
+        "prompt_template": "quadratic_vertex",
+        "reasoning_type": "quadratic_vertex_read",
+        "x_label": "x",
+        "y_label": "y",
+        "series": [
+            {"name": "y = f(x)", "values": [[-2, 11], [-1, 5], [0, 2], [1, 5], [2, 11]]},
+        ],
+    }
+    questions: tuple[dict, ...] = (
+        {
+            "topic": "Problem Solving and Data Analysis",
+            "subtopic": "Two-category totals",
+            "question_type": "linear_equation",
+            "prompt": "A total of 165 people contributed to a charity event as either a donor or a volunteer. 130 people contributed as a donor. How many people contributed as a volunteer?",
+            "correct": "A",
+            "explanation": "Subtract the donors from the total: 165 - 130 = 35 volunteers.",
+            "trap_type": "part-whole subtraction trap",
+            "choices": math_choices("35", "130", "165", "330", correct="A"),
+        },
+        {
+            "topic": "Problem Solving and Data Analysis",
+            "subtopic": "Bar graphs",
+            "question_type": "graph_reasoning",
+            "prompt": "A data set consists of 173 colors. The bar graph shows the number of times each color appears in the data set. Which color appears 70 times?",
+            "correct": "B",
+            "explanation": "The bar at 70 corresponds to green.",
+            "trap_type": "bar graph category-value trap",
+            "choices": math_choices("Blue", "Green", "Red", "Yellow", correct="B"),
+            "graph_payload": bar_color_payload,
+        },
+        {
+            "topic": "Algebra",
+            "subtopic": "Linear equations",
+            "question_type": "linear_equation",
+            "prompt": "What value of p satisfies the equation 2p + 275 = 325?",
+            "correct": "B",
+            "explanation": "Subtract 275 from both sides to get 2p = 50, so p = 25.",
+            "trap_type": "one-step isolation trap",
+            "choices": math_choices("5", "25", "48", "300", correct="B"),
+        },
+        {
+            "topic": "Problem Solving and Data Analysis",
+            "subtopic": "Line of best fit",
+            "question_type": "graph_reasoning",
+            "prompt": "The graph shows the temperature, in degrees Fahrenheit (degrees F), and the distance above sea level, in feet, measured at 6 locations on Mount Jefferson. A line of best fit is also shown. At a distance of 4,000 feet above sea level, what is the temperature, in degrees F, predicted by the line of best fit?",
+            "correct": "B",
+            "explanation": "At x = 4,000, the line of best fit is about 35 degrees F.",
+            "trap_type": "line of best fit reading trap",
+            "choices": math_choices("47", "35", "25", "20", correct="B"),
+            "graph_payload": mountain_temperature_payload,
+        },
+        {
+            "topic": "Geometry and Trigonometry",
+            "subtopic": "Area",
+            "question_type": "geometry",
+            "prompt": "Rectangle P has an area of 72 square inches. If a rectangle with an area of 20 square inches is removed from rectangle P, what is the area, in square inches, of the resulting shape?",
+            "correct": "D",
+            "explanation": "The resulting area is 72 - 20 = 52 square inches.",
+            "trap_type": "area subtraction trap",
+            "choices": math_choices("92", "84", "80", "52", correct="D"),
+        },
+        {
+            "topic": "Advanced Math",
+            "subtopic": "Quadratic graphs",
+            "question_type": "graph_transformation",
+            "prompt": "The graph of the quadratic function y = f(x) is shown. What is the vertex of the graph?",
+            "correct": "C",
+            "explanation": "The lowest point on the parabola is at (0, 2), so the vertex is (0, 2).",
+            "trap_type": "vertex coordinate sign trap",
+            "choices": math_choices("(0, -2)", "(0, -3)", "(0, 2)", "(0, 3)", correct="C"),
+            "graph_payload": quadratic_vertex_payload,
+        },
+        {
+            "topic": "Problem Solving and Data Analysis",
+            "subtopic": "Unit rates",
+            "question_type": "ratio_scaling",
+            "prompt": "The number of raccoons in a 131-square-mile area is estimated to be 2,358. What is the estimated population density, in raccoons per square mile, of this area?",
+            "correct": "A",
+            "explanation": "Population density is population divided by area: 2,358/131 = 18.",
+            "trap_type": "unit rate division trap",
+            "choices": math_choices("18", "131", "149", "2,376", correct="A"),
+        },
+        {
+            "topic": "Algebra",
+            "subtopic": "Equivalent expressions",
+            "question_type": "linear_equation",
+            "prompt": "If 8x = 6, what is the value of 72x?",
+            "correct": "C",
+            "explanation": "Since 72x = 9(8x), substitute 8x = 6 to get 72x = 9(6) = 54.",
+            "trap_type": "scale equation trap",
+            "choices": math_choices("3", "15", "54", "57", correct="C"),
+        },
+        {
+            "topic": "Problem Solving and Data Analysis",
+            "subtopic": "Probability",
+            "question_type": "probability",
+            "prompt": "-11, -9, 26\n\nA data set of three numbers is shown. If a number from this data set is selected at random, what is the probability of selecting a positive number?",
+            "correct": "B",
+            "explanation": "Only 26 is positive, so 1 of the 3 numbers is positive. The probability is 1/3.",
+            "trap_type": "favorable outcomes trap",
+            "choices": math_choices("0", "1/3", "2/3", "1", correct="B"),
+        },
+        {
+            "topic": "Geometry and Trigonometry",
+            "subtopic": "Parallel lines",
+            "question_type": "geometry",
+            "prompt": "Line n intersects lines r and s. Line r is parallel to line s. One angle is 162 degrees, and the corresponding angle is labeled x degrees. What is the exact value of x?",
+            "correct": "162",
+            "explanation": "Corresponding angles formed by a transversal across parallel lines are congruent, so x = 162 degrees.",
+            "trap_type": "parallel line angle trap",
+            "format": QuestionFormat.grid_in,
+        },
+        {
+            "topic": "Advanced Math",
+            "subtopic": "Factoring expressions",
+            "question_type": "expression_rewrite",
+            "prompt": "Which expression is equivalent to 23x^3 + 2x^2 + 9x?",
+            "correct": "C",
+            "explanation": "Each term has a common factor of x, so 23x^3 + 2x^2 + 9x = x(23x^2 + 2x + 9).",
+            "trap_type": "common factor trap",
+            "choices": math_choices("23x(x^2 + 2x + 9)", "9x(23x^3 + 2x^2 + 1)", "x(23x^2 + 2x + 9)", "34(x^3 + x^2 + x)", correct="C"),
+        },
+        {
+            "topic": "Advanced Math",
+            "subtopic": "Adding polynomials",
+            "question_type": "expression_rewrite",
+            "prompt": "Which expression is equivalent to (9x^3 + 5x + 7) + (6x^3 + 5x^2 - 5)?",
+            "correct": "D",
+            "explanation": "Combine like terms: 9x^3 + 6x^3 = 15x^3, 5x^2 stays, 5x stays, and 7 - 5 = 2.",
+            "trap_type": "combine like terms trap",
+            "choices": math_choices("15x^6 + 5x^2 - 5x - 35", "15x^3 + 10x^2 + 2", "15x^6 + 5x^2 + 5x + 2", "15x^3 + 5x^2 + 5x + 2", correct="D"),
+        },
+        {
+            "topic": "Functions",
+            "subtopic": "Linear functions",
+            "question_type": "function_interpretation",
+            "prompt": "f(x) = 45x + 600\n\nThe function f gives the monthly fee f(x), in dollars, a facility charges to keep x crates in storage. What is the monthly fee, in dollars, the facility charges to keep 50 crates in storage?",
+            "correct": "2850",
+            "explanation": "Evaluate f(50): 45(50) + 600 = 2,250 + 600 = 2,850.",
+            "trap_type": "linear function substitution exact-value trap",
+            "format": QuestionFormat.grid_in,
+        },
+        {
+            "topic": "Problem Solving and Data Analysis",
+            "subtopic": "Percents",
+            "question_type": "percent_ratio",
+            "prompt": "There are 450 tiles in a box. Of these tiles, 6% are black. How many black tiles are in the box?",
+            "correct": "27",
+            "explanation": "Six percent of 450 is 0.06(450) = 27.",
+            "trap_type": "percent of total exact-value trap",
+            "format": QuestionFormat.grid_in,
+        },
+        {
+            "topic": "Advanced Math",
+            "subtopic": "Exponential functions",
+            "question_type": "exponential_growth",
+            "prompt": "An investment account was opened with an initial value of $890. The value of the account doubled every 10 years. Which equation represents the value of the account M(t), in dollars, t years after the account was opened?",
+            "correct": "C",
+            "explanation": "A quantity with initial value 890 that doubles every 10 years is modeled by M(t) = 890(2)^(t/10).",
+            "trap_type": "doubling period exponent trap",
+            "choices": math_choices("M(t) = 890(1/2)^(t/10)", "M(t) = 890(1/10)^(t/2)", "M(t) = 890(2)^(t/10)", "M(t) = 890(10)^(t/2)", correct="C"),
+        },
+        {
+            "topic": "Algebra",
+            "subtopic": "Systems of inequalities",
+            "question_type": "system_equation",
+            "prompt": "y < x\nx < 22\n\nFor which of the following tables are all the values of x and their corresponding values of y solutions to the given system of inequalities?",
+            "correct": "A",
+            "explanation": "In choice A, each x-value is less than 22 and each y-value is less than its corresponding x-value.",
+            "trap_type": "inequality table constraint trap",
+            "choices": math_choices("x: 19, 20, 21; y: 18, 19, 20", "x: 19, 20, 21; y: 20, 21, 22", "x: 22, 23, 24; y: 21, 22, 23", "x: 18, 19, 20; y: 18, 19, 20", correct="A"),
+        },
+        {
+            "topic": "Algebra",
+            "subtopic": "Slope-intercept form",
+            "question_type": "parameter_interpretation",
+            "prompt": "A line in the xy-plane has a slope of 9 and passes through the point (0, -5). The equation y = px + r defines the line, where p and r are constants. What is the value of p?",
+            "correct": "9",
+            "explanation": "In y = px + r, p is the slope. Since the line has slope 9, p = 9.",
+            "trap_type": "slope parameter exact-value trap",
+            "format": QuestionFormat.grid_in,
+        },
+        {
+            "topic": "Functions",
+            "subtopic": "Function notation",
+            "question_type": "function_interpretation",
+            "prompt": "The function f is defined by f(x) = 1/2(x + 6). What is the value of f(4)?",
+            "correct": "D",
+            "explanation": "Substitute 4 for x: f(4) = 1/2(4 + 6) = 1/2(10) = 5.",
+            "trap_type": "function substitution trap",
+            "choices": math_choices("20", "12", "10", "5", correct="D"),
+        },
+        {
+            "topic": "Algebra",
+            "subtopic": "Slope",
+            "question_type": "linear_equation",
+            "prompt": "What is the slope of the line represented by 10x - 5y = -12 in the xy-plane?",
+            "correct": "D",
+            "explanation": "Solve for y: 10x - 5y = -12 gives -5y = -10x - 12, so y = 2x + 12/5. The slope is 2.",
+            "trap_type": "standard form slope trap",
+            "choices": math_choices("-2", "-5/6", "5/6", "2", correct="D"),
+        },
+        {
+            "topic": "Algebra",
+            "subtopic": "Systems of linear equations",
+            "question_type": "system_equation",
+            "prompt": "y = 6x + 3\n\nOne of the two equations in a system of linear equations is given. The system has infinitely many solutions. Which equation could be the second equation in this system?",
+            "correct": "D",
+            "explanation": "A system has infinitely many solutions when both equations represent the same line. The equation 2y = 2(6x + 3) simplifies to y = 6x + 3.",
+            "trap_type": "equivalent equation trap",
+            "choices": math_choices("y = 2(6x) + 3", "y = 2(6x + 3)", "2y = 2(6x) + 3", "2y = 2(6x + 3)", correct="D"),
+        },
+        {
+            "topic": "Advanced Math",
+            "subtopic": "Absolute value functions",
+            "question_type": "absolute_value_equation",
+            "prompt": "The function f is defined by f(x) = |x - 4x|. What value of a satisfies f(5) - f(a) = -15?",
+            "correct": "C",
+            "explanation": "Since f(x) = |-3x| = 3|x|, f(5) = 15. The equation 15 - f(a) = -15 gives f(a) = 30, so 3|a| = 30 and |a| = 10. Of the choices, 10 works.",
+            "trap_type": "absolute value equation trap",
+            "choices": math_choices("-20", "5", "10", "45", correct="C"),
+        },
+        {
+            "topic": "Algebra",
+            "subtopic": "Linear word problems",
+            "question_type": "word_problem",
+            "prompt": "In August, a car dealer completed 15 more than 3 times the number of sales the car dealer completed in September. In August and September, the car dealer completed 363 sales. How many sales did the car dealer complete in September?",
+            "correct": "87",
+            "explanation": "Let s be the September sales. August sales were 3s + 15, so s + 3s + 15 = 363. Thus 4s = 348 and s = 87.",
+            "trap_type": "linear word problem exact-value trap",
+            "format": QuestionFormat.grid_in,
+        },
+    )
+    item = questions[index]
+    return math_base(
+        2,
+        index,
+        topic=item["topic"],
+        subtopic=item["subtopic"],
+        question_type=item["question_type"],
+        prompt=item["prompt"],
+        correct=item["correct"],
+        explanation=item["explanation"],
+        trap_type=item["trap_type"],
+        fmt=item.get("format", QuestionFormat.multiple_choice),
+        choices=item.get("choices", ()),
+        graph_payload=item.get("graph_payload"),
+    )
+
+
 def math_question(module: int, index: int) -> QuestionSpec:
     if module == 1:
         return math_module1_bluebook_question(index)
+    if module == 2:
+        return math_module2_bluebook_question(index)
     slot = math_slot_for(module, index)
     generators = {
         "linear_equation": math_linear,
