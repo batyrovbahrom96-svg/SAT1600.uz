@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 const navItems = [
-  { label: "Mock Test", href: "/dashboard" },
+  { label: "Mock Test", href: "/mock-test" },
   { label: "Practice", href: "/dashboard" },
   { label: "Results", href: "/results/demo" },
   { label: "Pricing", href: "/#pricing" }
@@ -30,7 +30,7 @@ export function LuxuryNavbar() {
         </nav>
 
         <div className="flex items-center justify-end gap-2">
-          <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/dashboard">
+          <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/mock-test">
             Start Test
           </Link>
           <Link className="h-11 border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] leading-[44px] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
