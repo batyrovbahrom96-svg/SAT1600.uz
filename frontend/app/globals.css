@@ -57,6 +57,104 @@ button, input {
   margin: 0 auto;
 }
 
+.sat-home-motion {
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+}
+
+.motion-slide {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  scroll-snap-align: start;
+  isolation: isolate;
+}
+
+.motion-slide-hero {
+  background:
+    radial-gradient(circle at 22% 28%, rgba(255, 255, 255, 0.08), transparent 24%),
+    linear-gradient(90deg, #090909 0%, #0d0d0d 48%, #161616 100%);
+}
+
+.motion-slide-middle {
+  background:
+    radial-gradient(circle at 72% 40%, rgba(255, 255, 255, 0.07), transparent 28%),
+    linear-gradient(90deg, #0a0a0a 0%, #111111 52%, #181818 100%);
+}
+
+.motion-slide-final {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.08), transparent 24%),
+    linear-gradient(90deg, #090909 0%, #111111 44%, #1b1b1b 100%);
+}
+
+.motion-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(7, 7, 7, 0.98) 0%, rgba(7, 7, 7, 0.84) 42%, rgba(7, 7, 7, 0.42) 100%),
+    linear-gradient(0deg, rgba(7, 7, 7, 0.88) 0%, transparent 28%, transparent 72%, rgba(7, 7, 7, 0.7) 100%);
+}
+
+.revolving-figure {
+  position: absolute;
+  inset: -32vh -24vw -24vh 24vw;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.92;
+  perspective: 1500px;
+  transform-style: preserve-3d;
+  animation: revolving-stage 18s linear infinite;
+}
+
+.revolving-figure-1 {
+  inset: -30vh -18vw -26vh 18vw;
+  animation-duration: 21s;
+  animation-direction: reverse;
+}
+
+.revolving-figure-2 {
+  inset: -38vh -26vw -20vh 34vw;
+  animation-duration: 16s;
+}
+
+.revolving-core {
+  position: absolute;
+  left: 61%;
+  top: 50%;
+  height: 52%;
+  width: 30%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.015) 48%, transparent 70%);
+  transform: translate(-50%, -50%) rotate(-24deg);
+  filter: blur(1px);
+}
+
+.revolving-rib {
+  position: absolute;
+  left: 62%;
+  top: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  border-left-color: rgba(255, 255, 255, 0.035);
+  border-bottom-color: rgba(255, 255, 255, 0.055);
+  border-radius: 49% 51% 44% 56%;
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012) 36%, rgba(0, 0, 0, 0.22) 100%);
+  box-shadow:
+    inset 0 0 28px rgba(255, 255, 255, 0.026),
+    0 0 18px rgba(255, 255, 255, 0.025);
+  transform-origin: center;
+}
+
+.motion-benefit-card {
+  animation: benefit-drift 7s ease-in-out infinite;
+}
+
+.motion-benefit-card:nth-child(2) {
+  animation-delay: 0.9s;
+}
+
 .rotor-stage {
   position: absolute;
   inset: -18vh -18vw -20vh 18vw;
@@ -195,6 +293,31 @@ button, input {
   animation-delay: 1.1s;
 }
 
+@keyframes revolving-stage {
+  0% {
+    transform: rotateX(64deg) rotateY(-22deg) rotateZ(0deg) translate3d(0, 0, 0) scale(1.02);
+  }
+  35% {
+    transform: rotateX(64deg) rotateY(-22deg) rotateZ(126deg) translate3d(-2vw, 1vh, 0) scale(1.08);
+  }
+  70% {
+    transform: rotateX(64deg) rotateY(-22deg) rotateZ(252deg) translate3d(2vw, -1vh, 0) scale(1.04);
+  }
+  100% {
+    transform: rotateX(64deg) rotateY(-22deg) rotateZ(360deg) translate3d(0, 0, 0) scale(1.02);
+  }
+}
+
+@keyframes benefit-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
 @keyframes rotor-stage-spin {
   0% {
     transform: rotateX(58deg) rotateY(-18deg) rotateZ(0deg) scale(1.02);
@@ -325,12 +448,23 @@ button, input {
   .orbit-dot,
   .flow-bar,
   .rotor-stage,
-  .advantage-card {
+  .advantage-card,
+  .revolving-figure,
+  .motion-benefit-card {
     animation: none;
   }
 }
 
 @media (max-width: 768px) {
+  .sat-home-motion {
+    scroll-snap-type: none;
+  }
+
+  .revolving-figure {
+    inset: -10vh -72vw 4vh 0;
+    opacity: 0.62;
+  }
+
   .rotor-stage {
     inset: 4vh -62vw 8vh 2vw;
     opacity: 0.55;
