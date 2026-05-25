@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Analytics, AttemptStatus, Question, QuestionResult, QuestionSource, SATSection, Test, TestAttempt, User
+from app.models import Analytics, AttemptStatus, ChoiceTrapRole, Question, QuestionChoice, QuestionResult, QuestionSource, SATSection, Test, TestAttempt, User
 from app.services.difficulty_calibration import update_question_calibration
 from app.services.math_module1_bluebook import ensure_math_module1_bluebook_questions
 from app.services.telemetry import build_test_telemetry_summary, log_question_telemetry
@@ -207,7 +207,15 @@ def _generated_question(spec):
         estimated_time=spec.estimated_time,
         discrimination_score=spec.discrimination_score,
         order_index=spec.order_index,
-        choices=[SimpleNamespace(label=choice.label, text=choice.text) for choice in spec.choices],
+        choices=[
+            SimpleNamespace(
+                label=choice.label,
+                text=choice.text,
+                trap_role=getattr(choice, "trap_role", None),
+                error_basis=getattr(choice, "error_basis", None),
+            )
+            for choice in spec.choices
+        ],
         is_generated=True,
     )
 
@@ -239,6 +247,59 @@ def _generated_question_for_id(question_id: UUID, section: SATSection, module: i
     return next((question for question in questions if question.id == question_id), None)
 
 
+def _persist_generated_question(db: Session, attempt: TestAttempt, generated_question) -> Question:
+    existing = db.get(Question, generated_question.id)
+    if existing:
+        return existing
+
+    question = Question(
+        id=generated_question.id,
+        test_id=attempt.test_id,
+        section=generated_question.section,
+        module=generated_question.module,
+        difficulty=generated_question.difficulty,
+        adaptive_level=generated_question.adaptive_level,
+        source=generated_question.source,
+        topic=generated_question.topic,
+        subtopic=generated_question.subtopic,
+        structure_key=generated_question.structure_key,
+        graph_path=generated_question.graph_path,
+        graph_reasoning_type=generated_question.graph_reasoning_type,
+        graph_required=generated_question.graph_required,
+        data_type=generated_question.data_type,
+        data_payload=generated_question.data_payload,
+        passage=generated_question.passage,
+        prompt=generated_question.prompt,
+        correct_answer=generated_question.correct_answer,
+        explanation=generated_question.explanation,
+        trap_type=generated_question.trap_type,
+        question_type=generated_question.question_type,
+        format=generated_question.format,
+        estimated_time=generated_question.estimated_time,
+        discrimination_score=generated_question.discrimination_score,
+        percent_correct=0.5,
+        average_time_seconds=generated_question.estimated_time,
+        effective_difficulty=generated_question.difficulty,
+        quality_score=1,
+        auto_quality_flag="generated",
+        validation_status="approved",
+        order_index=generated_question.order_index,
+    )
+    question.choices = [
+        QuestionChoice(
+            question_id=question.id,
+            label=choice.label,
+            text=choice.text,
+            trap_role=choice.trap_role or ChoiceTrapRole.common_mistake,
+            error_basis=choice.error_basis,
+        )
+        for choice in generated_question.choices
+    ]
+    db.add(question)
+    db.flush()
+    return question
+
+
 def save_answer(db: Session, attempt: TestAttempt, answer) -> QuestionResult:
     enforce_deadline(db, attempt)
     question = db.get(Question, answer.question_id)
@@ -246,18 +307,7 @@ def save_answer(db: Session, attempt: TestAttempt, answer) -> QuestionResult:
         generated_question = _generated_question_for_id(answer.question_id, attempt.current_section, attempt.current_module)
         if generated_question is None:
             raise HTTPException(status_code=404, detail="Question not found")
-
-        selected = (answer.selected_answer or "").strip()
-        return SimpleNamespace(
-            question=generated_question,
-            question_id=generated_question.id,
-            selected_answer=selected or None,
-            is_correct=selected.lower() == generated_question.correct_answer.strip().lower(),
-            marked_for_review=answer.marked_for_review,
-            time_spent_seconds=answer.time_spent_seconds,
-            module_snapshot=attempt.current_module,
-            answered_at=datetime.utcnow(),
-        )
+        question = _persist_generated_question(db, attempt, generated_question)
     if question.section != attempt.current_section or question.module != attempt.current_module:
         raise HTTPException(status_code=409, detail="Previous modules are locked")
 
@@ -533,11 +583,17 @@ def results_payload(db: Session, attempt: TestAttempt) -> dict:
         "questions": [
             {
                 "id": str(row.question.id),
+                "section": row.question.section.value,
+                "module": row.module_snapshot,
                 "topic": row.question.topic,
+                "subtopic": row.question.subtopic,
                 "prompt": row.question.prompt,
+                "question_type": row.question.question_type,
+                "format": row.question.format.value,
                 "selected_answer": row.selected_answer,
                 "correct_answer": row.question.correct_answer,
                 "is_correct": row.is_correct,
+                "marked_for_review": row.marked_for_review,
                 "explanation": row.question.explanation,
                 "trap_type": row.question.trap_type,
                 "difficulty": row.question.difficulty,
