@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   Bar,
   BarChart,
@@ -28,7 +29,6 @@ import {
   Trophy,
   XCircle
 } from "lucide-react";
-import { Nav } from "@/components/Nav";
 import { ApiError, api } from "@/lib/api";
 
 type ResultQuestion = {
@@ -122,12 +122,17 @@ const demoResults: Results = {
 };
 
 export default function ResultsPage() {
-  const { attemptId } = useParams<{ attemptId: string }>();
+  const params = useParams<{ attemptId?: string | string[] }>();
+  const pathname = usePathname();
+  const pathAttemptId = pathname.split("/").filter(Boolean).at(-1);
+  const attemptId = (Array.isArray(params.attemptId) ? params.attemptId[0] : params.attemptId) || pathAttemptId;
   const router = useRouter();
   const [results, setResults] = useState<Results | null>(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    if (!attemptId) return;
+
     if (attemptId === "demo") {
       setResults(demoResults);
       return;
@@ -142,21 +147,24 @@ export default function ResultsPage() {
     });
   }, [attemptId, router]);
 
-  const analytics = useMemo(() => results ? buildReportAnalytics(results) : null, [results]);
+  const reportResults = results ?? (attemptId === "demo" ? demoResults : null);
+  const analytics = useMemo(() => reportResults ? buildReportAnalytics(reportResults) : null, [reportResults]);
 
-  if (!results || !analytics) {
+  if (!reportResults || !analytics) {
     return (
-      <main className="min-h-screen bg-paper">
-        <Nav />
-        <section className="mx-auto flex min-h-[70vh] max-w-4xl flex-col items-center justify-center px-4 text-center">
-          <BarChart3 className="h-12 w-12 text-brand" />
-          <h1 className="mt-5 text-3xl font-black text-ink">Loading score report</h1>
-          <p className="mt-3 max-w-xl text-slate-600">
+      <main className="min-h-screen bg-[#101112] text-white">
+        <ResultsHeader />
+        <section className="mx-auto flex min-h-[70vh] max-w-4xl flex-col items-center justify-center px-5 text-center">
+          <div className="flex h-16 w-16 items-center justify-center border border-white/10 bg-white/[0.035] text-white">
+            <BarChart3 className="h-8 w-8" />
+          </div>
+          <h1 className="mt-6 text-4xl font-light text-white md:text-5xl">Loading score report</h1>
+          <p className="mt-4 max-w-xl text-sm font-light leading-7 text-white/48">
             {message || "We are preparing your score, mistakes, and next study plan."}
           </p>
           {message ? (
             <button
-              className="mt-6 inline-flex items-center gap-2 rounded-md bg-brand px-4 py-3 font-bold text-white hover:bg-blue-700"
+              className="mt-7 inline-flex h-12 items-center gap-3 border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
               onClick={() => router.push("/dashboard")}
               type="button"
             >
@@ -169,27 +177,27 @@ export default function ResultsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-paper">
-      <Nav />
-      <section className="mx-auto max-w-7xl px-4 py-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <main className="min-h-screen bg-[#101112] text-white">
+      <ResultsHeader />
+      <section className="mx-auto max-w-7xl px-5 py-10 md:px-8 md:py-14">
+        <div className="grid gap-8 border-b border-white/10 pb-10 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <p className="text-sm font-black uppercase text-brand">Post-test analytics</p>
-            <h1 className="mt-2 text-3xl font-black text-ink md:text-4xl">SAT1600 Score Report</h1>
-            <p className="mt-2 max-w-3xl text-slate-600">
+            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Post-test analytics</p>
+            <h1 className="mt-5 text-5xl font-light leading-none text-white md:text-7xl">Score report</h1>
+            <p className="mt-6 max-w-3xl text-lg font-light leading-8 text-white/50">
               Your score, accuracy, weak topics, missed-question explanations, and the next study moves are all in one place.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-ink hover:bg-slate-50"
+              className="inline-flex h-12 items-center gap-3 border border-white/15 bg-white/[0.035] px-5 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white"
               onClick={() => window.print()}
               type="button"
             >
               <Download size={18} /> Print report
             </button>
             <button
-              className="inline-flex items-center gap-2 rounded-md bg-brand px-4 py-3 text-sm font-bold text-white hover:bg-blue-700"
+              className="inline-flex h-12 items-center gap-3 border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
               onClick={() => router.push("/dashboard")}
               type="button"
             >
@@ -202,55 +210,60 @@ export default function ResultsPage() {
           <ScoreCard
             icon={<Trophy size={22} />}
             label="Total SAT score"
-            value={results.score_total}
+            value={reportResults.score_total}
             detail={analytics.scoreBand}
             tone="brand"
           />
           <ScoreCard
             icon={<BookOpenCheck size={22} />}
             label="Reading and Writing"
-            value={results.score_reading_writing}
+            value={reportResults.score_reading_writing}
             detail={`${analytics.sectionSummaries[0]?.accuracy ?? 0}% accuracy`}
             tone="mint"
           />
           <ScoreCard
             icon={<Target size={22} />}
             label="Math"
-            value={results.score_math}
+            value={reportResults.score_math}
             detail={`${analytics.sectionSummaries[1]?.accuracy ?? 0}% accuracy`}
             tone="warning"
           />
-          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="border border-white/10 bg-white/[0.035] p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-black text-slate-500">Overall accuracy</div>
-                <div className="mt-2 text-4xl font-black text-ink">{analytics.overallAccuracy}%</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">Overall accuracy</div>
+                <div className="mt-3 text-5xl font-light text-white">{analytics.overallAccuracy}%</div>
               </div>
               <AccuracyRing value={analytics.overallAccuracy} />
             </div>
-            <p className="mt-4 text-sm font-semibold text-slate-600">
+            <p className="mt-5 text-sm font-light leading-6 text-white/48">
               {analytics.correctCount} correct out of {analytics.answeredCount} answered questions.
             </p>
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
-          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="border border-white/10 bg-white/[0.035] p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-black text-ink">Accuracy by topic</h2>
-                <p className="mt-1 text-sm text-slate-600">These are the fastest score gains to chase first.</p>
+                <h2 className="text-2xl font-light text-white">Accuracy by topic</h2>
+                <p className="mt-2 text-sm font-light text-white/45">These are the fastest score gains to chase first.</p>
               </div>
-              <BarChart3 className="text-brand" />
+              <BarChart3 className="text-white/55" />
             </div>
             <div className="mt-5 h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.topicChart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis dataKey="topic" hide />
-                  <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <Tooltip formatter={(value) => [`${value}%`, "Accuracy"]} labelFormatter={(label) => String(label)} />
-                  <Bar dataKey="accuracy" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
+                  <YAxis domain={[0, 100]} tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ background: "#18191a", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
+                    cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                    formatter={(value) => [`${value}%`, "Accuracy"]}
+                    labelFormatter={(label) => String(label)}
+                  />
+                  <Bar dataKey="accuracy" fill="#f4f4f4" radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -261,12 +274,12 @@ export default function ResultsPage() {
             </div>
           </section>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="border border-white/10 bg-white/[0.035] p-5">
             <div className="flex items-center gap-3">
-              <Brain className="text-brand" />
-              <h2 className="text-xl font-black text-ink">Smart feedback</h2>
+              <Brain className="text-white/55" />
+              <h2 className="text-2xl font-light text-white">Smart feedback</h2>
             </div>
-            <p className="mt-4 rounded-md bg-blue-50 p-4 text-sm font-semibold leading-6 text-blue-900">
+            <p className="mt-5 border border-white/10 bg-black/20 p-4 text-sm font-light leading-7 text-white/62">
               {analytics.feedback}
             </p>
             <div className="mt-5 grid gap-3">
@@ -292,41 +305,41 @@ export default function ResultsPage() {
             items={analytics.weaknesses}
             tone="red"
           />
-          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="border border-white/10 bg-white/[0.035] p-5">
             <div className="flex items-center gap-3">
-              <Lightbulb className="text-warning" />
-              <h2 className="text-xl font-black text-ink">Next 7 days</h2>
+              <Lightbulb className="text-yellow-200/70" />
+              <h2 className="text-2xl font-light text-white">Next 7 days</h2>
             </div>
             <div className="mt-4 space-y-3">
               {analytics.studyPlan.map((step, index) => (
                 <div className="flex gap-3" key={step}>
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-sm font-black text-ink">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-white/10 bg-black/20 text-sm font-black text-white/70">
                     {index + 1}
                   </span>
-                  <p className="text-sm font-semibold leading-6 text-slate-700">{step}</p>
+                  <p className="text-sm font-light leading-6 text-white/58">{step}</p>
                 </div>
               ))}
             </div>
           </section>
         </div>
 
-        <section className="mt-6 rounded-lg border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-2 border-b border-slate-200 p-5 md:flex-row md:items-center md:justify-between">
+        <section className="mt-6 border border-white/10 bg-white/[0.035]">
+          <div className="flex flex-col gap-2 border-b border-white/10 p-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-xl font-black text-ink">Mistake analysis</h2>
-              <p className="mt-1 text-sm text-slate-600">Wrong questions, explanations, trap type, and what to fix.</p>
+              <h2 className="text-2xl font-light text-white">Mistake analysis</h2>
+              <p className="mt-2 text-sm font-light text-white/45">Wrong questions, explanations, trap type, and what to fix.</p>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-md bg-red-50 px-3 py-2 text-sm font-black text-red-700">
+            <div className="inline-flex items-center gap-2 border border-red-300/20 bg-red-950/20 px-3 py-2 text-sm font-black text-red-200">
               <XCircle size={18} /> {analytics.wrongQuestions.length} missed
             </div>
           </div>
 
           {analytics.wrongQuestions.length === 0 ? (
-            <div className="p-6 text-sm font-semibold text-slate-600">
+            <div className="p-6 text-sm font-light text-white/48">
               No missed questions were recorded for this attempt.
             </div>
           ) : (
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-white/10">
               {analytics.wrongQuestions.map((question, index) => (
                 <MistakeCard key={question.id} index={index + 1} question={question} />
               ))}
@@ -334,13 +347,13 @@ export default function ResultsPage() {
           )}
         </section>
 
-        <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="mt-6 border border-white/10 bg-white/[0.035] p-5">
           <div className="flex items-center gap-3">
-            <ClipboardList className="text-brand" />
-            <h2 className="text-xl font-black text-ink">Tutor or parent summary</h2>
+            <ClipboardList className="text-white/55" />
+            <h2 className="text-2xl font-light text-white">Tutor or parent summary</h2>
           </div>
-          <p className="mt-4 text-sm font-semibold leading-6 text-slate-700">
-            Score: {results.score_total}. Reading and Writing: {results.score_reading_writing}. Math: {results.score_math}.
+          <p className="mt-5 text-sm font-light leading-7 text-white/58">
+            Score: {reportResults.score_total}. Reading and Writing: {reportResults.score_reading_writing}. Math: {reportResults.score_math}.
             Accuracy: {analytics.overallAccuracy}%. Priority topics: {analytics.weaknesses.slice(0, 3).join(", ") || "none flagged"}.
             Most common trap: {analytics.topTrap || "not enough missed questions to detect a pattern"}.
           </p>
@@ -454,6 +467,26 @@ function sectionName(section?: string) {
   return "SAT";
 }
 
+function ResultsHeader() {
+  return (
+    <header className="border-b border-white/10 bg-[#101112]/92 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 md:px-8">
+        <Link href="/" className="flex h-12 w-[210px] items-center border border-white/10 bg-black/30 px-4 shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
+          <img className="h-auto w-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.32)]" src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" />
+        </Link>
+        <nav className="hidden items-center gap-2 text-[10px] font-black uppercase tracking-[0.28em] text-white/48 md:flex">
+          <Link className="flex items-center gap-2 px-3 py-2 transition-colors hover:text-white" href="/dashboard">
+            <BookOpenCheck size={16} /> Tests
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2 text-white" href="/results/demo">
+            <BarChart3 size={16} /> Results
+          </Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
 function ScoreCard({
   icon,
   label,
@@ -468,28 +501,28 @@ function ScoreCard({
   tone: "brand" | "mint" | "warning";
 }) {
   const toneClass = {
-    brand: "bg-blue-50 text-brand",
-    mint: "bg-emerald-50 text-emerald-700",
-    warning: "bg-yellow-50 text-yellow-700"
+    brand: "border-white/12 bg-white/[0.05] text-white",
+    mint: "border-emerald-200/15 bg-emerald-400/10 text-emerald-100",
+    warning: "border-yellow-200/15 bg-yellow-400/10 text-yellow-100"
   }[tone];
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="border border-white/10 bg-white/[0.035] p-5">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-sm font-black text-slate-500">{label}</div>
-        <div className={`rounded-md p-2 ${toneClass}`}>{icon}</div>
+        <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">{label}</div>
+        <div className={`border p-2 ${toneClass}`}>{icon}</div>
       </div>
-      <div className="mt-3 text-4xl font-black text-ink">{value}</div>
-      <div className="mt-2 text-sm font-bold text-slate-600">{detail}</div>
+      <div className="mt-4 text-5xl font-light text-white">{value}</div>
+      <div className="mt-3 text-sm font-light text-white/48">{detail}</div>
     </div>
   );
 }
 
 function AccuracyRing({ value }: { value: number }) {
-  const background = `conic-gradient(#1d4ed8 ${value * 3.6}deg, #e2e8f0 0deg)`;
+  const background = `conic-gradient(#f4f4f4 ${value * 3.6}deg, rgba(255,255,255,0.12) 0deg)`;
   return (
     <div className="flex h-20 w-20 items-center justify-center rounded-full" style={{ background }}>
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-sm font-black text-ink">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#101112] text-sm font-black text-white">
         {value}%
       </div>
     </div>
@@ -497,15 +530,15 @@ function AccuracyRing({ value }: { value: number }) {
 }
 
 function TopicBar({ topic, accuracy }: { topic: string; accuracy: number }) {
-  const color = accuracy >= 75 ? "bg-emerald-500" : accuracy >= 60 ? "bg-yellow-500" : "bg-red-500";
+  const color = accuracy >= 75 ? "bg-emerald-300" : accuracy >= 60 ? "bg-yellow-200" : "bg-red-300";
   return (
     <div>
       <div className="flex items-center justify-between gap-3 text-sm">
-        <span className="font-bold text-ink">{topic}</span>
-        <span className="font-black text-slate-600">{accuracy}%</span>
+        <span className="font-light text-white/76">{topic}</span>
+        <span className="font-black text-white/50">{accuracy}%</span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${accuracy}%` }} />
+      <div className="mt-2 h-1.5 overflow-hidden bg-white/10">
+        <div className={`h-full ${color}`} style={{ width: `${accuracy}%` }} />
       </div>
     </div>
   );
@@ -513,17 +546,17 @@ function TopicBar({ topic, accuracy }: { topic: string; accuracy: number }) {
 
 function SectionBreakdown({ section }: { section: SectionSummary }) {
   return (
-    <div className="rounded-md border border-slate-200 p-4">
+    <div className="border border-white/10 bg-black/10 p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="font-black text-ink">{section.label}</div>
-          <div className="mt-1 text-sm text-slate-500">
+          <div className="font-light text-white">{section.label}</div>
+          <div className="mt-1 text-sm font-light text-white/42">
             {section.total ? `${section.correct}/${section.total} correct` : "Accuracy estimated from score"}
           </div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-black text-ink">{section.score}</div>
-          <div className="text-sm font-bold text-slate-500">{section.accuracy}%</div>
+          <div className="text-3xl font-light text-white">{section.score}</div>
+          <div className="text-sm font-black text-white/42">{section.accuracy}%</div>
         </div>
       </div>
     </div>
@@ -543,19 +576,19 @@ function InsightPanel({
   items: string[];
   tone: "green" | "red";
 }) {
-  const chipClass = tone === "green" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700";
+  const chipClass = tone === "green" ? "border-emerald-200/15 bg-emerald-400/10 text-emerald-100" : "border-red-200/15 bg-red-400/10 text-red-100";
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="border border-white/10 bg-white/[0.035] p-5">
       <div className="flex items-center gap-3">
-        <div className={tone === "green" ? "text-emerald-700" : "text-red-700"}>{icon}</div>
-        <h2 className="text-xl font-black text-ink">{title}</h2>
+        <div className={tone === "green" ? "text-emerald-100/80" : "text-red-100/80"}>{icon}</div>
+        <h2 className="text-2xl font-light text-white">{title}</h2>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         {items.length ? items.map((item) => (
-          <span className={`rounded-md px-3 py-2 text-sm font-black ${chipClass}`} key={item}>
+          <span className={`border px-3 py-2 text-sm font-black ${chipClass}`} key={item}>
             {item}
           </span>
-        )) : <p className="text-sm font-semibold text-slate-600">{emptyText}</p>}
+        )) : <p className="text-sm font-light text-white/48">{emptyText}</p>}
       </div>
     </section>
   );
@@ -566,42 +599,42 @@ function MistakeCard({ index, question }: { index: number; question: ResultQuest
     <article className="p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex flex-wrap gap-2">
-          <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-black text-slate-700">
+          <span className="border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-black text-white/65">
             Miss {index}
           </span>
-          <span className="rounded-md bg-blue-50 px-2 py-1 text-xs font-black text-blue-700">
+          <span className="border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-black text-white/65">
             {sectionName(question.section)} M{question.module || "-"}
           </span>
-          <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-black text-slate-700">
+          <span className="border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-black text-white/65">
             {question.topic}
           </span>
           {question.trap_type ? (
-            <span className="rounded-md bg-red-50 px-2 py-1 text-xs font-black text-red-700">
+            <span className="border border-red-300/20 bg-red-950/20 px-2 py-1 text-xs font-black text-red-200">
               Trap: {cleanLabel(question.trap_type)}
             </span>
           ) : null}
         </div>
-        <div className="inline-flex items-center gap-2 text-sm font-bold text-slate-500">
+        <div className="inline-flex items-center gap-2 text-sm font-light text-white/45">
           <Timer size={16} /> {formatSeconds(question.time_spent_seconds)}
         </div>
       </div>
 
-      <p className="mt-4 font-semibold leading-7 text-ink">{question.prompt}</p>
+      <p className="mt-5 font-light leading-7 text-white/78">{question.prompt}</p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <div className="rounded-md bg-red-50 p-3">
-          <div className="text-xs font-black uppercase text-red-700">Your answer</div>
-          <div className="mt-1 font-black text-red-900">{question.selected_answer || "Blank"}</div>
+        <div className="border border-red-300/20 bg-red-950/20 p-3">
+          <div className="text-xs font-black uppercase tracking-[0.18em] text-red-200/70">Your answer</div>
+          <div className="mt-2 font-black text-red-100">{question.selected_answer || "Blank"}</div>
         </div>
-        <div className="rounded-md bg-emerald-50 p-3">
-          <div className="text-xs font-black uppercase text-emerald-700">Correct answer</div>
-          <div className="mt-1 font-black text-emerald-900">{question.correct_answer}</div>
+        <div className="border border-emerald-300/20 bg-emerald-950/20 p-3">
+          <div className="text-xs font-black uppercase tracking-[0.18em] text-emerald-200/70">Correct answer</div>
+          <div className="mt-2 font-black text-emerald-100">{question.correct_answer}</div>
         </div>
       </div>
 
-      <div className="mt-4 rounded-md bg-slate-50 p-4">
-        <div className="text-sm font-black text-ink">Explanation</div>
-        <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{question.explanation}</p>
+      <div className="mt-4 border border-white/10 bg-black/20 p-4">
+        <div className="text-sm font-black text-white">Explanation</div>
+        <p className="mt-2 text-sm font-light leading-6 text-white/58">{question.explanation}</p>
       </div>
     </article>
   );
