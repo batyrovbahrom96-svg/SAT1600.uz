@@ -168,7 +168,7 @@ export default function Home() {
     <main className="nex-home" data-direction={direction}>
       <header className="nex-header">
         <Link href="/" className="nex-logo" aria-label="SAT1600 home">
-          <img src="/assets/brand/sattest-logo.png" alt="SATTEST.UZ" />
+          <img src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" />
         </Link>
         <nav className="nex-top-links" aria-label="Primary navigation">
           <Link href="/dashboard">Dashboard</Link>
