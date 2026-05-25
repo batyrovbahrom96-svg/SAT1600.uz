@@ -27,7 +27,7 @@ const metrics = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#0b0b0b] text-[#d8d8d8]">
+    <main className="min-h-screen overflow-hidden bg-[#0b0b0b] text-[#d8d8d8]">
       <header className="mx-auto flex max-w-[1440px] items-center justify-between border-b border-white/10 px-6 py-5 md:px-10">
         <Link href="/" className="text-lg font-black tracking-tight text-white">
           SAT1600.uz
@@ -38,8 +38,10 @@ export default function Home() {
         </nav>
       </header>
 
-      <section className="mx-auto grid min-h-[calc(100vh-73px)] max-w-[1440px] lg:grid-cols-[60%_40%]">
-        <div className="flex flex-col justify-center px-6 py-16 md:px-10 lg:px-16 xl:px-24">
+      <section className="relative mx-auto grid min-h-[calc(100vh-73px)] max-w-[1440px] lg:grid-cols-[60%_40%]">
+        <div className="motion-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
+
+        <div className="relative flex flex-col justify-center px-6 py-16 md:px-10 lg:px-16 xl:px-24">
           <p className="mb-8 text-xs font-black uppercase tracking-[0.36em] text-[#8f8f8f]">
             Digital SAT platform for Uzbekistan
           </p>
@@ -63,13 +65,22 @@ export default function Home() {
               Login
             </Link>
           </div>
+
+          <div className="mt-14 max-w-2xl border border-white/10 bg-[#101010]/90 p-5">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <p className="text-xs font-black uppercase tracking-[0.26em] text-[#8f8f8f]">Score trajectory</p>
+              <span className="text-sm font-black text-white">400 → 1600</span>
+            </div>
+            <ScoreMotionGraphic />
+          </div>
         </div>
 
-        <div className="border-l border-white/10 bg-[#151515] px-6 py-12 md:px-10 lg:px-12">
+        <div className="relative border-l border-white/10 bg-[#151515] px-6 py-12 md:px-10 lg:px-12">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/40 scan-line" aria-hidden="true" />
           <div className="flex h-full flex-col justify-between gap-12">
             <div className="space-y-0">
-              {principles.map((item) => (
-                <section className="border-b border-white/10 py-8 first:pt-0 last:border-b-0" key={item.title}>
+              {principles.map((item, index) => (
+                <section className={`${index === 1 ? "floating-panel" : index === 2 ? "floating-panel-delayed" : ""} border-b border-white/10 bg-[#151515] py-8 first:pt-0 last:border-b-0`} key={item.title}>
                   <div className="mb-5 flex items-center justify-between gap-6">
                     <span className="text-xs font-black uppercase tracking-[0.3em] text-[#777777]">{item.label}</span>
                     <CheckCircle2 className="text-[#d8d8d8]" size={19} />
@@ -105,7 +116,79 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <section className="border-t border-white/10 bg-[#0b0b0b] text-white">
+        <div className="mx-auto grid max-w-[1440px] gap-10 px-6 py-20 md:px-10 lg:grid-cols-[1fr_1fr] lg:px-16 xl:px-24">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-[#8f8f8f]">Live feedback loop</p>
+            <h2 className="mt-5 text-4xl font-black leading-tight md:text-5xl">Every answer moves the next decision.</h2>
+            <p className="mt-6 max-w-xl text-lg font-semibold leading-8 text-[#a8a8a8]">
+              The interface now feels alive before the test starts, while the exam itself stays stable, readable, and Bluebook-like.
+            </p>
+          </div>
+          <div className="grid gap-4">
+            <MotionModule label="Module 1" value="Routing" width="72%" />
+            <MotionModule label="Module 2" value="Adaptive" width="86%" />
+            <MotionModule label="Report" value="Analysis" width="64%" />
+          </div>
+        </div>
+      </section>
     </main>
+  );
+}
+
+function ScoreMotionGraphic() {
+  return (
+    <svg className="h-auto w-full" viewBox="0 0 640 240" role="img" aria-label="Animated score growth chart">
+      <line x1="20" y1="208" x2="620" y2="208" stroke="rgba(255,255,255,0.16)" />
+      <line x1="20" y1="32" x2="20" y2="208" stroke="rgba(255,255,255,0.16)" />
+      {[72, 120, 168].map((y) => (
+        <line key={y} x1="20" y1={y} x2="620" y2={y} stroke="rgba(255,255,255,0.07)" />
+      ))}
+      {[140, 260, 380, 500].map((x) => (
+        <line key={x} x1={x} y1="32" x2={x} y2="208" stroke="rgba(255,255,255,0.07)" />
+      ))}
+      <path
+        className="score-line"
+        d="M32 190 C110 184 132 150 196 150 C272 150 286 108 352 108 C424 108 440 70 512 70 C562 70 590 48 612 42"
+        fill="none"
+        stroke="white"
+        strokeLinecap="round"
+        strokeWidth="4"
+      />
+      <circle className="score-dot" cx="32" cy="190" r="7" fill="white" />
+      <circle className="score-dot" cx="196" cy="150" r="7" fill="white" />
+      <circle className="score-dot" cx="352" cy="108" r="7" fill="white" />
+      <circle className="score-dot" cx="512" cy="70" r="7" fill="white" />
+      <circle className="score-dot" cx="612" cy="42" r="7" fill="white" />
+      <text x="28" y="226" fill="#8f8f8f" fontSize="12" fontWeight="700">Start</text>
+      <text x="538" y="226" fill="#8f8f8f" fontSize="12" fontWeight="700">Score growth</text>
+    </svg>
+  );
+}
+
+function MotionModule({
+  label,
+  value,
+  width
+}: {
+  label: string;
+  value: string;
+  width: string;
+}) {
+  return (
+    <article className="floating-panel border border-white/10 bg-[#151515] p-5">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#8f8f8f]">{label}</p>
+          <h3 className="mt-2 text-2xl font-black">{value}</h3>
+        </div>
+        <div className="h-12 w-12 border border-white/15 bg-[#0b0b0b]" />
+      </div>
+      <div className="mt-5 h-2 bg-white/10">
+        <div className="h-full bg-white transition-all duration-200 ease-in-out" style={{ width }} />
+      </div>
+    </article>
   );
 }
 

@@ -53,6 +53,127 @@ button, input {
   margin: 0 auto;
 }
 
+.motion-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+  animation: grid-drift 24s linear infinite;
+}
+
+.score-line {
+  stroke-dasharray: 760;
+  stroke-dashoffset: 760;
+  animation: score-line-draw 5s ease-in-out infinite;
+}
+
+.score-dot {
+  animation: score-dot-pulse 2.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.score-dot:nth-of-type(2) {
+  animation-delay: 0.35s;
+}
+
+.score-dot:nth-of-type(3) {
+  animation-delay: 0.7s;
+}
+
+.score-dot:nth-of-type(4) {
+  animation-delay: 1.05s;
+}
+
+.score-dot:nth-of-type(5) {
+  animation-delay: 1.4s;
+}
+
+.floating-panel {
+  animation: floating-panel 7s ease-in-out infinite;
+}
+
+.floating-panel-delayed {
+  animation: floating-panel 7s ease-in-out infinite;
+  animation-delay: 1.8s;
+}
+
+.scan-line {
+  animation: scan-line 4.8s ease-in-out infinite;
+}
+
+@keyframes grid-drift {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  100% {
+    background-position: 56px 56px, 56px 56px;
+  }
+}
+
+@keyframes score-line-draw {
+  0% {
+    stroke-dashoffset: 760;
+    opacity: 0.35;
+  }
+  45%,
+  75% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -760;
+    opacity: 0.35;
+  }
+}
+
+@keyframes score-dot-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes floating-panel {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes scan-line {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.2;
+  }
+  45%,
+  55% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(184px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-grid,
+  .score-line,
+  .score-dot,
+  .floating-panel,
+  .floating-panel-delayed,
+  .scan-line {
+    animation: none;
+  }
+}
+
 @media (max-width: 768px) {
   .question-center,
   .answer-option {
