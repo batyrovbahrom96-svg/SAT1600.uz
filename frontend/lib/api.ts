@@ -51,6 +51,29 @@ export class ApiError extends Error {
   }
 }
 
+function formatApiErrorDetail(detail: unknown) {
+  if (!detail) return "Request failed";
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") {
+          const record = item as { loc?: unknown[]; msg?: unknown };
+          const field = Array.isArray(record.loc) ? record.loc.filter((part) => part !== "body").join(".") : "";
+          const message = typeof record.msg === "string" ? record.msg : "Invalid value";
+          return field ? `${field}: ${message}` : message;
+        }
+        return String(item);
+      })
+      .join("; ");
+  }
+  if (typeof detail === "object") {
+    return JSON.stringify(detail);
+  }
+  return String(detail);
+}
+
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const hasBody = options.body !== undefined;
@@ -72,7 +95,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new ApiError(body.detail || "Request failed", response.status);
+    throw new ApiError(formatApiErrorDetail(body.detail), response.status);
   }
   return response.json();
 }
