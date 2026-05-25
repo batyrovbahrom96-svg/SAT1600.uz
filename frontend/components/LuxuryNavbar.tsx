@@ -1,0 +1,48 @@
+"use client";
+
+import Link from "next/link";
+
+const navItems = [
+  { label: "Mock Test", href: "/dashboard" },
+  { label: "Practice", href: "/dashboard" },
+  { label: "Results", href: "/results/demo" },
+  { label: "Pricing", href: "/#pricing" }
+];
+
+export function LuxuryNavbar() {
+  return (
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#101112]/90 backdrop-blur-xl">
+      <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 md:grid-cols-[1fr_auto_1fr] md:px-8">
+        <Link className="group flex items-center gap-3" href="/">
+          <span className="flex h-11 w-11 items-center justify-center border border-white/15 bg-white/[0.035] text-[15px] font-light tracking-[-0.02em] text-white shadow-[0_18px_42px_rgba(0,0,0,0.28)] transition-colors group-hover:border-white/35">
+            ST
+          </span>
+          <span className="text-[13px] font-black uppercase tracking-[0.32em] text-white">
+            SATTEST.UZ
+          </span>
+        </Link>
+
+        <nav className="hidden items-center gap-1 border border-white/10 bg-black/20 px-2 py-1 md:flex">
+          {navItems.map((item) => (
+            <Link
+              className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-white/48 transition-colors hover:text-white"
+              href={item.href}
+              key={item.label}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex items-center justify-end gap-2">
+          <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/dashboard">
+            Start Test
+          </Link>
+          <Link className="h-11 border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] leading-[44px] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
+            Login
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}

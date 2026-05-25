@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   Bar,
@@ -29,6 +28,7 @@ import {
   Trophy,
   XCircle
 } from "lucide-react";
+import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { ApiError, api } from "@/lib/api";
 
 type ResultQuestion = {
@@ -153,7 +153,7 @@ export default function ResultsPage() {
   if (!reportResults || !analytics) {
     return (
       <main className="min-h-screen bg-[#101112] text-white">
-        <ResultsHeader />
+        <LuxuryNavbar />
         <section className="mx-auto flex min-h-[70vh] max-w-4xl flex-col items-center justify-center px-5 text-center">
           <div className="flex h-16 w-16 items-center justify-center border border-white/10 bg-white/[0.035] text-white">
             <BarChart3 className="h-8 w-8" />
@@ -178,7 +178,7 @@ export default function ResultsPage() {
 
   return (
     <main className="min-h-screen bg-[#101112] text-white">
-      <ResultsHeader />
+      <LuxuryNavbar />
       <section className="mx-auto max-w-7xl px-5 py-10 md:px-8 md:py-14">
         <div className="grid gap-8 border-b border-white/10 pb-10 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
@@ -465,26 +465,6 @@ function sectionName(section?: string) {
   if (section === "reading_writing") return "Reading and Writing";
   if (section === "math") return "Math";
   return "SAT";
-}
-
-function ResultsHeader() {
-  return (
-    <header className="border-b border-white/10 bg-[#101112]/92 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 md:px-8">
-        <Link href="/" className="flex h-12 w-[210px] items-center border border-white/10 bg-black/30 px-4 shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
-          <img className="h-auto w-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.32)]" src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" />
-        </Link>
-        <nav className="hidden items-center gap-2 text-[10px] font-black uppercase tracking-[0.28em] text-white/48 md:flex">
-          <Link className="flex items-center gap-2 px-3 py-2 transition-colors hover:text-white" href="/dashboard">
-            <BookOpenCheck size={16} /> Tests
-          </Link>
-          <Link className="flex items-center gap-2 px-3 py-2 text-white" href="/results/demo">
-            <BarChart3 size={16} /> Results
-          </Link>
-        </nav>
-      </div>
-    </header>
-  );
 }
 
 function ScoreCard({
