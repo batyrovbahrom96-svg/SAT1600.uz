@@ -60,6 +60,7 @@ button, input {
 .sat-home-motion {
   scroll-behavior: smooth;
   scroll-snap-type: y mandatory;
+  overscroll-behavior-y: contain;
 }
 
 .motion-slide {
@@ -67,7 +68,10 @@ button, input {
   min-height: 100vh;
   overflow: hidden;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
   isolation: isolate;
+  content-visibility: auto;
+  contain-intrinsic-size: 100vh;
 }
 
 .motion-slide-hero {
@@ -103,21 +107,24 @@ button, input {
   inset: -32vh -24vw -24vh 24vw;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.92;
+  opacity: 0.78;
   perspective: 1500px;
   transform-style: preserve-3d;
-  animation: revolving-stage 18s linear infinite;
+  animation: revolving-stage 28s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  backface-visibility: hidden;
+  contain: layout paint style;
+  will-change: transform;
 }
 
 .revolving-figure-1 {
   inset: -30vh -18vw -26vh 18vw;
-  animation-duration: 21s;
+  animation-duration: 32s;
   animation-direction: reverse;
 }
 
 .revolving-figure-2 {
   inset: -38vh -26vw -20vh 34vw;
-  animation-duration: 16s;
+  animation-duration: 24s;
 }
 
 .revolving-core {
@@ -127,24 +134,29 @@ button, input {
   height: 52%;
   width: 30%;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.015) 48%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.012) 48%, transparent 70%);
   transform: translate(-50%, -50%) rotate(-24deg);
-  filter: blur(1px);
+  animation: revolving-core-breathe 9s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .revolving-rib {
   position: absolute;
   left: 62%;
   top: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  border-left-color: rgba(255, 255, 255, 0.035);
-  border-bottom-color: rgba(255, 255, 255, 0.055);
+  height: var(--rib-height);
+  width: var(--rib-width);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-left-color: rgba(255, 255, 255, 0.025);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
   border-radius: 49% 51% 44% 56%;
-  background: linear-gradient(110deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012) 36%, rgba(0, 0, 0, 0.22) 100%);
-  box-shadow:
-    inset 0 0 28px rgba(255, 255, 255, 0.026),
-    0 0 18px rgba(255, 255, 255, 0.025);
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01) 38%, rgba(0, 0, 0, 0.18) 100%);
   transform-origin: center;
+  transform: translate3d(-50%, -50%, 0) rotate(var(--rib-rotate)) skewY(-15deg) scale(1);
+  animation: rib-twist 10s ease-in-out infinite;
+  animation-delay: var(--rib-delay);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 .motion-benefit-card {
@@ -295,16 +307,40 @@ button, input {
 
 @keyframes revolving-stage {
   0% {
-    transform: rotateX(64deg) rotateY(-22deg) rotateZ(0deg) translate3d(0, 0, 0) scale(1.02);
+    transform: translate3d(0, 0, 0) rotateX(64deg) rotateY(-22deg) rotateZ(0deg) scale(1.01);
   }
-  35% {
-    transform: rotateX(64deg) rotateY(-22deg) rotateZ(126deg) translate3d(-2vw, 1vh, 0) scale(1.08);
+  33% {
+    transform: translate3d(-1.2vw, 0.8vh, 0) rotateX(66deg) rotateY(-18deg) rotateZ(118deg) scale(1.04);
   }
-  70% {
-    transform: rotateX(64deg) rotateY(-22deg) rotateZ(252deg) translate3d(2vw, -1vh, 0) scale(1.04);
+  66% {
+    transform: translate3d(1.2vw, -0.8vh, 0) rotateX(62deg) rotateY(-25deg) rotateZ(242deg) scale(1.025);
   }
   100% {
-    transform: rotateX(64deg) rotateY(-22deg) rotateZ(360deg) translate3d(0, 0, 0) scale(1.02);
+    transform: translate3d(0, 0, 0) rotateX(64deg) rotateY(-22deg) rotateZ(360deg) scale(1.01);
+  }
+}
+
+@keyframes rib-twist {
+  0%,
+  100% {
+    opacity: 0.56;
+    transform: translate3d(-50%, -50%, 0) rotate(var(--rib-rotate)) skewY(-15deg) scale(0.99);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate3d(-50%, -50%, 0) rotate(calc(var(--rib-rotate) + 10deg)) skewY(-9deg) scale(1.012);
+  }
+}
+
+@keyframes revolving-core-breathe {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: translate(-50%, -50%) rotate(-24deg) scale(0.96);
+  }
+  50% {
+    opacity: 0.92;
+    transform: translate(-50%, -50%) rotate(-10deg) scale(1.05);
   }
 }
 
@@ -450,6 +486,8 @@ button, input {
   .rotor-stage,
   .advantage-card,
   .revolving-figure,
+  .revolving-rib,
+  .revolving-core,
   .motion-benefit-card {
     animation: none;
   }

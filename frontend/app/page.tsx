@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import {
   ArrowRight,
   BarChart3,
@@ -108,7 +109,7 @@ export default function Home() {
             {slide.id !== "practice" && (
               <div className="mt-12 grid max-w-4xl gap-4 md:grid-cols-2">
                 {advantages.slice(index - 1, index + 1).map((item) => (
-                  <article className="motion-benefit-card group border border-white/10 bg-white/[0.055] p-6 backdrop-blur-md transition-all duration-300 hover:border-white/45 hover:bg-white/[0.09]" key={item.title}>
+                  <article className="motion-benefit-card group border border-white/10 bg-white/[0.055] p-6 transition-all duration-300 hover:border-white/45 hover:bg-white/[0.09]" key={item.title}>
                     <item.Icon className="mb-8 text-white/70 transition-all duration-300 group-hover:text-white" size={30} />
                     <h2 className="text-2xl font-black">{item.title}</h2>
                     <p className="mt-4 text-sm font-semibold leading-7 text-white/52">{item.body}</p>
@@ -159,15 +160,16 @@ function RibbedMotionGraphic({ variant }: { variant: number }) {
   return (
     <div className={`revolving-figure revolving-figure-${variant}`} aria-hidden="true">
       <div className="revolving-core" />
-      {Array.from({ length: 42 }).map((_, index) => (
+      {Array.from({ length: 20 }).map((_, index) => (
         <span
           className="revolving-rib"
           key={index}
           style={{
-            height: `${42 + index * 2.45}%`,
-            width: `${25 + index * 1.82}%`,
-            transform: `translate(-50%, -50%) rotate(${index * 4.8}deg) skewY(-15deg)`
-          }}
+            "--rib-height": `${52 + index * 4.2}%`,
+            "--rib-width": `${32 + index * 3}%`,
+            "--rib-rotate": `${index * 9.2}deg`,
+            "--rib-delay": `${index * -0.15}s`
+          } as CSSProperties}
         />
       ))}
     </div>
