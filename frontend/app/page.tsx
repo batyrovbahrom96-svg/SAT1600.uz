@@ -1,175 +1,259 @@
+"use client";
+
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import {
-  ArrowRight,
-  BarChart3,
-  ChevronDown,
-  ChevronUp,
-  Gauge,
-  LineChart,
-  ShieldCheck,
-  Target,
-  Trophy
-} from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { ArrowRight, ChevronDown, ChevronUp, Menu } from "lucide-react";
 
 const slides = [
   {
     id: "practice",
+    nav: "Practice",
     eyebrow: "Digital SAT platform for Uzbekistan",
-    title: "Practice moves with your score.",
-    body: "Full mock tests, adaptive modules, math grid-ins, and Bluebook-style timing inside one premium SAT training experience.",
+    title: ["Practice", "Mode"],
+    body: "Full mock tests, adaptive modules, grid-ins, and Bluebook-style timing inside one premium SAT training experience.",
     cta: "Start mock test",
     href: "/register",
-    active: "Practice",
-    prev: "growth",
-    next: "analytics",
-    tone: "hero"
+    vertical: ["S", "A", "T", "1", "6", "0", "0"],
+    stat: "01"
   },
   {
     id: "analytics",
+    nav: "Analytics",
     eyebrow: "Score intelligence",
-    title: "Every test becomes a report.",
-    body: "Students see accuracy, missed questions, trap patterns, topic weakness, and what to fix before the next mock test.",
+    title: ["Score", "Analytics"],
+    body: "Every test becomes a report: accuracy, missed questions, trap patterns, topic weakness, and the next task to fix.",
     cta: "See advantages",
-    href: "#growth",
-    active: "Analytics",
-    prev: "practice",
-    next: "growth",
-    tone: "middle"
+    href: "/register",
+    vertical: ["A", "N", "A", "L", "Y", "T", "I", "C", "S"],
+    stat: "02"
   },
   {
     id: "growth",
+    nav: "Growth",
     eyebrow: "Built to sell improvement",
-    title: "Turn visitors into paid students.",
-    body: "A premium first impression, strong result pages, and clear progress feedback make the product feel worth paying for.",
+    title: ["Growth", "Engine"],
+    body: "Premium motion, clear progress, and result pages that make students feel the product is worth paying for.",
     cta: "Create account",
     href: "/register",
-    active: "Growth",
-    prev: "analytics",
-    next: "practice",
-    tone: "final"
+    vertical: ["P", "R", "O", "G", "R", "E", "S", "S"],
+    stat: "03"
   }
 ];
 
-const advantages = [
-  { title: "Bluebook-level practice", body: "Timed sections, review marks, grid-ins, locked modules.", Icon: ShieldCheck },
-  { title: "Adaptive score engine", body: "Module routing follows real SAT pressure patterns.", Icon: Gauge },
-  { title: "Post-test analytics", body: "Mistakes, traps, explanations, and next steps.", Icon: BarChart3 },
-  { title: "Growth dashboard", body: "Progress signals that keep students returning.", Icon: LineChart }
-];
-
-const navItems = ["Practice", "Analytics", "Growth"];
+const transitionMs = 1250;
 
 export default function Home() {
+  const [active, setActive] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const activeRef = useRef(active);
+  const lockRef = useRef(false);
+  const touchStartRef = useRef({ y: 0, time: 0 });
+
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  const goTo = useCallback((targetIndex: number) => {
+    const total = slides.length;
+    const normalized = (targetIndex + total) % total;
+
+    if (normalized === activeRef.current || lockRef.current) {
+      return;
+    }
+
+    lockRef.current = true;
+    const current = activeRef.current;
+    const nextDirection =
+      normalized > current || (current === total - 1 && normalized === 0) ? 1 : -1;
+
+    setDirection(nextDirection);
+    setActive(normalized);
+
+    window.setTimeout(() => {
+      lockRef.current = false;
+    }, transitionMs);
+  }, []);
+
+  const goNext = useCallback(() => goTo(activeRef.current + 1), [goTo]);
+  const goPrev = useCallback(() => goTo(activeRef.current - 1), [goTo]);
+
+  useEffect(() => {
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      if (Math.abs(event.deltaY) < 8) {
+        return;
+      }
+      event.deltaY > 0 ? goNext() : goPrev();
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown" || event.key === "PageDown") {
+        event.preventDefault();
+        goNext();
+      }
+      if (event.key === "ArrowUp" || event.key === "PageUp") {
+        event.preventDefault();
+        goPrev();
+      }
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      touchStartRef.current = { y: touch.pageY, time: event.timeStamp };
+    };
+
+    const onTouchEnd = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      const distance = touch.pageY - touchStartRef.current.y;
+      const elapsed = Math.max(event.timeStamp - touchStartRef.current.time, 1);
+      const velocity = distance / elapsed;
+
+      if (Math.abs(distance) > 54 || Math.abs(velocity) > 0.35) {
+        distance < 0 ? goNext() : goPrev();
+      }
+    };
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [goNext, goPrev]);
+
   return (
-    <main className="sat-home-motion h-screen overflow-y-auto overflow-x-hidden bg-[#0b0b0b] text-white">
-      <header className="fixed left-0 right-0 top-0 z-40 mx-auto flex max-w-[1440px] items-center justify-between px-6 py-8 md:px-12 lg:px-20">
-        <Link href="#practice" className="text-2xl font-black tracking-tight">
-          SAT1600.uz
+    <main className="nex-home" data-direction={direction}>
+      <header className="nex-header">
+        <Link href="/" className="nex-logo" aria-label="SAT1600 home">
+          <span className="nex-logo-mark">
+            <span />
+            <span />
+          </span>
+          <span>SAT1600</span>
         </Link>
-        <nav className="hidden items-center gap-9 text-xs font-black uppercase tracking-[0.24em] text-white/55 md:flex">
-          <Link className="transition-all duration-200 hover:text-white" href="#analytics">Advantages</Link>
-          <Link className="transition-all duration-200 hover:text-white" href="/login">Login</Link>
-          <Link className="transition-all duration-200 hover:text-white" href="/register">Start</Link>
+        <nav className="nex-top-links" aria-label="Primary navigation">
+          <Link href="/dashboard">Dashboard</Link>
+          <Link href="/login">Login</Link>
+          <Link href="/register">Start</Link>
         </nav>
+        <button className="nex-menu" aria-label="Navigation">
+          <Menu size={28} strokeWidth={1.5} />
+        </button>
       </header>
 
-      {slides.map((slide, index) => (
-        <section className={`motion-slide motion-slide-${slide.tone}`} id={slide.id} key={slide.id}>
-          <RibbedMotionGraphic variant={index} />
-          <div className="motion-vignette" />
+      <div className="nex-backgrounds" aria-hidden="true">
+        {slides.map((slide, index) => (
+          <RibbedFigure active={active === index} key={slide.id} variant={index} />
+        ))}
+      </div>
 
-          <div className="relative z-10 mx-auto flex min-h-screen max-w-[1440px] flex-col justify-center px-6 pb-36 pt-28 md:px-12 lg:px-20">
-            <div className="max-w-4xl">
-              <p className="mb-10 text-xs font-black uppercase tracking-[0.34em] text-white/55">
-                {slide.eyebrow}
-              </p>
-              <h1 className="max-w-5xl text-[58px] font-black leading-[0.88] tracking-normal md:text-[92px] lg:text-[118px]">
-                {slide.title}
+      <div className="nex-screen-stack">
+        {slides.map((slide, index) => (
+          <section
+            className={`nex-screen ${active === index ? "is-current" : ""}`}
+            aria-hidden={active !== index}
+            key={slide.id}
+          >
+            <div className="nex-copy">
+              <p className="nex-kicker">{slide.eyebrow}</p>
+              <h1 className="nex-title">
+                {slide.title.map((word) => (
+                  <span className="nex-title-line" key={word}>
+                    <span>{word}</span>
+                  </span>
+                ))}
               </h1>
-              <p className="mt-10 max-w-2xl text-xl font-semibold leading-9 text-white/56 md:text-2xl">
-                {slide.body}
-              </p>
-              <div className="mt-12 flex flex-wrap gap-4">
-                <Link
-                  className="inline-flex items-center gap-3 bg-white px-7 py-4 text-sm font-black uppercase tracking-[0.16em] text-black transition-all duration-200 hover:bg-transparent hover:text-white hover:outline hover:outline-1 hover:outline-white"
-                  href={slide.href}
-                >
-                  {slide.cta} <ArrowRight size={18} />
-                </Link>
-                <Link
-                  className="inline-flex items-center gap-3 border border-white/20 px-7 py-4 text-sm font-black uppercase tracking-[0.16em] text-white transition-all duration-200 hover:border-white"
-                  href={`#${slide.next}`}
-                >
-                  Move down
-                </Link>
-              </div>
+              <p className="nex-description">{slide.body}</p>
+              <Link className="nex-cta" href={slide.href}>
+                <span>{slide.cta}</span>
+                <ArrowRight size={18} />
+              </Link>
             </div>
 
-            {slide.id !== "practice" && (
-              <div className="mt-12 grid max-w-4xl gap-4 md:grid-cols-2">
-                {advantages.slice(index - 1, index + 1).map((item) => (
-                  <article className="motion-benefit-card group border border-white/10 bg-white/[0.055] p-6 transition-all duration-300 hover:border-white/45 hover:bg-white/[0.09]" key={item.title}>
-                    <item.Icon className="mb-8 text-white/70 transition-all duration-300 group-hover:text-white" size={30} />
-                    <h2 className="text-2xl font-black">{item.title}</h2>
-                    <p className="mt-4 text-sm font-semibold leading-7 text-white/52">{item.body}</p>
-                  </article>
+            <div className="nex-index" aria-label={`Slide ${slide.stat} of 03`}>
+              <span>{slide.stat}</span>
+              <span>/</span>
+              <span>03</span>
+            </div>
+
+            <div className="nex-vertical-text" aria-hidden="true">
+              <div className="nex-vertical-track">
+                {[...slide.vertical, ...slide.vertical].map((letter, letterIndex) => (
+                  <span className={letter === "1" ? "is-solid" : ""} key={`${letter}-${letterIndex}`}>
+                    {letter}
+                  </span>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          </section>
+        ))}
+      </div>
 
-          <SlideControls active={slide.active} previous={slide.prev} next={slide.next} />
-        </section>
-      ))}
+      <div className="nex-home-login">
+        <span />
+        <Link href="/login">Student Login</Link>
+      </div>
+
+      <nav className="nex-slide-nav" aria-label="Homepage slides">
+        <div className="nex-circ-buttons">
+          <button className="nex-circ-button" onClick={goPrev} aria-label="Previous slide" type="button">
+            <ChevronUp size={18} />
+          </button>
+          <button className="nex-circ-button" onClick={goNext} aria-label="Next slide" type="button">
+            <ChevronDown size={18} />
+          </button>
+        </div>
+
+        <div className="nex-slide-tabs">
+          {slides.map((slide, index) => (
+            <button
+              className={active === index ? "is-current" : ""}
+              key={slide.id}
+              onClick={() => goTo(index)}
+              type="button"
+            >
+              <span>{slide.nav}</span>
+              <span>{slide.nav}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="nex-footer-note">Digital SAT practice engine</div>
+      </nav>
     </main>
   );
 }
 
-function SlideControls({
-  active,
-  previous,
-  next
-}: {
-  active: string;
-  previous: string;
-  next: string;
-}) {
+function RibbedFigure({ active, variant }: { active: boolean; variant: number }) {
   return (
-    <div className="pointer-events-none absolute bottom-8 left-6 right-6 z-30 mx-auto flex max-w-[1440px] items-end justify-between gap-6 md:left-12 md:right-12 lg:left-20 lg:right-20">
-      <div className="hidden items-center gap-10 text-[11px] font-black uppercase tracking-[0.45em] text-white/34 md:flex">
-        {navItems.map((item) => (
-          <Link className={`pointer-events-auto transition-all duration-200 hover:text-white ${item === active ? "text-white" : ""}`} href={`#${item.toLowerCase()}`} key={item}>
-            {item}
-          </Link>
-        ))}
-      </div>
-      <div className="pointer-events-auto flex gap-5">
-        <Link className="motion-circle" href={`#${previous}`} aria-label="Move up">
-          <ChevronUp size={20} />
-        </Link>
-        <Link className="motion-circle" href={`#${next}`} aria-label="Move down">
-          <ChevronDown size={20} />
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function RibbedMotionGraphic({ variant }: { variant: number }) {
-  return (
-    <div className={`revolving-figure revolving-figure-${variant}`} aria-hidden="true">
-      <div className="revolving-core" />
-      {Array.from({ length: 20 }).map((_, index) => (
+    <div className={`nex-figure nex-figure-${variant} ${active ? "is-current" : ""}`}>
+      <div className="nex-figure-core" />
+      {Array.from({ length: 28 }).map((_, index) => (
         <span
-          className="revolving-rib"
+          className="nex-figure-rib"
           key={index}
-          style={{
-            "--rib-height": `${52 + index * 4.2}%`,
-            "--rib-width": `${32 + index * 3}%`,
-            "--rib-rotate": `${index * 9.2}deg`,
-            "--rib-delay": `${index * -0.15}s`
-          } as CSSProperties}
+          style={
+            {
+              "--rib-width": `${28 + index * 2.85}vw`,
+              "--rib-height": `${34 + index * 2.4}vh`,
+              "--rib-rotate": `${index * 7.8 + variant * 18}deg`,
+              "--rib-delay": `${index * -0.055}s`
+            } as CSSProperties
+          }
         />
       ))}
     </div>
