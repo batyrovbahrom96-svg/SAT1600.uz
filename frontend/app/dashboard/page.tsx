@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Crown, LineChart } from "lucide-react";
-import { Nav } from "@/components/Nav";
+import Link from "next/link";
+import { ArrowRight, BarChart3, BookOpenCheck, Crown, LineChart, Shield } from "lucide-react";
 import { ApiError, api } from "@/lib/api";
 
 type Test = { id: string; title: string; description: string; is_premium: boolean };
@@ -39,34 +39,76 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-paper">
-      <Nav />
-      <section className="mx-auto max-w-7xl px-4 py-8">
-        <div className="mb-6 flex items-end justify-between gap-4">
+    <main className="min-h-screen bg-[#101112] text-white">
+      <header className="border-b border-white/10 bg-[#101112]/92 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 md:px-8">
+          <Link href="/" className="flex h-12 w-[210px] items-center border border-white/10 bg-black/30 px-4 shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
+            <img className="h-auto w-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.32)]" src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" />
+          </Link>
+          <nav className="hidden items-center gap-2 text-[10px] font-black uppercase tracking-[0.28em] text-white/48 md:flex">
+            <Link className="flex items-center gap-2 px-3 py-2 text-white" href="/dashboard">
+              <BookOpenCheck size={16} /> Tests
+            </Link>
+            <Link className="flex items-center gap-2 px-3 py-2 transition-colors hover:text-white" href="/results/demo">
+              <BarChart3 size={16} /> Analytics
+            </Link>
+            <Link className="flex items-center gap-2 px-3 py-2 transition-colors hover:text-white" href="/admin">
+              <Shield size={16} /> Admin
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-7xl px-5 py-10 md:px-8 md:py-14">
+        <div className="grid gap-8 border-b border-white/10 pb-10 lg:grid-cols-[1fr_360px] lg:items-end">
           <div>
-            <h1 className="text-3xl font-black text-ink">Mock tests</h1>
-            <p className="mt-1 text-slate-600">Adaptive Digital SAT practice with analytics after submission.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Student workspace</p>
+            <h1 className="mt-5 text-5xl font-light leading-none text-white md:text-7xl">Mock tests</h1>
+            <p className="mt-6 max-w-2xl text-lg font-light leading-8 text-white/50">
+              Adaptive Digital SAT practice with analytics after submission. Pick a test, start clean, and return here to track the next score move.
+            </p>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
-            <div className="font-black">{history?.attempts ?? 0} attempts</div>
-            <div className="text-slate-500">Latest score {history?.score_history.at(-1)?.score ?? "none"}</div>
+          <div className="grid grid-cols-2 border border-white/10 bg-white/[0.035]">
+            <div className="border-r border-white/10 p-5">
+              <div className="text-[10px] font-black uppercase tracking-[0.28em] text-white/38">Attempts</div>
+              <div className="mt-4 text-4xl font-light text-white">{history?.attempts ?? 0}</div>
+            </div>
+            <div className="p-5">
+              <div className="text-[10px] font-black uppercase tracking-[0.28em] text-white/38">Latest score</div>
+              <div className="mt-4 text-4xl font-light text-white">{history?.score_history.at(-1)?.score ?? "none"}</div>
+            </div>
           </div>
         </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {message ? <p className="rounded-md bg-yellow-50 p-3 font-semibold text-yellow-700 lg:col-span-3">{message}</p> : null}
+
+        <div className="mt-8 grid gap-4">
+          {message ? <p className="border border-yellow-300/25 bg-yellow-950/20 p-4 font-semibold text-yellow-100">{message}</p> : null}
           {tests.map((test) => (
-            <article key={test.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <LineChart className="text-brand" />
-                {test.is_premium ? <Crown className="text-warning" /> : null}
+            <article key={test.id} className="grid gap-5 border border-white/10 bg-white/[0.035] p-5 transition-colors hover:border-white/25 hover:bg-white/[0.055] md:grid-cols-[56px_1fr_auto] md:items-center md:p-6">
+              <div className="flex h-14 w-14 items-center justify-center border border-white/10 bg-black/20 text-white/70">
+                <LineChart size={24} />
               </div>
-              <h2 className="text-xl font-black text-ink">{test.title}</h2>
-              <p className="mt-2 min-h-12 text-sm text-slate-600">{test.description}</p>
-              <button onClick={() => start(test.id)} className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-brand px-4 py-3 font-bold text-white hover:bg-blue-700">
-                Start test <ArrowRight size={18} />
+              <div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-2xl font-light text-white">{test.title}</h2>
+                  {test.is_premium ? (
+                    <span className="inline-flex items-center gap-2 border border-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/58">
+                      <Crown size={13} /> Premium
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-2 max-w-3xl text-sm font-light leading-6 text-white/48">{test.description}</p>
+              </div>
+              <button onClick={() => start(test.id)} className="flex h-12 items-center justify-center gap-3 border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white">
+                Start <ArrowRight size={17} />
               </button>
             </article>
           ))}
+
+          {!message && tests.length === 0 ? (
+            <div className="border border-white/10 bg-white/[0.03] p-8 text-white/50">
+              Loading available mock tests...
+            </div>
+          ) : null}
         </div>
       </section>
     </main>
