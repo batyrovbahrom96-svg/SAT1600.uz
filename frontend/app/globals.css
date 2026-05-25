@@ -538,8 +538,8 @@ button, input {
   z-index: 2;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(13, 14, 15, 0.96) 0%, rgba(13, 14, 15, 0.78) 39%, rgba(13, 14, 15, 0.26) 100%),
-    linear-gradient(0deg, rgba(10, 10, 10, 0.78) 0%, transparent 31%, transparent 70%, rgba(10, 10, 10, 0.7) 100%);
+    linear-gradient(90deg, rgba(13, 14, 15, 0.97) 0%, rgba(13, 14, 15, 0.76) 39%, rgba(13, 14, 15, 0.12) 100%),
+    linear-gradient(0deg, rgba(10, 10, 10, 0.72) 0%, transparent 31%, transparent 70%, rgba(10, 10, 10, 0.66) 100%);
 }
 
 .nex-header {
@@ -557,48 +557,17 @@ button, input {
 .nex-logo {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1;
+  width: 172px;
+  height: 58px;
   color: #fff;
 }
 
-.nex-logo-mark {
-  position: relative;
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-}
-
-.nex-logo-mark span {
-  position: absolute;
-  top: 14px;
-  left: 2px;
-  width: 30px;
-  height: 5px;
-  border-radius: 999px;
-  background: #fff;
-  transform-origin: center;
-  transition: transform 0.8s cubic-bezier(0.76, 0, 0.04, 1);
-}
-
-.nex-logo-mark span:first-child {
-  transform: rotate(42deg);
-  background: #e51646;
-}
-
-.nex-logo-mark span:nth-child(2) {
-  transform: rotate(-42deg);
-  background: #2b74c7;
-}
-
-.nex-logo:hover .nex-logo-mark span:first-child {
-  transform: rotate(-42deg);
-}
-
-.nex-logo:hover .nex-logo-mark span:nth-child(2) {
-  transform: rotate(42deg);
+.nex-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .nex-top-links {
@@ -633,6 +602,35 @@ button, input {
 
 .nex-backgrounds {
   z-index: 1;
+  overflow: hidden;
+  background: #111213;
+}
+
+.nex-background-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.035);
+  filter: contrast(1.05) brightness(0.95);
+  transition:
+    opacity 0.95s ease,
+    visibility 0s linear 0.95s,
+    transform 2.4s cubic-bezier(0.76, 0, 0.04, 1);
+  will-change: opacity, transform;
+}
+
+.nex-background-video.is-current {
+  opacity: 1;
+  visibility: inherit;
+  transform: scale(1);
+  transition:
+    opacity 0.95s ease,
+    visibility 0s,
+    transform 2.4s cubic-bezier(0.76, 0, 0.04, 1);
 }
 
 .nex-screen-stack {
@@ -1145,17 +1143,8 @@ button, input {
 
 @media (max-width: 560px) {
   .nex-logo {
-    font-size: 22px;
-  }
-
-  .nex-logo-mark {
-    width: 27px;
-    height: 27px;
-  }
-
-  .nex-logo-mark span {
-    top: 12px;
-    width: 25px;
+    width: 134px;
+    height: 46px;
   }
 
   .nex-title {

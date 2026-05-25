@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronUp, Menu } from "lucide-react";
 
 const slides = [
@@ -41,13 +41,24 @@ const slides = [
 ];
 
 const transitionMs = 1250;
+const videoSources = ["1-2", "1-3", "2-3", "3-1", "3-2"] as const;
+const transitionVideoByRoute: Record<string, (typeof videoSources)[number]> = {
+  "0-1": "1-2",
+  "0-2": "1-3",
+  "1-0": "1-2",
+  "1-2": "2-3",
+  "2-0": "3-1",
+  "2-1": "3-2"
+};
 
 export default function Home() {
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [currentVideo, setCurrentVideo] = useState<(typeof videoSources)[number]>("1-2");
   const activeRef = useRef(active);
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
     activeRef.current = active;
@@ -61,6 +72,23 @@ export default function Home() {
       document.body.style.overflow = previousOverflow;
     };
   }, []);
+
+  useEffect(() => {
+    const activeVideo = videoRefs.current[currentVideo];
+
+    if (activeVideo) {
+      activeVideo.muted = true;
+      activeVideo.currentTime = 0;
+      activeVideo.play().catch(() => undefined);
+    }
+
+    const retryId = window.setTimeout(() => {
+      const video = videoRefs.current[currentVideo];
+      video?.play().catch(() => undefined);
+    }, 120);
+
+    return () => window.clearTimeout(retryId);
+  }, [active, currentVideo]);
 
   const goTo = useCallback((targetIndex: number) => {
     const total = slides.length;
@@ -76,6 +104,7 @@ export default function Home() {
       normalized > current || (current === total - 1 && normalized === 0) ? 1 : -1;
 
     setDirection(nextDirection);
+    setCurrentVideo(transitionVideoByRoute[`${current}-${normalized}`] ?? "1-2");
     setActive(normalized);
 
     window.setTimeout(() => {
@@ -139,11 +168,7 @@ export default function Home() {
     <main className="nex-home" data-direction={direction}>
       <header className="nex-header">
         <Link href="/" className="nex-logo" aria-label="SAT1600 home">
-          <span className="nex-logo-mark">
-            <span />
-            <span />
-          </span>
-          <span>SAT1600</span>
+          <img src="/assets/brand/sattest-logo.png" alt="SATTEST.UZ" />
         </Link>
         <nav className="nex-top-links" aria-label="Primary navigation">
           <Link href="/dashboard">Dashboard</Link>
@@ -156,8 +181,25 @@ export default function Home() {
       </header>
 
       <div className="nex-backgrounds" aria-hidden="true">
-        {slides.map((slide, index) => (
-          <RibbedFigure active={active === index} key={slide.id} variant={index} />
+        {videoSources.map((source) => (
+          <video
+            className={`nex-background-video ${currentVideo === source ? "is-current" : ""}`}
+            key={source}
+            ref={(node) => {
+              videoRefs.current[source] = node;
+            }}
+            src={`/assets/video/${source}.mp4`}
+            autoPlay={source === currentVideo}
+            muted
+            loop
+            playsInline
+            preload="auto"
+            onLoadedData={(event) => {
+              if (source === currentVideo) {
+                event.currentTarget.play().catch(() => undefined);
+              }
+            }}
+          />
         ))}
       </div>
 
@@ -235,27 +277,5 @@ export default function Home() {
         <div className="nex-footer-note">Digital SAT practice engine</div>
       </nav>
     </main>
-  );
-}
-
-function RibbedFigure({ active, variant }: { active: boolean; variant: number }) {
-  return (
-    <div className={`nex-figure nex-figure-${variant} ${active ? "is-current" : ""}`}>
-      <div className="nex-figure-core" />
-      {Array.from({ length: 28 }).map((_, index) => (
-        <span
-          className="nex-figure-rib"
-          key={index}
-          style={
-            {
-              "--rib-width": `${28 + index * 2.85}vw`,
-              "--rib-height": `${34 + index * 2.4}vh`,
-              "--rib-rotate": `${index * 7.8 + variant * 18}deg`,
-              "--rib-delay": `${index * -0.055}s`
-            } as CSSProperties
-          }
-        />
-      ))}
-    </div>
   );
 }
