@@ -114,6 +114,16 @@ export default function Home() {
 
   const goNext = useCallback(() => goTo(activeRef.current + 1), [goTo]);
   const goPrev = useCallback(() => goTo(activeRef.current - 1), [goTo]);
+  const refreshHome = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+
+    if (window.location.pathname === "/") {
+      window.location.reload();
+      return;
+    }
+
+    window.location.href = "/";
+  }, []);
 
   useEffect(() => {
     const onWheel = (event: WheelEvent) => {
@@ -167,7 +177,7 @@ export default function Home() {
   return (
     <main className="nex-home" data-direction={direction}>
       <header className="nex-header">
-        <Link href="/" className="nex-logo" aria-label="SAT1600 home">
+        <Link href="/" className="nex-logo" onClick={refreshHome} aria-label="Refresh SATTEST.UZ homepage">
           <img src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" />
         </Link>
         <nav className="nex-top-links" aria-label="Primary navigation">
