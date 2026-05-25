@@ -47,6 +47,12 @@ RATE_LIMIT_PER_MINUTE=120
 LOG_LEVEL=INFO
 WEB_CONCURRENCY=2
 WEB_TIMEOUT=120
+SMTP_HOST=<smtp host for your SATTEST.UZ email account>
+SMTP_PORT=587
+SMTP_USERNAME=<smtp username>
+SMTP_PASSWORD=<smtp password or app password>
+SMTP_FROM_EMAIL=no-reply@sattest.uz
+SMTP_FROM_NAME=SATTEST.UZ Email Bot
 ```
 
 Examples are stored in:
@@ -117,6 +123,7 @@ The system can be deployed and validated on temporary Railway/Vercel URLs before
    - Gunicorn starts
    - startup logs show `DATABASE_URL EXISTS`
    - startup logs show `JWT_SECRET EXISTS`
+   - startup logs show `SMTP_HOST EXISTS`
    - database log shows `exists=True`, a Railway host, and driver `postgresql+psycopg`
    - `/api/health` returns `{"status":"ok"}`
    - `/api/ready` returns `{"status":"ready"}`

@@ -18,6 +18,12 @@ else
   echo "JWT_SECRET EXISTS"
 fi
 
+if [ -z "${SMTP_HOST:-}" ]; then
+  echo "WARNING: SMTP_HOST missing; production email verification cannot send codes"
+else
+  echo "SMTP_HOST EXISTS"
+fi
+
 run_bootstrap() {
   if [ -n "${DATABASE_URL:-}" ]; then
     echo "Running migrations..."

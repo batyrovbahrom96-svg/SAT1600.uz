@@ -3,13 +3,23 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { api, saveAuth } from "@/lib/api";
+import { ApiError, api, saveAuth } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isSendingCode, setIsSendingCode] = useState(false);
+
+  function getEmailBotError(err: unknown, fallback: string) {
+    if (err instanceof ApiError && err.status === 404) {
+      return "Email bot is not deployed on the backend yet. Redeploy the SATTEST.UZ API with the latest code, then set SMTP in Railway.";
+    }
+    if (err instanceof Error && err.message.startsWith("API unavailable")) {
+      return "Email bot is unavailable right now. Check the SATTEST.UZ API deployment and SMTP settings in Railway.";
+    }
+    return err instanceof Error ? err.message : fallback;
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,7 +37,7 @@ export default function RegisterPage() {
       saveAuth(result.access_token);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(getEmailBotError(err, "Registration failed"));
     }
   }
 
@@ -48,7 +58,7 @@ export default function RegisterPage() {
           : "Verification code sent. Check your email and paste the 6-digit code below."
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to send verification code");
+      setError(getEmailBotError(err, "Unable to send verification code"));
     } finally {
       setIsSendingCode(false);
     }

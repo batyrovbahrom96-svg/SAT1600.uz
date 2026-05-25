@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     smtp_username: str | None = None
     smtp_password: str | None = None
     smtp_from_email: str = "no-reply@sattest.uz"
-    smtp_from_name: str = "SATTEST.UZ"
+    smtp_from_name: str = "SATTEST.UZ Email Bot"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
