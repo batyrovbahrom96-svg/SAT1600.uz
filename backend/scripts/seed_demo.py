@@ -587,15 +587,15 @@ MODULE1_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
     MathModuleSlot("m1_ratio_scaling_2", "ratio_scaling", "inverse_scaling", 6),
     MathModuleSlot("m1_function_2", "function_interpretation", "parameter_meaning", 6),
     MathModuleSlot("m1_geometry_2", "geometry", "area_constraint", 6),
-    MathModuleSlot("m1_linear_3", "linear_equation", "equivalent_expression", 6),
-    MathModuleSlot("m1_parameter_1", "parameter_interpretation", "coefficient_meaning", 7),
+    MathModuleSlot("m1_linear_3", "ratio_scaling", "decimal_area", 6),
+    MathModuleSlot("m1_parameter_1", "graph_reasoning", "average_rate", 7),
     MathModuleSlot("m1_expression_2", "expression_rewrite", "expression_comparison", 7),
-    MathModuleSlot("m1_polynomial_grid_1", "polynomial_roots_gridin", "factorization_multiple_roots", 7),
-    MathModuleSlot("m1_graph_3", "graph_reasoning", "rate_comparison", 7),
+    MathModuleSlot("m1_polynomial_grid_1", "function_interpretation", "exponential_parameter", 7),
+    MathModuleSlot("m1_graph_3", "linear_equation", "requested_expression", 7),
     MathModuleSlot("m1_word_2", "word_problem", "hidden_unit", 7),
-    MathModuleSlot("m1_ratio_scaling_3", "ratio_scaling", "compound_scale", 7),
-    MathModuleSlot("m1_rational_2", "rational_equation_trap", "cancellation_domain", 7),
-    MathModuleSlot("m1_geometry_3", "geometry", "angle_sum_layered", 7),
+    MathModuleSlot("m1_ratio_scaling_3", "rational_equation_trap", "quadratic_discriminant", 7),
+    MathModuleSlot("m1_rational_2", "parameter_interpretation", "x_intercept_meaning", 7),
+    MathModuleSlot("m1_geometry_3", "geometry", "cofunction_identity", 7),
 )
 
 MODULE2_HARD_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = (
@@ -630,8 +630,15 @@ MODULE2_MEDIUM_MATH_BLUEPRINT: tuple[MathModuleSlot, ...] = tuple(
 
 MATH_TRAP_SEQUENCE = sorted(MATH_TRAPS)
 MATH_STUDENT_RESPONSE_SLOT_KEYS = {
+    "m1_function_2",
+    "m1_linear_3",
+    "m1_parameter_1",
     "m1_polynomial_grid_1",
+    "m1_ratio_scaling_3",
     "m1_word_2",
+    "m1_geometry_2",
+    "m1_graph_3",
+    "m1_rational_2",
     "m2h_polynomial_grid_1",
     "m2h_polynomial_grid_2",
     "m2m_polynomial_grid_1",
@@ -4700,8 +4707,12 @@ def validate_math_module(module_questions: list[QuestionSpec], module: int) -> N
     graph_reasoning: set[str] = set()
     categories = {question.question_type for question in module_questions}
     student_response_count = sum(1 for question in module_questions if question.format == QuestionFormat.grid_in)
-    if student_response_count != 2:
-        raise ValueError(f"Math module {module} must include exactly two student-response questions, got {student_response_count}.")
+    expected_student_response_count = 5 if module == 1 else 2
+    if student_response_count != expected_student_response_count:
+        raise ValueError(
+            f"Math module {module} must include exactly {expected_student_response_count} "
+            f"student-response questions, got {student_response_count}."
+        )
     if not 8 <= len(categories) <= 10:
         raise ValueError(f"Math module {module} must use 8-10 unique patterns, got {len(categories)}: {sorted(categories)}.")
     category_counts = Counter(question.question_type for question in module_questions)
@@ -4886,7 +4897,7 @@ def simulate_math_first_pass_elimination(question: QuestionSpec) -> list[ChoiceS
 
 def math_module1_bluebook_question(index: int) -> QuestionSpec:
     graph_value_payload = {
-        "graph_pattern": "rate_change",
+        "graph_pattern": "diminishing_returns",
         "question_intent": "direct_read",
         "prompt_template": "interpret_y_intercept",
         "reasoning_type": "slope_meaning",
@@ -4915,13 +4926,27 @@ def math_module1_bluebook_question(index: int) -> QuestionSpec:
         "graph_pattern": "divergence",
         "question_intent": "trend_description",
         "prompt_template": "vertical_shift_launch",
-        "reasoning_type": "rate_comparison",
+        "reasoning_type": "average_rate",
         "x_label": "Seconds after launch",
         "y_label": "Height (feet)",
         "series": [
             {
                 "name": "First launch",
                 "values": [[0, 7], [0.25, 8.2], [0.5, 7], [0.75, 4], [1, 0]],
+            }
+        ],
+    }
+    graph_temperature_payload = {
+        "graph_pattern": "lag_effect",
+        "question_intent": "direct_read",
+        "prompt_template": "average_rate_between_points",
+        "reasoning_type": "average_rate",
+        "x_label": "Time (minutes)",
+        "y_label": "Temperature (degrees C)",
+        "series": [
+            {
+                "name": "Recorded temperature",
+                "values": [[1, 4], [2, 6], [3, 12], [4, 10], [5, 14], [6, 16], [7, 24]],
             }
         ],
     }
@@ -5040,43 +5065,44 @@ def math_module1_bluebook_question(index: int) -> QuestionSpec:
         },
         {
             "topic": "Advanced Math",
-            "subtopic": "Exponential functions",
+            "subtopic": "Function notation",
             "question_type": "function_interpretation",
-            "prompt": "The function f(t) = 40,000(2)^(t/790) gives the number of bacteria in a population t minutes after an initial observation. How much time, in minutes, does it take for the number of bacteria in the population to double?",
-            "correct": "D",
-            "explanation": "The population doubles when the exponent on 2 increases by 1. Thus t/790 = 1, so t = 790 minutes.",
-            "trap_type": "exponential parameter trap",
-            "choices": math_choices("2", "1,580", "40,000", "790", correct="D"),
+            "prompt": "The function f is defined by f(x) = 5(1/4 - x)^2 + 11/4. What is the value of f(1/4)?",
+            "correct": "2.75",
+            "explanation": "Substitute 1/4 for x. The squared term is 5(1/4 - 1/4)^2 = 0, so f(1/4) = 11/4 = 2.75.",
+            "trap_type": "function substitution exact-value trap",
+            "format": QuestionFormat.grid_in,
         },
         {
             "topic": "Geometry and Trigonometry",
             "subtopic": "Circle equations",
             "question_type": "geometry",
-            "prompt": "A circle in the xy-plane has the equation (x - 11)^2 + (y - k)^2 = 49. Which of the following gives the center of the circle and its radius?",
+            "prompt": "A circle in the xy-plane has the equation (x - 13)^2 + (y - k)^2 = 64. Which of the following gives the center of the circle and its radius?",
             "correct": "A",
-            "explanation": "A circle written as (x - h)^2 + (y - k)^2 = r^2 has center (h, k) and radius r. Here the center is (11, k), and the radius is 7.",
+            "explanation": "A circle written as (x - h)^2 + (y - k)^2 = r^2 has center (h, k) and radius r. Here the center is (13, k), and the radius is 8.",
             "trap_type": "center versus radius trap",
-            "choices": math_choices("The center is at (11, k) and the radius is 7.", "The center is at (k, 11) and the radius is 7.", "The center is at (k, 11) and the radius is 49.", "The center is at (11, k) and the radius is 49.", correct="A"),
+            "choices": math_choices("The center is at (13, k) and the radius is 8.", "The center is at (k, 13) and the radius is 8.", "The center is at (k, 13) and the radius is 64.", "The center is at (13, k) and the radius is 64.", correct="A"),
         },
         {
-            "topic": "Algebra",
-            "subtopic": "Equivalent expressions",
-            "question_type": "linear_equation",
-            "prompt": "The equation 12t + b = c relates the variables t, b, and c. Which of the following correctly expresses the value of c - b in terms of t?",
-            "correct": "D",
-            "explanation": "Subtract b from both sides of 12t + b = c to get c - b = 12t.",
-            "trap_type": "expression isolation trap",
-            "choices": math_choices("t/12", "t", "t + 1/12", "12t", correct="D"),
+            "topic": "Geometry and Trigonometry",
+            "subtopic": "Circle area",
+            "question_type": "ratio_scaling",
+            "prompt": "A circle has a radius of 2.1 inches. The area of the circle is b*pi square inches, where b is a constant. What is the value of b?",
+            "correct": "4.41",
+            "explanation": "The area is pi r^2 = pi(2.1)^2 = 4.41pi, so b = 4.41.",
+            "trap_type": "radius squared decimal trap",
+            "format": QuestionFormat.grid_in,
         },
         {
             "topic": "Problem Solving and Data Analysis",
-            "subtopic": "Parameter interpretation",
-            "question_type": "parameter_interpretation",
-            "prompt": "A rideshare service charges a fixed booking fee of $3 plus $2.40 for each mile traveled. The total cost C, in dollars, of a ride that is m miles long can be represented by C = 2.40m + 3. What does 2.40 represent in this equation?",
-            "correct": "A",
-            "explanation": "The coefficient of m is the amount added to the total cost for each mile, so 2.40 is the cost per mile.",
-            "trap_type": "coefficient meaning trap",
-            "choices": math_choices("The cost, in dollars, for each mile traveled", "The fixed booking fee, in dollars", "The total cost of the ride, in dollars", "The number of miles traveled", correct="A"),
+            "subtopic": "Average rate of change",
+            "question_type": "graph_reasoning",
+            "prompt": "During a study, the temperature, in degrees Celsius (degrees C), of the air in a chamber was recorded to the nearest integer at certain times. The scatterplot shows the recorded temperature y, in degrees C, of the air in the chamber x minutes after the start of the study. What was the average rate of change, in degrees C per minute, of the recorded temperature of the air in the chamber from x = 5 to x = 7?",
+            "correct": "5",
+            "explanation": "From the scatterplot, the temperature is 14 degrees C at x = 5 and 24 degrees C at x = 7. The average rate of change is (24 - 14)/(7 - 5) = 5 degrees C per minute.",
+            "trap_type": "average rate between graph points trap",
+            "format": QuestionFormat.grid_in,
+            "graph_payload": graph_temperature_payload,
         },
         {
             "topic": "Algebra",
@@ -5090,64 +5116,63 @@ def math_module1_bluebook_question(index: int) -> QuestionSpec:
         },
         {
             "topic": "Advanced Math",
-            "subtopic": "Polynomial roots",
-            "question_type": "polynomial_roots_gridin",
-            "prompt": "What is one positive x-coordinate of an x-intercept of the graph of y = 2(x - 12)(x + 3)(x + 5) in the xy-plane? Enter the exact value.",
-            "correct": "12",
-            "explanation": "The x-intercepts occur when one factor is 0. The positive exact x-coordinate is 12; the negative roots are not positive.",
-            "trap_type": "exact root and sign trap",
-            "format": QuestionFormat.grid_in,
+            "subtopic": "Exponential functions",
+            "question_type": "function_interpretation",
+            "prompt": "The function f(t) = 40,000(2)^(t/790) gives the number of bacteria in a population t minutes after an initial observation. How much time, in minutes, does it take for the number of bacteria in the population to double?",
+            "correct": "B",
+            "explanation": "The population doubles when the exponent on 2 increases by 1. Thus t/790 = 1, so t = 790 minutes.",
+            "trap_type": "exponential parameter trap",
+            "choices": math_choices("2", "790", "1,580", "40,000", correct="B"),
         },
         {
-            "topic": "Data Analysis",
-            "subtopic": "Graph transformations",
-            "question_type": "graph_reasoning",
-            "prompt": "During the first part of an experiment, a ball was launched from a 7-foot-tall platform. The graph shows the height y, in feet, of the ball x seconds after it was launched. During the second part of the experiment, the ball was launched the same way, but from a platform that is 2 feet shorter. Which statement best describes how the graph for the second part compares with the graph for the first part?",
-            "correct": "A",
-            "explanation": "Launching the ball the same way keeps the shape the same, but a platform 2 feet shorter shifts every corresponding height down by 2 feet.",
-            "trap_type": "vertical shift versus horizontal shift trap",
-            "choices": math_choices("Every point on the second graph is 2 units lower than the corresponding point on the first graph.", "Every point on the second graph is 2 units to the left of the corresponding point on the first graph.", "The second graph has the same y-intercept and reaches the ground later.", "The second graph has a maximum height 2 units greater than the first graph.", correct="A"),
-            "graph_payload": graph_launch_payload,
+            "topic": "Algebra",
+            "subtopic": "Equivalent expressions",
+            "question_type": "linear_equation",
+            "prompt": "If 5 - 7(2 - 4x) = 16 - 8(2 - 4x), what is the exact value of 2 - 4x?",
+            "correct": "11",
+            "explanation": "Let u = 2 - 4x. Then 5 - 7u = 16 - 8u. Adding 8u to both sides gives 5 + u = 16, so u = 11. Therefore 2 - 4x = 11.",
+            "trap_type": "solve requested expression trap",
+            "format": QuestionFormat.grid_in,
         },
         {
             "topic": "Problem Solving and Data Analysis",
             "subtopic": "Percent change",
             "question_type": "word_problem",
-            "prompt": "A scientist counted the number of beetles in a habitat for 46 days. On February 15, there were 126 beetles. The percent increase in the number of beetles from January 1 to February 15 was 12.5%. How many beetles were in the habitat on January 1? Enter the exact number.",
-            "correct": "112",
-            "explanation": "The final amount is 112.5% of the January 1 amount. Since 126/1.125 = 112, the exact answer is 112.",
+            "prompt": "A scientist studying the life cycle of dragonflies counted the number of dragonflies in a certain habitat each day for 46 days. On February 15, there were 99 dragonflies in the habitat. The percent increase in the number of dragonflies in the habitat from January 1 to February 15 was 12.50%. How many dragonflies were in the habitat on January 1?",
+            "correct": "A",
+            "explanation": "The final amount is 112.5% of the January 1 amount. Since 99/1.125 = 88, there were 88 dragonflies on January 1.",
             "trap_type": "percent base exact-value trap",
-            "format": QuestionFormat.grid_in,
-        },
-        {
-            "topic": "Geometry and Trigonometry",
-            "subtopic": "Circle area",
-            "question_type": "ratio_scaling",
-            "prompt": "A circle has a radius of 3.2 inches. The area of the circle is b*pi square inches, where b is a constant. What is the value of b?",
-            "correct": "C",
-            "explanation": "The area is pi r^2 = pi(3.2)^2 = 10.24pi, so b = 10.24.",
-            "trap_type": "radius squared trap",
-            "choices": math_choices("3.2", "6.4", "10.24", "32", correct="C"),
+            "choices": math_choices("88", "87", "12", "8", correct="A"),
         },
         {
             "topic": "Advanced Math",
-            "subtopic": "Rational equations",
+            "subtopic": "Quadratic equations",
             "question_type": "rational_equation_trap",
-            "prompt": "((x + 6)(3x - 4))/(x + 6) = 17, where x is not equal to -6.\n\nWhat is the solution to the given equation?",
-            "correct": "B",
-            "explanation": "Because x is not -6, cancel x + 6 to get 3x - 4 = 17. Then 3x = 21, so x = 7.",
-            "trap_type": "cancellation domain trap",
-            "choices": math_choices("-6", "7", "17", "23", correct="B"),
+            "prompt": "2x^2 - 8x - 7 = 0\n\nOne solution to the given equation can be written as (8 - sqrt(k))/4, where k is a constant. What is the value of k?",
+            "correct": "120",
+            "explanation": "Using the quadratic formula, x = (8 +/- sqrt((-8)^2 - 4(2)(-7)))/(2(2)) = (8 +/- sqrt(120))/4. Therefore k = 120.",
+            "trap_type": "quadratic discriminant exact-value trap",
+            "format": QuestionFormat.grid_in,
+        },
+        {
+            "topic": "Advanced Math",
+            "subtopic": "Linear functions",
+            "question_type": "parameter_interpretation",
+            "prompt": "The function f(x) is defined as 19 more than 4 times a number x. If y = f(x) is graphed in the xy-plane, what is the best interpretation of the x-intercept?",
+            "correct": "A",
+            "explanation": "The x-intercept is the input value when f(x) = 0. Since f(x) = 4x + 19, the x-intercept occurs when the number is -19/4.",
+            "trap_type": "x-intercept interpretation trap",
+            "choices": math_choices("When f(x) = 0, the number is -19/4.", "When the number is 0, f(x) = 19.", "The value of f(x) increases by 1 for each increase of 4 in the value of the number.", "For each increase of 1 in the value of the number, f(x) increases by 4.", correct="A"),
         },
         {
             "topic": "Geometry and Trigonometry",
             "subtopic": "Trigonometric identities",
             "question_type": "geometry",
-            "prompt": "Which of the following expressions is equivalent to (sin 31 degrees)(cos 59 degrees) + (cos 31 degrees)(sin 59 degrees)?",
+            "prompt": "Which of the following expressions is equivalent to (sin 24 degrees)(cos 66 degrees) + (cos 24 degrees)(sin 66 degrees)?",
             "correct": "C",
-            "explanation": "Since sin 31 degrees = cos 59 degrees and sin 59 degrees = cos 31 degrees, the expression equals (cos 59 degrees)^2 + (cos 31 degrees)^2.",
+            "explanation": "Since sin 24 degrees = cos 66 degrees and sin 66 degrees = cos 24 degrees, the expression equals (cos 66 degrees)^2 + (cos 24 degrees)^2.",
             "trap_type": "cofunction identity trap",
-            "choices": math_choices("2(cos 59 degrees)(sin 31 degrees)", "2(cos 59 degrees) + 2(cos 31 degrees)", "(cos 59 degrees)^2 + (cos 31 degrees)^2", "(cos 59 degrees)^2 + (sin 31 degrees)^2", correct="C"),
+            "choices": math_choices("2(cos 66 degrees)(sin 24 degrees)", "2(cos 66 degrees) + 2(cos 24 degrees)", "(cos 66 degrees)^2 + (cos 24 degrees)^2", "(cos 66 degrees)^2 + (sin 24 degrees)^2", correct="C"),
         },
     )
     item = questions[index]
