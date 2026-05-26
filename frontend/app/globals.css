@@ -637,26 +637,7 @@ button, input {
   line-height: 1;
   letter-spacing: 0;
   text-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
-  will-change: transform;
-  animation: sat-count-single-step 1.28s cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-@keyframes sat-count-single-step {
-  0% {
-    opacity: 0;
-    transform: translateY(28px);
-  }
-
-  30%,
-  76% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateY(-28px);
-  }
+  transition: opacity 0.45s ease;
 }
 
 .nex-header {

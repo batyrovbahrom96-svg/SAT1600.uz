@@ -189,7 +189,7 @@ export default function Home() {
           aria-label={`Loading ${loadingProgress}`}
         >
           <div className="sat-count-loader__inner" aria-hidden="true">
-            <span className="sat-count-loader__number" key={loadingProgress}>
+            <span className="sat-count-loader__number">
               {loadingProgress}
             </span>
           </div>
