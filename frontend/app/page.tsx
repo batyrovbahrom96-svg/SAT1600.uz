@@ -56,9 +56,8 @@ export default function Home() {
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
   const [currentVideo, setCurrentVideo] = useState<(typeof videoSources)[number]>("1-2");
-  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingProgress, setLoadingProgress] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
-  const loaderDigits = loadingProgress < 100 ? loadingProgress.toString().padStart(2, "0") : "100";
   const activeRef = useRef(active);
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
@@ -69,30 +68,15 @@ export default function Home() {
   }, [active]);
 
   useEffect(() => {
-    let frameId = 0;
-    let finishId = 0;
-    const duration = 5200;
-    const startedAt = performance.now();
-
-    const tick = (now: number) => {
-      const elapsed = Math.min((now - startedAt) / duration, 1);
-      const nextProgress = Math.min(100, Math.round(elapsed * 100));
-
-      setLoadingProgress(nextProgress);
-
-      if (elapsed < 1) {
-        frameId = window.requestAnimationFrame(tick);
-        return;
-      }
-
-      finishId = window.setTimeout(() => setIsLoading(false), 420);
-    };
-
-    frameId = window.requestAnimationFrame(tick);
+    const timers = [
+      window.setTimeout(() => setLoadingProgress(50), 1300),
+      window.setTimeout(() => setLoadingProgress(70), 2600),
+      window.setTimeout(() => setLoadingProgress(100), 3900),
+      window.setTimeout(() => setIsLoading(false), 5350)
+    ];
 
     return () => {
-      window.cancelAnimationFrame(frameId);
-      window.clearTimeout(finishId);
+      timers.forEach((timer) => window.clearTimeout(timer));
     };
   }, []);
 
@@ -205,13 +189,9 @@ export default function Home() {
           aria-label={`Loading ${loadingProgress}`}
         >
           <div className="sat-count-loader__inner" aria-hidden="true">
-            <div className="sat-count-loader__digits">
-              {loaderDigits.split("").map((digit, index) => (
-                <span className="sat-count-loader__digit" key={`${index}-${digit}`}>
-                  {digit}
-                </span>
-              ))}
-            </div>
+            <span className="sat-count-loader__number" key={loadingProgress}>
+              {loadingProgress}
+            </span>
           </div>
         </div>
       ) : null}
