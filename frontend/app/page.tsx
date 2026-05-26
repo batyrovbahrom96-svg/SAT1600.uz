@@ -206,13 +206,9 @@ export default function Home() {
         >
           <div className="nex-loader__inner" aria-hidden="true">
             <div className="nex-loader__digits">
-              <span>{loadingProgress}%</span>
-              <span>{loadingProgress}%</span>
+              <span>{loadingProgress}</span>
+              <span>{loadingProgress}</span>
             </div>
-            <div className="nex-loader__bar">
-              <span style={{ transform: `scaleX(${loadingProgress / 100})` }} />
-            </div>
-            <p>SATTEST.UZ</p>
           </div>
         </div>
       ) : null}

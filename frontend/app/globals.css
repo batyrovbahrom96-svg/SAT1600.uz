@@ -600,10 +600,8 @@ button, input {
   z-index: 80;
   display: grid;
   place-items: center;
-  color: #f7f7f7;
-  background:
-    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.045), transparent 22%),
-    #171818;
+  color: #f4f4f4;
+  background: #171818;
 }
 
 .nex-loader::before {
@@ -611,73 +609,69 @@ button, input {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(120deg, transparent 0%, transparent 42%, rgba(255, 255, 255, 0.025) 43%, transparent 45%),
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
     linear-gradient(0deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
-  background-size: 100% 100%, 22px 22px, 22px 22px;
-  opacity: 0.34;
+  background-size: 24px 24px, 24px 24px;
+  opacity: 0.12;
 }
 
 .nex-loader__inner {
   position: relative;
   z-index: 1;
-  display: grid;
-  justify-items: center;
-  gap: 22px;
-  min-width: 210px;
+  width: 150px;
+  height: 96px;
 }
 
 .nex-loader__digits {
   position: relative;
   width: 150px;
   height: 96px;
-  font-size: 34px;
-  font-weight: 700;
+  font-size: 31px;
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .nex-loader__digits span {
   position: absolute;
   display: block;
-  min-width: 88px;
+  min-width: 54px;
   text-align: center;
-  text-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+  will-change: transform;
 }
 
 .nex-loader__digits span:first-child {
   top: 6px;
-  left: 11px;
+  left: 26px;
+  animation: nex-loader-rise 1.18s cubic-bezier(0.76, 0, 0.24, 1) infinite alternate;
 }
 
 .nex-loader__digits span:nth-child(2) {
-  top: 44px;
-  left: 52px;
-  color: rgba(255, 255, 255, 0.7);
+  top: 45px;
+  left: 68px;
+  color: rgba(255, 255, 255, 0.72);
+  animation: nex-loader-drop 1.18s cubic-bezier(0.76, 0, 0.24, 1) infinite alternate;
 }
 
-.nex-loader__bar {
-  width: 190px;
-  height: 1px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.16);
+@keyframes nex-loader-rise {
+  from {
+    transform: translateY(9px);
+  }
+
+  to {
+    transform: translateY(-9px);
+  }
 }
 
-.nex-loader__bar span {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: #fff;
-  transform-origin: left center;
-  transition: transform 0.08s linear;
-}
+@keyframes nex-loader-drop {
+  from {
+    transform: translateY(-9px);
+  }
 
-.nex-loader__inner p {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.68em;
-  text-indent: 0.68em;
-  color: rgba(255, 255, 255, 0.58);
+  to {
+    transform: translateY(9px);
+  }
 }
 
 .nex-header {
