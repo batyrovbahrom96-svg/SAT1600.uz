@@ -71,10 +71,12 @@ export default function Home() {
     current: loadingSequence[0],
     step: 0
   });
+  const [loadingStage, setLoadingStage] = useState<"numbers" | "intro">("numbers");
   const [isLoading, setIsLoading] = useState(true);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
+  const introVideoRef = useRef<HTMLVideoElement | null>(null);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
@@ -92,13 +94,28 @@ export default function Home() {
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
       }, 5400),
-      window.setTimeout(() => setIsLoading(false), 7600)
+      window.setTimeout(() => setLoadingStage("intro"), 7600)
     ];
 
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
     };
   }, []);
+
+  useEffect(() => {
+    if (loadingStage !== "intro") {
+      return undefined;
+    }
+
+    const video = introVideoRef.current;
+    video?.play().catch(() => undefined);
+
+    const fallbackTimer = window.setTimeout(() => {
+      setIsLoading(false);
+    }, 6200);
+
+    return () => window.clearTimeout(fallbackTimer);
+  }, [loadingStage]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -208,32 +225,45 @@ export default function Home() {
           aria-live="polite"
           aria-label={`Loading ${loadingFrame.current}`}
         >
-          <div className="sat-count-loader__window" aria-hidden="true">
-            <div
-              className={`sat-count-loader__number sat-count-loader__number--previous ${
-                loadingFrame.step === 0 ? "is-hidden" : ""
-              }`}
-              key={`previous-${loadingFrame.step}`}
-            >
-              {getLoaderDigits(loadingFrame.previous).map((digit, index) => (
-                <span className="sat-count-loader__digit" key={`${digit}-${index}`}>
-                  {digit}
-                </span>
-              ))}
+          {loadingStage === "numbers" ? (
+            <div className="sat-count-loader__window" aria-hidden="true">
+              <div
+                className={`sat-count-loader__number sat-count-loader__number--previous ${
+                  loadingFrame.step === 0 ? "is-hidden" : ""
+                }`}
+                key={`previous-${loadingFrame.step}`}
+              >
+                {getLoaderDigits(loadingFrame.previous).map((digit, index) => (
+                  <span className="sat-count-loader__digit" key={`${digit}-${index}`}>
+                    {digit}
+                  </span>
+                ))}
+              </div>
+              <div
+                className={`sat-count-loader__number sat-count-loader__number--current ${
+                  loadingFrame.step === 0 ? "is-idle" : ""
+                }`}
+                key={`current-${loadingFrame.step}`}
+              >
+                {getLoaderDigits(loadingFrame.current).map((digit, index) => (
+                  <span className="sat-count-loader__digit" key={`${digit}-${index}`}>
+                    {digit}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div
-              className={`sat-count-loader__number sat-count-loader__number--current ${
-                loadingFrame.step === 0 ? "is-idle" : ""
-              }`}
-              key={`current-${loadingFrame.step}`}
-            >
-              {getLoaderDigits(loadingFrame.current).map((digit, index) => (
-                <span className="sat-count-loader__digit" key={`${digit}-${index}`}>
-                  {digit}
-                </span>
-              ))}
-            </div>
-          </div>
+          ) : (
+            <video
+              className="sat-count-loader__intro"
+              ref={introVideoRef}
+              src="/assets/video/intro.mp4"
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              onEnded={() => setIsLoading(false)}
+            />
+          )}
         </div>
       ) : null}
       <LuxuryNavbar />
