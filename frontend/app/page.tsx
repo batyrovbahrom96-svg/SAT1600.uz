@@ -72,6 +72,7 @@ export default function Home() {
     step: 0
   });
   const [loadingStage, setLoadingStage] = useState<"numbers" | "intro">("numbers");
+  const [isLoaderExiting, setIsLoaderExiting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
@@ -82,6 +83,14 @@ export default function Home() {
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  const finishLoading = useCallback(() => {
+    setIsLoaderExiting(true);
+
+    window.setTimeout(() => {
+      setIsLoading(false);
+    }, 1250);
+  }, []);
 
   useEffect(() => {
     const timers = [
@@ -111,11 +120,11 @@ export default function Home() {
     video?.play().catch(() => undefined);
 
     const fallbackTimer = window.setTimeout(() => {
-      setIsLoading(false);
+      finishLoading();
     }, 6200);
 
     return () => window.clearTimeout(fallbackTimer);
-  }, [loadingStage]);
+  }, [finishLoading, loadingStage]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -217,10 +226,15 @@ export default function Home() {
   }, [goNext, goPrev]);
 
   return (
-    <main className="nex-home" data-direction={direction}>
+    <main
+      className={`nex-home ${isLoading && !isLoaderExiting ? "is-loading" : "is-ready"}`}
+      data-direction={direction}
+    >
       {isLoading ? (
         <div
-          className="sat-count-loader"
+          className={`sat-count-loader sat-count-loader--${loadingStage} ${
+            isLoaderExiting ? "is-exiting" : ""
+          }`}
           role="status"
           aria-live="polite"
           aria-label={`Loading ${loadingFrame.current}`}
@@ -261,7 +275,7 @@ export default function Home() {
               muted
               playsInline
               preload="auto"
-              onEnded={() => setIsLoading(false)}
+              onEnded={finishLoading}
             />
           )}
         </div>
