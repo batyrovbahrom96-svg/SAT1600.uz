@@ -618,38 +618,40 @@ button, input {
 .sat-count-loader__inner {
   position: relative;
   z-index: 1;
+  display: flex;
+  justify-content: center;
   width: 118px;
-  height: 84px;
+  height: 70px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
 }
 
 .sat-count-loader__digits {
-  position: relative;
-  width: 118px;
-  height: 84px;
-  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  height: 70px;
+  font-size: 30px;
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
 }
 
-.sat-count-loader__digits span {
-  position: absolute;
+.sat-count-loader__digit {
   display: block;
-  min-width: 46px;
+  min-width: 24px;
   text-align: center;
   text-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
   will-change: transform;
 }
 
-.sat-count-loader__digits span:first-child {
-  top: 6px;
-  left: 22px;
+.sat-count-loader__digit:nth-child(odd) {
   animation: sat-count-rise 1.3s cubic-bezier(0.76, 0, 0.24, 1) 4 alternate;
 }
 
-.sat-count-loader__digits span:nth-child(2) {
-  top: 42px;
-  left: 57px;
+.sat-count-loader__digit:nth-child(even) {
   color: rgba(255, 255, 255, 0.66);
   animation: sat-count-drop 1.3s cubic-bezier(0.76, 0, 0.24, 1) 4 alternate;
 }

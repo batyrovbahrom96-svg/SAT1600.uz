@@ -58,6 +58,7 @@ export default function Home() {
   const [currentVideo, setCurrentVideo] = useState<(typeof videoSources)[number]>("1-2");
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const loaderDigits = loadingProgress < 100 ? loadingProgress.toString().padStart(2, "0") : "100";
   const activeRef = useRef(active);
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
@@ -205,8 +206,11 @@ export default function Home() {
         >
           <div className="sat-count-loader__inner" aria-hidden="true">
             <div className="sat-count-loader__digits">
-              <span>{loadingProgress}</span>
-              <span>{loadingProgress}</span>
+              {loaderDigits.split("").map((digit, index) => (
+                <span className="sat-count-loader__digit" key={`${index}-${digit}`}>
+                  {digit}
+                </span>
+              ))}
             </div>
           </div>
         </div>
