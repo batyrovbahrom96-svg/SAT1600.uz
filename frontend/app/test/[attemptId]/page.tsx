@@ -58,6 +58,10 @@ type DesmosCalculatorInstance = {
   destroy: () => void;
 };
 
+type MathTextSegment =
+  | { type: "text"; value: string }
+  | { type: "math"; value: string };
+
 declare global {
   interface Window {
     Desmos?: {
@@ -109,6 +113,143 @@ function isGraphPayload(payload: Question["data_payload"]): payload is GraphPayl
         && typeof point[1] === "number"
       ))
     ))
+  );
+}
+
+function splitMathText(text: string): MathTextSegment[] {
+  const segments: MathTextSegment[] = [];
+  let lastIndex = 0;
+  let index = 0;
+
+  while (index < text.length) {
+    const startIndex = text.indexOf("$", index);
+    if (startIndex === -1) break;
+    const nextChar = text[startIndex + 1];
+    if (nextChar && /[\d.]/.test(nextChar)) {
+      index = startIndex + 1;
+      continue;
+    }
+
+    let endIndex = text.indexOf("$", startIndex + 1);
+    while (endIndex !== -1 && /[\d.]/.test(text[endIndex + 1] ?? "")) {
+      endIndex = text.indexOf("$", endIndex + 1);
+    }
+    if (endIndex === -1) break;
+
+    if (startIndex > lastIndex) {
+      segments.push({ type: "text", value: text.slice(lastIndex, startIndex) });
+    }
+    segments.push({ type: "math", value: text.slice(startIndex + 1, endIndex) });
+    lastIndex = endIndex + 1;
+    index = lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ type: "text", value: text.slice(lastIndex) });
+  }
+  return segments.length ? segments : [{ type: "text", value: text }];
+}
+
+function readLatexGroup(value: string, openIndex: number) {
+  let depth = 0;
+  for (let index = openIndex; index < value.length; index += 1) {
+    const char = value[index];
+    if (char === "{") depth += 1;
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        return {
+          body: value.slice(openIndex + 1, index),
+          endIndex: index + 1
+        };
+      }
+    }
+  }
+  return null;
+}
+
+function renderLatexSubset(latex: string): string {
+  let html = "";
+  for (let index = 0; index < latex.length; index += 1) {
+    if (latex.startsWith("\\frac{", index)) {
+      const numerator = readLatexGroup(latex, index + "\\frac".length);
+      if (numerator) {
+        const denominator = latex[numerator.endIndex] === "{" ? readLatexGroup(latex, numerator.endIndex) : null;
+        if (denominator) {
+          html += `<span class="sat-fraction"><span>${renderLatexSubset(numerator.body)}</span><span>${renderLatexSubset(denominator.body)}</span></span>`;
+          index = denominator.endIndex - 1;
+          continue;
+        }
+      }
+    }
+
+    if (latex.startsWith("\\sqrt{", index)) {
+      const radicand = readLatexGroup(latex, index + "\\sqrt".length);
+      if (radicand) {
+        html += `<span class="sat-sqrt"><span class="sat-sqrt-symbol">√</span><span class="sat-sqrt-radicand">${renderLatexSubset(radicand.body)}</span></span>`;
+        index = radicand.endIndex - 1;
+        continue;
+      }
+    }
+
+    if (latex[index] === "^") {
+      const nextIndex = index + 1;
+      if (latex[nextIndex] === "{") {
+        const exponent = readLatexGroup(latex, nextIndex);
+        if (exponent) {
+          html += `<sup>${renderLatexSubset(exponent.body)}</sup>`;
+          index = exponent.endIndex - 1;
+          continue;
+        }
+      }
+      html += `<sup>${latex[nextIndex] ?? ""}</sup>`;
+      index = nextIndex;
+      continue;
+    }
+
+    const commands: Record<string, string> = {
+      "\\sin": "sin",
+      "\\cos": "cos",
+      "\\tan": "tan",
+      "\\pi": "π",
+      "\\ne": "≠",
+      "\\pm": "±",
+      "\\circ": "°",
+      "\\left": "",
+      "\\right": "",
+      "\\,": " "
+    };
+    const command = Object.keys(commands).find((item) => latex.startsWith(item, index));
+    if (command) {
+      html += commands[command];
+      index += command.length - 1;
+      continue;
+    }
+
+    const escaped = latex[index]
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    html += escaped;
+  }
+  return html.replace(/[{}]/g, "");
+}
+
+function MathText({ children, className = "" }: { children: string; className?: string }) {
+  return (
+    <>
+      {splitMathText(children).map((segment, index) => (
+        segment.type === "math" ? (
+          <span
+            className={`sat-math ${className}`}
+            dangerouslySetInnerHTML={{ __html: renderLatexSubset(segment.value) }}
+            key={`${segment.type}-${index}-${segment.value}`}
+          />
+        ) : (
+          <span className="whitespace-pre-line" key={`${segment.type}-${index}-${segment.value}`}>{segment.value}</span>
+        )
+      ))}
+    </>
   );
 }
 
@@ -2034,7 +2175,9 @@ export default function TestPage() {
               </button>
             </div>
             <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
-            <h1 className={`${isStudentResponse ? "mb-8 text-left" : "question-text text-center"} text-[20px] font-semibold leading-[1.45] text-slate-950`}>{question.prompt}</h1>
+            <h1 className={`${isStudentResponse ? "mb-8 text-left" : "question-text text-center"} text-[20px] font-semibold leading-[1.45] text-slate-950`}>
+              <MathText>{question.prompt}</MathText>
+            </h1>
 
             <div className="answers">
               {question.format === "multiple_choice" ? orderedChoices.map((choice, choiceIndex) => (
@@ -2075,7 +2218,7 @@ export default function TestPage() {
                       {choice.label}
                     </span>
                     <span className={eliminatedAnswers.has(choice.label) ? "text-slate-500 line-through decoration-slate-500 decoration-2" : "text-slate-950"}>
-                      {choice.text}
+                      <MathText>{choice.text}</MathText>
                     </span>
                   </button>
                   <button

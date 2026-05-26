@@ -57,6 +57,58 @@ button, input {
   margin: 0 auto;
 }
 
+.sat-math {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.03em;
+  white-space: nowrap;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+}
+
+.sat-math sup {
+  font-size: 0.68em;
+  line-height: 0;
+  margin-left: 0.02em;
+  position: relative;
+  top: -0.28em;
+}
+
+.sat-fraction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.1em;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.sat-fraction > span:first-child {
+  border-bottom: 0.08em solid currentColor;
+  padding: 0 0.12em 0.06em;
+}
+
+.sat-fraction > span:last-child {
+  padding-top: 0.06em;
+}
+
+.sat-sqrt {
+  display: inline-flex;
+  align-items: stretch;
+  margin: 0 0.08em;
+}
+
+.sat-sqrt-symbol {
+  font-size: 1.08em;
+  line-height: 1;
+}
+
+.sat-sqrt-radicand {
+  border-top: 0.08em solid currentColor;
+  padding: 0 0.08em;
+}
+
 .sat-home-motion {
   scroll-behavior: smooth;
   scroll-snap-type: y mandatory;
