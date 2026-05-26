@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, Play, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 
 const slides = [
@@ -53,6 +53,16 @@ const transitionVideoByRoute: Record<string, (typeof videoSources)[number]> = {
 };
 
 const loadingSequence = [20, 50, 70, 100];
+const studentResults = [
+  {
+    name: "Jasmina Abuduhamidov",
+    score: "1200 SAT",
+    improvement: "Improved from 1000 to 1200",
+    video: "/assets/video/student-jasmina-1200score.mp4"
+  }
+];
+
+type StudentResult = (typeof studentResults)[number];
 
 function getLoaderDigits(value: number) {
   return value
@@ -74,6 +84,8 @@ export default function Home() {
   const [loadingStage, setLoadingStage] = useState<"numbers" | "intro">("numbers");
   const [isLoaderExiting, setIsLoaderExiting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showResultsWall, setShowResultsWall] = useState(false);
+  const [activeResultVideo, setActiveResultVideo] = useState<StudentResult | null>(null);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
@@ -134,6 +146,18 @@ export default function Home() {
       document.body.style.overflow = previousOverflow;
     };
   }, []);
+
+  useEffect(() => {
+    if (isLoading) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setShowResultsWall(true);
+    }, 1100);
+
+    return () => window.clearTimeout(timer);
+  }, [isLoading]);
 
   useEffect(() => {
     const activeVideo = videoRefs.current[currentVideo];
@@ -351,6 +375,93 @@ export default function Home() {
         <span />
         <Link href="/login">Student Login</Link>
       </div>
+
+      <section
+        className={`results-wall ${showResultsWall ? "is-visible" : ""}`}
+        aria-label="Student SAT results"
+      >
+        <div className="results-wall__copy">
+          <p>Student Results</p>
+          <h2>Real score growth from SATTEST.UZ students.</h2>
+        </div>
+
+        <div className="results-wall__cards">
+          {studentResults.map((result) => (
+            <button
+              className="results-card"
+              key={result.name}
+              onClick={() => setActiveResultVideo(result)}
+              type="button"
+            >
+              <video
+                className="results-card__video"
+                src={result.video}
+                muted
+                loop
+                playsInline
+                autoPlay
+                preload="metadata"
+              />
+              <span className="results-card__shade" aria-hidden="true" />
+              <span className="results-card__play" aria-hidden="true">
+                <Play size={16} fill="currentColor" />
+              </span>
+              <span className="results-card__meta">
+                <strong>{result.name}</strong>
+                <span>{result.score}</span>
+                <span>{result.improvement}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <button
+          className="results-wall__close"
+          onClick={() => setShowResultsWall(false)}
+          type="button"
+          aria-label="Close student results"
+        >
+          <X size={16} />
+        </button>
+      </section>
+
+      {activeResultVideo ? (
+        <div
+          className="results-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${activeResultVideo.name} SAT result video`}
+        >
+          <button
+            className="results-modal__backdrop"
+            onClick={() => setActiveResultVideo(null)}
+            type="button"
+            aria-label="Close video"
+          />
+          <div className="results-modal__dialog">
+            <button
+              className="results-modal__close"
+              onClick={() => setActiveResultVideo(null)}
+              type="button"
+              aria-label="Close video"
+            >
+              <X size={18} />
+            </button>
+            <video
+              className="results-modal__video"
+              src={activeResultVideo.video}
+              controls
+              autoPlay
+              playsInline
+            />
+            <div className="results-modal__caption">
+              <strong>{activeResultVideo.name}</strong>
+              <span>{activeResultVideo.score}</span>
+              <span>{activeResultVideo.improvement}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <nav className="nex-slide-nav" aria-label="Homepage slides">
         <div className="nex-circ-buttons">
