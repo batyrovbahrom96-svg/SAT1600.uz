@@ -190,7 +190,11 @@ export default function Home() {
         >
           <div className="sat-count-loader__inner" aria-hidden="true">
             <span className="sat-count-loader__number">
-              {loadingProgress}
+              {loadingProgress.toString().split("").map((digit, index) => (
+                <span className="sat-count-loader__digit" key={`${index}-${digit}`}>
+                  {digit}
+                </span>
+              ))}
             </span>
           </div>
         </div>
