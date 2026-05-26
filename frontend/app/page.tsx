@@ -52,11 +52,25 @@ const transitionVideoByRoute: Record<string, (typeof videoSources)[number]> = {
   "2-1": "3-2"
 };
 
+const loadingSequence = [20, 50, 70, 100];
+
+function getLoaderDigits(value: number) {
+  return value
+    .toString()
+    .padStart(3, " ")
+    .split("")
+    .map((digit) => (digit === " " ? "\u00a0" : digit));
+}
+
 export default function Home() {
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
   const [currentVideo, setCurrentVideo] = useState<(typeof videoSources)[number]>("1-2");
-  const [loadingProgress, setLoadingProgress] = useState(20);
+  const [loadingFrame, setLoadingFrame] = useState({
+    previous: loadingSequence[0],
+    current: loadingSequence[0],
+    step: 0
+  });
   const [isLoading, setIsLoading] = useState(true);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
@@ -69,10 +83,16 @@ export default function Home() {
 
   useEffect(() => {
     const timers = [
-      window.setTimeout(() => setLoadingProgress(50), 1300),
-      window.setTimeout(() => setLoadingProgress(70), 2600),
-      window.setTimeout(() => setLoadingProgress(100), 3900),
-      window.setTimeout(() => setIsLoading(false), 5350)
+      window.setTimeout(() => {
+        setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[1], step: frame.step + 1 }));
+      }, 1800),
+      window.setTimeout(() => {
+        setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[2], step: frame.step + 1 }));
+      }, 3600),
+      window.setTimeout(() => {
+        setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
+      }, 5400),
+      window.setTimeout(() => setIsLoading(false), 7600)
     ];
 
     return () => {
@@ -186,10 +206,33 @@ export default function Home() {
           className="sat-count-loader"
           role="status"
           aria-live="polite"
-          aria-label={`Loading ${loadingProgress}`}
+          aria-label={`Loading ${loadingFrame.current}`}
         >
-          <div className="sat-count-loader__inner" aria-hidden="true">
-            <span className="sat-count-loader__number">{loadingProgress}</span>
+          <div className="sat-count-loader__window" aria-hidden="true">
+            <div
+              className={`sat-count-loader__number sat-count-loader__number--previous ${
+                loadingFrame.step === 0 ? "is-hidden" : ""
+              }`}
+              key={`previous-${loadingFrame.step}`}
+            >
+              {getLoaderDigits(loadingFrame.previous).map((digit, index) => (
+                <span className="sat-count-loader__digit" key={`${digit}-${index}`}>
+                  {digit}
+                </span>
+              ))}
+            </div>
+            <div
+              className={`sat-count-loader__number sat-count-loader__number--current ${
+                loadingFrame.step === 0 ? "is-idle" : ""
+              }`}
+              key={`current-${loadingFrame.step}`}
+            >
+              {getLoaderDigits(loadingFrame.current).map((digit, index) => (
+                <span className="sat-count-loader__digit" key={`${digit}-${index}`}>
+                  {digit}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       ) : null}
