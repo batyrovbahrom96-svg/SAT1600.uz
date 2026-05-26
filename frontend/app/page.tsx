@@ -199,13 +199,13 @@ export default function Home() {
     <main className="nex-home" data-direction={direction}>
       {isLoading ? (
         <div
-          className="nex-loader"
+          className="sat-count-loader"
           role="status"
           aria-live="polite"
-          aria-label={`Loading ${loadingProgress}%`}
+          aria-label={`Loading ${loadingProgress}`}
         >
-          <div className="nex-loader__inner" aria-hidden="true">
-            <div className="nex-loader__digits">
+          <div className="sat-count-loader__inner" aria-hidden="true">
+            <div className="sat-count-loader__digits">
               <span>{loadingProgress}</span>
               <span>{loadingProgress}</span>
             </div>

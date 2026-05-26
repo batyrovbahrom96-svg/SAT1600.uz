@@ -594,7 +594,7 @@ button, input {
     linear-gradient(0deg, rgba(10, 10, 10, 0.72) 0%, transparent 31%, transparent 70%, rgba(10, 10, 10, 0.66) 100%);
 }
 
-.nex-loader {
+.sat-count-loader {
   position: fixed;
   inset: 0;
   z-index: 80;
@@ -604,7 +604,7 @@ button, input {
   background: #171818;
 }
 
-.nex-loader::before {
+.sat-count-loader::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -615,62 +615,62 @@ button, input {
   opacity: 0.12;
 }
 
-.nex-loader__inner {
+.sat-count-loader__inner {
   position: relative;
   z-index: 1;
-  width: 150px;
-  height: 96px;
+  width: 118px;
+  height: 84px;
 }
 
-.nex-loader__digits {
+.sat-count-loader__digits {
   position: relative;
-  width: 150px;
-  height: 96px;
-  font-size: 31px;
-  font-weight: 500;
+  width: 118px;
+  height: 84px;
+  font-size: 28px;
+  font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
 }
 
-.nex-loader__digits span {
+.sat-count-loader__digits span {
   position: absolute;
   display: block;
-  min-width: 54px;
+  min-width: 46px;
   text-align: center;
   text-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
   will-change: transform;
 }
 
-.nex-loader__digits span:first-child {
+.sat-count-loader__digits span:first-child {
   top: 6px;
-  left: 26px;
-  animation: nex-loader-rise 1.18s cubic-bezier(0.76, 0, 0.24, 1) infinite alternate;
+  left: 22px;
+  animation: sat-count-rise 1s cubic-bezier(0.76, 0, 0.24, 1) infinite alternate;
 }
 
-.nex-loader__digits span:nth-child(2) {
-  top: 45px;
-  left: 68px;
-  color: rgba(255, 255, 255, 0.72);
-  animation: nex-loader-drop 1.18s cubic-bezier(0.76, 0, 0.24, 1) infinite alternate;
+.sat-count-loader__digits span:nth-child(2) {
+  top: 42px;
+  left: 57px;
+  color: rgba(255, 255, 255, 0.66);
+  animation: sat-count-drop 1s cubic-bezier(0.76, 0, 0.24, 1) infinite alternate;
 }
 
-@keyframes nex-loader-rise {
+@keyframes sat-count-rise {
   from {
-    transform: translateY(9px);
+    transform: translateY(10px);
   }
 
   to {
-    transform: translateY(-9px);
+    transform: translateY(-10px);
   }
 }
 
-@keyframes nex-loader-drop {
+@keyframes sat-count-drop {
   from {
-    transform: translateY(-9px);
+    transform: translateY(-10px);
   }
 
   to {
-    transform: translateY(9px);
+    transform: translateY(10px);
   }
 }
 
