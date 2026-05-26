@@ -18,6 +18,7 @@ type ModulePayload = {
 type GraphSeries = {
   name: string;
   values: [number, number][];
+  labels?: string[];
 };
 
 type GraphPayload = {
@@ -259,6 +260,8 @@ function DataGraph({ payload }: { payload: GraphPayload }) {
   const padding = { top: 24, right: 32, bottom: 54, left: 58 };
   const colors = ["#2563eb", "#16a34a", "#dc2626", "#7c3aed"];
   const points = payload.series.flatMap((series) => series.values);
+  const isCategoricalBarGraph = Boolean(payload.series.length === 1 && payload.series[0].labels?.length === payload.series[0].values.length);
+  const categoryLabels = payload.series[0]?.labels ?? [];
   const xValues = points.map(([x]) => x);
   const yValues = points.map(([, y]) => y);
   const minX = Math.min(...xValues);
@@ -268,8 +271,9 @@ function DataGraph({ payload }: { payload: GraphPayload }) {
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
   const scaleX = (value: number) => padding.left + ((value - minX) / Math.max(1, maxX - minX)) * plotWidth;
+  const scaleCategoryX = (index: number) => padding.left + ((index + 0.5) / Math.max(1, categoryLabels.length)) * plotWidth;
   const scaleY = (value: number) => padding.top + (1 - ((value - minY) / Math.max(1, maxY - minY))) * plotHeight;
-  const xTicks = Array.from(new Set(xValues)).sort((a, b) => a - b);
+  const xTicks = isCategoricalBarGraph ? [] : Array.from(new Set(xValues)).sort((a, b) => a - b);
   const yTicks = [minY, Math.round((minY + maxY) / 2), maxY];
 
   return (
@@ -293,18 +297,42 @@ function DataGraph({ payload }: { payload: GraphPayload }) {
             </text>
           </g>
         ))}
-        {payload.series.map((series, seriesIndex) => {
-          const color = colors[seriesIndex % colors.length];
-          const linePoints = series.values.map(([x, y]) => `${scaleX(x)},${scaleY(y)}`).join(" ");
-          return (
-            <g key={series.name}>
-              <polyline fill="none" points={linePoints} stroke={color} strokeWidth={3} />
-              {series.values.map(([x, y]) => (
-                <circle cx={scaleX(x)} cy={scaleY(y)} fill="white" key={`${series.name}-${x}-${y}`} r={4} stroke={color} strokeWidth={2} />
-              ))}
-            </g>
-          );
-        })}
+        {isCategoricalBarGraph ? (
+          payload.series[0].values.map(([, y], pointIndex) => {
+            const x = scaleCategoryX(pointIndex);
+            const barWidth = Math.min(70, plotWidth / Math.max(1, categoryLabels.length) * 0.56);
+            const barTop = scaleY(y);
+            const barHeight = height - padding.bottom - barTop;
+            return (
+              <g key={`${payload.series[0].name}-${categoryLabels[pointIndex]}`}>
+                <rect
+                  fill={colors[pointIndex % colors.length]}
+                  height={barHeight}
+                  rx={3}
+                  width={barWidth}
+                  x={x - barWidth / 2}
+                  y={barTop}
+                />
+                <text x={x} y={height - padding.bottom + 22} textAnchor="middle" className="fill-slate-600 text-[12px] capitalize">
+                  {categoryLabels[pointIndex]}
+                </text>
+              </g>
+            );
+          })
+        ) : (
+          payload.series.map((series, seriesIndex) => {
+            const color = colors[seriesIndex % colors.length];
+            const linePoints = series.values.map(([x, y]) => `${scaleX(x)},${scaleY(y)}`).join(" ");
+            return (
+              <g key={series.name}>
+                <polyline fill="none" points={linePoints} stroke={color} strokeWidth={3} />
+                {series.values.map(([x, y]) => (
+                  <circle cx={scaleX(x)} cy={scaleY(y)} fill="white" key={`${series.name}-${x}-${y}`} r={4} stroke={color} strokeWidth={2} />
+                ))}
+              </g>
+            );
+          })
+        )}
         <text x={padding.left + plotWidth / 2} y={height - 12} textAnchor="middle" className="fill-slate-700 text-[13px] font-semibold">
           {payload.x_label}
         </text>

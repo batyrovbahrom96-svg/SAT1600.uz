@@ -25,6 +25,7 @@ export type Question = {
     series?: {
       name: string;
       values: [number, number][];
+      labels?: string[];
     }[];
     [key: string]: unknown;
   } | null;
