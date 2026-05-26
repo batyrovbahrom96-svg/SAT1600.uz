@@ -70,13 +70,12 @@ export default function Home() {
   useEffect(() => {
     let frameId = 0;
     let finishId = 0;
-    const duration = 2100;
+    const duration = 5200;
     const startedAt = performance.now();
 
     const tick = (now: number) => {
       const elapsed = Math.min((now - startedAt) / duration, 1);
-      const eased = 1 - Math.pow(1 - elapsed, 3);
-      const nextProgress = Math.min(100, Math.round(eased * 100));
+      const nextProgress = Math.min(100, Math.round(elapsed * 100));
 
       setLoadingProgress(nextProgress);
 

@@ -644,14 +644,14 @@ button, input {
 .sat-count-loader__digits span:first-child {
   top: 6px;
   left: 22px;
-  animation: sat-count-rise 1s cubic-bezier(0.76, 0, 0.24, 1) infinite alternate;
+  animation: sat-count-rise 1.3s cubic-bezier(0.76, 0, 0.24, 1) 4 alternate;
 }
 
 .sat-count-loader__digits span:nth-child(2) {
   top: 42px;
   left: 57px;
   color: rgba(255, 255, 255, 0.66);
-  animation: sat-count-drop 1s cubic-bezier(0.76, 0, 0.24, 1) infinite alternate;
+  animation: sat-count-drop 1.3s cubic-bezier(0.76, 0, 0.24, 1) 4 alternate;
 }
 
 @keyframes sat-count-rise {
