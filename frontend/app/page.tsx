@@ -189,13 +189,7 @@ export default function Home() {
           aria-label={`Loading ${loadingProgress}`}
         >
           <div className="sat-count-loader__inner" aria-hidden="true">
-            <span className="sat-count-loader__number">
-              {loadingProgress.toString().split("").map((digit, index) => (
-                <span className="sat-count-loader__digit" key={`${index}-${digit}`}>
-                  {digit}
-                </span>
-              ))}
-            </span>
+            <span className="sat-count-loader__number">{loadingProgress}</span>
           </div>
         </div>
       ) : null}
