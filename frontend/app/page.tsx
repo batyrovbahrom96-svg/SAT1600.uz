@@ -56,6 +56,8 @@ export default function Home() {
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
   const [currentVideo, setCurrentVideo] = useState<(typeof videoSources)[number]>("1-2");
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
@@ -64,6 +66,35 @@ export default function Home() {
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  useEffect(() => {
+    let frameId = 0;
+    let finishId = 0;
+    const duration = 2100;
+    const startedAt = performance.now();
+
+    const tick = (now: number) => {
+      const elapsed = Math.min((now - startedAt) / duration, 1);
+      const eased = 1 - Math.pow(1 - elapsed, 3);
+      const nextProgress = Math.min(100, Math.round(eased * 100));
+
+      setLoadingProgress(nextProgress);
+
+      if (elapsed < 1) {
+        frameId = window.requestAnimationFrame(tick);
+        return;
+      }
+
+      finishId = window.setTimeout(() => setIsLoading(false), 420);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(finishId);
+    };
+  }, []);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -95,7 +126,7 @@ export default function Home() {
     const total = slides.length;
     const normalized = (targetIndex + total) % total;
 
-    if (normalized === activeRef.current || lockRef.current) {
+    if (isLoading || normalized === activeRef.current || lockRef.current) {
       return;
     }
 
@@ -111,7 +142,7 @@ export default function Home() {
     window.setTimeout(() => {
       lockRef.current = false;
     }, transitionMs);
-  }, []);
+  }, [isLoading]);
 
   const goNext = useCallback(() => goTo(activeRef.current + 1), [goTo]);
   const goPrev = useCallback(() => goTo(activeRef.current - 1), [goTo]);
@@ -166,6 +197,25 @@ export default function Home() {
 
   return (
     <main className="nex-home" data-direction={direction}>
+      {isLoading ? (
+        <div
+          className="nex-loader"
+          role="status"
+          aria-live="polite"
+          aria-label={`Loading ${loadingProgress}%`}
+        >
+          <div className="nex-loader__inner" aria-hidden="true">
+            <div className="nex-loader__digits">
+              <span>{loadingProgress}%</span>
+              <span>{loadingProgress}%</span>
+            </div>
+            <div className="nex-loader__bar">
+              <span style={{ transform: `scaleX(${loadingProgress / 100})` }} />
+            </div>
+            <p>SATTEST.UZ</p>
+          </div>
+        </div>
+      ) : null}
       <LuxuryNavbar />
 
       <div className="nex-backgrounds" aria-hidden="true">

@@ -594,6 +594,92 @@ button, input {
     linear-gradient(0deg, rgba(10, 10, 10, 0.72) 0%, transparent 31%, transparent 70%, rgba(10, 10, 10, 0.66) 100%);
 }
 
+.nex-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  color: #f7f7f7;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.045), transparent 22%),
+    #171818;
+}
+
+.nex-loader::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 0%, transparent 42%, rgba(255, 255, 255, 0.025) 43%, transparent 45%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
+  background-size: 100% 100%, 22px 22px, 22px 22px;
+  opacity: 0.34;
+}
+
+.nex-loader__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 22px;
+  min-width: 210px;
+}
+
+.nex-loader__digits {
+  position: relative;
+  width: 150px;
+  height: 96px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.nex-loader__digits span {
+  position: absolute;
+  display: block;
+  min-width: 88px;
+  text-align: center;
+  text-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.nex-loader__digits span:first-child {
+  top: 6px;
+  left: 11px;
+}
+
+.nex-loader__digits span:nth-child(2) {
+  top: 44px;
+  left: 52px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.nex-loader__bar {
+  width: 190px;
+  height: 1px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.nex-loader__bar span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  transform-origin: left center;
+  transition: transform 0.08s linear;
+}
+
+.nex-loader__inner p {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.68em;
+  text-indent: 0.68em;
+  color: rgba(255, 255, 255, 0.58);
+}
+
 .nex-header {
   position: fixed;
   top: 70px;
