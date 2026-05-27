@@ -107,7 +107,7 @@ export default function Home() {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
       }, 5400),
       window.setTimeout(() => setLoadingStage("brand"), 7600),
-      window.setTimeout(() => setLoadingStage("intro"), 10600)
+      window.setTimeout(() => setLoadingStage("intro"), 13200)
     ];
 
     return () => {
