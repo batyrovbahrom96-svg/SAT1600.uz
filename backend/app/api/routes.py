@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 from email.message import EmailMessage
+import json
 import random
 import smtplib
+from urllib import error, request
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -95,7 +97,11 @@ def request_verification_code(payload: VerificationCodeRequest, db: Session = De
         "created_at": now,
         "expires_at": now + timedelta(minutes=10),
     }
-    dev_code = _send_verification_email(email, code)
+    try:
+        dev_code = _send_verification_email(email, code)
+    except HTTPException:
+        verification_codes.pop(email, None)
+        raise
     response = {"sent": True, "expires_in_minutes": 10}
     if dev_code:
         response["dev_code"] = code
@@ -112,6 +118,9 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> TokenResponse:
 
 def _send_verification_email(email: str, code: str) -> bool:
     settings = get_settings()
+    if settings.resend_api_key:
+        return _send_verification_email_with_resend(email, code)
+
     if not settings.smtp_host:
         if settings.environment.lower() == "production":
             raise HTTPException(status_code=500, detail="Email verification is not configured")
@@ -133,8 +142,53 @@ def _send_verification_email(email: str, code: str) -> bool:
             if settings.smtp_username and settings.smtp_password:
                 smtp.login(settings.smtp_username, settings.smtp_password)
             smtp.send_message(message)
-    except OSError as exc:
+    except (OSError, smtplib.SMTPException) as exc:
+        print(f"SMTP verification email failed: {exc}")
         raise HTTPException(status_code=502, detail="Unable to send verification email") from exc
+    return False
+
+
+def _send_verification_email_with_resend(email: str, code: str) -> bool:
+    settings = get_settings()
+    from_email = settings.resend_from_email or f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
+    payload = {
+        "from": from_email,
+        "to": [email],
+        "subject": "Your SATTEST.UZ verification code",
+        "text": (
+            f"Your SATTEST.UZ verification code is {code}.\n\n"
+            "This code expires in 10 minutes. If you did not request it, you can ignore this email."
+        ),
+        "html": (
+            "<div style=\"font-family:Arial,sans-serif;color:#111;line-height:1.5\">"
+            "<h2>Your SATTEST.UZ verification code</h2>"
+            f"<p style=\"font-size:28px;font-weight:700;letter-spacing:4px\">{code}</p>"
+            "<p>This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>"
+            "</div>"
+        ),
+    }
+    email_request = request.Request(
+        "https://api.resend.com/emails",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {settings.resend_api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with request.urlopen(email_request, timeout=10) as response:
+            if response.status >= 400:
+                raise HTTPException(status_code=502, detail="Unable to send verification email")
+    except error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        print(f"Resend verification email failed: status={exc.code} body={body}")
+        raise HTTPException(status_code=502, detail="Unable to send verification email") from exc
+    except OSError as exc:
+        print(f"Resend verification email failed: {exc}")
+        raise HTTPException(status_code=502, detail="Unable to send verification email") from exc
+
     return False
 
 

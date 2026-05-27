@@ -53,6 +53,8 @@ SMTP_USERNAME=<smtp username>
 SMTP_PASSWORD=<smtp password or app password>
 SMTP_FROM_EMAIL=no-reply@sattest.uz
 SMTP_FROM_NAME=SATTEST.UZ Email Bot
+RESEND_API_KEY=<Resend API key, preferred for signup email codes>
+RESEND_FROM_EMAIL=SATTEST.UZ Email Bot <no-reply@sattest.uz>
 ```
 
 Examples are stored in:
