@@ -13,7 +13,7 @@ export const studentResults: StudentResult[] = [
     video: "/assets/video/student-jasmina-1200score.mp4"
   },
   {
-    name: "Zadar Bazarov",
+    name: "Zafar Bazarov",
     score: "1250 SAT",
     improvement: "Improved from 1100 to 1250",
     video: "/assets/video/student-zafar-bazarov-1250sat.mp4"
