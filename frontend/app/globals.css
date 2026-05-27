@@ -1153,13 +1153,13 @@ button, input {
 .results-wall {
   position: absolute;
   right: 7.15vw;
-  bottom: 7vh;
+  bottom: calc(7vh + 118px);
   z-index: 12;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-  width: min(380px, 86vw);
-  padding: 14px;
+  grid-template-columns: minmax(230px, 1fr) minmax(230px, 420px);
+  gap: 26px;
+  width: min(980px, 78vw);
+  padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 2px;
   background:
@@ -1185,11 +1185,12 @@ button, input {
 }
 
 .results-wall__copy {
-  padding: 0 38px 0 0;
+  align-self: end;
+  padding: 8px 30px 4px 2px;
 }
 
 .results-wall__copy p {
-  margin-bottom: 8px;
+  margin-bottom: 18px;
   color: rgba(255, 255, 255, 0.48);
   font-size: 9px;
   font-weight: 700;
@@ -1199,11 +1200,11 @@ button, input {
 }
 
 .results-wall__copy h2 {
-  max-width: 270px;
+  max-width: 360px;
   color: #fff;
-  font-size: 20px;
+  font-size: clamp(22px, 2.2vw, 34px);
   font-weight: 300;
-  line-height: 1.15;
+  line-height: 1.18;
 }
 
 .results-wall__carousel {
@@ -1214,7 +1215,7 @@ button, input {
 .results-wall__cards {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 100%;
+  grid-auto-columns: minmax(190px, calc((100% - 14px) / 2));
   gap: 14px;
   min-width: 0;
   max-width: 100%;
@@ -1722,7 +1723,7 @@ button, input {
 
   .results-wall {
     right: 7vw;
-    bottom: 7vh;
+    bottom: calc(7vh + 210px);
     width: min(420px, 86vw);
     gap: 18px;
     padding: 18px;
@@ -1742,7 +1743,7 @@ button, input {
   }
 
   .results-wall__cards {
-    grid-auto-columns: 100%;
+    grid-auto-columns: minmax(220px, 82%);
   }
 
   .results-wall__controls button {
@@ -1791,7 +1792,7 @@ button, input {
   }
 
   .results-wall {
-    bottom: 7vh;
+    bottom: calc(7vh + 184px);
   }
 
   .results-card {
