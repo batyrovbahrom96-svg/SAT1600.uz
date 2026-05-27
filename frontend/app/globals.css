@@ -1153,7 +1153,7 @@ button, input {
 .results-wall {
   position: absolute;
   right: 4vw;
-  bottom: calc(7vh + 72px);
+  top: clamp(104px, 14vh, 126px);
   z-index: 12;
   display: grid;
   grid-template-columns: minmax(210px, 0.84fr) minmax(360px, 1fr);
@@ -1723,7 +1723,7 @@ button, input {
 
   .results-wall {
     right: 7vw;
-    bottom: calc(7vh + 116px);
+    top: 112px;
     grid-template-columns: 1fr;
     width: min(420px, 86vw);
     gap: 18px;
@@ -1793,7 +1793,7 @@ button, input {
   }
 
   .results-wall {
-    bottom: calc(7vh + 104px);
+    top: 104px;
   }
 
   .results-card {
