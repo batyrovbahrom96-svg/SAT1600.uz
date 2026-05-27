@@ -936,7 +936,7 @@ export default function TestPage() {
   const [desmosFailed, setDesmosFailed] = useState(false);
   const [highlightModeEnabled, setHighlightModeEnabled] = useState(true);
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
-  const [secureModeActive, setSecureModeActive] = useState(true);
+  const [secureModeActive, setSecureModeActive] = useState(false);
   const [integrityNotice, setIntegrityNotice] = useState<IntegrityNotice | null>(null);
   const [integrityLocked, setIntegrityLocked] = useState(false);
   const [integrityViolationCount, setIntegrityViolationCount] = useState(0);
@@ -1019,9 +1019,6 @@ export default function TestPage() {
   }
 
   function recordIntegrityEvent(type: IntegrityEventType) {
-    void type;
-    return;
-
     if (!secureModeActiveRef.current || integrityLockedRef.current || isBreakActiveRef.current) return;
 
     const nextCount = integrityViolationCountRef.current + 1;
@@ -1047,8 +1044,16 @@ export default function TestPage() {
   }
 
   async function enterSecureMode() {
-    setSecureModeActive(true);
-    setIntegrityNotice(null);
+    try {
+      if (document.fullscreenEnabled && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (error) {
+      console.log("Fullscreen unavailable:", error);
+    } finally {
+      setSecureModeActive(true);
+      setIntegrityNotice(null);
+    }
   }
 
   async function continueAfterIntegrityWarning() {
