@@ -567,6 +567,7 @@ button, input {
   transition: opacity 0.9s cubic-bezier(0.43, 0, 0.06, 1);
 }
 
+.sat-count-loader--brand::before,
 .sat-count-loader--intro::before,
 .sat-count-loader.is-exiting::before {
   opacity: 0;
@@ -620,6 +621,19 @@ button, input {
   transition:
     transform 1.5s cubic-bezier(0.43, 0, 0.06, 1),
     filter 1.2s cubic-bezier(0.43, 0, 0.06, 1);
+}
+
+.sat-count-loader__brand {
+  position: relative;
+  z-index: 1;
+  width: min(58vw, 460px);
+  max-height: 72vh;
+  object-fit: contain;
+  opacity: 0;
+  filter: drop-shadow(0 26px 54px rgba(0, 0, 0, 0.55));
+  transform: scale(0.965);
+  animation: satLoaderBrandReveal 2.9s cubic-bezier(0.43, 0, 0.06, 1) both;
+  will-change: opacity, transform, filter;
 }
 
 .sat-count-loader.is-exiting .sat-count-loader__intro {
@@ -731,6 +745,27 @@ button, input {
 
   to {
     opacity: 1;
+  }
+}
+
+@keyframes satLoaderBrandReveal {
+  0% {
+    opacity: 0;
+    filter: blur(10px) drop-shadow(0 26px 54px rgba(0, 0, 0, 0.55));
+    transform: scale(0.965);
+  }
+
+  32%,
+  70% {
+    opacity: 1;
+    filter: blur(0) drop-shadow(0 26px 54px rgba(0, 0, 0, 0.55));
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    filter: blur(8px) drop-shadow(0 26px 54px rgba(0, 0, 0, 0.55));
+    transform: scale(1.018);
   }
 }
 

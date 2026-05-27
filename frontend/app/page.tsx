@@ -71,7 +71,7 @@ export default function Home() {
     current: loadingSequence[0],
     step: 0
   });
-  const [loadingStage, setLoadingStage] = useState<"numbers" | "intro">("numbers");
+  const [loadingStage, setLoadingStage] = useState<"numbers" | "brand" | "intro">("numbers");
   const [isLoaderExiting, setIsLoaderExiting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showResultsWall, setShowResultsWall] = useState(false);
@@ -106,7 +106,8 @@ export default function Home() {
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
       }, 5400),
-      window.setTimeout(() => setLoadingStage("intro"), 7600)
+      window.setTimeout(() => setLoadingStage("brand"), 7600),
+      window.setTimeout(() => setLoadingStage("intro"), 10600)
     ];
 
     return () => {
@@ -263,7 +264,7 @@ export default function Home() {
           }`}
           role="status"
           aria-live="polite"
-          aria-label={`Loading ${loadingFrame.current}`}
+          aria-label={loadingStage === "numbers" ? `Loading ${loadingFrame.current}` : "Loading SATTEST.UZ"}
         >
           {loadingStage === "numbers" ? (
             <div className="sat-count-loader__window" aria-hidden="true">
@@ -292,6 +293,12 @@ export default function Home() {
                 ))}
               </div>
             </div>
+          ) : loadingStage === "brand" ? (
+            <img
+              className="sat-count-loader__brand"
+              src="/assets/brand/sattest-intro-logo.png"
+              alt="SATTEST.UZ"
+            />
           ) : (
             <video
               className="sat-count-loader__intro"
