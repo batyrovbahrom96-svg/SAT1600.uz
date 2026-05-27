@@ -57,58 +57,6 @@ button, input {
   margin: 0 auto;
 }
 
-.sat-math {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.03em;
-  white-space: nowrap;
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 600;
-}
-
-.sat-math sup {
-  font-size: 0.68em;
-  line-height: 0;
-  margin-left: 0.02em;
-  position: relative;
-  top: -0.28em;
-}
-
-.sat-fraction {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0 0.1em;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.sat-fraction > span:first-child {
-  border-bottom: 0.08em solid currentColor;
-  padding: 0 0.12em 0.06em;
-}
-
-.sat-fraction > span:last-child {
-  padding-top: 0.06em;
-}
-
-.sat-sqrt {
-  display: inline-flex;
-  align-items: stretch;
-  margin: 0 0.08em;
-}
-
-.sat-sqrt-symbol {
-  font-size: 1.08em;
-  line-height: 1;
-}
-
-.sat-sqrt-radicand {
-  border-top: 0.08em solid currentColor;
-  padding: 0 0.08em;
-}
-
 .sat-home-motion {
   scroll-behavior: smooth;
   scroll-snap-type: y mandatory;
@@ -1208,9 +1156,9 @@ button, input {
   bottom: calc(7vh + 118px);
   z-index: 12;
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) 230px;
+  grid-template-columns: minmax(230px, 1fr) minmax(230px, 420px);
   gap: 26px;
-  width: min(760px, 72vw);
+  width: min(980px, 78vw);
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 2px;
@@ -1260,7 +1208,19 @@ button, input {
 }
 
 .results-wall__cards {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(190px, 1fr);
+  gap: 14px;
   min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.results-wall__cards::-webkit-scrollbar {
+  display: none;
 }
 
 .results-card {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronUp, Play, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { studentResults, type StudentResult } from "@/lib/student-results";
 
 const slides = [
   {
@@ -53,17 +54,6 @@ const transitionVideoByRoute: Record<string, (typeof videoSources)[number]> = {
 };
 
 const loadingSequence = [20, 50, 70, 100];
-const studentResults = [
-  {
-    name: "Jasmina Abuduhamidov",
-    score: "1200 SAT",
-    improvement: "Improved from 1000 to 1200",
-    video: "/assets/video/student-jasmina-1200score.mp4"
-  }
-];
-
-type StudentResult = (typeof studentResults)[number];
-
 function getLoaderDigits(value: number) {
   return value
     .toString()
