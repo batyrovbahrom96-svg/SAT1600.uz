@@ -59,10 +59,6 @@ type DesmosCalculatorInstance = {
   destroy: () => void;
 };
 
-type MathTextSegment =
-  | { type: "text"; value: string }
-  | { type: "math"; value: string };
-
 declare global {
   interface Window {
     Desmos?: {
@@ -117,141 +113,89 @@ function isGraphPayload(payload: Question["data_payload"]): payload is GraphPayl
   );
 }
 
-function splitMathText(text: string): MathTextSegment[] {
-  const segments: MathTextSegment[] = [];
-  let lastIndex = 0;
-  let index = 0;
+function isCurrencyDollar(value: string, index: number) {
+  const previous = value[index - 1] || "";
+  const rest = value.slice(index + 1);
+  const currencyMatch = rest.match(/^\d+(?:,\d{3})*(?:\.\d+)?/);
+  const afterNumber = currencyMatch ? rest.slice(currencyMatch[0].length).trimStart()[0] || "" : "";
 
-  while (index < text.length) {
-    const startIndex = text.indexOf("$", index);
-    if (startIndex === -1) break;
-    const nextChar = text[startIndex + 1];
-    if (nextChar && /[\d.]/.test(nextChar)) {
-      index = startIndex + 1;
+  return Boolean(currencyMatch)
+    && !/[A-Za-z0-9)\]}]/.test(previous)
+    && (afterNumber === "" || /[\s.,;:?!]/.test(afterNumber));
+}
+
+function stripLooseMathDelimiters(value: string) {
+  let output = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] !== "$") {
+      output += value[index];
       continue;
     }
 
-    let endIndex = text.indexOf("$", startIndex + 1);
-    while (endIndex !== -1 && /[\d.]/.test(text[endIndex + 1] ?? "")) {
-      endIndex = text.indexOf("$", endIndex + 1);
+    if (isCurrencyDollar(value, index)) {
+      output += "$";
     }
-    if (endIndex === -1) break;
-
-    if (startIndex > lastIndex) {
-      segments.push({ type: "text", value: text.slice(lastIndex, startIndex) });
-    }
-    segments.push({ type: "math", value: text.slice(startIndex + 1, endIndex) });
-    lastIndex = endIndex + 1;
-    index = lastIndex;
   }
 
-  if (lastIndex < text.length) {
-    segments.push({ type: "text", value: text.slice(lastIndex) });
-  }
-  return segments.length ? segments : [{ type: "text", value: text }];
+  return output;
 }
 
-function readLatexGroup(value: string, openIndex: number) {
-  let depth = 0;
-  for (let index = openIndex; index < value.length; index += 1) {
-    const char = value[index];
-    if (char === "{") depth += 1;
-    if (char === "}") {
-      depth -= 1;
-      if (depth === 0) {
-        return {
-          body: value.slice(openIndex + 1, index),
-          endIndex: index + 1
-        };
-      }
-    }
+function plainQuestionText(value: string) {
+  let output = stripLooseMathDelimiters(value
+    .replace(/\r\n/g, "\n")
+    .replace(/\\\$/g, "$")
+    .replace(/\\\\(?=[A-Za-z])/g, "\\"));
+
+  let previous = "";
+  while (output !== previous) {
+    previous = output;
+    output = output
+      .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1/$2")
+      .replace(/\\sqrt\{([^{}]+)\}/g, "sqrt($1)")
+      .replace(/\\left/g, "")
+      .replace(/\\right/g, "");
   }
-  return null;
-}
 
-function renderLatexSubset(latex: string): string {
-  let html = "";
-  for (let index = 0; index < latex.length; index += 1) {
-    if (latex.startsWith("\\frac{", index)) {
-      const numerator = readLatexGroup(latex, index + "\\frac".length);
-      if (numerator) {
-        const denominator = latex[numerator.endIndex] === "{" ? readLatexGroup(latex, numerator.endIndex) : null;
-        if (denominator) {
-          html += `<span class="sat-fraction"><span>${renderLatexSubset(numerator.body)}</span><span>${renderLatexSubset(denominator.body)}</span></span>`;
-          index = denominator.endIndex - 1;
-          continue;
-        }
-      }
-    }
-
-    if (latex.startsWith("\\sqrt{", index)) {
-      const radicand = readLatexGroup(latex, index + "\\sqrt".length);
-      if (radicand) {
-        html += `<span class="sat-sqrt"><span class="sat-sqrt-symbol">√</span><span class="sat-sqrt-radicand">${renderLatexSubset(radicand.body)}</span></span>`;
-        index = radicand.endIndex - 1;
-        continue;
-      }
-    }
-
-    if (latex[index] === "^") {
-      const nextIndex = index + 1;
-      if (latex[nextIndex] === "{") {
-        const exponent = readLatexGroup(latex, nextIndex);
-        if (exponent) {
-          html += `<sup>${renderLatexSubset(exponent.body)}</sup>`;
-          index = exponent.endIndex - 1;
-          continue;
-        }
-      }
-      html += `<sup>${latex[nextIndex] ?? ""}</sup>`;
-      index = nextIndex;
-      continue;
-    }
-
-    const commands: Record<string, string> = {
-      "\\sin": "sin",
-      "\\cos": "cos",
-      "\\tan": "tan",
-      "\\pi": "π",
-      "\\ne": "≠",
-      "\\pm": "±",
-      "\\circ": "°",
-      "\\left": "",
-      "\\right": "",
-      "\\,": " "
-    };
-    const command = Object.keys(commands).find((item) => latex.startsWith(item, index));
-    if (command) {
-      html += commands[command];
-      index += command.length - 1;
-      continue;
-    }
-
-    const escaped = latex[index]
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    html += escaped;
-  }
-  return html.replace(/[{}]/g, "");
-}
-
-function MathText({ children, className = "" }: { children: string; className?: string }) {
-  return (
-    <>
-      {splitMathText(children).map((segment, index) => (
-        segment.type === "math" ? (
-          <span
-            className={`sat-math ${className}`}
-            dangerouslySetInnerHTML={{ __html: renderLatexSubset(segment.value) }}
-            key={`${segment.type}-${index}-${segment.value}`}
-          />
-        ) : (
-          <span className="whitespace-pre-line" key={`${segment.type}-${index}-${segment.value}`}>{segment.value}</span>
-        )
-      ))}
-    </>
-  );
+  return output
+    .replace(/\\(?:ne|neq)\b/g, "!=")
+    .replace(/\\leq?\b/g, "<=")
+    .replace(/\\geq?\b/g, ">=")
+    .replace(/\\times\b/g, "x")
+    .replace(/\\div\b/g, "/")
+    .replace(/\\pm\b/g, "+/-")
+    .replace(/\\approx\b/g, "~")
+    .replace(/\\pi\b/g, "pi")
+    .replace(/\\(?:sin|cos|tan|log|ln)\b/g, (command) => command.slice(1))
+    .replace(/\\([A-Za-z]+)/g, "$1")
+    .replace(/[{}]/g, "")
+    .replace(/\bvalueof\b/gi, "value of")
+    .replace(/\bvalue off\(/gi, "value of f(")
+    .replace(/\bwhenx\b/gi, "when x")
+    .replace(/\bofasatisfiesf\b/gi, "of a satisfies f")
+    .replace(/\bsatisfiesf\(/gi, "satisfies f(")
+    .replace(/\bvariablesn\s*,\s*a\s*,\s*andb\b/gi, "variables n, a, and b")
+    .replace(/\bvariables([a-z])\b/gi, "variables $1")
+    .replace(/\bandb\b/gi, "and b")
+    .replace(/\bbrelates\b/gi, "b relates")
+    .replace(/\bwhere([a-z])\b/gi, "where $1")
+    .replace(/\binterms\b/gi, "in terms")
+    .replace(/\bf\(\s*x\s*\)/g, "f(x)")
+    .replace(/\bf\(\s*(\d+)\s*\)/g, "f($1)")
+    .replace(/\s*\/\s*/g, "/")
+    .replace(/\s*([=+])\s*/g, " $1 ")
+    .replace(/\s+-\s*/g, " - ")
+    .replace(/\(\s+/g, "(")
+    .replace(/\s+\)/g, ")")
+    .replace(/\s*,\s*/g, ", ")
+    .replace(/\s+([.,;:?])/g, "$1")
+    .replace(/([.,;:?])(?=\S)/g, "$1 ")
+    .replace(/(\d)\.\s+(\d)/g, "$1.$2")
+    .replace(/(\d),\s+(\d{3}\b)/g, "$1,$2")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
 }
 
 function DataGraph({ payload }: { payload: GraphPayload }) {
@@ -992,7 +936,7 @@ export default function TestPage() {
   const [desmosFailed, setDesmosFailed] = useState(false);
   const [highlightModeEnabled, setHighlightModeEnabled] = useState(true);
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
-  const [secureModeActive, setSecureModeActive] = useState(false);
+  const [secureModeActive, setSecureModeActive] = useState(true);
   const [integrityNotice, setIntegrityNotice] = useState<IntegrityNotice | null>(null);
   const [integrityLocked, setIntegrityLocked] = useState(false);
   const [integrityViolationCount, setIntegrityViolationCount] = useState(0);
@@ -1037,7 +981,19 @@ export default function TestPage() {
   }, [integrityViolationCount]);
 
   function loadModulePayload(data: ModulePayload) {
-    setModuleData(data);
+    const normalizedData: ModulePayload = {
+      ...data,
+      questions: data.questions.map((item) => ({
+        ...item,
+        prompt: plainQuestionText(item.prompt),
+        choices: item.choices.map((choice) => ({
+          ...choice,
+          text: plainQuestionText(choice.text)
+        }))
+      }))
+    };
+
+    setModuleData(normalizedData);
     setSecondsLeft(data.duration_seconds);
     setIndex(0);
     setIsCheckWorkActive(false);
@@ -1063,6 +1019,9 @@ export default function TestPage() {
   }
 
   function recordIntegrityEvent(type: IntegrityEventType) {
+    void type;
+    return;
+
     if (!secureModeActiveRef.current || integrityLockedRef.current || isBreakActiveRef.current) return;
 
     const nextCount = integrityViolationCountRef.current + 1;
@@ -1088,16 +1047,8 @@ export default function TestPage() {
   }
 
   async function enterSecureMode() {
-    try {
-      if (document.fullscreenEnabled && !document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-      }
-    } catch (error) {
-      console.log("Fullscreen unavailable:", error);
-    } finally {
-      setSecureModeActive(true);
-      setIntegrityNotice(null);
-    }
+    setSecureModeActive(true);
+    setIntegrityNotice(null);
   }
 
   async function continueAfterIntegrityWarning() {
@@ -2204,7 +2155,7 @@ export default function TestPage() {
             </div>
             <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
             <h1 className={`${isStudentResponse ? "mb-8 text-left" : "question-text text-center"} text-[20px] font-semibold leading-[1.45] text-slate-950`}>
-              <MathText>{question.prompt}</MathText>
+              <span className="whitespace-pre-line">{question.prompt}</span>
             </h1>
 
             <div className="answers">
@@ -2246,7 +2197,7 @@ export default function TestPage() {
                       {choice.label}
                     </span>
                     <span className={eliminatedAnswers.has(choice.label) ? "text-slate-500 line-through decoration-slate-500 decoration-2" : "text-slate-950"}>
-                      <MathText>{choice.text}</MathText>
+                      {choice.text}
                     </span>
                   </button>
                   <button
