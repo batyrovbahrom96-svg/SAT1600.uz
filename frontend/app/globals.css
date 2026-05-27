@@ -1247,33 +1247,51 @@ button, input {
 
 .results-wall__controls {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
-  z-index: 3;
-  display: inline-flex;
-  gap: 8px;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
 }
 
 .results-wall__controls button {
   display: inline-flex;
-  width: 38px;
-  height: 38px;
+  width: 54px;
+  height: 54px;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.48);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.9);
+  color: #050505;
+  pointer-events: auto;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.42);
   transition:
     background 0.25s ease,
     border-color 0.25s ease,
     transform 0.25s ease;
 }
 
+.results-wall__controls button:first-child {
+  transform: translateX(-24px);
+}
+
+.results-wall__controls button:last-child {
+  transform: translateX(24px);
+}
+
 .results-wall__controls button:hover {
-  border-color: rgba(255, 255, 255, 0.58);
-  background: rgba(255, 255, 255, 0.12);
-  transform: translateY(-1px);
+  border-color: #fff;
+  background: #fff;
+}
+
+.results-wall__controls button:first-child:hover {
+  transform: translateX(-28px);
+}
+
+.results-wall__controls button:last-child:hover {
+  transform: translateX(28px);
 }
 
 .results-card__video {
@@ -1727,6 +1745,19 @@ button, input {
 
   .results-wall__cards {
     grid-auto-columns: minmax(220px, 82%);
+  }
+
+  .results-wall__controls button {
+    width: 46px;
+    height: 46px;
+  }
+
+  .results-wall__controls button:first-child {
+    transform: translateX(-12px);
+  }
+
+  .results-wall__controls button:last-child {
+    transform: translateX(12px);
   }
 
   .results-card {
