@@ -7,6 +7,12 @@ export type StudentResult = {
 
 export const studentResults: StudentResult[] = [
   {
+    name: "Muslima",
+    score: "1330 SAT",
+    improvement: "Reached 1330 SAT in 6 months",
+    video: "/assets/video/student-muslima-1330sat.mp4"
+  },
+  {
     name: "Jasmina Abuduhamidov",
     score: "1200 SAT",
     improvement: "Improved from 1000 to 1200",
