@@ -23,5 +23,11 @@ export const studentResults: StudentResult[] = [
     score: "1100 SAT",
     improvement: "Improved from 900 to 1100 at age 16",
     video: "/assets/video/student-ulugbek-abdurahmanov-1100sat.mp4"
+  },
+  {
+    name: "Ismail Sobitov",
+    score: "1200 SAT",
+    improvement: "Scored 1200 SAT",
+    video: "/assets/video/student-ismail-sobitov-1200sat.mp4"
   }
 ];
