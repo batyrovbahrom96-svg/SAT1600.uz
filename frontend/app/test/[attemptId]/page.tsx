@@ -1792,7 +1792,7 @@ export default function TestPage() {
       const previousSection = moduleData?.attempt.current_section;
       const result = await api<{ status: string; current_section: string; current_module: number }>(`/api/attempts/${attemptId}/advance`, { method: "POST" });
       if (result.status === "completed") {
-        router.push(`/results/${attemptId}`);
+        router.push(`/dashboard?attemptId=${attemptId}`);
         return;
       }
       if (previousSection === "reading_writing" && result.current_section === "math") {
