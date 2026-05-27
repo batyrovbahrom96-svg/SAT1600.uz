@@ -558,6 +558,10 @@ button, input {
   will-change: opacity;
 }
 
+.sat-count-loader--brand {
+  background: #000;
+}
+
 .sat-count-loader::before {
   content: "";
   position: absolute;
@@ -565,6 +569,18 @@ button, input {
   background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.035), transparent 25%);
   opacity: 0.45;
   transition: opacity 0.9s cubic-bezier(0.43, 0, 0.06, 1);
+}
+
+.sat-count-loader--brand::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.11), transparent 20%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.045), transparent 36%);
+  opacity: 0;
+  animation: satLoaderBrandHalo 2.9s cubic-bezier(0.43, 0, 0.06, 1) both;
+  pointer-events: none;
 }
 
 .sat-count-loader--brand::before,
@@ -626,12 +642,15 @@ button, input {
 .sat-count-loader__brand {
   position: relative;
   z-index: 1;
-  width: min(58vw, 460px);
+  width: min(64vw, 520px);
   max-height: 72vh;
   object-fit: contain;
   opacity: 0;
-  filter: drop-shadow(0 26px 54px rgba(0, 0, 0, 0.55));
-  transform: scale(0.965);
+  filter:
+    brightness(0.28)
+    contrast(1.18)
+    drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  transform: scale(0.78) rotateX(8deg);
   animation: satLoaderBrandReveal 2.9s cubic-bezier(0.43, 0, 0.06, 1) both;
   will-change: opacity, transform, filter;
 }
@@ -751,21 +770,62 @@ button, input {
 @keyframes satLoaderBrandReveal {
   0% {
     opacity: 0;
-    filter: blur(10px) drop-shadow(0 26px 54px rgba(0, 0, 0, 0.55));
-    transform: scale(0.965);
+    filter:
+      blur(14px)
+      brightness(0.12)
+      contrast(1.24)
+      drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+    transform: scale(0.78) rotateX(8deg);
   }
 
-  32%,
+  18% {
+    opacity: 0.52;
+    filter:
+      blur(5px)
+      brightness(0.72)
+      contrast(1.18)
+      drop-shadow(0 0 18px rgba(255, 255, 255, 0.2));
+    transform: scale(0.93) rotateX(3deg);
+  }
+
+  42%,
+  72% {
+    opacity: 1;
+    filter:
+      blur(0)
+      brightness(1.08)
+      contrast(1.1)
+      drop-shadow(0 0 22px rgba(255, 255, 255, 0.18))
+      drop-shadow(0 30px 58px rgba(0, 0, 0, 0.82));
+    transform: scale(1) rotateX(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    filter:
+      blur(10px)
+      brightness(0.42)
+      contrast(1.18)
+      drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+    transform: scale(1.09) rotateX(0deg);
+  }
+}
+
+@keyframes satLoaderBrandHalo {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  35%,
   70% {
     opacity: 1;
-    filter: blur(0) drop-shadow(0 26px 54px rgba(0, 0, 0, 0.55));
     transform: scale(1);
   }
 
   100% {
     opacity: 0;
-    filter: blur(8px) drop-shadow(0 26px 54px rgba(0, 0, 0, 0.55));
-    transform: scale(1.018);
+    transform: scale(1.12);
   }
 }
 
