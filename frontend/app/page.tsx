@@ -198,7 +198,7 @@ export default function Home() {
     const distance = firstCard ? firstCard.offsetWidth + 14 : 240;
     const maxLeft = container.scrollWidth - container.clientWidth;
     const target = container.scrollLeft + direction * distance;
-    const nextLeft = target > maxLeft - 4 ? 0 : target < 4 ? maxLeft : target;
+    const nextLeft = Math.min(maxLeft, Math.max(0, target));
     container.scrollTo({ left: nextLeft, behavior: "smooth" });
   }, []);
 
