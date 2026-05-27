@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -149,6 +150,10 @@ export default function ResultsPage() {
 
   const reportResults = results ?? (attemptId === "demo" ? demoResults : null);
   const analytics = useMemo(() => reportResults ? buildReportAnalytics(reportResults) : null, [reportResults]);
+
+  if (attemptId === "demo") {
+    return <ResultsUnavailableNotice />;
+  }
 
   if (!reportResults || !analytics) {
     return (
@@ -358,6 +363,34 @@ export default function ResultsPage() {
             Most common trap: {analytics.topTrap || "not enough missed questions to detect a pattern"}.
           </p>
         </section>
+      </section>
+    </main>
+  );
+}
+
+function ResultsUnavailableNotice() {
+  return (
+    <main className="min-h-screen bg-[#101112] text-white">
+      <LuxuryNavbar />
+      <section className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-5xl place-items-center px-5 py-16">
+        <div className="w-full max-w-2xl border border-white/12 bg-white/[0.035] p-8 text-center shadow-[0_30px_90px_rgba(0,0,0,0.38)] md:p-12">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center border border-yellow-200/25 bg-yellow-200/10 text-yellow-100">
+            <CircleAlert size={30} />
+          </div>
+          <p className="mt-8 text-[10px] font-black uppercase tracking-[0.42em] text-white/42">Results unavailable</p>
+          <h1 className="mt-5 text-4xl font-light leading-tight text-white md:text-5xl">
+            Your SAT mock test has not been taken yet.
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-base font-light leading-7 text-white/55">
+            Score reports become available after a student completes a SAT mock test. Register first, take the mock test, and your results will appear here automatically.
+          </p>
+          <Link
+            className="mt-8 inline-flex h-13 items-center gap-3 border border-white bg-white px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
+            href="/register"
+          >
+            Register to take SAT mock test <ArrowRight size={18} />
+          </Link>
+        </div>
       </section>
     </main>
   );
