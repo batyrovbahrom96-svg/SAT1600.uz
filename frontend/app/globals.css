@@ -1152,14 +1152,14 @@ button, input {
 
 .results-wall {
   position: absolute;
-  right: 7.15vw;
-  bottom: calc(7vh + 118px);
+  right: 4vw;
+  bottom: calc(7vh + 72px);
   z-index: 12;
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) minmax(230px, 420px);
-  gap: 26px;
-  width: min(980px, 78vw);
-  padding: 20px;
+  grid-template-columns: minmax(210px, 0.84fr) minmax(360px, 1fr);
+  gap: 22px;
+  width: min(780px, 62vw);
+  padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 2px;
   background:
@@ -1186,7 +1186,7 @@ button, input {
 
 .results-wall__copy {
   align-self: end;
-  padding: 8px 30px 4px 2px;
+  padding: 8px 18px 4px 2px;
 }
 
 .results-wall__copy p {
@@ -1200,9 +1200,9 @@ button, input {
 }
 
 .results-wall__copy h2 {
-  max-width: 360px;
+  max-width: 300px;
   color: #fff;
-  font-size: clamp(22px, 2.2vw, 34px);
+  font-size: clamp(22px, 2vw, 30px);
   font-weight: 300;
   line-height: 1.18;
 }
@@ -1723,7 +1723,8 @@ button, input {
 
   .results-wall {
     right: 7vw;
-    bottom: calc(7vh + 210px);
+    bottom: calc(7vh + 116px);
+    grid-template-columns: 1fr;
     width: min(420px, 86vw);
     gap: 18px;
     padding: 18px;
@@ -1792,7 +1793,7 @@ button, input {
   }
 
   .results-wall {
-    bottom: calc(7vh + 184px);
+    bottom: calc(7vh + 104px);
   }
 
   .results-card {
