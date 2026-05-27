@@ -173,6 +173,7 @@ def _send_verification_email_with_resend(email: str, code: str) -> bool:
         headers={
             "Authorization": f"Bearer {settings.resend_api_key}",
             "Content-Type": "application/json",
+            "User-Agent": "SATTEST.UZ/1.0",
         },
         method="POST",
     )
