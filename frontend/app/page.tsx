@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, ChevronDown, ChevronUp, Play, X } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Play, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { studentResults, type StudentResult } from "@/lib/student-results";
 
@@ -80,6 +80,7 @@ export default function Home() {
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
   const introVideoRef = useRef<HTMLVideoElement | null>(null);
+  const resultsCardsRef = useRef<HTMLDivElement | null>(null);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
@@ -190,6 +191,17 @@ export default function Home() {
 
   const goNext = useCallback(() => goTo(activeRef.current + 1), [goTo]);
   const goPrev = useCallback(() => goTo(activeRef.current - 1), [goTo]);
+  const scrollResults = useCallback((direction: -1 | 1) => {
+    const container = resultsCardsRef.current;
+    if (!container) return;
+    const firstCard = container.querySelector<HTMLElement>(".results-card");
+    const distance = firstCard ? firstCard.offsetWidth + 14 : 240;
+    const maxLeft = container.scrollWidth - container.clientWidth;
+    const target = container.scrollLeft + direction * distance;
+    const nextLeft = target > maxLeft - 4 ? 0 : target < 4 ? maxLeft : target;
+    container.scrollTo({ left: nextLeft, behavior: "smooth" });
+  }, []);
+
   useEffect(() => {
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
@@ -375,34 +387,54 @@ export default function Home() {
           <h2>Real score growth from SATTEST.UZ students.</h2>
         </div>
 
-        <div className="results-wall__cards">
-          {studentResults.map((result) => (
-            <button
-              className="results-card"
-              key={result.name}
-              onClick={() => setActiveResultVideo(result)}
-              type="button"
-            >
-              <video
-                className="results-card__video"
-                src={result.video}
-                muted
-                loop
-                playsInline
-                autoPlay
-                preload="metadata"
-              />
-              <span className="results-card__shade" aria-hidden="true" />
-              <span className="results-card__play" aria-hidden="true">
-                <Play size={16} fill="currentColor" />
-              </span>
-              <span className="results-card__meta">
-                <strong>{result.name}</strong>
-                <span>{result.score}</span>
-                <span>{result.improvement}</span>
-              </span>
+        <div className="results-wall__carousel">
+          <div
+            className="results-wall__cards"
+            onWheel={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+              event.currentTarget.scrollLeft += delta;
+            }}
+            ref={resultsCardsRef}
+          >
+            {studentResults.map((result) => (
+              <button
+                className="results-card"
+                key={result.name}
+                onClick={() => setActiveResultVideo(result)}
+                type="button"
+              >
+                <video
+                  className="results-card__video"
+                  src={result.video}
+                  muted
+                  loop
+                  playsInline
+                  autoPlay
+                  preload="metadata"
+                />
+                <span className="results-card__shade" aria-hidden="true" />
+                <span className="results-card__play" aria-hidden="true">
+                  <Play size={16} fill="currentColor" />
+                </span>
+                <span className="results-card__meta">
+                  <strong>{result.name}</strong>
+                  <span>{result.score}</span>
+                  <span>{result.improvement}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="results-wall__controls" aria-label="Student result videos">
+            <button aria-label="Previous student video" onClick={() => scrollResults(-1)} type="button">
+              <ChevronLeft size={18} />
             </button>
-          ))}
+            <button aria-label="Next student video" onClick={() => scrollResults(1)} type="button">
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
 
         <button
