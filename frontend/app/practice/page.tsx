@@ -11,12 +11,12 @@ export default function PracticeAccessPage() {
 
       <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1fr_440px] lg:items-center">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Practice locked</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Student access required</p>
           <h1 className="mt-6 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
-            Practice opens after your diagnostic mock SAT test.
+            Sign in before starting SAT practice.
           </h1>
           <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-            This section is personalized. Register first, take the diagnostic mock test, and SATTEST.UZ will build practice from your own mistakes, weak skills, and score target.
+            Practice is personalized. Students must create an account or sign in first, then take the diagnostic mock SAT test so SATTEST.UZ can build practice from their own mistakes, weak skills, and score target.
           </p>
         </div>
 
@@ -25,9 +25,9 @@ export default function PracticeAccessPage() {
             <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
               <LockKeyhole size={22} />
             </div>
-            <h2 className="mt-5 text-2xl font-light text-white">Practice is unavailable now</h2>
+            <h2 className="mt-5 text-2xl font-light text-white">Continue to Practice</h2>
             <p className="mt-3 text-sm font-light leading-6 text-white/48">
-              Your personal curriculum, weakness drills, and progress track will appear after registration and the diagnostic test.
+              Create an account if this is your first time, or sign in to continue with your saved personal curriculum and weakness drills.
             </p>
           </div>
 
@@ -39,6 +39,10 @@ export default function PracticeAccessPage() {
               Sign In <ArrowRight size={18} />
             </Link>
           </div>
+
+          <p className="mt-5 text-xs font-light leading-5 text-white/35">
+            After signing up or signing in, take the diagnostic mock test to unlock personalized practice.
+          </p>
         </div>
       </section>
     </main>
