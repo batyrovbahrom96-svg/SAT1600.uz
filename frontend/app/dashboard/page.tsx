@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BookOpenCheck, CalendarDays, CheckCircle2, Clock3, Crown, LineChart, Target, TrendingUp, XCircle } from "lucide-react";
+import { CurriculumPrompt } from "@/components/CurriculumPrompt";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { ApiError, api, getToken } from "@/lib/api";
 
@@ -51,6 +52,7 @@ export default function DashboardPage() {
   const [diagnosticResults, setDiagnosticResults] = useState<Results | null>(null);
   const [requestedAttemptId, setRequestedAttemptId] = useState<string | null>(null);
   const [canShowCabinet, setCanShowCabinet] = useState(false);
+  const [showCurriculumPanel, setShowCurriculumPanel] = useState(false);
   const [message, setMessage] = useState("");
   const attempts = history?.attempts ?? 0;
   const latestScore = history?.score_history.at(-1)?.score;
@@ -98,6 +100,12 @@ export default function DashboardPage() {
       console.log("Unable to load diagnostic results", error);
     });
   }, [latestAttemptId]);
+
+  useEffect(() => {
+    if (!diagnosticResults || !latestAttemptId) return undefined;
+    const timer = window.setTimeout(() => setShowCurriculumPanel(true), 1400);
+    return () => window.clearTimeout(timer);
+  }, [diagnosticResults, latestAttemptId]);
 
   async function start(testId: string) {
     try {
@@ -221,8 +229,12 @@ export default function DashboardPage() {
                     Loading diagnostic
                   </div>
                 )}
-                <button className="flex h-12 items-center justify-center gap-3 border border-white/15 bg-black/20 px-6 text-xs font-black uppercase tracking-[0.2em] text-white/45" type="button">
-                  30-day plan locked
+                <button
+                  className="flex h-12 items-center justify-center gap-3 border border-white/15 bg-black/20 px-6 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white"
+                  onClick={() => setShowCurriculumPanel(true)}
+                  type="button"
+                >
+                  Open 1400+ plan
                 </button>
               </div>
             </article>
@@ -372,9 +384,18 @@ export default function DashboardPage() {
                 Practice will become personal: algebra, grammar, reading, timing, and mistake review by the student’s own weak skills.
               </p>
               <div className="mt-6 grid gap-2 text-xs font-black uppercase tracking-[0.18em] text-white/35">
-                <span>Diagnostic required</span>
-                <span>Skill tags required</span>
+                <span>{hasDiagnostic ? "Diagnostic connected" : "Diagnostic required"}</span>
+                <span>Reading/Writing and Math bound</span>
               </div>
+              {hasDiagnostic ? (
+                <button
+                  className="mt-5 flex h-11 items-center justify-center gap-3 border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-white"
+                  onClick={() => setShowCurriculumPanel(true)}
+                  type="button"
+                >
+                  View curriculum <ArrowRight size={16} />
+                </button>
+              ) : null}
             </article>
 
             <article className="border border-white/10 bg-white/[0.03] p-6">
@@ -439,6 +460,15 @@ export default function DashboardPage() {
           ) : null}
         </div>
       </section>
+
+      {showCurriculumPanel && diagnosticResults && latestAttemptId ? (
+        <CurriculumPrompt
+          onClose={() => setShowCurriculumPanel(false)}
+          onOpen={() => router.push(`/curriculum/${latestAttemptId}`)}
+          score={diagnosticResults.score_total}
+          weaknesses={diagnosticSummary?.weaknesses ?? []}
+        />
+      ) : null}
     </main>
   );
 }
