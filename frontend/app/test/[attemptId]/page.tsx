@@ -198,6 +198,25 @@ function plainQuestionText(value: string) {
     .trim();
 }
 
+function notesTaskGoalText(goal: unknown) {
+  if (typeof goal !== "string" || !goal.trim()) {
+    return "Use only the relevant notes to complete the writing task.";
+  }
+
+  const normalized = goal.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const goalLabels: Record<string, string> = {
+    contrast: "Show a clear contrast between the relevant ideas in the notes.",
+    compare: "Compare the relevant ideas from the notes.",
+    summarize: "Summarize the most relevant information from the notes.",
+    support: "Use relevant evidence from the notes to support the claim.",
+    introduce: "Introduce the topic using relevant information from the notes.",
+    describe: "Describe the topic using the relevant notes.",
+    explain: "Explain the idea using only the relevant notes."
+  };
+
+  return goalLabels[normalized] || plainQuestionText(goal);
+}
+
 function DataGraph({ payload }: { payload: GraphPayload }) {
   const width = 560;
   const height = 320;
@@ -2022,6 +2041,12 @@ export default function TestPage() {
                 ) : isNotesQuestion ? (
                   <div className="mb-6 flex w-full max-w-[580px] flex-col gap-4 select-text text-[16px] leading-[1.65] tracking-normal text-slate-950 [text-wrap:pretty]">
                     <p>A student is reviewing notes for a writing task.</p>
+                    <section aria-labelledby="notes-goal-label" className="border border-[#d1d5db] bg-[#f9fafb] px-4 py-3">
+                      <div id="notes-goal-label" className="mb-1 text-[14px] font-semibold text-[#374151]">
+                        Goal
+                      </div>
+                      <p>{notesTaskGoalText(question.data_payload?.task_goal)}</p>
+                    </section>
                     <section aria-labelledby="notes-label" className="border-b border-[#e5e7eb] pb-3">
                       <div id="notes-label" className="mb-2 text-[14px] font-semibold text-[#374151]">
                         Notes
