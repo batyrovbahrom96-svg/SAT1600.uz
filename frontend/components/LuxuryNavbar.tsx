@@ -4,7 +4,7 @@ import Link from "next/link";
 
 const navItems = [
   { label: "Mock Test", href: "/mock-test" },
-  { label: "Practice", href: "/dashboard" },
+  { label: "Practice", href: "/practice" },
   { label: "Results", href: "/results/demo" },
   { label: "Pricing", href: "/#pricing" }
 ];
