@@ -339,19 +339,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="divide-y divide-white/10">
                   {diagnosticSummary.wrongQuestions.slice(0, 4).map((question, index) => (
-                    <div className="grid gap-3 p-5 md:grid-cols-[32px_1fr]" key={question.id}>
-                      <span className="flex h-8 w-8 items-center justify-center border border-white/10 bg-white/[0.04] text-sm font-black text-white/70">
-                        {index + 1}
-                      </span>
-                      <div>
-                        <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
-                          <span>{sectionName(question.section)}</span>
-                          <span>{formatTopicLabel(question.topic)}</span>
-                          {question.trap_type ? <span>{formatTopicLabel(question.trap_type)}</span> : null}
-                        </div>
-                        <p className="mt-3 line-clamp-2 text-sm font-light leading-6 text-white/58">{question.explanation || question.correct_answer}</p>
-                      </div>
-                    </div>
+                    <SetbackCard key={question.id} question={question} index={index + 1} />
                   ))}
                   {diagnosticSummary.wrongQuestions.length === 0 ? (
                     <div className="p-5 text-sm font-light text-white/48">No missed questions were recorded for this diagnostic.</div>
@@ -540,6 +528,96 @@ function DiagnosticList({ title, items, emptyText }: { title: string; items: str
       </div>
     </div>
   );
+}
+
+function SetbackCard({ question, index }: { question: ResultQuestion; index: number }) {
+  const report = buildSetbackReport(question);
+
+  return (
+    <div className="grid gap-4 p-5 md:grid-cols-[42px_1fr]">
+      <span className="flex h-10 w-10 items-center justify-center border border-white/10 bg-white/[0.04] text-sm font-black text-white/70">
+        {index}
+      </span>
+      <div>
+        <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+          <span>{sectionName(question.section)}</span>
+          <span>{formatTopicLabel(question.topic)}</span>
+          {question.trap_type ? <span>{formatTopicLabel(question.trap_type)}</span> : null}
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-3">
+          <div className="border border-white/10 bg-white/[0.03] p-4">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Why it happened</div>
+            <p className="mt-2 text-sm font-light leading-6 text-white/62">{report.reason}</p>
+          </div>
+          <div className="border border-red-200/15 bg-red-400/10 p-4">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-red-100/60">Setback pattern</div>
+            <p className="mt-2 text-sm font-light leading-6 text-red-50/76">{report.trap}</p>
+          </div>
+          <div className="border border-emerald-200/15 bg-emerald-400/10 p-4">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/60">Next correction</div>
+            <p className="mt-2 text-sm font-light leading-6 text-emerald-50/76">{report.nextMove}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function buildSetbackReport(question: ResultQuestion) {
+  const parsed = parseDiagnosticExplanation(question.explanation || "");
+  const trap = question.trap_type || parsed.pattern || parsed.distractor_taxonomy || "evidence mismatch";
+  const logicPattern = parsed.logic_pattern || "";
+  const cleanReason = parsed.cleanText || "The selected answer did not match the exact evidence needed for the question.";
+
+  return {
+    reason: cleanReason,
+    trap: `${formatTopicLabel(trap)}. This answer type feels tempting because it is related to the passage, but it adds a claim or connection that the text does not fully prove.`,
+    nextMove: logicPattern
+      ? `Before choosing, ${formatSentence(logicPattern)}. Then eliminate answers that go beyond the stated evidence.`
+      : `Find the exact line of support first, then choose only the answer that stays inside that evidence.`
+  };
+}
+
+function parseDiagnosticExplanation(value: string): Record<string, string> & { cleanText: string } {
+  const metadata: Record<string, string> = {};
+  const readableParts: string[] = [];
+
+  value
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .forEach((part) => {
+      const match = part.match(/^([a-zA-Z_]+)=(.+)$/);
+      if (match) {
+        metadata[match[1]] = match[2].trim();
+        return;
+      }
+      readableParts.push(part);
+    });
+
+  return {
+    ...metadata,
+    cleanText: cleanDiagnosticSentence(readableParts.join("; "))
+  };
+}
+
+function cleanDiagnosticSentence(value: string) {
+  return value
+    .replace(/^Ambiguity-first validation:\s*/i, "")
+    .replace(/[_/\\]+/g, " ")
+    .replace(/\s+([,.;:])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function formatSentence(value: string) {
+  const cleaned = value
+    .replace(/[_/\\-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+  return cleaned || "check the exact evidence";
 }
 
 function normalizeLabels(values: string[]) {
