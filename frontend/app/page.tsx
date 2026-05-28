@@ -54,6 +54,34 @@ const transitionVideoByRoute: Record<string, (typeof videoSources)[number]> = {
 };
 
 const loadingSequence = [20, 50, 70, 100];
+const skipHomeIntroKey = "sattest_skip_home_intro";
+
+function shouldSkipHomeIntro() {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  const shouldSkipFromUrl = params.get("skipIntro") === "1";
+  let shouldSkipFromStorage = false;
+
+  try {
+    shouldSkipFromStorage = window.sessionStorage.getItem(skipHomeIntroKey) === "1";
+  } catch {
+    shouldSkipFromStorage = false;
+  }
+
+  const shouldSkip = shouldSkipFromUrl || shouldSkipFromStorage;
+  if (shouldSkip) {
+    try {
+      window.sessionStorage.removeItem(skipHomeIntroKey);
+    } catch {
+      // Ignore storage access issues; URL-based skip still works.
+    }
+  }
+  if (shouldSkipFromUrl) {
+    window.history.replaceState(null, "", "/");
+  }
+  return shouldSkip;
+}
+
 function getLoaderDigits(value: number) {
   return value
     .toString()
@@ -73,7 +101,7 @@ export default function Home() {
   });
   const [loadingStage, setLoadingStage] = useState<"numbers" | "brand" | "intro">("numbers");
   const [isLoaderExiting, setIsLoaderExiting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !shouldSkipHomeIntro());
   const [showResultsWall, setShowResultsWall] = useState(false);
   const [activeResultVideo, setActiveResultVideo] = useState<StudentResult | null>(null);
   const activeRef = useRef(active);
@@ -87,6 +115,13 @@ export default function Home() {
     activeRef.current = active;
   }, [active]);
 
+  useEffect(() => {
+    if (shouldSkipHomeIntro()) {
+      setIsLoaderExiting(false);
+      setIsLoading(false);
+    }
+  }, []);
+
   const finishLoading = useCallback(() => {
     setIsLoaderExiting(true);
 
@@ -96,6 +131,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!isLoading) {
+      return undefined;
+    }
+
     const timers = [
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[1], step: frame.step + 1 }));
@@ -113,7 +152,7 @@ export default function Home() {
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
     };
-  }, []);
+  }, [isLoading]);
 
   useEffect(() => {
     if (loadingStage !== "intro") {
