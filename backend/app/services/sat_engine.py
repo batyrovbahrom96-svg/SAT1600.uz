@@ -169,7 +169,7 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
             module_two_results,
         )
         selected = _fill_required_count(selected, module_questions, required_count)
-        return _avoid_adjacent_repetition(_sort_module_progression(selected, adaptive_level, module_two_results))[:required_count]
+        return _delivery_order(selected)[:required_count]
     module_questions = list(db.execute(query).scalars().unique())
     questions = _select_hybrid_questions(
         _filter_deliverable(module_questions),
@@ -178,7 +178,7 @@ def get_module_questions(db: Session, attempt: TestAttempt) -> list[Question]:
         [],
     )
     questions = _fill_required_count(questions, module_questions, required_count)
-    return _avoid_adjacent_repetition(_sort_module_progression(questions, "medium", []))[:required_count]
+    return _delivery_order(questions)[:required_count]
 
 
 def _generated_question(spec):
@@ -638,6 +638,10 @@ def _avoid_adjacent_repetition(questions: list[Question]) -> list[Question]:
                     break
         arranged.append(remaining.pop(next_index))
     return arranged
+
+
+def _delivery_order(questions: list[Question]) -> list[Question]:
+    return sorted(questions, key=lambda question: (question.order_index, str(question.id)))
 
 
 def _select_hybrid_questions(

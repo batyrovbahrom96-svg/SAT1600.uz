@@ -1002,14 +1002,21 @@ export default function TestPage() {
   function loadModulePayload(data: ModulePayload) {
     const normalizedData: ModulePayload = {
       ...data,
-      questions: data.questions.map((item) => ({
-        ...item,
-        prompt: plainQuestionText(item.prompt),
-        choices: item.choices.map((choice) => ({
-          ...choice,
-          text: plainQuestionText(choice.text)
+      questions: [...data.questions]
+        .sort((first, second) => {
+          if (typeof first.order_index === "number" && typeof second.order_index === "number") {
+            return first.order_index - second.order_index;
+          }
+          return 0;
+        })
+        .map((item) => ({
+          ...item,
+          prompt: plainQuestionText(item.prompt),
+          choices: item.choices.map((choice) => ({
+            ...choice,
+            text: plainQuestionText(choice.text)
+          }))
         }))
-      }))
     };
 
     setModuleData(normalizedData);

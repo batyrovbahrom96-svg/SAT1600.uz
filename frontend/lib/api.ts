@@ -4,6 +4,7 @@ export type Question = {
   id: string;
   section: "reading_writing" | "math";
   module: number;
+  order_index?: number;
   difficulty: number;
   topic: string;
   subtopic?: string | null;

@@ -38,6 +38,7 @@ class QuestionOut(BaseModel):
     id: UUID
     section: str
     module: int
+    order_index: int
     difficulty: int
     topic: str
     subtopic: str | None
