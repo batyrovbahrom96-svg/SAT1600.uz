@@ -2368,7 +2368,7 @@ export default function TestPage() {
 
               <button
                 className="mt-6 w-full rounded-md bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
-                onClick={() => console.log("review page")}
+                onClick={openCheckWork}
                 type="button"
               >
                 Go to Review Page
