@@ -1,21 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, LockKeyhole, UserPlus } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { getToken } from "@/lib/api";
 
 export default function PracticeAccessPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    if (getToken()) {
-      router.push("/dashboard");
-    }
-  }, [router]);
-
   return (
     <main className="min-h-screen bg-[#101112] text-white">
       <LuxuryNavbar />

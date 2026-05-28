@@ -84,7 +84,7 @@ export default function DashboardPage() {
         return;
       }
       console.log("API unavailable, continue");
-      setCanShowCabinet(true);
+      router.replace("/practice");
     });
   }, [router]);
 
@@ -119,6 +119,48 @@ export default function DashboardPage() {
           <p className="mt-4 max-w-xl text-sm font-light leading-7 text-white/48">
             Practice and personal track are available after registration and the diagnostic mock SAT test.
           </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!hasDiagnostic) {
+    return (
+      <main className="min-h-screen bg-[#101112] text-white">
+        <LuxuryNavbar />
+        <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1fr_440px] lg:items-center">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Diagnostic required</p>
+            <h1 className="mt-6 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
+              Practice unlocks after your SAT mock test.
+            </h1>
+            <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
+              Your personal SAT track, weak-skill analysis, daily hours, and study curriculum appear only after your diagnostic result is available.
+            </p>
+          </div>
+
+          <div className="border border-white/10 bg-white/[0.035] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+            <div className="border-b border-white/10 pb-5">
+              <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
+                <Target size={22} />
+              </div>
+              <h2 className="mt-5 text-2xl font-light text-white">No diagnostic result yet</h2>
+              <p className="mt-3 text-sm font-light leading-6 text-white/48">
+                Take the diagnostic mock SAT test first. After submission, this cabinet becomes your personal study track.
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              <button
+                className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
+                disabled={!diagnosticTest}
+                onClick={() => diagnosticTest && start(diagnosticTest.id)}
+                type="button"
+              >
+                Start Diagnostic <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
         </section>
       </main>
     );

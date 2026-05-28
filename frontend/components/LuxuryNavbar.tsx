@@ -1,21 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getToken } from "@/lib/api";
 
 export function LuxuryNavbar() {
-  const [practiceHref, setPracticeHref] = useState("/practice");
   const navItems = [
     { label: "Mock Test", href: "/mock-test" },
-    { label: "Practice", href: practiceHref },
+    { label: "Practice", href: "/practice" },
     { label: "Results", href: "/results/demo" },
     { label: "Pricing", href: "/#pricing" }
   ];
-
-  useEffect(() => {
-    setPracticeHref(getToken() ? "/dashboard" : "/practice");
-  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#101112]/90 backdrop-blur-xl">
