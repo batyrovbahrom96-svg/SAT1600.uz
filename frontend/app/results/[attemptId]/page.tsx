@@ -547,6 +547,76 @@ function formatReportText(value: string) {
     .trim();
 }
 
+function buildMistakeExplanation(question: ResultQuestion) {
+  const { cleanText, meta } = parseExplanation(question.explanation || "");
+  const trap = question.trap_type || meta.pattern || meta.logic_pattern || "";
+  const cleanedTrap = trap ? formatTopicLabel(trap) : "";
+  const reasoning = cleanText || "Review the evidence carefully and compare it with the exact wording of the correct answer.";
+  const selected = question.selected_answer || "blank";
+  const correct = question.correct_answer || "the credited answer";
+  const nextMove = meta.logic_pattern
+    ? `When you see this question type again, ${formatSentence(meta.logic_pattern)}.`
+    : `Before choosing, underline the exact proof for ${correct} and reject any answer that adds a claim the text does not prove.`;
+
+  return [
+    {
+      title: "Why the correct answer works",
+      body: reasoning
+    },
+    {
+      title: "Why your answer missed",
+      body: `You chose ${selected}, but the credited answer is ${correct}. The missed answer most likely went beyond the evidence or followed an attractive trap instead of the exact support in the text.`
+    },
+    {
+      title: "Trap to avoid",
+      body: cleanedTrap
+        ? `${cleanedTrap}: this trap looks reasonable because it borrows words or timing from the passage, but it does not prove the required conclusion.`
+        : "Do not choose an answer because it sounds related. Choose it only if the passage directly supports it."
+    },
+    {
+      title: "Next move",
+      body: nextMove
+    }
+  ];
+}
+
+function parseExplanation(value: string) {
+  const meta: Record<string, string> = {};
+  const textParts: string[] = [];
+
+  value
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .forEach((part) => {
+      const match = part.match(/^([a-zA-Z_]+)=(.+)$/);
+      if (match) {
+        meta[match[1]] = match[2].trim();
+        return;
+      }
+      textParts.push(part);
+    });
+
+  return {
+    meta,
+    cleanText: formatExplanationText(textParts.join("; "))
+  };
+}
+
+function formatExplanationText(value: string) {
+  return value
+    .replace(/^Ambiguity-first validation:\s*/i, "")
+    .replace(/[_/\\]+/g, " ")
+    .replace(/\s+([,.;:])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function formatSentence(value: string) {
+  const cleaned = cleanLabel(value).toLowerCase();
+  return cleaned ? `${cleaned.charAt(0).toLowerCase()}${cleaned.slice(1)}` : "check the exact evidence before selecting";
+}
+
 function titleCase(value: string) {
   return value
     .toLowerCase()
@@ -684,6 +754,8 @@ function InsightPanel({
 }
 
 function MistakeCard({ index, question }: { index: number; question: ResultQuestion }) {
+  const explanation = buildMistakeExplanation(question);
+
   return (
     <article className="p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -722,8 +794,21 @@ function MistakeCard({ index, question }: { index: number; question: ResultQuest
       </div>
 
       <div className="mt-4 border border-white/10 bg-black/20 p-4">
-        <div className="text-sm font-black text-white">Explanation</div>
-        <p className="mt-2 text-sm font-light leading-6 text-white/58">{question.explanation}</p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-black text-white">Enhanced explanation</div>
+            <p className="mt-1 text-xs font-light text-white/42">Clear reason, trap, and next action for this mistake.</p>
+          </div>
+          <Lightbulb className="shrink-0 text-yellow-100/70" size={19} />
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {explanation.map((item) => (
+            <div className="border border-white/10 bg-white/[0.03] p-4" key={item.title}>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/38">{item.title}</div>
+              <p className="mt-2 text-sm font-light leading-6 text-white/62">{item.body}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </article>
   );
