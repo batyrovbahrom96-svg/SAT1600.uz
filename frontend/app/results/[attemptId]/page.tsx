@@ -18,10 +18,12 @@ import {
   BarChart3,
   BookOpenCheck,
   Brain,
+  CalendarDays,
   CheckCircle2,
   CircleAlert,
   ClipboardList,
   Download,
+  GraduationCap,
   Lightbulb,
   RefreshCcw,
   Target,
@@ -139,6 +141,7 @@ export default function ResultsPage() {
   const router = useRouter();
   const [results, setResults] = useState<Results | null>(null);
   const [message, setMessage] = useState("");
+  const [showCurriculumPanel, setShowCurriculumPanel] = useState(false);
 
   useEffect(() => {
     if (!attemptId) return;
@@ -159,6 +162,12 @@ export default function ResultsPage() {
 
   const reportResults = results ?? (attemptId === "demo" ? demoResults : null);
   const analytics = useMemo(() => reportResults ? buildReportAnalytics(reportResults) : null, [reportResults]);
+
+  useEffect(() => {
+    if (!reportResults || !analytics || attemptId === "demo") return undefined;
+    const timer = window.setTimeout(() => setShowCurriculumPanel(true), 2200);
+    return () => window.clearTimeout(timer);
+  }, [analytics, attemptId, reportResults]);
 
   if (attemptId === "demo") {
     return <ResultsUnavailableNotice />;
@@ -373,7 +382,58 @@ export default function ResultsPage() {
           </p>
         </section>
       </section>
+
+      {showCurriculumPanel ? (
+        <CurriculumPrompt
+          onClose={() => setShowCurriculumPanel(false)}
+          onOpen={() => router.push(`/curriculum/${attemptId}`)}
+          score={reportResults.score_total}
+          weaknesses={analytics.weaknesses}
+        />
+      ) : null}
     </main>
+  );
+}
+
+function CurriculumPrompt({
+  onClose,
+  onOpen,
+  score,
+  weaknesses
+}: {
+  onClose: () => void;
+  onOpen: () => void;
+  score: number;
+  weaknesses: string[];
+}) {
+  return (
+    <aside className="fixed bottom-5 right-5 z-50 w-[min(420px,calc(100vw-2.5rem))] border border-white/12 bg-[#151617]/95 p-5 text-white shadow-[0_30px_100px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+      <button
+        aria-label="Close curriculum panel"
+        className="absolute right-4 top-4 text-white/42 transition-colors hover:text-white"
+        onClick={onClose}
+        type="button"
+      >
+        <XCircle size={18} />
+      </button>
+      <div className="flex h-12 w-12 items-center justify-center border border-yellow-200/20 bg-yellow-200/10 text-yellow-100">
+        <GraduationCap size={23} />
+      </div>
+      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.34em] text-white/38">1400+ curriculum ready</p>
+      <h2 className="mt-3 pr-6 text-2xl font-light leading-tight text-white">
+        Turn this report into a personal study route.
+      </h2>
+      <p className="mt-3 text-sm font-light leading-6 text-white/52">
+        Current score: {score}. The plan starts with {weaknesses.slice(0, 2).join(" and ") || "your weakest topics"}, then connects practice to Reading/Writing and Math section tests.
+      </p>
+      <button
+        className="mt-5 flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
+        onClick={onOpen}
+        type="button"
+      >
+        Open curriculum <ArrowRight size={18} />
+      </button>
+    </aside>
   );
 }
 
