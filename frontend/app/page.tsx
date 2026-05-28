@@ -55,6 +55,7 @@ const transitionVideoByRoute: Record<string, (typeof videoSources)[number]> = {
 
 const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
+const skipHomeIntroEvent = "sattest:skip-home-intro";
 
 function shouldSkipHomeIntro() {
   if (typeof window === "undefined") return false;
@@ -115,12 +116,31 @@ export default function Home() {
     activeRef.current = active;
   }, [active]);
 
+  const skipIntroNow = useCallback(() => {
+    window.history.replaceState(null, "", "/");
+    setIsLoaderExiting(false);
+    setIsLoading(false);
+    setLoadingStage("numbers");
+    setLoadingFrame({
+      previous: loadingSequence[0],
+      current: loadingSequence[0],
+      step: 0
+    });
+  }, []);
+
   useEffect(() => {
     if (shouldSkipHomeIntro()) {
-      setIsLoaderExiting(false);
-      setIsLoading(false);
+      skipIntroNow();
     }
-  }, []);
+  }, [skipIntroNow]);
+
+  useEffect(() => {
+    window.addEventListener(skipHomeIntroEvent, skipIntroNow);
+
+    return () => {
+      window.removeEventListener(skipHomeIntroEvent, skipIntroNow);
+    };
+  }, [skipIntroNow]);
 
   const finishLoading = useCallback(() => {
     setIsLoaderExiting(true);

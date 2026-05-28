@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+const skipHomeIntroEvent = "sattest:skip-home-intro";
+
 export function LuxuryNavbar() {
   const navItems = [
     { label: "Mock Test", href: "/mock-test" },
@@ -16,6 +18,13 @@ export function LuxuryNavbar() {
         <Link
           className="flex h-12 w-[210px] items-center border border-white/10 bg-black/30 px-4 shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition-colors hover:border-white/30"
           href="/?skipIntro=1"
+          onClick={(event) => {
+            if (window.location.pathname === "/") {
+              event.preventDefault();
+              window.history.replaceState(null, "", "/");
+              window.dispatchEvent(new Event(skipHomeIntroEvent));
+            }
+          }}
         >
           <img className="h-auto w-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.32)]" src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" />
         </Link>
