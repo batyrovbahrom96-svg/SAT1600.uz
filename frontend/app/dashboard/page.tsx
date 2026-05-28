@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BookOpenCheck, CalendarDays, CheckCircle2, Clock3, Crown, LineChart, Target, TrendingUp, XCircle } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { ApiError, api } from "@/lib/api";
+import { ApiError, api, getToken } from "@/lib/api";
 
 type Test = { id: string; title: string; description: string; is_premium: boolean };
 type ScoreHistoryItem = { attempt_id: string; score: number; date: string };
@@ -50,6 +50,7 @@ export default function DashboardPage() {
   const [history, setHistory] = useState<AnalyticsHistory | null>(null);
   const [diagnosticResults, setDiagnosticResults] = useState<Results | null>(null);
   const [requestedAttemptId, setRequestedAttemptId] = useState<string | null>(null);
+  const [canShowCabinet, setCanShowCabinet] = useState(false);
   const [message, setMessage] = useState("");
   const attempts = history?.attempts ?? 0;
   const latestScore = history?.score_history.at(-1)?.score;
@@ -59,6 +60,11 @@ export default function DashboardPage() {
   const diagnosticSummary = diagnosticResults ? buildDiagnosticSummary(diagnosticResults) : null;
 
   useEffect(() => {
+    if (!getToken()) {
+      router.replace("/practice");
+      return;
+    }
+
     setRequestedAttemptId(new URLSearchParams(window.location.search).get("attemptId"));
 
     api<Test[]>("/api/tests").then(setTests).catch((error) => {
@@ -69,8 +75,16 @@ export default function DashboardPage() {
       console.log("API unavailable, continue");
       setMessage("Practice tests are temporarily unavailable.");
     });
-    api<AnalyticsHistory>("/api/analytics/me").then(setHistory).catch(() => {
+    api<AnalyticsHistory>("/api/analytics/me").then((data) => {
+      setHistory(data);
+      setCanShowCabinet(true);
+    }).catch((error) => {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        router.replace("/login");
+        return;
+      }
       console.log("API unavailable, continue");
+      setCanShowCabinet(true);
     });
   }, [router]);
 
@@ -93,6 +107,21 @@ export default function DashboardPage() {
       console.log("API unavailable, continue");
       setMessage(error instanceof Error ? error.message : "Unable to start test.");
     }
+  }
+
+  if (!canShowCabinet) {
+    return (
+      <main className="min-h-screen bg-[#101112] text-white">
+        <LuxuryNavbar />
+        <section className="mx-auto flex min-h-[calc(100vh-81px)] max-w-4xl flex-col items-center justify-center px-5 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/38">Student access</p>
+          <h1 className="mt-5 text-4xl font-light text-white md:text-5xl">Checking your cabinet access</h1>
+          <p className="mt-4 max-w-xl text-sm font-light leading-7 text-white/48">
+            Practice and personal track are available after registration and the diagnostic mock SAT test.
+          </p>
+        </section>
+      </main>
+    );
   }
 
   return (
