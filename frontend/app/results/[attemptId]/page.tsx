@@ -74,6 +74,15 @@ type SectionSummary = {
   accuracy: number;
 };
 
+const KNOWN_LABELS: Record<string, string> = {
+  command_of_evidence_quantitative_graph: "Command of Evidence Quantitative Graph",
+  cross_text_connection: "Cross Text Connection",
+  text_structure_function: "Text Structure and Function",
+  functions: "Functions"
+};
+
+const LOWERCASE_WORDS = new Set(["and", "as", "for", "in", "of", "on", "the", "to"]);
+
 const demoResults: Results = {
   attempt_id: "demo",
   score_total: 1320,
@@ -274,7 +283,7 @@ export default function ResultsPage() {
             </div>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {analytics.topicChart.map((item) => (
-                <TopicBar key={item.topic} topic={item.topic} accuracy={item.accuracy} />
+                <TopicBar key={item.rawTopic} topic={item.topic} accuracy={item.accuracy} />
               ))}
             </div>
           </section>
@@ -403,17 +412,19 @@ function buildReportAnalytics(results: Results) {
   const correctCount = questions.filter((question) => question.is_correct).length;
   const overallAccuracy = answeredCount ? Math.round((correctCount / answeredCount) * 100) : 0;
   const topicChart = Object.entries(results.topic_accuracy || {})
-    .map(([topic, value]) => ({ topic, accuracy: Math.round(value * 100) }))
+    .map(([topic, value]) => ({ rawTopic: topic, topic: formatTopicLabel(topic), accuracy: Math.round(value * 100) }))
     .sort((a, b) => a.accuracy - b.accuracy);
-  const wrongQuestions = questions.filter((question) => !question.is_correct);
+  const wrongQuestions = questions
+    .filter((question) => !question.is_correct)
+    .map(normalizeQuestionLabels);
   const trapCounts = wrongQuestions.reduce<Record<string, number>>((counts, question) => {
-    const trap = cleanLabel(question.trap_type || "general reasoning miss");
+    const trap = formatTrapLabel(question.trap_type || "general reasoning miss");
     counts[trap] = (counts[trap] || 0) + 1;
     return counts;
   }, {});
   const topTrap = Object.entries(trapCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
-  const weaknesses = results.weaknesses.length ? results.weaknesses : topicChart.filter((item) => item.accuracy < 65).map((item) => item.topic);
-  const strengths = results.strengths.length ? results.strengths : topicChart.filter((item) => item.accuracy >= 75).map((item) => item.topic);
+  const weaknesses = normalizeLabelList(results.weaknesses.length ? results.weaknesses : topicChart.filter((item) => item.accuracy < 65).map((item) => item.topic));
+  const strengths = normalizeLabelList(results.strengths.length ? results.strengths : topicChart.filter((item) => item.accuracy >= 75).map((item) => item.topic));
   const sectionSummaries = buildSectionSummaries(results, questions);
   const feedback = buildFeedback(results, overallAccuracy, weaknesses, topTrap);
   const studyPlan = buildStudyPlan(weaknesses, wrongQuestions, topTrap);
@@ -450,7 +461,7 @@ function buildSectionSummaries(results: Results, questions: ResultQuestion[]): S
 }
 
 function buildFeedback(results: Results, accuracy: number, weaknesses: string[], topTrap: string) {
-  if (results.report) return results.report;
+  if (results.report) return formatReportText(results.report);
   if (weaknesses.length) {
     return `Your biggest score lift is in ${weaknesses.slice(0, 2).join(" and ")}. Review missed examples, then do short timed sets until accuracy is above 75%.${topTrap ? ` Watch for ${topTrap} traps.` : ""}`;
   }
@@ -461,8 +472,8 @@ function buildFeedback(results: Results, accuracy: number, weaknesses: string[],
 }
 
 function buildStudyPlan(weaknesses: string[], wrongQuestions: ResultQuestion[], topTrap: string) {
-  const priority = weaknesses[0] || wrongQuestions[0]?.topic || "mixed practice";
-  const second = weaknesses[1] || wrongQuestions[1]?.topic || "timing";
+  const priority = weaknesses[0] || formatTopicLabel(wrongQuestions[0]?.topic || "") || "mixed practice";
+  const second = weaknesses[1] || formatTopicLabel(wrongQuestions[1]?.topic || "") || "timing";
   return [
     `Day 1: Review every missed ${priority} question and rewrite the solution in your own words.`,
     `Day 2-3: Drill 20 targeted ${priority} questions without a timer, then correct immediately.`,
@@ -485,7 +496,70 @@ function estimateAccuracyFromScore(score: number) {
 }
 
 function cleanLabel(value: string) {
-  return value.replace(/[_-]/g, " ").replace(/\s+/g, " ").trim();
+  return value.replace(/[_/\\-]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function normalizeQuestionLabels(question: ResultQuestion): ResultQuestion {
+  return {
+    ...question,
+    topic: formatTopicLabel(question.topic),
+    subtopic: question.subtopic ? formatTopicLabel(question.subtopic) : question.subtopic,
+    trap_type: question.trap_type ? formatTrapLabel(question.trap_type) : question.trap_type
+  };
+}
+
+function normalizeLabelList(values: string[]) {
+  const seen = new Set<string>();
+  return values.reduce<string[]>((labels, value) => {
+    const label = formatTopicLabel(value);
+    if (label && !seen.has(label)) {
+      seen.add(label);
+      labels.push(label);
+    }
+    return labels;
+  }, []);
+}
+
+function formatTopicLabel(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const known = KNOWN_LABELS[trimmed.toLowerCase()];
+  if (known) return known;
+  return titleCase(cleanLabel(trimmed));
+}
+
+function formatTrapLabel(value: string) {
+  return cleanLabel(value).toLowerCase();
+}
+
+function formatReportText(value: string) {
+  let formatted = value;
+  Object.keys(KNOWN_LABELS)
+    .sort((a, b) => b.length - a.length)
+    .forEach((label) => {
+      formatted = formatted.replace(new RegExp(escapeRegExp(label), "g"), KNOWN_LABELS[label]);
+    });
+  return formatted
+    .replace(/[_/\\]+/g, " ")
+    .replace(/[–—-]/g, " ")
+    .replace(/\s+([,.;:])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function titleCase(value: string) {
+  return value
+    .toLowerCase()
+    .split(" ")
+    .map((word, index) => {
+      if (index > 0 && LOWERCASE_WORDS.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function formatSeconds(seconds: number) {
@@ -545,10 +619,12 @@ function AccuracyRing({ value }: { value: number }) {
 function TopicBar({ topic, accuracy }: { topic: string; accuracy: number }) {
   const color = accuracy >= 75 ? "bg-emerald-300" : accuracy >= 60 ? "bg-yellow-200" : "bg-red-300";
   return (
-    <div>
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <span className="font-light text-white/76">{topic}</span>
-        <span className="font-black text-white/50">{accuracy}%</span>
+    <div className="min-w-0">
+      <div className="flex items-start justify-between gap-4">
+        <span className="min-w-0 max-w-[calc(100%-4rem)] break-words text-sm font-light leading-5 text-white/76">
+          {formatTopicLabel(topic)}
+        </span>
+        <span className="shrink-0 text-sm font-black tabular-nums text-white/50">{accuracy}%</span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden bg-white/10">
         <div className={`h-full ${color}`} style={{ width: `${accuracy}%` }} />
