@@ -550,37 +550,39 @@ button, input {
 }
 
 .nex-continuous-satmark {
-  position: absolute;
+  position: fixed;
   top: 81px;
-  right: -18vw;
+  right: 0;
   bottom: 0;
   z-index: 6;
-  width: min(52vw, 680px);
+  width: clamp(190px, 28vw, 380px);
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.78;
+  opacity: 0.92;
 }
 
 .nex-continuous-satmark__track {
   position: absolute;
-  top: -8vh;
-  right: 0;
+  top: -14vh;
+  right: clamp(18px, 4vw, 70px);
   display: flex;
-  gap: 0.08em;
-  color: rgba(255, 255, 255, 0.05);
-  font-size: clamp(96px, 21vh, 218px);
+  flex-direction: column;
+  gap: 0.12em;
+  color: rgba(255, 255, 255, 0.09);
+  font-size: clamp(90px, 15vh, 188px);
   font-weight: 300;
-  line-height: 1;
+  line-height: 0.86;
   white-space: nowrap;
-  transform: rotate(-90deg) translate3d(-4%, 0, 0);
-  transform-origin: right top;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: translate3d(0, 0, 0);
   animation: nex-continuous-satmark-drift 26s linear infinite;
   will-change: transform;
 }
 
 @supports (-webkit-text-stroke: 1px #676767) {
   .nex-continuous-satmark__track {
-    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.22);
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.34);
     color: transparent;
   }
 }
@@ -2001,10 +2003,10 @@ button, input {
 
 @keyframes nex-continuous-satmark-drift {
   0% {
-    transform: rotate(-90deg) translate3d(-4%, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: rotate(-90deg) translate3d(-34%, 0, 0);
+    transform: translate3d(0, -28%, 0);
   }
 }
 
@@ -2069,13 +2071,13 @@ button, input {
   }
 
   .nex-continuous-satmark {
-    right: -42vw;
-    width: min(72vw, 430px);
-    opacity: 0.58;
+    width: clamp(150px, 32vw, 260px);
+    opacity: 0.78;
   }
 
   .nex-continuous-satmark__track {
-    font-size: clamp(86px, 17vh, 160px);
+    right: clamp(6px, 3vw, 22px);
+    font-size: clamp(76px, 12vh, 132px);
   }
 
   .nex-figure,
