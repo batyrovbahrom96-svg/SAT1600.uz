@@ -10,12 +10,14 @@ const practiceSections = [
   {
     title: "SAT Reading",
     description: "Practice command of evidence, inference, main idea, text structure, and words in context.",
-    icon: BookOpenText
+    icon: BookOpenText,
+    href: "/practice/reading"
   },
   {
     title: "SAT Writing",
     description: "Practice transitions, grammar, punctuation, rhetorical synthesis, and sentence boundaries.",
-    icon: PenLine
+    icon: PenLine,
+    href: "/practice/writing"
   },
   {
     title: "SAT Math",
