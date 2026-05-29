@@ -438,11 +438,11 @@ export default function Home() {
                     </span>
                   ))}
                 </h1>
-                <p className="nex-description">{slide.body}</p>
                 <Link className="nex-cta" href={slide.href}>
                   <span>{slide.cta}</span>
                   <ArrowRight size={18} />
                 </Link>
+                <p className="nex-description">{slide.body}</p>
               </div>
 
               <div className="nex-index" aria-label={`Slide ${slide.stat} of 03`}>
