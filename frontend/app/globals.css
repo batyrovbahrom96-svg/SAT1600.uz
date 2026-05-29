@@ -549,6 +549,46 @@ button, input {
     linear-gradient(0deg, rgba(10, 10, 10, 0.72) 0%, transparent 31%, transparent 70%, rgba(10, 10, 10, 0.66) 100%);
 }
 
+.nex-continuous-satmark {
+  position: absolute;
+  top: 81px;
+  right: -18vw;
+  bottom: 0;
+  z-index: 6;
+  width: min(52vw, 680px);
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.78;
+}
+
+.nex-continuous-satmark__track {
+  position: absolute;
+  top: -8vh;
+  right: 0;
+  display: flex;
+  gap: 0.08em;
+  color: rgba(255, 255, 255, 0.05);
+  font-size: clamp(96px, 21vh, 218px);
+  font-weight: 300;
+  line-height: 1;
+  white-space: nowrap;
+  transform: rotate(-90deg) translate3d(-4%, 0, 0);
+  transform-origin: right top;
+  animation: nex-continuous-satmark-drift 26s linear infinite;
+  will-change: transform;
+}
+
+@supports (-webkit-text-stroke: 1px #676767) {
+  .nex-continuous-satmark__track {
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.22);
+    color: transparent;
+  }
+}
+
+.nex-continuous-satmark__track span {
+  display: inline-block;
+}
+
 .sat-count-loader {
   position: fixed;
   inset: 0;
@@ -1239,46 +1279,6 @@ button, input {
   color: #fff;
 }
 
-.nex-vertical-text {
-  position: absolute;
-  left: 61vw;
-  bottom: -2vh;
-  z-index: 3;
-  width: 100vh;
-  overflow: hidden;
-  color: rgba(149, 149, 149, 0.13);
-  font-size: clamp(96px, 21vh, 210px);
-  font-weight: 300;
-  line-height: 1;
-  white-space: nowrap;
-  transform: rotate(-90deg) translate(-45%, 100%);
-  transform-origin: left bottom;
-}
-
-@supports (-webkit-text-stroke: 1px #676767) {
-  .nex-vertical-text {
-    -webkit-text-stroke: 1px rgba(149, 149, 149, 0.5);
-    color: transparent;
-  }
-}
-
-.nex-vertical-track {
-  display: flex;
-  gap: 0.05em;
-  transform: translate3d(-18%, 0, 0);
-  animation: nex-vertical-marquee 13s linear infinite;
-  will-change: transform;
-}
-
-.nex-vertical-track span {
-  display: inline-block;
-}
-
-.nex-vertical-track .is-solid {
-  -webkit-text-stroke: 0;
-  color: #fff;
-}
-
 .nex-home-login {
   position: absolute;
   right: 7.15vw;
@@ -1640,38 +1640,6 @@ button, input {
     linear-gradient(0deg, rgba(0, 0, 0, 0.72) 0%, transparent 42%, rgba(0, 0, 0, 0.44) 100%);
 }
 
-.platform-ad-section__verticalText {
-  position: absolute;
-  right: -18vw;
-  bottom: -10vh;
-  z-index: 2;
-  display: flex;
-  gap: 0.08em;
-  width: 118vh;
-  overflow: hidden;
-  color: rgba(255, 255, 255, 0.045);
-  font-size: clamp(90px, 21vh, 218px);
-  font-weight: 300;
-  line-height: 0.9;
-  white-space: nowrap;
-  transform: rotate(-90deg) translate3d(-8%, 0, 0);
-  transform-origin: right bottom;
-  pointer-events: none;
-  animation: platformVerticalMark 18s linear infinite;
-  will-change: transform;
-}
-
-@supports (-webkit-text-stroke: 1px #676767) {
-  .platform-ad-section__verticalText {
-    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.18);
-    color: transparent;
-  }
-}
-
-.platform-ad-section__verticalText span {
-  display: inline-block;
-}
-
 .platform-ad-section__copy {
   position: relative;
   z-index: 2;
@@ -2031,12 +1999,12 @@ button, input {
   }
 }
 
-@keyframes nex-vertical-marquee {
+@keyframes nex-continuous-satmark-drift {
   0% {
-    transform: translate3d(-10%, 0, 0);
+    transform: rotate(-90deg) translate3d(-4%, 0, 0);
   }
   100% {
-    transform: translate3d(-50%, 0, 0);
+    transform: rotate(-90deg) translate3d(-34%, 0, 0);
   }
 }
 
@@ -2052,15 +2020,6 @@ button, input {
   }
 }
 
-@keyframes platformVerticalMark {
-  0% {
-    transform: rotate(-90deg) translate3d(-8%, 0, 0);
-  }
-  100% {
-    transform: rotate(-90deg) translate3d(-38%, 0, 0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .nex-kicker,
   .nex-title-line span,
@@ -2070,10 +2029,9 @@ button, input {
   .nex-figure,
   .nex-figure-rib,
   .nex-figure-core,
-  .nex-vertical-track,
+  .nex-continuous-satmark__track,
   .platform-ad-section__videoGlow,
-  .platform-ad-section__backgroundVideo,
-  .platform-ad-section__verticalText {
+  .platform-ad-section__backgroundVideo {
     animation: none;
     transition: none;
   }
@@ -2110,9 +2068,14 @@ button, input {
     right: 7vw;
   }
 
-  .nex-vertical-text {
-    left: 70vw;
-    font-size: 15vh;
+  .nex-continuous-satmark {
+    right: -42vw;
+    width: min(72vw, 430px);
+    opacity: 0.58;
+  }
+
+  .nex-continuous-satmark__track {
+    font-size: clamp(86px, 17vh, 160px);
   }
 
   .nex-figure,
@@ -2205,11 +2168,6 @@ button, input {
     min-width: 0;
   }
 
-  .platform-ad-section__verticalText {
-    right: -38vw;
-    bottom: -7vh;
-    font-size: clamp(86px, 17vh, 160px);
-  }
 }
 
 @media (max-width: 560px) {
