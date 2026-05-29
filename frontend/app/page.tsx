@@ -618,6 +618,88 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="diagnostic-preview-section" aria-labelledby="diagnostic-preview-title">
+        <div className="diagnostic-preview-section__intro">
+          <p className="diagnostic-preview-section__eyebrow">Diagnostic preview</p>
+          <h2 id="diagnostic-preview-title">Before a student practices, SATTEST.UZ shows exactly what is holding the score down.</h2>
+          <p>
+            The mock test becomes a personal report: section scores, weak question types, repeated
+            mistake patterns, timing pressure, and the first study tasks needed to start improving.
+          </p>
+        </div>
+
+        <div className="diagnostic-preview-section__report" aria-label="Example diagnostic report preview">
+          <div className="diagnostic-preview-section__scoreBand">
+            <div>
+              <span>Overall</span>
+              <strong>1050</strong>
+            </div>
+            <div>
+              <span>Reading and Writing</span>
+              <strong>520</strong>
+            </div>
+            <div>
+              <span>Math</span>
+              <strong>530</strong>
+            </div>
+          </div>
+
+          <div className="diagnostic-preview-section__columns">
+            <div className="diagnostic-preview-section__block">
+              <span className="diagnostic-preview-section__label">Weak areas</span>
+              <div className="diagnostic-preview-section__skill">
+                <span>Inference</span>
+                <strong>42%</strong>
+              </div>
+              <div className="diagnostic-preview-section__bar">
+                <span style={{ width: "42%" }} />
+              </div>
+              <div className="diagnostic-preview-section__skill">
+                <span>Algebra</span>
+                <strong>50%</strong>
+              </div>
+              <div className="diagnostic-preview-section__bar">
+                <span style={{ width: "50%" }} />
+              </div>
+              <div className="diagnostic-preview-section__skill">
+                <span>Grammar precision</span>
+                <strong>58%</strong>
+              </div>
+              <div className="diagnostic-preview-section__bar">
+                <span style={{ width: "58%" }} />
+              </div>
+            </div>
+
+            <div className="diagnostic-preview-section__block">
+              <span className="diagnostic-preview-section__label">Mistake patterns</span>
+              <div className="diagnostic-preview-section__tag">Causal gap trap</div>
+              <div className="diagnostic-preview-section__tag">Comma boundary error</div>
+              <div className="diagnostic-preview-section__tag">Linear equation setup</div>
+              <p className="diagnostic-preview-section__explain">
+                The report does not only mark answers wrong. It explains why the wrong choice looked
+                tempting and what rule the student must use next time.
+              </p>
+            </div>
+          </div>
+
+          <div className="diagnostic-preview-section__plan">
+            <span className="diagnostic-preview-section__label">First 7 days generated from this report</span>
+            <div>
+              <strong>Day 1</strong>
+              <span>Inference drills + explanation review</span>
+            </div>
+            <div>
+              <strong>Day 2</strong>
+              <span>Algebra equation setup and timed practice</span>
+            </div>
+            <div>
+              <strong>Day 3</strong>
+              <span>Grammar punctuation targets and mixed review</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="study-growth-section" aria-labelledby="study-growth-title">
         <div className="study-growth-section__copy">
           <p className="study-growth-section__eyebrow">Personal study plan</p>
