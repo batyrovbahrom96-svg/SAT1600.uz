@@ -618,6 +618,106 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="study-growth-section" aria-labelledby="study-growth-title">
+        <div className="study-growth-section__copy">
+          <p className="study-growth-section__eyebrow">Personal study plan</p>
+          <h2 id="study-growth-title">A 30-day route built from the exact mistakes in the diagnostic test.</h2>
+          <p className="study-growth-section__body">
+            SATTEST.UZ does not give random practice. After the mock test, every wrong answer becomes
+            a weakness target, every weakness becomes a daily task, and every task is connected to
+            Reading, Writing, or Math drills that move the score upward.
+          </p>
+          <div className="study-growth-section__promise">
+            <span>30-day minimum target</span>
+            <strong>+100 SAT points</strong>
+            <p>Built for steady improvement when the student completes the assigned daily work.</p>
+          </div>
+        </div>
+
+        <div className="study-growth-section__panel" aria-label="SAT score growth plan">
+          <div className="study-growth-section__panelHeader">
+            <span>Projected growth</span>
+            <strong>Diagnostic to 30 days</strong>
+          </div>
+
+          <div className="study-growth-chart" aria-hidden="true">
+            <div className="study-growth-chart__grid" />
+            <svg className="study-growth-chart__svg" viewBox="0 0 680 320" role="img">
+              <defs>
+                <linearGradient id="growthLine" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#9aa0a6" />
+                  <stop offset="48%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#8ff1c6" />
+                </linearGradient>
+                <linearGradient id="growthFill" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#8ff1c6" stopOpacity="0.26" />
+                  <stop offset="100%" stopColor="#8ff1c6" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path
+                className="study-growth-chart__area"
+                d="M36 248 C124 232 160 214 214 198 C282 176 314 158 376 136 C462 104 520 84 644 54 L644 286 L36 286 Z"
+              />
+              <path
+                className="study-growth-chart__line"
+                d="M36 248 C124 232 160 214 214 198 C282 176 314 158 376 136 C462 104 520 84 644 54"
+              />
+              {[
+                [36, 248],
+                [214, 198],
+                [376, 136],
+                [644, 54]
+              ].map(([cx, cy]) => (
+                <circle className="study-growth-chart__dot" cx={cx} cy={cy} key={`${cx}-${cy}`} r="7" />
+              ))}
+            </svg>
+            <div className="study-growth-chart__labels">
+              <span>Diagnostic</span>
+              <span>Day 7</span>
+              <span>Day 14</span>
+              <span>Day 30</span>
+            </div>
+          </div>
+
+          <div className="study-growth-section__scores">
+            <div>
+              <span>Start</span>
+              <strong>1050</strong>
+            </div>
+            <div>
+              <span>Week 1</span>
+              <strong>1080</strong>
+            </div>
+            <div>
+              <span>Week 2</span>
+              <strong>1120</strong>
+            </div>
+            <div className="is-target">
+              <span>Day 30</span>
+              <strong>1150+</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="study-growth-section__steps">
+          <div>
+            <span>01</span>
+            <strong>Diagnose</strong>
+            <p>Find the exact question types, traps, timing issues, and weak topics holding the student back.</p>
+          </div>
+          <div>
+            <span>02</span>
+            <strong>Assign</strong>
+            <p>Convert mistakes into daily Reading, Writing, and Math work with a clear hour-by-hour plan.</p>
+          </div>
+          <div>
+            <span>03</span>
+            <strong>Improve</strong>
+            <p>Repeat targeted drills, review explanations, and confirm progress with section tests.</p>
+          </div>
+        </div>
+      </section>
+
       {activeResultVideo ? (
         <div
           className="results-modal"
