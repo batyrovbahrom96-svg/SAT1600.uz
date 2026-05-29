@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Play, X } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Play, Volume2, VolumeX, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { studentResults, type StudentResult } from "@/lib/student-results";
 
@@ -105,10 +106,12 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(() => !shouldSkipHomeIntro());
   const [showResultsWall, setShowResultsWall] = useState(false);
   const [activeResultVideo, setActiveResultVideo] = useState<StudentResult | null>(null);
+  const [isPlatformVideoMuted, setIsPlatformVideoMuted] = useState(true);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
   const introVideoRef = useRef<HTMLVideoElement | null>(null);
+  const platformVideoRef = useRef<HTMLVideoElement | null>(null);
   const resultsCardsRef = useRef<HTMLDivElement | null>(null);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
@@ -251,6 +254,17 @@ export default function Home() {
 
   const goNext = useCallback(() => goTo(activeRef.current + 1), [goTo]);
   const goPrev = useCallback(() => goTo(activeRef.current - 1), [goTo]);
+  const togglePlatformVideoSound = useCallback(() => {
+    const nextMuted = !isPlatformVideoMuted;
+    const video = platformVideoRef.current;
+    if (video) {
+      video.muted = nextMuted;
+      video.volume = nextMuted ? 0 : 1;
+      video.play().catch(() => undefined);
+    }
+    setIsPlatformVideoMuted(nextMuted);
+  }, [isPlatformVideoMuted]);
+
   const scrollResults = useCallback((direction: -1 | 1) => {
     const container = resultsCardsRef.current;
     if (!container) return;
@@ -554,6 +568,40 @@ export default function Home() {
       </div>
 
       <section className="platform-ad-section" aria-labelledby="platform-ad-title">
+        <div className="platform-ad-section__figure platform-ad-section__figure--back" aria-hidden="true">
+          <span className="platform-ad-section__figureCore" />
+          {Array.from({ length: 34 }).map((_, index) => (
+            <span
+              className="platform-ad-section__rib"
+              key={index}
+              style={
+                {
+                  "--rib-delay": `${index * -0.12}s`,
+                  "--rib-height": `${32 + index * 2.7}vh`,
+                  "--rib-rotate": `${index * 8.5}deg`,
+                  "--rib-width": `${15 + index * 1.35}vw`
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
+        <div className="platform-ad-section__figure platform-ad-section__figure--front" aria-hidden="true">
+          <span className="platform-ad-section__figureCore" />
+          {Array.from({ length: 26 }).map((_, index) => (
+            <span
+              className="platform-ad-section__rib"
+              key={index}
+              style={
+                {
+                  "--rib-delay": `${index * -0.16}s`,
+                  "--rib-height": `${28 + index * 2.1}vh`,
+                  "--rib-rotate": `${index * 10}deg`,
+                  "--rib-width": `${13 + index * 1.1}vw`
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
         <div className="platform-ad-section__copy">
           <p className="platform-ad-section__eyebrow">Why SATTEST.UZ works</p>
           <h2 id="platform-ad-title">A diagnostic SAT platform that turns mistakes into a plan.</h2>
@@ -584,13 +632,23 @@ export default function Home() {
         <div className="platform-ad-section__videoWrap">
           <video
             className="platform-ad-section__video"
+            ref={platformVideoRef}
             src="/assets/video/sattest-platform-ad.mp4"
             autoPlay
-            muted
+            muted={isPlatformVideoMuted}
             loop
             playsInline
             preload="auto"
           />
+          <button
+            className="platform-ad-section__sound"
+            onClick={togglePlatformVideoSound}
+            type="button"
+            aria-label={isPlatformVideoMuted ? "Turn platform video sound on" : "Turn platform video sound off"}
+          >
+            {isPlatformVideoMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+            <span>{isPlatformVideoMuted ? "Sound on" : "Sound off"}</span>
+          </button>
           <div className="platform-ad-section__videoGlow" aria-hidden="true" />
         </div>
       </section>
