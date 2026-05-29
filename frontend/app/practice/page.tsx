@@ -20,7 +20,8 @@ const practiceSections = [
   {
     title: "SAT Math",
     description: "Practice algebra, advanced math, problem solving, data analysis, geometry, and precision.",
-    icon: Calculator
+    icon: Calculator,
+    href: "/practice/math"
   }
 ];
 
@@ -66,17 +67,13 @@ export default function PracticeAccessPage() {
             {practiceSections.map((section) => {
               const Icon = section.icon;
               const isSelected = selectedSection === section.title;
-              return (
-                <button
-                  className={`min-h-[260px] border p-6 text-left transition-colors ${
-                    isSelected
-                      ? "border-white bg-white text-black"
-                      : "border-white/10 bg-white/[0.035] text-white hover:border-white/35 hover:bg-white/[0.06]"
-                  }`}
-                  key={section.title}
-                  onClick={() => setSelectedSection(section.title)}
-                  type="button"
-                >
+              const cardClass = `block min-h-[260px] border p-6 text-left transition-colors ${
+                isSelected
+                  ? "border-white bg-white text-black"
+                  : "border-white/10 bg-white/[0.035] text-white hover:border-white/35 hover:bg-white/[0.06]"
+              }`;
+              const content = (
+                <>
                   <div className={`flex h-14 w-14 items-center justify-center border ${
                     isSelected ? "border-black/15 bg-black text-white" : "border-white/10 bg-black/25 text-white/70"
                   }`}>
@@ -96,8 +93,27 @@ export default function PracticeAccessPage() {
                   <div className={`mt-8 flex h-12 items-center justify-between border px-4 text-xs font-black uppercase tracking-[0.18em] ${
                     isSelected ? "border-black bg-black text-white" : "border-white/15 text-white/70"
                   }`}>
-                    {isSelected ? "Selected" : "Choose"} <ArrowRight size={17} />
+                    {section.href ? "Start practice" : isSelected ? "Selected" : "Choose"} <ArrowRight size={17} />
                   </div>
+                </>
+              );
+
+              if (section.href) {
+                return (
+                  <Link className={cardClass} href={section.href} key={section.title}>
+                    {content}
+                  </Link>
+                );
+              }
+
+              return (
+                <button
+                  className={cardClass}
+                  key={section.title}
+                  onClick={() => setSelectedSection(section.title)}
+                  type="button"
+                >
+                  {content}
                 </button>
               );
             })}
