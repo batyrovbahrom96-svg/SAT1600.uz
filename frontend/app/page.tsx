@@ -10,10 +10,10 @@ const slides = [
   {
     id: "practice",
     nav: "Practice",
-    eyebrow: "Digital SAT platform for Uzbekistan",
-    title: ["Practice", "Mode"],
-    body: "Full mock tests, adaptive modules, grid-ins, and Bluebook-style timing inside one premium SAT training experience.",
-    cta: "Start mock test",
+    eyebrow: "Diagnostic first. Clear plan next.",
+    title: ["Your SAT", "Growth Plan"],
+    body: "Take one realistic mock test, discover exactly where points are being lost, and receive a personal study route built to raise your score with steady daily work.",
+    cta: "Start diagnostic test",
     href: "/register",
     vertical: ["S", "A", "T", "1", "6", "0", "0"],
     stat: "01"
@@ -21,10 +21,10 @@ const slides = [
   {
     id: "analytics",
     nav: "Analytics",
-    eyebrow: "Score intelligence",
-    title: ["Score", "Analytics"],
-    body: "Every test becomes a report: accuracy, missed questions, trap patterns, topic weakness, and the next task to fix.",
-    cta: "See advantages",
+    eyebrow: "Know every lost point",
+    title: ["Weakness", "Analytics"],
+    body: "Every answer becomes a report: weak skills, trap patterns, timing pressure, missed questions, and the next task that should be fixed first.",
+    cta: "View diagnostic preview",
     href: "/register",
     vertical: ["A", "N", "A", "L", "Y", "T", "I", "C", "S"],
     stat: "02"
@@ -32,9 +32,9 @@ const slides = [
   {
     id: "growth",
     nav: "Growth",
-    eyebrow: "Built to sell improvement",
-    title: ["Growth", "Engine"],
-    body: "Premium motion, clear progress, and result pages that make students feel the product is worth paying for.",
+    eyebrow: "Built for steady score growth",
+    title: ["30-Day", "Improvement"],
+    body: "SATTEST.UZ turns diagnostic mistakes into daily Reading, Writing, and Math practice so students know what to study and how progress is happening.",
     cta: "Create account",
     href: "/register",
     vertical: ["P", "R", "O", "G", "R", "E", "S", "S"],
