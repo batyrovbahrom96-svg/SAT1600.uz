@@ -2266,13 +2266,13 @@ button, input {
 
 .nex-circ-buttons {
   display: flex;
-  gap: 25px;
+  gap: 18px;
 }
 
 .nex-circ-button {
   display: inline-flex;
-  width: 80px;
-  height: 80px;
+  width: 58px;
+  height: 58px;
   align-items: center;
   justify-content: center;
   border: 2px solid rgba(255, 255, 255, 0.34);
@@ -2652,8 +2652,8 @@ button, input {
   }
 
   .nex-circ-button {
-    width: 64px;
-    height: 64px;
+    width: 52px;
+    height: 52px;
   }
 
   .results-wall {
