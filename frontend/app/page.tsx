@@ -397,14 +397,6 @@ export default function Home() {
         </div>
       ) : null}
       <LuxuryNavbar />
-      <div className="nex-continuous-satmark" aria-hidden="true">
-        <div className="nex-continuous-satmark__track">
-          <span>SAT1600</span>
-          <span>SAT1600</span>
-          <span>SAT1600</span>
-          <span>SAT1600</span>
-        </div>
-      </div>
 
       <div className="nex-hero-stage">
         <div className="nex-backgrounds" aria-hidden="true">
