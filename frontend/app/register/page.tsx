@@ -35,7 +35,7 @@ export default function RegisterPage() {
         })
       });
       saveAuth(result.access_token, result.full_name);
-      router.push("/dashboard");
+      router.push("/mock-test");
     } catch (err) {
       setError(getEmailBotError(err, "Registration failed"));
     }
