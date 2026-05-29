@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Play, Volume2, VolumeX, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
@@ -568,39 +567,20 @@ export default function Home() {
       </div>
 
       <section className="platform-ad-section" aria-labelledby="platform-ad-title">
-        <div className="platform-ad-section__figure platform-ad-section__figure--back" aria-hidden="true">
-          <span className="platform-ad-section__figureCore" />
-          {Array.from({ length: 34 }).map((_, index) => (
-            <span
-              className="platform-ad-section__rib"
-              key={index}
-              style={
-                {
-                  "--rib-delay": `${index * -0.12}s`,
-                  "--rib-height": `${32 + index * 2.7}vh`,
-                  "--rib-rotate": `${index * 8.5}deg`,
-                  "--rib-width": `${15 + index * 1.35}vw`
-                } as CSSProperties
-              }
-            />
-          ))}
-        </div>
-        <div className="platform-ad-section__figure platform-ad-section__figure--front" aria-hidden="true">
-          <span className="platform-ad-section__figureCore" />
-          {Array.from({ length: 26 }).map((_, index) => (
-            <span
-              className="platform-ad-section__rib"
-              key={index}
-              style={
-                {
-                  "--rib-delay": `${index * -0.16}s`,
-                  "--rib-height": `${28 + index * 2.1}vh`,
-                  "--rib-rotate": `${index * 10}deg`,
-                  "--rib-width": `${13 + index * 1.1}vw`
-                } as CSSProperties
-              }
-            />
-          ))}
+        <video
+          className="platform-ad-section__backgroundVideo"
+          src="/assets/video/platform-rolling-bg.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        />
+        <div className="platform-ad-section__verticalText" aria-hidden="true">
+          <span>SAT1600</span>
+          <span>SAT1600</span>
+          <span>SAT1600</span>
         </div>
         <div className="platform-ad-section__copy">
           <p className="platform-ad-section__eyebrow">Why SATTEST.UZ works</p>

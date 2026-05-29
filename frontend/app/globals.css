@@ -1609,6 +1609,7 @@ button, input {
   min-height: 100vh;
   padding: clamp(72px, 9vh, 118px) 7.15vw clamp(82px, 11vh, 132px);
   overflow: hidden;
+  isolation: isolate;
   border-top: 1px solid rgba(255, 255, 255, 0.09);
   background:
     radial-gradient(circle at 76% 38%, rgba(255, 255, 255, 0.08), transparent 24%),
@@ -1616,89 +1617,59 @@ button, input {
     linear-gradient(135deg, #050606 0%, #101112 48%, #050505 100%);
 }
 
-.platform-ad-section::before {
-  content: "";
+.platform-ad-section__backgroundVideo {
   position: absolute;
-  inset: -20% -10%;
-  z-index: -1;
-  background:
-    repeating-linear-gradient(
-      112deg,
-      transparent 0,
-      transparent 72px,
-      rgba(255, 255, 255, 0.055) 73px,
-      transparent 75px
-    );
-  opacity: 0.36;
-  transform: rotate(0.001deg);
-  animation: platformAdLines 26s linear infinite;
+  inset: -4%;
+  z-index: 0;
+  width: 108%;
+  height: 108%;
+  object-fit: cover;
+  opacity: 0.56;
+  filter: contrast(1.08) brightness(0.72) saturate(0.9);
+  pointer-events: none;
 }
 
 .platform-ad-section::after {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(6, 6, 6, 0.88) 0%, rgba(6, 6, 6, 0.48) 44%, rgba(6, 6, 6, 0.1) 100%),
-    linear-gradient(0deg, rgba(0, 0, 0, 0.62) 0%, transparent 38%, rgba(0, 0, 0, 0.36) 100%);
+    linear-gradient(90deg, rgba(6, 6, 6, 0.94) 0%, rgba(6, 6, 6, 0.72) 42%, rgba(6, 6, 6, 0.36) 100%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.72) 0%, transparent 42%, rgba(0, 0, 0, 0.44) 100%);
 }
 
-.platform-ad-section__figure {
+.platform-ad-section__verticalText {
   position: absolute;
-  z-index: -2;
+  right: -18vw;
+  bottom: -10vh;
+  z-index: 2;
+  display: flex;
+  gap: 0.08em;
+  width: 118vh;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.045);
+  font-size: clamp(90px, 21vh, 218px);
+  font-weight: 300;
+  line-height: 0.9;
+  white-space: nowrap;
+  transform: rotate(-90deg) translate3d(-8%, 0, 0);
+  transform-origin: right bottom;
   pointer-events: none;
-  perspective: 1600px;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  contain: layout paint style;
-  will-change: transform, opacity;
+  animation: platformVerticalMark 18s linear infinite;
+  will-change: transform;
 }
 
-.platform-ad-section__figure--back {
-  inset: -30vh -20vw -28vh 18vw;
-  opacity: 0.82;
-  animation: platformFigureRoll 32s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+@supports (-webkit-text-stroke: 1px #676767) {
+  .platform-ad-section__verticalText {
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.18);
+    color: transparent;
+  }
 }
 
-.platform-ad-section__figure--front {
-  inset: -42vh -22vw -18vh 42vw;
-  opacity: 0.48;
-  animation: platformFigureRoll 24s cubic-bezier(0.45, 0, 0.55, 1) infinite reverse;
-}
-
-.platform-ad-section__figureCore {
-  position: absolute;
-  left: 61%;
-  top: 50%;
-  width: 28vw;
-  height: 64vh;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.016) 48%, transparent 72%);
-  transform: translate3d(-50%, -50%, 0) rotate(-18deg);
-  animation: platformFigureCore 8.5s ease-in-out infinite;
-}
-
-.platform-ad-section__rib {
-  position: absolute;
-  left: 61%;
-  top: 50%;
-  width: var(--rib-width);
-  height: var(--rib-height);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-left-color: rgba(255, 255, 255, 0.022);
-  border-bottom-color: rgba(255, 255, 255, 0.035);
-  border-radius: 48% 52% 43% 57%;
-  background: linear-gradient(110deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01) 42%, rgba(0, 0, 0, 0.18) 100%);
-  transform: translate3d(-50%, -50%, 0) rotate(var(--rib-rotate)) skewY(-15deg);
-  transform-origin: center;
-  animation: platformRibBreath 8s cubic-bezier(0.76, 0, 0.24, 1) infinite;
-  animation-delay: var(--rib-delay);
-  box-shadow:
-    inset 0 0 18px rgba(255, 255, 255, 0.012),
-    0 0 12px rgba(255, 255, 255, 0.01);
-  will-change: transform, opacity;
+.platform-ad-section__verticalText span {
+  display: inline-block;
 }
 
 .platform-ad-section__copy {
@@ -2069,15 +2040,6 @@ button, input {
   }
 }
 
-@keyframes platformAdLines {
-  0% {
-    transform: translate3d(-4%, 0, 0) rotate(0.001deg);
-  }
-  100% {
-    transform: translate3d(4%, 0, 0) rotate(0.001deg);
-  }
-}
-
 @keyframes platformAdGlow {
   0%,
   100% {
@@ -2090,42 +2052,12 @@ button, input {
   }
 }
 
-@keyframes platformFigureRoll {
+@keyframes platformVerticalMark {
   0% {
-    transform: translate3d(0, 0, 0) rotateX(64deg) rotateY(-22deg) rotateZ(0deg) scale(1.02);
-  }
-  33% {
-    transform: translate3d(-1vw, 0.7vh, 0) rotateX(66deg) rotateY(-18deg) rotateZ(118deg) scale(1.05);
-  }
-  66% {
-    transform: translate3d(1vw, -0.7vh, 0) rotateX(62deg) rotateY(-25deg) rotateZ(242deg) scale(1.03);
+    transform: rotate(-90deg) translate3d(-8%, 0, 0);
   }
   100% {
-    transform: translate3d(0, 0, 0) rotateX(64deg) rotateY(-22deg) rotateZ(360deg) scale(1.02);
-  }
-}
-
-@keyframes platformRibBreath {
-  0%,
-  100% {
-    opacity: 0.54;
-    transform: translate3d(-50%, -50%, 0) rotate(var(--rib-rotate)) skewY(-15deg) scale(0.99);
-  }
-  50% {
-    opacity: 0.9;
-    transform: translate3d(-50%, -50%, 0) rotate(calc(var(--rib-rotate) + 10deg)) skewY(-9deg) scale(1.012);
-  }
-}
-
-@keyframes platformFigureCore {
-  0%,
-  100% {
-    opacity: 0.58;
-    transform: translate3d(-50%, -50%, 0) rotate(-24deg) scale(0.96);
-  }
-  50% {
-    opacity: 0.9;
-    transform: translate3d(-50%, -50%, 0) rotate(-10deg) scale(1.05);
+    transform: rotate(-90deg) translate3d(-38%, 0, 0);
   }
 }
 
@@ -2139,11 +2071,9 @@ button, input {
   .nex-figure-rib,
   .nex-figure-core,
   .nex-vertical-track,
-  .platform-ad-section::before,
   .platform-ad-section__videoGlow,
-  .platform-ad-section__figure,
-  .platform-ad-section__figureCore,
-  .platform-ad-section__rib {
+  .platform-ad-section__backgroundVideo,
+  .platform-ad-section__verticalText {
     animation: none;
     transition: none;
   }
@@ -2275,13 +2205,10 @@ button, input {
     min-width: 0;
   }
 
-  .platform-ad-section__figure--back {
-    inset: -24vh -72vw -18vh 4vw;
-  }
-
-  .platform-ad-section__figure--front {
-    inset: -28vh -60vw -14vh 18vw;
-    opacity: 0.34;
+  .platform-ad-section__verticalText {
+    right: -38vw;
+    bottom: -7vh;
+    font-size: clamp(86px, 17vh, 160px);
   }
 }
 
