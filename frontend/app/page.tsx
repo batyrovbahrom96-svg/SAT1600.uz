@@ -190,11 +190,11 @@ export default function Home() {
   }, [finishLoading, loadingStage]);
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const previousOverflowX = document.body.style.overflowX;
+    document.body.style.overflowX = "hidden";
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflowX = previousOverflowX;
     };
   }, []);
 
@@ -264,15 +264,23 @@ export default function Home() {
 
   useEffect(() => {
     const onWheel = (event: WheelEvent) => {
-      event.preventDefault();
       if (Math.abs(event.deltaY) < 8) {
         return;
       }
+      const canScrollToPlatformAd = activeRef.current === slides.length - 1 && event.deltaY > 0;
+      const isPastHero = window.scrollY > 24;
+      if (canScrollToPlatformAd || isPastHero) {
+        return;
+      }
+      event.preventDefault();
       event.deltaY > 0 ? goNext() : goPrev();
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowDown" || event.key === "PageDown") {
+        if (activeRef.current === slides.length - 1) {
+          return;
+        }
         event.preventDefault();
         goNext();
       }
@@ -294,6 +302,9 @@ export default function Home() {
       const velocity = distance / elapsed;
 
       if (Math.abs(distance) > 54 || Math.abs(velocity) > 0.35) {
+        if (activeRef.current === slides.length - 1 && distance < 0) {
+          return;
+        }
         distance < 0 ? goNext() : goPrev();
       }
     };
@@ -374,143 +385,214 @@ export default function Home() {
       ) : null}
       <LuxuryNavbar />
 
-      <div className="nex-backgrounds" aria-hidden="true">
-        {videoSources.map((source) => (
-          <video
-            className={`nex-background-video ${currentVideo === source ? "is-current" : ""}`}
-            key={source}
-            ref={(node) => {
-              videoRefs.current[source] = node;
-            }}
-            src={`/assets/video/${source}.mp4`}
-            autoPlay={source === currentVideo}
-            muted
-            loop
-            playsInline
-            preload="auto"
-            onLoadedData={(event) => {
-              if (source === currentVideo) {
-                event.currentTarget.play().catch(() => undefined);
-              }
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="nex-screen-stack">
-        {slides.map((slide, index) => (
-          <section
-            className={`nex-screen ${active === index ? "is-current" : ""}`}
-            aria-hidden={active !== index}
-            key={slide.id}
-          >
-            <div className="nex-copy">
-              <p className="nex-kicker">{slide.eyebrow}</p>
-              <h1 className="nex-title">
-                {slide.title.map((word) => (
-                  <span className="nex-title-line" key={word}>
-                    <span>{word}</span>
-                  </span>
-                ))}
-              </h1>
-              <p className="nex-description">{slide.body}</p>
-              <Link className="nex-cta" href={slide.href}>
-                <span>{slide.cta}</span>
-                <ArrowRight size={18} />
-              </Link>
-            </div>
-
-            <div className="nex-index" aria-label={`Slide ${slide.stat} of 03`}>
-              <span>{slide.stat}</span>
-              <span>/</span>
-              <span>03</span>
-            </div>
-
-            <div className="nex-vertical-text" aria-hidden="true">
-              <div className="nex-vertical-track">
-                {[...slide.vertical, ...slide.vertical].map((letter, letterIndex) => (
-                  <span className={letter === "1" ? "is-solid" : ""} key={`${letter}-${letterIndex}`}>
-                    {letter}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </section>
-        ))}
-      </div>
-
-      <div className="nex-home-login">
-        <span />
-        <Link href="/login">Student Login</Link>
-      </div>
-
-      <section
-        className={`results-wall ${showResultsWall ? "is-visible" : ""}`}
-        aria-label="Student SAT results"
-      >
-        <div className="results-wall__copy">
-          <p>Student Results</p>
-          <h2>Real score growth from SATTEST.UZ students.</h2>
+      <div className="nex-hero-stage">
+        <div className="nex-backgrounds" aria-hidden="true">
+          {videoSources.map((source) => (
+            <video
+              className={`nex-background-video ${currentVideo === source ? "is-current" : ""}`}
+              key={source}
+              ref={(node) => {
+                videoRefs.current[source] = node;
+              }}
+              src={`/assets/video/${source}.mp4`}
+              autoPlay={source === currentVideo}
+              muted
+              loop
+              playsInline
+              preload="auto"
+              onLoadedData={(event) => {
+                if (source === currentVideo) {
+                  event.currentTarget.play().catch(() => undefined);
+                }
+              }}
+            />
+          ))}
         </div>
 
-        <div className="results-wall__carousel">
-          <div
-            className="results-wall__cards"
-            onWheel={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-              event.currentTarget.scrollLeft += delta;
-            }}
-            ref={resultsCardsRef}
+        <div className="nex-screen-stack">
+          {slides.map((slide, index) => (
+            <section
+              className={`nex-screen ${active === index ? "is-current" : ""}`}
+              aria-hidden={active !== index}
+              key={slide.id}
+            >
+              <div className="nex-copy">
+                <p className="nex-kicker">{slide.eyebrow}</p>
+                <h1 className="nex-title">
+                  {slide.title.map((word) => (
+                    <span className="nex-title-line" key={word}>
+                      <span>{word}</span>
+                    </span>
+                  ))}
+                </h1>
+                <p className="nex-description">{slide.body}</p>
+                <Link className="nex-cta" href={slide.href}>
+                  <span>{slide.cta}</span>
+                  <ArrowRight size={18} />
+                </Link>
+              </div>
+
+              <div className="nex-index" aria-label={`Slide ${slide.stat} of 03`}>
+                <span>{slide.stat}</span>
+                <span>/</span>
+                <span>03</span>
+              </div>
+
+              <div className="nex-vertical-text" aria-hidden="true">
+                <div className="nex-vertical-track">
+                  {[...slide.vertical, ...slide.vertical].map((letter, letterIndex) => (
+                    <span className={letter === "1" ? "is-solid" : ""} key={`${letter}-${letterIndex}`}>
+                      {letter}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <div className="nex-home-login">
+          <span />
+          <Link href="/login">Student Login</Link>
+        </div>
+
+        <section
+          className={`results-wall ${showResultsWall ? "is-visible" : ""}`}
+          aria-label="Student SAT results"
+        >
+          <div className="results-wall__copy">
+            <p>Student Results</p>
+            <h2>Real score growth from SATTEST.UZ students.</h2>
+          </div>
+
+          <div className="results-wall__carousel">
+            <div
+              className="results-wall__cards"
+              onWheel={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+                event.currentTarget.scrollLeft += delta;
+              }}
+              ref={resultsCardsRef}
+            >
+              {studentResults.map((result) => (
+                <button
+                  className="results-card"
+                  key={result.name}
+                  onClick={() => setActiveResultVideo(result)}
+                  type="button"
+                >
+                  <video
+                    className="results-card__video"
+                    src={result.video}
+                    muted
+                    loop
+                    playsInline
+                    autoPlay
+                    preload="metadata"
+                  />
+                  <span className="results-card__shade" aria-hidden="true" />
+                  <span className="results-card__play" aria-hidden="true">
+                    <Play size={16} fill="currentColor" />
+                  </span>
+                  <span className="results-card__meta">
+                    <strong>{result.name}</strong>
+                    <span>{result.score}</span>
+                    <span>{result.improvement}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="results-wall__controls" aria-label="Student result videos">
+              <button aria-label="Previous student video" onClick={() => scrollResults(-1)} type="button">
+                <ChevronLeft size={18} />
+              </button>
+              <button aria-label="Next student video" onClick={() => scrollResults(1)} type="button">
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+
+          <button
+            className="results-wall__close"
+            onClick={() => setShowResultsWall(false)}
+            type="button"
+            aria-label="Close student results"
           >
-            {studentResults.map((result) => (
+            <X size={16} />
+          </button>
+        </section>
+
+        <nav className="nex-slide-nav" aria-label="Homepage slides">
+          <div className="nex-circ-buttons">
+            <button className="nex-circ-button" onClick={goPrev} aria-label="Previous slide" type="button">
+              <ChevronUp size={18} />
+            </button>
+            <button className="nex-circ-button" onClick={goNext} aria-label="Next slide" type="button">
+              <ChevronDown size={18} />
+            </button>
+          </div>
+
+          <div className="nex-slide-tabs">
+            {slides.map((slide, index) => (
               <button
-                className="results-card"
-                key={result.name}
-                onClick={() => setActiveResultVideo(result)}
+                className={active === index ? "is-current" : ""}
+                key={slide.id}
+                onClick={() => goTo(index)}
                 type="button"
               >
-                <video
-                  className="results-card__video"
-                  src={result.video}
-                  muted
-                  loop
-                  playsInline
-                  autoPlay
-                  preload="metadata"
-                />
-                <span className="results-card__shade" aria-hidden="true" />
-                <span className="results-card__play" aria-hidden="true">
-                  <Play size={16} fill="currentColor" />
-                </span>
-                <span className="results-card__meta">
-                  <strong>{result.name}</strong>
-                  <span>{result.score}</span>
-                  <span>{result.improvement}</span>
-                </span>
+                <span>{slide.nav}</span>
+                <span>{slide.nav}</span>
               </button>
             ))}
           </div>
 
-          <div className="results-wall__controls" aria-label="Student result videos">
-            <button aria-label="Previous student video" onClick={() => scrollResults(-1)} type="button">
-              <ChevronLeft size={18} />
-            </button>
-            <button aria-label="Next student video" onClick={() => scrollResults(1)} type="button">
-              <ChevronRight size={18} />
-            </button>
+          <div className="nex-footer-note">Digital SAT practice engine</div>
+        </nav>
+      </div>
+
+      <section className="platform-ad-section" aria-labelledby="platform-ad-title">
+        <div className="platform-ad-section__copy">
+          <p className="platform-ad-section__eyebrow">Why SATTEST.UZ works</p>
+          <h2 id="platform-ad-title">A diagnostic SAT platform that turns mistakes into a plan.</h2>
+          <p className="platform-ad-section__body">
+            Students do not just finish a mock test. They receive score reports, weakness maps,
+            mistake analysis, and targeted practice routes built around Reading, Writing, and Math.
+          </p>
+          <div className="platform-ad-section__advantages">
+            <div>
+              <strong>Bluebook-style mock tests</strong>
+              <span>Timed modules, review flow, and realistic SAT pressure.</span>
+            </div>
+            <div>
+              <strong>Personal weakness tracking</strong>
+              <span>Every missed pattern becomes a focused practice target.</span>
+            </div>
+            <div>
+              <strong>1400+ curriculum direction</strong>
+              <span>Students know exactly what to study after the diagnostic.</span>
+            </div>
           </div>
+          <Link className="platform-ad-section__cta" href="/mock-test">
+            <span>Start diagnostic mock test</span>
+            <ArrowRight size={18} />
+          </Link>
         </div>
 
-        <button
-          className="results-wall__close"
-          onClick={() => setShowResultsWall(false)}
-          type="button"
-          aria-label="Close student results"
-        >
-          <X size={16} />
-        </button>
+        <div className="platform-ad-section__videoWrap">
+          <video
+            className="platform-ad-section__video"
+            src="/assets/video/sattest-platform-ad.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+          />
+          <div className="platform-ad-section__videoGlow" aria-hidden="true" />
+        </div>
       </section>
 
       {activeResultVideo ? (
@@ -550,33 +632,6 @@ export default function Home() {
           </div>
         </div>
       ) : null}
-
-      <nav className="nex-slide-nav" aria-label="Homepage slides">
-        <div className="nex-circ-buttons">
-          <button className="nex-circ-button" onClick={goPrev} aria-label="Previous slide" type="button">
-            <ChevronUp size={18} />
-          </button>
-          <button className="nex-circ-button" onClick={goNext} aria-label="Next slide" type="button">
-            <ChevronDown size={18} />
-          </button>
-        </div>
-
-        <div className="nex-slide-tabs">
-          {slides.map((slide, index) => (
-            <button
-              className={active === index ? "is-current" : ""}
-              key={slide.id}
-              onClick={() => goTo(index)}
-              type="button"
-            >
-              <span>{slide.nav}</span>
-              <span>{slide.nav}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="nex-footer-note">Digital SAT practice engine</div>
-      </nav>
     </main>
   );
 }

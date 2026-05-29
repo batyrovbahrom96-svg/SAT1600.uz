@@ -520,9 +520,9 @@ button, input {
 }
 
 .nex-home {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
   color: #fff;
   background:
     radial-gradient(circle at 26% 24%, rgba(255, 255, 255, 0.06), transparent 28%),
@@ -531,7 +531,14 @@ button, input {
   isolation: isolate;
 }
 
-.nex-home::after {
+.nex-hero-stage {
+  position: relative;
+  min-height: calc(100vh - 81px);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.nex-hero-stage::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1592,6 +1599,176 @@ button, input {
   text-transform: uppercase;
 }
 
+.platform-ad-section {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(360px, 0.9fr);
+  gap: clamp(36px, 5vw, 84px);
+  align-items: center;
+  min-height: 100vh;
+  padding: clamp(72px, 9vh, 118px) 7.15vw clamp(82px, 11vh, 132px);
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(circle at 78% 42%, rgba(255, 255, 255, 0.09), transparent 28%),
+    radial-gradient(circle at 16% 76%, rgba(255, 255, 255, 0.055), transparent 30%),
+    linear-gradient(135deg, #070808 0%, #111213 52%, #050505 100%);
+}
+
+.platform-ad-section::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10%;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(
+      112deg,
+      transparent 0,
+      transparent 72px,
+      rgba(255, 255, 255, 0.055) 73px,
+      transparent 75px
+    );
+  opacity: 0.36;
+  transform: rotate(0.001deg);
+  animation: platformAdLines 26s linear infinite;
+}
+
+.platform-ad-section__copy {
+  max-width: 720px;
+}
+
+.platform-ad-section__eyebrow {
+  margin-bottom: 28px;
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.44em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.platform-ad-section h2 {
+  max-width: 760px;
+  color: #fff;
+  font-size: clamp(44px, 5vw, 86px);
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 1.04;
+}
+
+.platform-ad-section__body {
+  max-width: 670px;
+  margin-top: 30px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: clamp(18px, 1.65vw, 28px);
+  font-weight: 300;
+  line-height: 1.65;
+}
+
+.platform-ad-section__advantages {
+  display: grid;
+  gap: 12px;
+  margin-top: 42px;
+}
+
+.platform-ad-section__advantages div {
+  display: grid;
+  gap: 8px;
+  padding: 20px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    rgba(255, 255, 255, 0.018);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.platform-ad-section__advantages strong {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.platform-ad-section__advantages span {
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.platform-ad-section__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  min-width: min(100%, 420px);
+  margin-top: 36px;
+  padding: 24px 28px;
+  border: 1px solid #fff;
+  color: #050505;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  transition:
+    color 0.28s ease,
+    background 0.28s ease,
+    transform 0.28s ease;
+}
+
+.platform-ad-section__cta:hover {
+  color: #fff;
+  background: transparent;
+  transform: translateY(-2px);
+}
+
+.platform-ad-section__videoWrap {
+  position: relative;
+  justify-self: end;
+  width: min(42vw, 680px);
+  min-width: 360px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 2px;
+  background: #000;
+  box-shadow:
+    0 34px 90px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(255, 255, 255, 0.045) inset;
+  transform: translateZ(0);
+}
+
+.platform-ad-section__videoWrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 22%, transparent 78%, rgba(255, 255, 255, 0.12)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.13), transparent 18%, transparent 76%, rgba(0, 0, 0, 0.22));
+  mix-blend-mode: screen;
+  opacity: 0.32;
+}
+
+.platform-ad-section__video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  filter: contrast(1.08) saturate(1.02) brightness(1.05);
+}
+
+.platform-ad-section__videoGlow {
+  position: absolute;
+  inset: 12% 8%;
+  z-index: -1;
+  background: rgba(255, 255, 255, 0.18);
+  filter: blur(70px);
+  opacity: 0.56;
+  animation: platformAdGlow 5.8s ease-in-out infinite;
+}
+
 .nex-slide-nav {
   position: absolute;
   left: 7.15vw;
@@ -1788,6 +1965,27 @@ button, input {
   }
 }
 
+@keyframes platformAdLines {
+  0% {
+    transform: translate3d(-4%, 0, 0) rotate(0.001deg);
+  }
+  100% {
+    transform: translate3d(4%, 0, 0) rotate(0.001deg);
+  }
+}
+
+@keyframes platformAdGlow {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: translate3d(-3%, -2%, 0) scale(0.96);
+  }
+  50% {
+    opacity: 0.72;
+    transform: translate3d(3%, 2%, 0) scale(1.04);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nex-kicker,
   .nex-title-line span,
@@ -1797,7 +1995,9 @@ button, input {
   .nex-figure,
   .nex-figure-rib,
   .nex-figure-core,
-  .nex-vertical-track {
+  .nex-vertical-track,
+  .platform-ad-section::before,
+  .platform-ad-section__videoGlow {
     animation: none;
     transition: none;
   }
@@ -1911,6 +2111,23 @@ button, input {
   .results-card {
     aspect-ratio: 16 / 10;
   }
+
+  .platform-ad-section {
+    grid-template-columns: 1fr;
+    gap: 42px;
+    min-height: auto;
+    padding: 72px 7vw 88px;
+  }
+
+  .platform-ad-section h2 {
+    font-size: clamp(40px, 10vw, 64px);
+  }
+
+  .platform-ad-section__videoWrap {
+    justify-self: stretch;
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 560px) {
@@ -1946,5 +2163,20 @@ button, input {
 
   .results-card {
     aspect-ratio: 16 / 11;
+  }
+
+  .platform-ad-section {
+    padding-top: 56px;
+  }
+
+  .platform-ad-section__advantages div {
+    padding: 18px;
+  }
+
+  .platform-ad-section__cta {
+    width: 100%;
+    min-width: 0;
+    padding: 20px;
+    letter-spacing: 0.18em;
   }
 }
