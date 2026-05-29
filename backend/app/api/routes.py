@@ -76,7 +76,7 @@ def register(payload: AuthRegister, db: Session = Depends(get_db)) -> TokenRespo
     db.commit()
     db.refresh(user)
     verification_codes.pop(email, None)
-    return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role)
+    return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role, full_name=user.full_name)
 
 
 @router.post("/auth/request-verification-code")
@@ -113,7 +113,12 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> TokenResponse:
     user = db.execute(select(User).where(User.email == payload.email.lower())).scalar_one_or_none()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
-    return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role)
+    return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role, full_name=user.full_name)
+
+
+@router.get("/auth/me")
+def current_user_profile(user: User = Depends(get_current_user)) -> dict:
+    return {"full_name": user.full_name, "role": user.role}
 
 
 def _send_verification_email(email: str, code: str) -> bool:

@@ -43,6 +43,11 @@ export function getToken() {
   return localStorage.getItem("sat1600_token");
 }
 
+export function getStudentName() {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("sat1600_full_name");
+}
+
 export class ApiError extends Error {
   status?: number;
 
@@ -105,6 +110,16 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   return response.json();
 }
 
-export function saveAuth(token: string) {
+export function saveAuth(token: string, fullName?: string | null) {
   localStorage.setItem("sat1600_token", token);
+  if (fullName) {
+    localStorage.setItem("sat1600_full_name", fullName);
+  }
+  window.dispatchEvent(new Event("sattest:auth-change"));
+}
+
+export function clearAuth() {
+  localStorage.removeItem("sat1600_token");
+  localStorage.removeItem("sat1600_full_name");
+  window.dispatchEvent(new Event("sattest:auth-change"));
 }

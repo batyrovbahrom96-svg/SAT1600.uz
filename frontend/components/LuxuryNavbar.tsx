@@ -1,16 +1,59 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { api, clearAuth, getStudentName, getToken } from "@/lib/api";
 
 const skipHomeIntroEvent = "sattest:skip-home-intro";
 
 export function LuxuryNavbar() {
+  const [studentName, setStudentName] = useState<string | null>(null);
   const navItems = [
     { label: "Mock Test", href: "/mock-test" },
     { label: "Practice", href: "/practice" },
     { label: "Results", href: "/results/demo" },
     { label: "Pricing", href: "/#pricing" }
   ];
+
+  useEffect(() => {
+    let active = true;
+    const refreshAuth = () => {
+      if (!getToken()) {
+        setStudentName(null);
+        return;
+      }
+
+      const savedName = getStudentName();
+      if (savedName) {
+        setStudentName(savedName);
+        return;
+      }
+
+      api<{ full_name: string }>("/api/auth/me")
+        .then((profile) => {
+          if (!active) return;
+          localStorage.setItem("sat1600_full_name", profile.full_name);
+          setStudentName(profile.full_name);
+        })
+        .catch(() => {
+          if (active) setStudentName(null);
+        });
+    };
+
+    refreshAuth();
+    window.addEventListener("storage", refreshAuth);
+    window.addEventListener("sattest:auth-change", refreshAuth);
+    return () => {
+      active = false;
+      window.removeEventListener("storage", refreshAuth);
+      window.removeEventListener("sattest:auth-change", refreshAuth);
+    };
+  }, []);
+
+  function logout() {
+    clearAuth();
+    window.location.href = "/";
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#101112]/90 backdrop-blur-xl">
@@ -42,12 +85,25 @@ export function LuxuryNavbar() {
         </nav>
 
         <div className="flex items-center justify-end gap-2">
-          <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/mock-test">
-            Start Test
-          </Link>
-          <Link className="h-11 border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] leading-[44px] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
-            Login
-          </Link>
+          {studentName ? (
+            <>
+              <Link className="hidden h-11 max-w-[240px] items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/dashboard">
+                <span className="truncate">{studentName}</span>
+              </Link>
+              <button className="h-11 border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] leading-[44px] text-white/70 transition-colors hover:border-white/35 hover:text-white" onClick={logout} type="button">
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/mock-test">
+                Start Test
+              </Link>
+              <Link className="h-11 border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] leading-[44px] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
+                Login
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

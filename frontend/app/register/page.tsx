@@ -25,7 +25,7 @@ export default function RegisterPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     try {
-      const result = await api<{ access_token: string }>("/api/auth/register", {
+      const result = await api<{ access_token: string; full_name?: string }>("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({
           full_name: form.get("full_name"),
@@ -34,7 +34,7 @@ export default function RegisterPage() {
           verification_code: form.get("verification_code")
         })
       });
-      saveAuth(result.access_token);
+      saveAuth(result.access_token, result.full_name);
       router.push("/dashboard");
     } catch (err) {
       setError(getEmailBotError(err, "Registration failed"));

@@ -13,11 +13,11 @@ export default function LoginPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     try {
-      const result = await api<{ access_token: string }>("/api/auth/login", {
+      const result = await api<{ access_token: string; full_name?: string }>("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ email: form.get("email"), password: form.get("password") })
       });
-      saveAuth(result.access_token);
+      saveAuth(result.access_token, result.full_name);
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
