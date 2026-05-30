@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, LockKeyhole, Route } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { ApiError, api, getToken } from "@/lib/api";
+import { api, getToken } from "@/lib/api";
 
 type ScoreHistoryItem = { attempt_id: string; score: number; date: string };
 type AnalyticsHistory = { score_history: ScoreHistoryItem[]; attempts: number };
@@ -30,10 +30,7 @@ export default function My1400Page() {
         setState("diagnostic");
       })
       .catch((error) => {
-        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-          setState("login");
-          return;
-        }
+        console.log("Unable to open My 1400+ curriculum", error);
         setState("diagnostic");
       });
   }, [router]);
