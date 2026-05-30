@@ -18,6 +18,20 @@ type Topic = {
   focus: string;
 };
 
+type Difficulty = "foundations" | "medium" | "advanced";
+
+const difficulties: { key: Difficulty; title: string; description: string }[] = [
+  { key: "foundations", title: "Foundations", description: "Core grammar, punctuation, transitions, and sentence control." },
+  { key: "medium", title: "Medium", description: "SAT-level writing choices with stronger context and wording traps." },
+  { key: "advanced", title: "Advanced", description: "High-score drills for synthesis, boundaries, and precise expression." }
+];
+
+const difficultyLabel: Record<Difficulty, string> = {
+  foundations: "Foundations",
+  medium: "Medium",
+  advanced: "Advanced"
+};
+
 const topics: Topic[] = [
   { domain: "Expression of Ideas", title: "Transitions: advanced", slug: "transitions", focus: "choose the connector that matches the exact logical relationship" },
   { domain: "Expression of Ideas", title: "Rhetorical synthesis: advanced", slug: "rhetorical-synthesis", focus: "use notes only for the stated goal" },
@@ -29,7 +43,11 @@ const topics: Topic[] = [
 
 const q = (prompt: string, choices: string[], answerIndex: number): Question => ({ prompt, choices, answerIndex });
 
-function buildQuestions(topic: Topic): Question[] {
+function topicTitle(topic: Topic, difficulty: Difficulty) {
+  return topic.title.replace(/: advanced$/, `: ${difficulty}`);
+}
+
+function buildQuestions(topic: Topic, difficulty: Difficulty): Question[] {
   if (topic.slug === "transitions") {
     return [
       q("The first map was accurate for coastal areas. _____, it left the interior almost blank because surveyors had not yet traveled there.", ["However", "For example", "Similarly", "Therefore"], 0),
@@ -90,12 +108,13 @@ function buildQuestions(topic: Topic): Question[] {
 }
 
 export default function WritingPracticePage() {
+  const [activeDifficulty, setActiveDifficulty] = useState<Difficulty | null>(null);
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [confirmedAnswers, setConfirmedAnswers] = useState<(number | null)[]>([]);
 
-  const questions = useMemo(() => (activeTopic ? buildQuestions(activeTopic) : []), [activeTopic]);
+  const questions = useMemo(() => (activeTopic && activeDifficulty ? buildQuestions(activeTopic, activeDifficulty) : []), [activeTopic, activeDifficulty]);
   const currentQuestion = questions[questionIndex];
   const confirmedAnswer = confirmedAnswers[questionIndex];
   const score = confirmedAnswers.reduce<number>((total, answer, index) => total + (answer === questions[index]?.answerIndex ? 1 : 0), 0);
@@ -140,14 +159,52 @@ export default function WritingPracticePage() {
           <ArrowLeft size={16} /> Practice areas
         </Link>
 
-        {!activeTopic ? (
+        {!activeDifficulty ? (
           <>
             <div className="mt-8 border-b border-white/10 pb-10">
               <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">SAT Writing practice</p>
-              <h1 className="mt-5 max-w-5xl text-5xl font-light leading-none md:text-7xl">Advanced Writing by question type.</h1>
+              <h1 className="mt-5 max-w-5xl text-5xl font-light leading-none md:text-7xl">Choose your Writing difficulty first.</h1>
               <p className="mt-6 max-w-3xl text-lg font-light leading-8 text-white/50">
-                Only advanced drills. Each topic has 5 original SAT-style questions and only correct or wrong feedback.
+                Pick Foundations, Medium, or Advanced, then train the exact Writing question type.
               </p>
+            </div>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {difficulties.map((difficulty) => (
+                <button
+                  className="group min-h-[260px] border border-white/10 bg-white/[0.025] p-6 text-left transition-colors hover:border-white/35 hover:bg-white hover:text-black"
+                  key={difficulty.key}
+                  onClick={() => setActiveDifficulty(difficulty.key)}
+                  type="button"
+                >
+                  <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/35 group-hover:text-black/40">Difficulty</p>
+                  <h2 className="mt-6 text-4xl font-light">{difficulty.title}</h2>
+                  <p className="mt-5 text-base leading-7 text-white/48 group-hover:text-black/58">{difficulty.description}</p>
+                  <div className="mt-8 flex items-center justify-between border border-white/10 px-4 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 group-hover:border-black/15 group-hover:text-black">
+                    Choose {difficulty.title} <ArrowRight size={17} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : !activeTopic ? (
+          <>
+            <div className="mt-8 border-b border-white/10 pb-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">SAT Writing practice</p>
+              <h1 className="mt-5 max-w-5xl text-5xl font-light leading-none md:text-7xl">{difficultyLabel[activeDifficulty]} Writing by question type.</h1>
+              <p className="mt-6 max-w-3xl text-lg font-light leading-8 text-white/50">
+                Each topic has 5 original SAT-style questions and only correct or wrong feedback.
+              </p>
+              <button
+                className="mt-6 border border-white/15 px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/60 hover:border-white/35 hover:text-white"
+                onClick={() => {
+                  setActiveDifficulty(null);
+                  setActiveTopic(null);
+                }}
+                type="button"
+              >
+                Change difficulty
+              </button>
             </div>
 
             <div className="mt-8 grid gap-6">
@@ -165,8 +222,8 @@ export default function WritingPracticePage() {
                   <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     {domainTopics.map((topic) => (
                       <button className="group min-h-[170px] border border-white/10 bg-black/20 p-4 text-left transition-colors hover:border-white/35 hover:bg-white hover:text-black" key={topic.slug} onClick={() => startTopic(topic)} type="button">
-                        <p className="text-[10px] font-black uppercase tracking-[0.26em] text-white/35 group-hover:text-black/40">Advanced · 5 questions</p>
-                        <h3 className="mt-4 text-xl font-light leading-tight">{topic.title}</h3>
+                        <p className="text-[10px] font-black uppercase tracking-[0.26em] text-white/35 group-hover:text-black/40">{difficultyLabel[activeDifficulty]} · 5 questions</p>
+                        <h3 className="mt-4 text-xl font-light leading-tight">{topicTitle(topic, activeDifficulty)}</h3>
                         <p className="mt-3 text-sm leading-6 text-white/42 group-hover:text-black/55">{topic.focus}</p>
                         <div className="mt-5 flex items-center justify-between border border-white/10 px-3 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/60 group-hover:border-black/15 group-hover:text-black">
                           Start <ArrowRight size={16} />
@@ -182,7 +239,7 @@ export default function WritingPracticePage() {
           <section className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
             <aside className="border border-white/10 bg-white/[0.025] p-5">
               <p className="text-[10px] font-black uppercase tracking-[0.36em] text-white/38">{activeTopic.domain}</p>
-              <h1 className="mt-4 text-3xl font-light leading-tight">{activeTopic.title}</h1>
+              <h1 className="mt-4 text-3xl font-light leading-tight">{topicTitle(activeTopic, activeDifficulty)}</h1>
               <div className="mt-6 grid grid-cols-5 gap-2">
                 {questions.map((item, index) => {
                   const answer = confirmedAnswers[index];
@@ -197,6 +254,9 @@ export default function WritingPracticePage() {
               <button className="mt-6 w-full border border-white/15 px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 hover:border-white/35 hover:text-white" onClick={() => setActiveTopic(null)} type="button">
                 Change topic
               </button>
+              <button className="mt-3 w-full border border-white/15 px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 hover:border-white/35 hover:text-white" onClick={() => { setActiveDifficulty(null); setActiveTopic(null); }} type="button">
+                Change difficulty
+              </button>
             </aside>
 
             <div className="border border-white/10 bg-white/[0.035] p-5 md:p-8">
@@ -204,7 +264,7 @@ export default function WritingPracticePage() {
                 <div className="flex min-h-[430px] flex-col justify-center">
                   <p className="text-[10px] font-black uppercase tracking-[0.36em] text-white/45">Set complete</p>
                   <h2 className="mt-5 text-5xl font-light">Score: {score}/5</h2>
-                  <p className="mt-5 max-w-2xl text-lg font-light leading-8 text-white/50">This advanced Writing set is finished.</p>
+                  <p className="mt-5 max-w-2xl text-lg font-light leading-8 text-white/50">This {activeDifficulty} Writing set is finished.</p>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <button className="border border-white bg-white px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-black" onClick={() => startTopic(activeTopic)} type="button">Repeat topic</button>
                     <button className="border border-white/15 px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70" onClick={() => setActiveTopic(null)} type="button">All topics</button>
