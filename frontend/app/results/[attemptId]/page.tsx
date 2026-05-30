@@ -24,6 +24,7 @@ import {
   Download,
   Lightbulb,
   RefreshCcw,
+  Route,
   Target,
   Timer,
   Trophy,
@@ -395,27 +396,99 @@ export default function ResultsPage() {
 }
 
 function ResultsUnavailableNotice() {
+  const previewItems = [
+    {
+      icon: BarChart3,
+      title: "Score breakdown",
+      text: "Overall score, Reading and Writing score, Math score, and topic accuracy."
+    },
+    {
+      icon: XCircle,
+      title: "Mistake map",
+      text: "Wrong answers grouped by section, question type, trap pattern, and timing pressure."
+    },
+    {
+      icon: Route,
+      title: "Personal study route",
+      text: "A focused curriculum that turns the diagnostic result into daily practice priorities."
+    }
+  ];
+
   return (
     <main className="min-h-screen bg-[#101112] text-white">
       <LuxuryNavbar />
-      <section className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-5xl place-items-center px-5 py-16">
-        <div className="w-full max-w-2xl border border-white/12 bg-white/[0.035] p-8 text-center shadow-[0_30px_90px_rgba(0,0,0,0.38)] md:p-12">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center border border-yellow-200/25 bg-yellow-200/10 text-yellow-100">
+
+      <section className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl gap-8 px-5 py-14 md:px-8 lg:grid-cols-[1fr_470px] lg:items-center">
+        <div>
+          <div className="flex h-16 w-16 items-center justify-center border border-yellow-200/25 bg-yellow-200/10 text-yellow-100">
             <CircleAlert size={30} />
           </div>
-          <p className="mt-8 text-[10px] font-black uppercase tracking-[0.42em] text-white/42">Results unavailable</p>
-          <h1 className="mt-5 text-4xl font-light leading-tight text-white md:text-5xl">
-            Your SAT mock test has not been taken yet.
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base font-light leading-7 text-white/55">
-            Score reports become available after a student completes a SAT mock test. Register first, take the mock test, and your results will appear here automatically.
+          <p className="mt-8 text-[10px] font-black uppercase tracking-[0.42em] text-white/42">
+            Results unavailable
           </p>
+          <h1 className="mt-5 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
+            Take the diagnostic first. Then your report appears here.
+          </h1>
+          <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/55">
+            This page is reserved for completed SAT mock tests. After the diagnostic, SATTEST.UZ will show your score, mistakes, weak topics, timing pressure, and the next practice route.
+          </p>
+
+          <div className="mt-9 grid gap-3 sm:grid-cols-3">
+            {["Create account", "Take mock test", "Open report"].map((step, index) => (
+              <div className="border border-white/10 bg-white/[0.035] p-4" key={step}>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/35">Step {index + 1}</p>
+                <p className="mt-3 text-lg font-light text-white">{step}</p>
+              </div>
+            ))}
+          </div>
+
           <Link
-            className="mt-8 inline-flex h-13 items-center gap-3 border border-white bg-white px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
+            className="mt-9 inline-flex h-14 items-center gap-4 border border-white bg-white px-7 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
             href="/register"
           >
-            Register to take SAT mock test <ArrowRight size={18} />
+            Start diagnostic mock test <ArrowRight size={18} />
           </Link>
+        </div>
+
+        <div className="border border-white/12 bg-white/[0.035] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.38)]">
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/42">What will appear here</p>
+          <div className="mt-5 grid gap-3">
+            {previewItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div className="border border-white/10 bg-black/20 p-4" key={item.title}>
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/10 bg-black/25 text-white/65">
+                      <Icon size={20} />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-light text-white">{item.title}</h2>
+                      <p className="mt-2 text-sm font-light leading-6 text-white/48">{item.text}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-5 border border-white/10 bg-black/20 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/35">Report preview</p>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+              {[
+                ["Overall", "—"],
+                ["R&W", "—"],
+                ["Math", "—"]
+              ].map(([label, value]) => (
+                <div className="border border-white/10 p-3" key={label}>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">{label}</p>
+                  <p className="mt-2 text-3xl font-light text-white">{value}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-sm font-light leading-6 text-white/45">
+              Once the mock test is submitted, these empty values become your real diagnostic scores and report.
+            </p>
+          </div>
         </div>
       </section>
     </main>
