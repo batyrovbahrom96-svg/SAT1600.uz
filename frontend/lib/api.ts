@@ -38,14 +38,21 @@ export type Question = {
   choices: { label: string; text: string }[];
 };
 
-export function getToken() {
+function getSafeStorage() {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("sat1600_token");
+  try {
+    return window.localStorage ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function getToken() {
+  return getSafeStorage()?.getItem("sat1600_token") ?? null;
 }
 
 export function getStudentName() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("sat1600_full_name");
+  return getSafeStorage()?.getItem("sat1600_full_name") ?? null;
 }
 
 export class ApiError extends Error {
@@ -111,15 +118,20 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 }
 
 export function saveAuth(token: string, fullName?: string | null) {
-  localStorage.setItem("sat1600_token", token);
+  const storage = getSafeStorage();
+  if (!storage) return;
+  storage.setItem("sat1600_token", token);
   if (fullName) {
-    localStorage.setItem("sat1600_full_name", fullName);
+    storage.setItem("sat1600_full_name", fullName);
   }
   window.dispatchEvent(new Event("sattest:auth-change"));
 }
 
 export function clearAuth() {
-  localStorage.removeItem("sat1600_token");
-  localStorage.removeItem("sat1600_full_name");
-  window.dispatchEvent(new Event("sattest:auth-change"));
+  const storage = getSafeStorage();
+  storage?.removeItem("sat1600_token");
+  storage?.removeItem("sat1600_full_name");
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("sattest:auth-change"));
+  }
 }

@@ -2,7 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpenText, Calculator, LockKeyhole, PenLine, UserPlus } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpenText,
+  Calculator,
+  Crown,
+  LockKeyhole,
+  PenLine,
+  Star,
+  UserPlus,
+  Zap
+} from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { getToken } from "@/lib/api";
 
@@ -26,6 +36,153 @@ const practiceSections = [
     href: "/practice/math"
   }
 ];
+
+type MasteryStatus = "mastered" | "proficient" | "familiar" | "attempted" | "not-started" | "quiz" | "unit-test";
+
+type ProgressUnit = {
+  title: string;
+  note?: string;
+  statuses: MasteryStatus[];
+};
+
+const masteryLegend: { label: string; status: MasteryStatus }[] = [
+  { label: "Mastered", status: "mastered" },
+  { label: "Proficient", status: "proficient" },
+  { label: "Familiar", status: "familiar" },
+  { label: "Attempted", status: "attempted" },
+  { label: "Not started", status: "not-started" },
+  { label: "Quiz", status: "quiz" },
+  { label: "Unit test", status: "unit-test" }
+];
+
+const progressTables = [
+  {
+    subject: "SAT Reading and Writing",
+    mastery: 87,
+    challenge: 77,
+    units: [
+      { title: "Unit 1", note: "Diagnostic orientation", statuses: ["not-started"] },
+      { title: "Unit 2", note: "Foundations: Information and Ideas", statuses: ["mastered", "mastered", "proficient", "unit-test"] },
+      { title: "Unit 3", note: "Foundations: Craft and Structure", statuses: ["mastered", "proficient", "mastered", "unit-test"] },
+      { title: "Unit 4", note: "Foundations: Expression and Conventions", statuses: ["familiar", "mastered", "mastered", "unit-test"] },
+      { title: "Unit 5", note: "Medium: Information and Ideas", statuses: ["attempted", "familiar", "mastered", "mastered", "unit-test"] },
+      { title: "Unit 6", note: "Medium: Craft and Structure", statuses: ["proficient", "mastered", "mastered", "unit-test"] },
+      { title: "Unit 7", note: "Medium: Expression and Conventions", statuses: ["proficient", "mastered", "mastered", "familiar", "unit-test"] },
+      { title: "Unit 8", note: "Advanced: Information and Ideas", statuses: ["attempted", "mastered", "mastered", "mastered", "unit-test"] },
+      { title: "Unit 9", note: "Advanced: Craft and Structure", statuses: ["proficient", "proficient", "mastered", "unit-test"] },
+      { title: "Unit 10", note: "Advanced: Expression and Conventions", statuses: ["mastered", "proficient", "mastered", "proficient", "unit-test"] },
+      {
+        title: "Unit 11",
+        note: "Full Reading and Writing section test",
+        statuses: ["mastered", "mastered", "quiz", "mastered", "proficient", "quiz", "mastered", "unit-test"]
+      }
+    ]
+  },
+  {
+    subject: "SAT Math",
+    mastery: 64,
+    challenge: 68,
+    units: [
+      { title: "Unit 1", note: "Diagnostic orientation", statuses: ["not-started"] },
+      { title: "Unit 2", note: "Foundations: Algebra", statuses: ["familiar", "proficient", "quiz", "mastered", "unit-test"] },
+      { title: "Unit 3", note: "Foundations: Problem Solving and Data Analysis", statuses: ["attempted", "familiar", "quiz", "proficient", "unit-test"] },
+      { title: "Unit 4", note: "Foundations: Advanced Math", statuses: ["attempted", "not-started", "quiz", "familiar", "unit-test"] },
+      { title: "Unit 5", note: "Foundations: Geometry and Trigonometry", statuses: ["not-started", "attempted", "quiz", "familiar", "unit-test"] },
+      { title: "Unit 6", note: "Medium: Algebra", statuses: ["proficient", "familiar", "quiz", "mastered", "unit-test"] },
+      { title: "Unit 7", note: "Medium: Problem Solving and Data Analysis", statuses: ["familiar", "proficient", "quiz", "proficient", "unit-test"] },
+      { title: "Unit 8", note: "Medium: Advanced Math", statuses: ["attempted", "familiar", "quiz", "proficient", "unit-test"] },
+      { title: "Unit 9", note: "Medium: Geometry and Trigonometry", statuses: ["not-started", "attempted", "quiz", "familiar", "unit-test"] },
+      { title: "Unit 10", note: "Advanced: Algebra", statuses: ["proficient", "quiz", "familiar", "mastered", "unit-test"] },
+      { title: "Unit 11", note: "Advanced: Problem Solving and Data Analysis", statuses: ["attempted", "quiz", "familiar", "proficient", "unit-test"] },
+      { title: "Unit 12", note: "Advanced: Advanced Math", statuses: ["not-started", "quiz", "attempted", "familiar", "unit-test"] },
+      { title: "Unit 13", note: "Advanced: Geometry and Trigonometry", statuses: ["not-started", "quiz", "attempted", "unit-test"] },
+      { title: "Unit 14", note: "Full Math section test", statuses: ["quiz", "familiar", "proficient", "quiz", "unit-test"] }
+    ]
+  }
+] satisfies {
+  subject: string;
+  mastery: number;
+  challenge: number;
+  units: ProgressUnit[];
+}[];
+
+const statusClass: Record<MasteryStatus, string> = {
+  mastered: "border-[#6d4bb4] bg-[#6d4bb4] text-white",
+  proficient: "border-[#9089bf] bg-[#9089bf] text-white",
+  familiar: "border-[#df8507] bg-[#df8507] text-white",
+  attempted: "border-[#c76324] bg-transparent text-[#f6b08c]",
+  "not-started": "border-white/35 bg-transparent text-transparent",
+  quiz: "border-white/10 bg-white/10 text-white/70",
+  "unit-test": "border-white/10 bg-white/10 text-white/70"
+};
+
+function MasteryMark({ status }: { status: MasteryStatus }) {
+  return (
+    <span
+      aria-label={status.replace("-", " ")}
+      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[5px] border ${statusClass[status]}`}
+      title={status.replace("-", " ")}
+    >
+      {status === "mastered" ? <Crown size={16} fill="currentColor" /> : null}
+      {status === "quiz" ? <Zap size={16} fill="currentColor" /> : null}
+      {status === "unit-test" ? <Star size={16} fill="currentColor" /> : null}
+    </span>
+  );
+}
+
+function ProgressTable({ table }: { table: (typeof progressTables)[number] }) {
+  return (
+    <article className="border border-white/10 bg-white/[0.035] p-5">
+      <div className="flex flex-col gap-5 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38">Course mastery</p>
+          <h2 className="mt-3 text-3xl font-light text-white">{table.subject}</h2>
+        </div>
+        <div className="text-left sm:text-right">
+          <p className="text-4xl font-light text-white">{table.mastery}%</p>
+          <p className="mt-1 text-xs font-light text-white/42">in process</p>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3">
+        {masteryLegend.map((item) => (
+          <div className="flex items-center gap-2 text-sm text-white/62" key={`${table.subject}-${item.status}`}>
+            <MasteryMark status={item.status} />
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-7 grid gap-x-8 lg:grid-cols-2">
+        {table.units.map((unit) => (
+          <div className="grid grid-cols-[72px_1fr] items-center gap-3 border-t border-white/10 py-4" key={`${table.subject}-${unit.title}`}>
+            <p className="text-sm font-black text-white">{unit.title}</p>
+            <div>
+              <div className="flex flex-wrap gap-2">
+                {unit.statuses.map((status, index) => (
+                  <MasteryMark key={`${unit.title}-${status}-${index}`} status={status} />
+                ))}
+              </div>
+              {unit.note ? <p className="mt-2 text-xs font-light leading-5 text-white/42">{unit.note}</p> : null}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 border-t border-white/10 pt-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/38">Course challenge</p>
+            <p className="mt-2 text-lg font-light text-white">Current challenge score: {table.challenge}%</p>
+          </div>
+          <p className="max-w-sm text-sm font-light leading-6 text-white/48">
+            Finish weak units, then retake the section challenge to move more skills into mastered status.
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export default function PracticeAccessPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -120,6 +277,24 @@ export default function PracticeAccessPage() {
               );
             })}
           </div>
+
+          <section className="mt-14 border-t border-white/10 pt-10">
+            <div className="max-w-4xl">
+              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Progress in process</p>
+              <h2 className="mt-5 text-4xl font-light leading-tight text-white md:text-5xl">
+                Track mastery for both SAT subjects.
+              </h2>
+              <p className="mt-5 max-w-2xl text-base font-light leading-7 text-white/48">
+                Every quiz, topic drill, and section test moves a unit from not started to mastered, so students can see exactly where improvement is happening.
+              </p>
+            </div>
+
+            <div className="mt-7 grid gap-6 xl:grid-cols-2">
+              {progressTables.map((table) => (
+                <ProgressTable key={table.subject} table={table} />
+              ))}
+            </div>
+          </section>
         </section>
       </main>
     );
