@@ -12,7 +12,7 @@ export function LuxuryNavbar() {
     { label: "Mock Test", href: "/mock-test" },
     { label: "Practice", href: "/practice" },
     { label: "Results", href: "/results/demo" },
-    { label: "My 1400+", href: "/dashboard" },
+    { label: "My 1400+", href: "/my-1400" },
     { label: "Pricing", href: "/#pricing" }
   ];
 
