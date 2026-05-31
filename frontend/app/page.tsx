@@ -57,15 +57,16 @@ const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
 const skipHomeIntroEvent = "sattest:skip-home-intro";
 const partnerLogos = [
-  { logo: "/assets/partners/khan-academy.svg", name: "Khan Academy" },
-  { logo: "/assets/partners/college-board.svg", name: "College Board" },
-  { logo: "/assets/partners/sat.svg", name: "SAT Exam" },
-  { logo: "/assets/partners/british-council.svg", name: "British Council" },
-  { logo: "/assets/partners/idp.svg", name: "IELTS IDP" },
-  { logo: "/assets/partners/mr-doniyor.svg", name: "Mr. Doniyor School" },
-  { logo: "/assets/partners/result.svg", name: "Result Learning Center" },
-  { logo: "/assets/partners/thompson.svg", name: "Thompson Learning Center" },
-  { logo: "/assets/partners/azamath.svg", name: "AzaMath" }
+  { logo: "/assets/partners/khan-academy.jpg", name: "Khan Academy" },
+  { logo: "/assets/partners/the%20college%20board.png", name: "College Board" },
+  { logo: "/assets/partners/SAT.png", name: "SAT Exam" },
+  { logo: "/assets/partners/british%20council.png", name: "British Council" },
+  { logo: "/assets/partners/mister%20doniyor.webp", name: "Mr. Doniyor School" },
+  { logo: "/assets/partners/result-logo.jpg", name: "Result Learning Center" },
+  { logo: "/assets/partners/Thompson.jpg", name: "Thompson Learning Center" },
+  { logo: "/assets/partners/Azamath.jpg", name: "AzaMath" },
+  { logo: "/assets/partners/Cambridge%20Learning%20Center.png", name: "Cambridge Learning Center" },
+  { logo: "/assets/partners/Richmond%20School.webp", name: "Richmond School" }
 ];
 
 function shouldSkipHomeIntro() {
