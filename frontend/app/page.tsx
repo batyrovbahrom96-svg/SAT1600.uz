@@ -57,16 +57,16 @@ const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
 const skipHomeIntroEvent = "sattest:skip-home-intro";
 const partnerLogos = [
-  { logo: "/assets/partners/khan-academy.jpg", name: "Khan Academy" },
-  { logo: "/assets/partners/the%20college%20board.png", name: "College Board" },
+  { logo: "/assets/partners/khan-academy6250.jpg", name: "Khan Academy" },
+  { logo: "/assets/partners/college-board-vector-logo.png", name: "College Board" },
   { logo: "/assets/partners/SAT.png", name: "SAT Exam" },
   { logo: "/assets/partners/british%20council.png", name: "British Council" },
   { logo: "/assets/partners/mister%20doniyor.webp", name: "Mr. Doniyor School" },
   { logo: "/assets/partners/result-logo.jpg", name: "Result Learning Center" },
   { logo: "/assets/partners/Thompson.jpg", name: "Thompson Learning Center" },
-  { logo: "/assets/partners/Azamath.jpg", name: "AzaMath" },
-  { logo: "/assets/partners/Cambridge%20Learning%20Center.png", name: "Cambridge Learning Center" },
-  { logo: "/assets/partners/Richmond%20School.webp", name: "Richmond School" }
+  { logo: "/assets/partners/Screenshot%202026-05-31%20at%2022.26.00.png", name: "AzaMath" },
+  { logo: "/assets/partners/Cambridge%20Learning%20Center.jpg", name: "Cambridge Learning Center" },
+  { logo: "/assets/partners/Richmond%20School.png", name: "Richmond School" }
 ];
 
 function shouldSkipHomeIntro() {
