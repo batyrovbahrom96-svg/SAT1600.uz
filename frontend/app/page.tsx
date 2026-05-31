@@ -56,6 +56,11 @@ const transitionVideoByRoute: Record<string, (typeof videoSources)[number]> = {
 const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
 const skipHomeIntroEvent = "sattest:skip-home-intro";
+const partnerLogos = [
+  { mark: "KA", name: "Khan Academy" },
+  { mark: "CB", name: "College Board" },
+  { mark: "SAT", name: "SAT Exam" }
+];
 
 function shouldSkipHomeIntro() {
   if (typeof window === "undefined") return false;
@@ -397,6 +402,18 @@ export default function Home() {
         </div>
       ) : null}
       <LuxuryNavbar />
+
+      <section className="partner-marquee" aria-label="SAT learning and exam partners">
+        <p className="partner-marquee__label">Trusted SAT learning ecosystem</p>
+        <div className="partner-marquee__track" aria-hidden="true">
+          {[...partnerLogos, ...partnerLogos, ...partnerLogos, ...partnerLogos].map((partner, index) => (
+            <span className="partner-marquee__item" key={`${partner.name}-${index}`}>
+              <span className="partner-marquee__mark">{partner.mark}</span>
+              <span>{partner.name}</span>
+            </span>
+          ))}
+        </div>
+      </section>
 
       <div className="nex-hero-stage">
         <div className="nex-backgrounds" aria-hidden="true">

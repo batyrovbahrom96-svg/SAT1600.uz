@@ -538,6 +538,111 @@ button, input {
   isolation: isolate;
 }
 
+.partner-marquee {
+  position: relative;
+  z-index: 12;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.98), rgba(16, 17, 18, 0.96) 48%, rgba(0, 0, 0, 0.98)),
+    #050505;
+  padding: 18px 0 20px;
+  color: #fff;
+}
+
+.partner-marquee::before,
+.partner-marquee::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 18vw;
+  pointer-events: none;
+}
+
+.partner-marquee::before {
+  left: 0;
+  background: linear-gradient(90deg, #050505 0%, rgba(5, 5, 5, 0) 100%);
+}
+
+.partner-marquee::after {
+  right: 0;
+  background: linear-gradient(270deg, #050505 0%, rgba(5, 5, 5, 0) 100%);
+}
+
+.partner-marquee__label {
+  margin-bottom: 14px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.partner-marquee__track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 46px;
+  padding-left: 46px;
+  animation: partnerMarqueeSlide 26s linear infinite;
+  will-change: transform;
+}
+
+.partner-marquee__item {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  font-size: clamp(20px, 2.1vw, 34px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.12);
+}
+
+.partner-marquee__item::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin-left: 46px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.partner-marquee__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+@keyframes partnerMarqueeSlide {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
 .nex-hero-stage::after {
   content: "";
   position: absolute;
