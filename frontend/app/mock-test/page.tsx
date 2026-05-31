@@ -25,6 +25,7 @@ export default function MockTestAccessPage() {
   const [results, setResults] = useState<Results | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [message, setMessage] = useState("");
+  const [preTestStep, setPreTestStep] = useState<"dashboard" | "instructions" | "preparing">("dashboard");
   const latestAttemptId = history?.score_history.at(-1)?.attempt_id;
   const diagnosticTest = tests[0];
 
@@ -61,12 +62,28 @@ export default function MockTestAccessPage() {
 
   async function startDiagnostic() {
     if (!diagnosticTest) return;
+    setPreTestStep("preparing");
+    setMessage("");
+    const startedAt = Date.now();
     try {
       const result = await api<{ attempt_id: string }>(`/api/tests/${diagnosticTest.id}/attempts`, { method: "POST" });
+      const remainingDelay = Math.max(1400 - (Date.now() - startedAt), 0);
+      if (remainingDelay) {
+        await new Promise((resolve) => setTimeout(resolve, remainingDelay));
+      }
       router.push(`/test/${result.attempt_id}`);
     } catch (error) {
+      setPreTestStep("dashboard");
       setMessage(error instanceof Error ? error.message : "Unable to start diagnostic mock test.");
     }
+  }
+
+  if (isLoggedIn && preTestStep === "instructions") {
+    return <DiagnosticInstructions onBack={() => setPreTestStep("dashboard")} onContinue={startDiagnostic} />;
+  }
+
+  if (isLoggedIn && preTestStep === "preparing") {
+    return <PreparingDiagnosticScreen />;
   }
 
   if (isLoggedIn) {
@@ -116,7 +133,7 @@ export default function MockTestAccessPage() {
               <button
                 className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/10 disabled:text-white/35"
                 disabled={!diagnosticTest}
-                onClick={startDiagnostic}
+                onClick={() => setPreTestStep("instructions")}
                 type="button"
               >
                 {results ? "Retake Diagnostic" : "Start Diagnostic"} <RotateCcw size={18} />
@@ -183,5 +200,99 @@ function ScoreMetric({ label, value }: { label: string; value: number }) {
       <div className="text-[10px] font-black uppercase tracking-[0.28em] text-white/38">{label}</div>
       <div className="mt-3 text-5xl font-light text-white">{value}</div>
     </div>
+  );
+}
+
+function DiagnosticInstructions({ onBack, onContinue }: { onBack: () => void; onContinue: () => void }) {
+  return (
+    <main className="min-h-screen bg-[#f6f6f4] px-5 py-10 text-[#202124]">
+      <section className="mx-auto max-w-4xl">
+        <h1 className="text-center text-5xl font-light leading-none md:text-6xl">SAT Diagnostic Mock Test</h1>
+
+        <div className="mt-10 rounded-2xl bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] md:p-12">
+          <div className="grid gap-9">
+            <InstructionBlock
+              title="Timing"
+              text="This diagnostic is timed like a real Digital SAT. Keep one browser tab open, stay focused, and answer each module before the timer ends."
+            />
+            <InstructionBlock
+              title="Scores"
+              text="When you finish, SATTEST.UZ saves your overall score, Reading and Writing score, Math score, missed questions, and weak topics."
+            />
+            <InstructionBlock
+              title="Personal 1400+ route"
+              text="Your report becomes the starting point for My 1400+: daily study hours, priority skills, and practice tasks based on your own mistakes."
+            />
+            <div className="flex gap-5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#eeeeec] text-[#202124]">
+                <LockKeyhole size={22} />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold">Test mode</h2>
+                <p className="mt-3 max-w-2xl text-xl leading-8 text-[#202124]/82">
+                  Do not refresh the page or close the browser during the test. If the test is interrupted, you may need to start again.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-3 sm:grid-cols-[1fr_2fr]">
+            <button
+              className="h-14 border border-black/20 bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-black hover:text-white"
+              onClick={onBack}
+              type="button"
+            >
+              Back
+            </button>
+            <button
+              className="flex h-14 items-center justify-between bg-black px-6 text-xs font-black uppercase tracking-[0.22em] text-white transition-colors hover:bg-black/82"
+              onClick={onContinue}
+              type="button"
+            >
+              Continue to diagnostic <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function InstructionBlock({ title, text }: { title: string; text: string }) {
+  return (
+    <div>
+      <h2 className="text-3xl font-bold">{title}</h2>
+      <p className="mt-3 max-w-2xl text-xl leading-8 text-[#202124]/82">{text}</p>
+    </div>
+  );
+}
+
+function PreparingDiagnosticScreen() {
+  return (
+    <main className="min-h-screen bg-[#f6f6f4] px-5 py-10 text-[#202124]">
+      <section className="mx-auto max-w-5xl">
+        <h1 className="text-5xl font-light leading-none md:text-6xl">We're preparing your SAT diagnostic mock test</h1>
+
+        <div className="mt-16 overflow-hidden rounded-2xl bg-white shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
+          <div className="relative flex min-h-[480px] flex-col items-center justify-center px-8 py-12 text-center">
+            <div className="absolute left-0 top-24 h-20 w-56 rounded-r-full bg-[#bfeffa]" />
+            <div className="absolute left-28 top-36 h-24 w-72 rounded-full bg-[#d9f6fb]" />
+            <div className="relative h-56 w-40">
+              <div className="absolute left-4 right-4 top-0 h-8 border-4 border-[#555] bg-[#9d9d9d]" />
+              <div className="absolute left-6 right-6 top-7 h-44 rounded-b-[70px] rounded-t-[70px] border-4 border-[#666] bg-[#c9f4ff]/70" />
+              <div className="absolute left-9 right-9 top-12 h-16 rounded-b-[52px] bg-[#ff6846]" />
+              <div className="absolute left-9 right-9 bottom-11 h-14 rounded-t-[52px] bg-[#ff6846]" />
+              <div className="absolute left-1/2 top-[104px] h-4 w-4 -translate-x-1/2 rounded-full bg-[#ff6846]" />
+              <div className="absolute left-1/2 top-[132px] h-3 w-3 -translate-x-1/2 rounded-full bg-[#ff6846]" />
+              <div className="absolute left-1/2 top-[158px] h-2 w-2 -translate-x-1/2 rounded-full bg-[#ff6846]" />
+              <div className="absolute bottom-0 left-4 right-4 h-8 border-4 border-[#555] bg-[#9d9d9d]" />
+            </div>
+            <p className="mt-12 max-w-3xl text-3xl leading-tight text-[#202124]">
+              This may take up to a minute. Please do not refresh this page or close the browser.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
