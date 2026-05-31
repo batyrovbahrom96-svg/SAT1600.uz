@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 140" role="img" aria-labelledby="title">
+  <title id="title">AzaMath</title>
+  <rect width="560" height="140" fill="none"/>
+  <path d="M25 54 93 23l68 31-68 31z" fill="#fff"/>
+  <path d="M43 62v41l50 21 50-21V62" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M28 60v45" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+  <text x="190" y="83" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="900">AzaMath</text>
+  <circle cx="472" cy="44" r="16" fill="#fff"/>
+  <circle cx="510" cy="36" r="22" fill="#fff"/>
+  <circle cx="486" cy="80" r="12" fill="#fff"/>
+  <circle cx="522" cy="82" r="18" fill="#fff"/>
+</svg>

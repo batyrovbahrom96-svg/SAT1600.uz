@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 140" role="img" aria-labelledby="title">
+  <title id="title">Thompson Learning Center</title>
+  <rect width="430" height="140" fill="none"/>
+  <path d="M62 23h88c15 0 24 8 24 21v49l-68 29-68-29V44c0-13 9-21 24-21z" fill="none" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
+  <text x="72" y="84" fill="#fff" font-family="Georgia, 'Times New Roman', serif" font-size="64" font-weight="900">T</text>
+  <path d="M103 91 173 52" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  <text x="201" y="85" fill="#fff" font-family="Georgia, 'Times New Roman', serif" font-size="42" font-weight="900">THOMPSON</text>
+</svg>

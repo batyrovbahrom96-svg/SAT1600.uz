@@ -57,15 +57,15 @@ const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
 const skipHomeIntroEvent = "sattest:skip-home-intro";
 const partnerLogos = [
-  { mark: "KA", name: "Khan Academy" },
-  { mark: "CB", name: "College Board" },
-  { mark: "SAT", name: "SAT Exam" },
-  { mark: "BC", name: "British Council" },
-  { mark: "IDP", name: "IELTS IDP" },
-  { mark: "MR", name: "Mr. Doniyor School" },
-  { mark: "R", name: "Result Learning Center" },
-  { mark: "T", name: "Thompson Learning Center" },
-  { mark: "AZ", name: "AzaMath" }
+  { logo: "/assets/partners/khan-academy.svg", name: "Khan Academy" },
+  { logo: "/assets/partners/college-board.svg", name: "College Board" },
+  { logo: "/assets/partners/sat.svg", name: "SAT Exam" },
+  { logo: "/assets/partners/british-council.svg", name: "British Council" },
+  { logo: "/assets/partners/idp.svg", name: "IELTS IDP" },
+  { logo: "/assets/partners/mr-doniyor.svg", name: "Mr. Doniyor School" },
+  { logo: "/assets/partners/result.svg", name: "Result Learning Center" },
+  { logo: "/assets/partners/thompson.svg", name: "Thompson Learning Center" },
+  { logo: "/assets/partners/azamath.svg", name: "AzaMath" }
 ];
 
 function shouldSkipHomeIntro() {
@@ -414,8 +414,7 @@ export default function Home() {
         <div className="partner-marquee__track" aria-hidden="true">
           {[...partnerLogos, ...partnerLogos, ...partnerLogos, ...partnerLogos].map((partner, index) => (
             <span className="partner-marquee__item" key={`${partner.name}-${index}`}>
-              <span className="partner-marquee__mark">{partner.mark}</span>
-              <span>{partner.name}</span>
+              <img className="partner-marquee__logo" src={partner.logo} alt={partner.name} />
             </span>
           ))}
         </div>
