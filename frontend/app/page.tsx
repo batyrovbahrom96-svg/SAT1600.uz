@@ -59,7 +59,13 @@ const skipHomeIntroEvent = "sattest:skip-home-intro";
 const partnerLogos = [
   { mark: "KA", name: "Khan Academy" },
   { mark: "CB", name: "College Board" },
-  { mark: "SAT", name: "SAT Exam" }
+  { mark: "SAT", name: "SAT Exam" },
+  { mark: "BC", name: "British Council" },
+  { mark: "IDP", name: "IELTS IDP" },
+  { mark: "MR", name: "Mr. Doniyor School" },
+  { mark: "R", name: "Result Learning Center" },
+  { mark: "T", name: "Thompson Learning Center" },
+  { mark: "AZ", name: "AzaMath" }
 ];
 
 function shouldSkipHomeIntro() {
@@ -404,7 +410,7 @@ export default function Home() {
       <LuxuryNavbar />
 
       <section className="partner-marquee" aria-label="SAT learning and exam partners">
-        <p className="partner-marquee__label">Trusted SAT learning ecosystem</p>
+        <p className="partner-marquee__label">Trusted Our Partners</p>
         <div className="partner-marquee__track" aria-hidden="true">
           {[...partnerLogos, ...partnerLogos, ...partnerLogos, ...partnerLogos].map((partner, index) => (
             <span className="partner-marquee__item" key={`${partner.name}-${index}`}>
