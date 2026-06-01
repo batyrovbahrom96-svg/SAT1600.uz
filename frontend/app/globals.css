@@ -576,11 +576,10 @@ button, input {
 .partner-marquee__label {
   margin-bottom: 22px;
   text-align: center;
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 800;
   line-height: 1.4;
-  letter-spacing: 0.42em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   color: rgba(255, 255, 255, 0.66);
 }
 
