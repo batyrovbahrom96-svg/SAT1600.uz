@@ -13,6 +13,7 @@ export function LuxuryNavbar() {
     { label: "Practice", href: "/practice" },
     { label: "Results", href: "/results/demo" },
     { label: "My 1400+", href: "/my-1400" },
+    { label: "About Us", href: "/about-us" },
     { label: "Pricing", href: "/#pricing" }
   ];
 
