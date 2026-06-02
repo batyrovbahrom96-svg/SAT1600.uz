@@ -87,9 +87,9 @@ const LOWERCASE_WORDS = new Set(["and", "as", "for", "in", "of", "on", "the", "t
 
 const demoResults: Results = {
   attempt_id: "demo",
-  score_total: 1240,
-  score_reading_writing: 620,
-  score_math: 620,
+  score_total: 1320,
+  score_reading_writing: 660,
+  score_math: 660,
   final_score: 0.73,
   topic_accuracy: {
     "Information and Ideas": 0.82,
@@ -98,9 +98,9 @@ const demoResults: Results = {
     "Advanced Math": 0.52,
     "Problem Solving": 0.59
   },
-  weaknesses: ["Algebra", "Functions"],
-  strengths: ["Information and Ideas", "Craft and Structure"],
-  report: "You are close to 1400+, but Algebra and Functions are costing the fastest points. A targeted practice route should come before more random practice.",
+  weaknesses: ["Advanced Math", "Problem Solving"],
+  strengths: ["Information and Ideas", "Algebra"],
+  report: "Focus next on Advanced Math and Problem Solving. Most misses came from algebra setup and unit interpretation traps.",
   questions: [
     {
       id: "demo-1",
@@ -169,6 +169,10 @@ export default function ResultsPage() {
     return () => window.clearTimeout(timer);
   }, [analytics, attemptId, reportResults]);
 
+  if (attemptId === "demo") {
+    return <ResultsUnavailableNotice />;
+  }
+
   if (!reportResults || !analytics) {
     return (
       <main className="min-h-screen bg-[#101112] text-white">
@@ -226,41 +230,6 @@ export default function ResultsPage() {
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_1fr_1fr_1.2fr]">
-          <section className="border border-white/10 bg-white/[0.035] p-6 lg:col-span-4">
-            <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr_0.9fr] lg:items-center">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.36em] text-white/40">Your Score</p>
-                <div className="mt-3 text-7xl font-light leading-none text-white">{reportResults.score_total}</div>
-                <p className="mt-4 text-lg font-light text-white/62">You are ahead of 63% of students.</p>
-              </div>
-              <div className="border-y border-white/10 py-5 lg:border-x lg:border-y-0 lg:px-7 lg:py-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.36em] text-red-200/70">Critical score leak</p>
-                <h2 className="mt-4 text-4xl font-light leading-tight text-white">
-                  You are losing ~120 points due to Algebra mistakes.
-                </h2>
-                <p className="mt-4 text-base font-light leading-7 text-white/55">
-                  With targeted practice, you can reach 1400+ instead of repeating the same missed patterns.
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.36em] text-white/40">Weak Area</p>
-                <div className="mt-4 grid gap-3">
-                  {["Algebra", "Functions"].map((area) => (
-                    <div className="border border-white/10 bg-black/25 px-4 py-3 text-xl font-light text-white" key={area}>
-                      {area}
-                    </div>
-                  ))}
-                </div>
-                <Link
-                  className="mt-5 inline-flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-                  href="/pricing"
-                >
-                  Improve Your Score <ArrowRight size={18} />
-                </Link>
-              </div>
-            </div>
-          </section>
-
           <ScoreCard
             icon={<Trophy size={22} />}
             label="Total SAT score"
