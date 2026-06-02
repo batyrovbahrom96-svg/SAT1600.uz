@@ -14,7 +14,7 @@ export function LuxuryNavbar() {
     { label: "Practice", href: "/practice" },
     { label: "Results", href: "/results/demo" },
     { label: "My 1400+", href: "/my-1400" },
-    { label: "Pricing", href: "/#pricing" }
+    { label: "Pricing", href: "/pricing" }
   ];
 
   useEffect(() => {
