@@ -9,11 +9,11 @@ const skipHomeIntroEvent = "sattest:skip-home-intro";
 export function LuxuryNavbar() {
   const [studentName, setStudentName] = useState<string | null>(null);
   const navItems = [
+    { label: "About Us", href: "/about-us" },
     { label: "Mock Test", href: "/mock-test" },
     { label: "Practice", href: "/practice" },
     { label: "Results", href: "/results/demo" },
     { label: "My 1400+", href: "/my-1400" },
-    { label: "About Us", href: "/about-us" },
     { label: "Pricing", href: "/#pricing" }
   ];
 
