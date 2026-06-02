@@ -411,7 +411,7 @@ export default function Home() {
       <LuxuryNavbar />
 
       <section className="partner-marquee" aria-label="SAT learning and exam partners">
-        <p className="partner-marquee__label">Trusted Our Partners</p>
+        <p className="partner-marquee__label">Our Trusted Partners</p>
         <div className="partner-marquee__track" aria-hidden="true">
           {[...partnerLogos, ...partnerLogos, ...partnerLogos, ...partnerLogos].map((partner, index) => (
             <span className="partner-marquee__item" key={`${partner.name}-${index}`}>
