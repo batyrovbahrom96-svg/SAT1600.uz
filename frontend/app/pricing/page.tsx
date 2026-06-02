@@ -1,0 +1,386 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ArrowRight, Check, Crown, Sparkles, Target, X, Zap } from "lucide-react";
+import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+
+const prices = {
+  pro: "149 000 UZS",
+  elite: "990 000 UZS",
+  intensive: "1 490 000 UZS"
+} as const;
+
+const platformFeatures = [
+  "Unlimited SAT practice by Reading, Writing, and Math",
+  "Full diagnostic analytics after every mock test",
+  "Mistake and weakness targeting by topic",
+  "Personal My 1400+ curriculum route",
+  "Progress tracking for score growth"
+];
+
+const eliteFeatures = [
+  "Everything in SAT Platform Pro",
+  "Personal study roadmap for 1400+",
+  "Weekly strategy and mistake review",
+  "Priority weak-topic practice plan",
+  "Guidance for serious score improvement"
+];
+
+const intensiveFeatures = [
+  "Everything in Elite Program",
+  "One-on-one SAT strategy support",
+  "Custom weekly targets by score gap",
+  "Reading/Writing and Math correction focus",
+  "Best for students with urgent deadlines"
+];
+
+type PlanAction =
+  {
+    href: string;
+    text: string;
+  };
+
+type SelectedPlan = {
+  description: string;
+  label: string;
+  price: string;
+  title: string;
+};
+
+function PriceCard({
+  action,
+  accent,
+  description,
+  features,
+  label,
+  price,
+  title
+}: {
+  action: PlanAction;
+  accent: "light" | "dark" | "gold";
+  description: string;
+  features: string[];
+  label: string;
+  price: string;
+  title: string;
+}) {
+  const isLight = accent === "light";
+  const isGold = accent === "gold";
+
+  return (
+    <article
+      className={[
+        "group relative flex min-h-[620px] flex-col overflow-hidden border p-5 transition-all duration-300",
+        isLight
+          ? "border-white bg-white text-black shadow-[0_30px_80px_rgba(255,255,255,0.08)]"
+          : "border-white/12 bg-white/[0.035] text-white hover:border-white/30",
+        isGold ? "shadow-[0_0_80px_rgba(255,255,255,0.08)]" : ""
+      ].join(" ")}
+    >
+      <div
+        className={[
+          "relative overflow-hidden border p-6",
+          isLight ? "border-black/10 bg-black text-white" : "border-white/12 bg-white/[0.04]"
+        ].join(" ")}
+      >
+        <div
+          className={[
+            "absolute inset-0 opacity-80",
+            isGold
+              ? "bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.22),transparent_30%),linear-gradient(135deg,#151515,#2a2a2a,#0f0f0f)]"
+              : isLight
+                ? "bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.24),transparent_32%),linear-gradient(135deg,#050505,#202020)]"
+                : "bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.14),transparent_28%),linear-gradient(135deg,#191919,#101112)]"
+          ].join(" ")}
+        />
+        <div className="relative">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-white/58">{label}</p>
+            {isGold ? <Crown size={22} /> : <Sparkles size={20} />}
+          </div>
+          <h2 className="mt-5 text-3xl font-light leading-tight md:text-4xl">{title}</h2>
+          <p className="mt-5 text-4xl font-black tracking-tight md:text-5xl">{price}</p>
+          <p className="mt-4 max-w-xl text-base font-light leading-7 text-white/66">{description}</p>
+        </div>
+      </div>
+
+      <ul className="mt-7 grid gap-4">
+        {features.map((feature) => (
+          <li className="flex gap-3 text-base leading-7" key={feature}>
+            <span
+              className={[
+                "mt-1 flex h-6 w-6 shrink-0 items-center justify-center border",
+                isLight ? "border-black/15 bg-black text-white" : "border-white/15 bg-white/5 text-white"
+              ].join(" ")}
+            >
+              <Check size={14} />
+            </span>
+            <span className={isLight ? "text-black/68" : "text-white/68"}>{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      <a
+        className={[
+          "mt-auto flex h-16 items-center justify-between border px-6 text-xs font-black uppercase tracking-[0.24em] transition-colors",
+          isLight
+            ? "border-black bg-black text-white hover:bg-transparent hover:text-black"
+            : "border-white bg-white text-black hover:bg-transparent hover:text-white"
+        ].join(" ")}
+        href={action.href}
+      >
+        {action.text}
+        <ArrowRight size={20} />
+      </a>
+    </article>
+  );
+}
+
+export default function PricingPage() {
+  const [selectedPlan, setSelectedPlan] = useState<SelectedPlan | null>(null);
+
+  function getPlanSelection(plan: string): SelectedPlan | null {
+    if (plan === "pro") {
+      return {
+        description: "The main plan for students who want targeted SAT practice, full analytics, and a personal My 1400+ route.",
+        label: "Most useful",
+        price: `${prices.pro} / month`,
+        title: "SAT Platform Pro"
+      };
+    }
+
+    if (plan === "elite") {
+      return {
+        description: "High-touch preparation for students who need personal structure, strategy, and weekly correction.",
+        label: "Elite program",
+        price: `${prices.elite} / month`,
+        title: "1400+ Elite"
+      };
+    }
+
+    if (plan === "intensive") {
+      return {
+        description: "One-to-one SAT strategy support for families who want individual guidance, deadlines, and close review of weak sections.",
+        label: "Optional intensive",
+        price: `${prices.intensive} / month`,
+        title: "One-to-one SAT correction"
+      };
+    }
+
+    return null;
+  }
+
+  function closePlanPanel() {
+    setSelectedPlan(null);
+    window.history.replaceState(null, "", "/pricing");
+  }
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get("plan");
+
+    if (plan) {
+      setSelectedPlan(getPlanSelection(plan));
+    }
+  }, []);
+
+  return (
+    <main className="min-h-screen bg-[#101112] text-white">
+      <LuxuryNavbar />
+
+      <section className="relative overflow-hidden border-b border-white/10 px-5 py-14 md:px-8 lg:py-18">
+        <div className="pointer-events-none absolute inset-0 opacity-70">
+          <div className="absolute -left-40 top-0 h-[520px] w-[520px] rounded-full border border-white/[0.045]" />
+          <div className="absolute right-[-16rem] top-[-12rem] h-[620px] w-[620px] rounded-full border border-white/[0.06]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_10%,rgba(255,255,255,0.10),transparent_32%),linear-gradient(90deg,rgba(0,0,0,0.92),rgba(16,17,18,0.92))]" />
+        </div>
+
+        <div className="relative mx-auto max-w-7xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">SAT pricing</p>
+          <h1 className="mt-6 max-w-5xl text-5xl font-light leading-none md:text-7xl">
+            Tariffs and prices for serious SAT improvement.
+          </h1>
+          <p className="mt-7 max-w-3xl text-lg font-light leading-8 text-white/52">
+            Start with a diagnostic mock test. Then unlock the practice, analytics, and personal 1400+ route that tells students exactly what to fix next.
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <PriceCard
+            action={{ href: "/mock-test", text: "Start Free" }}
+            accent="dark"
+            description="For students who want to see their real SAT level before choosing a paid route."
+            features={[
+              "1 full diagnostic SAT mock test",
+              "Overall score preview",
+              "Reading/Writing and Math section scores",
+              "Limited mistake preview",
+              "Upgrade when the weak areas are clear"
+            ]}
+            label="Free plan"
+            price="0 UZS"
+            title="Diagnostic Mock"
+          />
+
+          <PriceCard
+            action={{
+              href: "/pricing?plan=pro",
+              text: "Unlock Pro"
+            }}
+            accent="light"
+            description="The main plan for students who want targeted SAT practice and a visible score-growth route."
+            features={platformFeatures}
+            label="Most useful"
+            price={`${prices.pro} / month`}
+            title="SAT Platform Pro"
+          />
+
+          <PriceCard
+            action={{
+              href: "/pricing?plan=elite",
+              text: "Join Elite"
+            }}
+            accent="gold"
+            description="High-touch preparation for students who need personal structure, strategy, and weekly correction."
+            features={eliteFeatures}
+            label="Elite program"
+            price={`${prices.elite} / month`}
+            title="1400+ Elite"
+          />
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+          <article className="border border-white/10 bg-white/[0.035] p-6">
+            <div className="flex h-13 w-13 items-center justify-center border border-white/10 bg-black/20 text-white/72">
+              <Target size={24} />
+            </div>
+            <h2 className="mt-6 text-3xl font-light text-white">Why this pricing works for Tashkent.</h2>
+            <p className="mt-4 text-base font-light leading-7 text-white/52">
+              A student can begin free, understand the pain through the diagnostic report, then choose Pro for practice or Elite for guided improvement. The price is below most offline monthly SAT/IELTS tutoring, while still feeling serious enough to be trusted.
+            </p>
+          </article>
+
+          <article className="border border-white/10 bg-white/[0.035] p-6">
+            <div className="flex items-start justify-between gap-6">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-white/42">Optional intensive</p>
+                <h2 className="mt-4 text-3xl font-light text-white">One-to-one SAT correction</h2>
+                <p className="mt-3 text-base font-light leading-7 text-white/52">
+                  For families who want individual guidance, deadlines, and close review of weak sections.
+                </p>
+              </div>
+              <Zap className="shrink-0 text-white/62" size={28} />
+            </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+              <div>
+                <p className="text-4xl font-black text-white">{prices.intensive}</p>
+                <p className="mt-2 text-sm font-light text-white/46">per month, limited seats</p>
+              </div>
+              <a
+                className="flex h-14 items-center justify-between border border-white bg-white px-5 text-left text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:min-w-[240px]"
+                href="/pricing?plan=intensive"
+              >
+                Apply
+                <ArrowRight size={18} />
+              </a>
+            </div>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {intensiveFeatures.map((feature) => (
+                <li className="flex gap-3 text-sm leading-6 text-white/58" key={feature}>
+                  <Check className="mt-1 shrink-0" size={15} />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </article>
+        </div>
+
+        <section className="mt-6 border border-white/10 bg-black/25 p-6 md:p-8">
+          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.38em] text-white/42">Recommended first step</p>
+              <h2 className="mt-4 max-w-4xl text-4xl font-light leading-tight text-white md:text-5xl">
+                Take one diagnostic. See the score gap. Then choose the plan.
+              </h2>
+            </div>
+            <Link className="flex h-16 min-w-[270px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white" href="/mock-test">
+              Start Mock Test
+              <ArrowRight size={20} />
+            </Link>
+          </div>
+        </section>
+      </section>
+
+      {selectedPlan ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/82 px-5 py-8 backdrop-blur-xl">
+          <div className="relative w-full max-w-5xl border border-white/18 bg-[#101112] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.65)] md:p-8">
+            <button
+              aria-label="Close pricing plan"
+              className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center border border-white/15 bg-black/30 text-white/62 transition-colors hover:border-white hover:text-white"
+              onClick={closePlanPanel}
+              type="button"
+            >
+              <X size={22} />
+            </button>
+
+            <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-stretch">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/42">Selected tariff</p>
+                <h2 className="mt-5 max-w-3xl text-5xl font-light leading-none text-white md:text-6xl">
+                  {selectedPlan.title}
+                </h2>
+                <p className="mt-6 text-4xl font-black text-white">{selectedPlan.price}</p>
+                <p className="mt-5 max-w-2xl text-lg font-light leading-8 text-white/58">{selectedPlan.description}</p>
+
+                <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                  <div className="border border-white/10 bg-white/[0.035] p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">Plan</p>
+                    <p className="mt-3 text-xl text-white">{selectedPlan.label}</p>
+                  </div>
+                  <div className="border border-white/10 bg-white/[0.035] p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">Status</p>
+                    <p className="mt-3 text-xl text-white">Ready</p>
+                  </div>
+                </div>
+              </div>
+
+              <aside className="flex flex-col border border-white/10 bg-white/[0.035] p-5">
+                <Sparkles className="text-white/70" size={26} />
+                <h3 className="mt-5 text-3xl font-light text-white">Activate this plan</h3>
+                <p className="mt-4 text-base font-light leading-7 text-white/54">
+                  Create an account or sign in first. After payment integration is connected, this panel becomes the checkout step.
+                </p>
+                <div className="mt-auto grid gap-3 pt-7">
+                  <a
+                    className="flex h-14 items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white"
+                    href="/register"
+                  >
+                    Create account
+                    <ArrowRight size={18} />
+                  </a>
+                  <a
+                    className="flex h-14 items-center justify-between border border-white/12 bg-black/25 px-5 text-xs font-black uppercase tracking-[0.22em] text-white/70 transition-colors hover:border-white hover:text-white"
+                    href="/login"
+                  >
+                    Sign in
+                    <ArrowRight size={18} />
+                  </a>
+                  <a
+                    className="flex h-14 items-center justify-between border border-white/12 bg-black/25 px-5 text-xs font-black uppercase tracking-[0.22em] text-white/70 transition-colors hover:border-white hover:text-white"
+                    href="/mock-test"
+                  >
+                    Start diagnostic
+                    <ArrowRight size={18} />
+                  </a>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </main>
+  );
+}
