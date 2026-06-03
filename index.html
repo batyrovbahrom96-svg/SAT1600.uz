@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SAT1600.uz Pricing</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#pricing">SAT1600.uz</a>
+      <nav aria-label="Main navigation">
+        <a class="nav-link" href="#pricing">Pricing</a>
+        <a class="nav-link" href="https://t.me/adam232" target="_blank" rel="noreferrer">
+          Founder of SATTEST.UZ
+        </a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="pricing-section" id="pricing" aria-label="Pricing">
+        <div class="section-heading">
+          <p class="eyebrow">Pricing</p>
+          <h1>Choose your SAT route</h1>
+        </div>
+
+        <div class="pricing-grid" id="pricingGrid"></div>
+
+        <section class="system-view" id="systemView" hidden>
+          <div>
+            <p class="eyebrow">Unlocked system</p>
+            <h2 id="activeSystemTitle"></h2>
+            <p id="activeSystemDescription"></p>
+          </div>
+          <div class="module-grid" id="moduleGrid"></div>
+          <button class="secondary-button" id="closeSystemButton" type="button">Back to pricing</button>
+        </section>
+      </section>
+    </main>
+
+    <dialog class="payment-dialog" id="paymentDialog">
+      <form method="dialog" class="dialog-card">
+        <button class="icon-button close-button" value="cancel" aria-label="Close payment form">x</button>
+        <div class="dialog-header">
+          <p class="eyebrow">Paynet payment</p>
+          <h2 id="paymentTitle">Complete payment</h2>
+          <p id="paymentSubtitle"></p>
+        </div>
+
+        <div class="payment-layout">
+          <div class="qr-panel">
+            <img id="paymentQr" alt="Paynet payment QR code" />
+            <p>Scan this QR in Paynet or your banking app, complete payment, then send the receipt in Telegram.</p>
+          </div>
+
+          <div class="steps-panel">
+            <ol>
+              <li>Scan the QR code in Paynet or your banking app and complete the payment.</li>
+              <li>Open Telegram and send the payment screenshot to Founder of SATTEST.UZ.</li>
+              <li>Upload the same screenshot here so this plan can be unlocked.</li>
+            </ol>
+
+            <a class="primary-button" id="telegramButton" target="_blank" rel="noreferrer">Send receipt in Telegram</a>
+
+            <label class="upload-box" for="receiptInput">
+              <span>Payment screenshot</span>
+              <input id="receiptInput" type="file" accept="image/*,.pdf" />
+            </label>
+
+            <button class="success-button" id="unlockButton" type="button" disabled>
+              Receipt sent, unlock plan
+            </button>
+            <p class="small-note" id="unlockNote">Upload the payment screenshot to continue.</p>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
