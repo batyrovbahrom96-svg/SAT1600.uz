@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, Crown, Sparkles, Target, X, Zap } from "lucide-react";
+import { ArrowRight, Check, Crown, Sparkles, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 
 const telegramUsername = "FounderSATTESTUZ";
@@ -13,8 +13,7 @@ const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&
 
 const prices = {
   pro: "149 000 UZS",
-  elite: "990 000 UZS",
-  intensive: "1 490 000 UZS"
+  elite: "990 000 UZS"
 } as const;
 
 const platformFeatures = [
@@ -31,14 +30,6 @@ const eliteFeatures = [
   "Weekly strategy and mistake review",
   "Priority weak-topic practice plan",
   "Guidance for serious score improvement"
-];
-
-const intensiveFeatures = [
-  "Everything in Elite Program",
-  "One-on-one SAT strategy support",
-  "Custom weekly targets by score gap",
-  "Reading/Writing and Math correction focus",
-  "Best for students with urgent deadlines"
 ];
 
 type PlanAction =
@@ -171,15 +162,6 @@ export default function PricingPage() {
       };
     }
 
-    if (plan === "intensive") {
-      return {
-        description: "One-to-one SAT strategy support for families who want individual guidance, deadlines, and close review of weak sections.",
-        label: "Optional intensive",
-        price: `${prices.intensive} / month`,
-        title: "One-to-one SAT correction"
-      };
-    }
-
     return null;
   }
 
@@ -264,52 +246,6 @@ export default function PricingPage() {
             price={`${prices.elite} / month`}
             title="1400+ Elite"
           />
-        </div>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-          <article className="border border-white/10 bg-white/[0.035] p-6">
-            <div className="flex h-13 w-13 items-center justify-center border border-white/10 bg-black/20 text-white/72">
-              <Target size={24} />
-            </div>
-            <h2 className="mt-6 text-3xl font-light text-white">Why this pricing works for Tashkent.</h2>
-            <p className="mt-4 text-base font-light leading-7 text-white/52">
-              A student can begin free, understand the pain through the diagnostic report, then choose Pro for practice or Elite for guided improvement. The price is below most offline monthly SAT/IELTS tutoring, while still feeling serious enough to be trusted.
-            </p>
-          </article>
-
-          <article className="border border-white/10 bg-white/[0.035] p-6">
-            <div className="flex items-start justify-between gap-6">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-white/42">Optional intensive</p>
-                <h2 className="mt-4 text-3xl font-light text-white">One-to-one SAT correction</h2>
-                <p className="mt-3 text-base font-light leading-7 text-white/52">
-                  For families who want individual guidance, deadlines, and close review of weak sections.
-                </p>
-              </div>
-              <Zap className="shrink-0 text-white/62" size={28} />
-            </div>
-            <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-              <div>
-                <p className="text-4xl font-black text-white">{prices.intensive}</p>
-                <p className="mt-2 text-sm font-light text-white/46">per month, limited seats</p>
-              </div>
-              <a
-                className="flex h-14 items-center justify-between border border-white bg-white px-5 text-left text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:min-w-[240px]"
-                href="/pricing?plan=intensive"
-              >
-                Apply
-                <ArrowRight size={18} />
-              </a>
-            </div>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {intensiveFeatures.map((feature) => (
-                <li className="flex gap-3 text-sm leading-6 text-white/58" key={feature}>
-                  <Check className="mt-1 shrink-0" size={15} />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </article>
         </div>
 
         <section className="mt-6 border border-white/10 bg-black/25 p-6 md:p-8">
