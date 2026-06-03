@@ -5,6 +5,12 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Check, Crown, Sparkles, Target, X, Zap } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 
+const telegramUsername = "adam232";
+const telegramDisplayName = "Founder of SATTEST.UZ";
+const paynetQrPayload =
+  "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
+const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(paynetQrPayload)}`;
+
 const prices = {
   pro: "149 000 UZS",
   elite: "990 000 UZS",
@@ -139,6 +145,12 @@ function PriceCard({
 
 export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan | null>(null);
+  const [receiptReady, setReceiptReady] = useState(false);
+
+  function telegramReceiptUrl(plan: SelectedPlan) {
+    const message = `Assalomu alaykum, I paid for ${plan.title}. I will send the payment screenshot now.`;
+    return `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
+  }
 
   function getPlanSelection(plan: string): SelectedPlan | null {
     if (plan === "pro") {
@@ -173,6 +185,7 @@ export default function PricingPage() {
 
   function closePlanPanel() {
     setSelectedPlan(null);
+    setReceiptReady(false);
     window.history.replaceState(null, "", "/pricing");
   }
 
@@ -182,6 +195,7 @@ export default function PricingPage() {
 
     if (plan) {
       setSelectedPlan(getPlanSelection(plan));
+      setReceiptReady(false);
     }
   }, []);
 
@@ -349,32 +363,54 @@ export default function PricingPage() {
 
               <aside className="flex flex-col border border-white/10 bg-white/[0.035] p-5">
                 <Sparkles className="text-white/70" size={26} />
-                <h3 className="mt-5 text-3xl font-light text-white">Activate this plan</h3>
+                <h3 className="mt-5 text-3xl font-light text-white">Pay with Paynet</h3>
                 <p className="mt-4 text-base font-light leading-7 text-white/54">
-                  Create an account or sign in first. After payment integration is connected, this panel becomes the checkout step.
+                  Scan the QR code, complete the payment, then send your receipt to {telegramDisplayName}.
                 </p>
+                <div className="mt-6 border border-white/12 bg-white p-4">
+                  <img
+                    alt="Paynet payment QR code"
+                    className="mx-auto aspect-square w-full max-w-[260px]"
+                    src={paynetQrImage}
+                  />
+                </div>
+                <ol className="mt-5 grid gap-3 text-sm font-light leading-6 text-white/58">
+                  <li>1. Scan this QR in Paynet or your banking app.</li>
+                  <li>2. Complete payment for {selectedPlan.title}.</li>
+                  <li>3. Send the payment screenshot in Telegram.</li>
+                </ol>
                 <div className="mt-auto grid gap-3 pt-7">
                   <a
                     className="flex h-14 items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white"
-                    href="/register"
+                    href={telegramReceiptUrl(selectedPlan)}
+                    rel="noreferrer"
+                    target="_blank"
                   >
-                    Create account
+                    Send receipt
                     <ArrowRight size={18} />
                   </a>
-                  <a
-                    className="flex h-14 items-center justify-between border border-white/12 bg-black/25 px-5 text-xs font-black uppercase tracking-[0.22em] text-white/70 transition-colors hover:border-white hover:text-white"
-                    href="/login"
+                  <label className="grid gap-2 border border-white/12 bg-black/25 p-4 text-xs font-black uppercase tracking-[0.18em] text-white/70">
+                    Upload receipt
+                    <input
+                      accept="image/*,.pdf"
+                      className="text-sm font-medium normal-case tracking-normal text-white/58 file:mr-3 file:border-0 file:bg-white file:px-3 file:py-2 file:text-xs file:font-black file:uppercase file:tracking-[0.14em] file:text-black"
+                      onChange={(event) => setReceiptReady(event.target.files ? event.target.files.length > 0 : false)}
+                      type="file"
+                    />
+                  </label>
+                  <button
+                    className={[
+                      "flex h-14 items-center justify-between border px-5 text-left text-xs font-black uppercase tracking-[0.18em] transition-colors",
+                      receiptReady
+                        ? "border-emerald-400 bg-emerald-400 text-black"
+                        : "cursor-not-allowed border-white/12 bg-black/25 text-white/32"
+                    ].join(" ")}
+                    disabled={!receiptReady}
+                    type="button"
                   >
-                    Sign in
-                    <ArrowRight size={18} />
-                  </a>
-                  <a
-                    className="flex h-14 items-center justify-between border border-white/12 bg-black/25 px-5 text-xs font-black uppercase tracking-[0.22em] text-white/70 transition-colors hover:border-white hover:text-white"
-                    href="/mock-test"
-                  >
-                    Start diagnostic
-                    <ArrowRight size={18} />
-                  </a>
+                    Receipt uploaded
+                    <Check size={18} />
+                  </button>
                 </div>
               </aside>
             </div>
