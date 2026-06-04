@@ -26,28 +26,28 @@ const weeklyTargets = [
     week: "Week 1",
     title: "Repair the score leaks",
     hours: "12.5h",
-    target: "1210 -> 1260",
+    target: "1210 to 1260",
     work: "Theory supervision, weak-topic drills, and one mini module retake."
   },
   {
     week: "Week 2",
     title: "Build accuracy under time",
     hours: "14h",
-    target: "1260 -> 1310",
+    target: "1260 to 1310",
     work: "Timed Reading/Writing sets, Advanced Math blocks, and mistake notebook review."
   },
   {
     week: "Week 3",
     title: "Mixed module pressure",
     hours: "15h",
-    target: "1310 -> 1360",
+    target: "1310 to 1360",
     work: "Full mixed modules, hard-question review, and parent progress update."
   },
   {
     week: "Week 4",
     title: "Mock retake and 1400+ push",
     hours: "16h",
-    target: "1360 -> 1400+",
+    target: "1360 to 1400+",
     work: "Two full mock cycles, final weak-topic sprint, and timing strategy correction."
   }
 ] as const;
@@ -193,7 +193,7 @@ function My1400PreviewDashboard({
               <h2 className="mt-3 text-3xl font-light text-white md:text-4xl">Today: Advanced Math repair</h2>
             </div>
             <div className="border border-emerald-300/25 bg-emerald-300/10 px-4 py-3 text-sm font-semibold text-emerald-100">
-              1210 -> 1400+
+              1210 to 1400+
             </div>
           </div>
 
