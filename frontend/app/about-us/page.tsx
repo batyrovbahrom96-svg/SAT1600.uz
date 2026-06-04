@@ -82,8 +82,8 @@ export default function AboutUsPage() {
               Start Free Diagnostic
               <ArrowRight size={18} />
             </Link>
-            <Link href="/results/demo">
-              View Demo Report
+            <Link href="/pricing">
+              Choose Plan
               <ArrowRight size={18} />
             </Link>
           </div>

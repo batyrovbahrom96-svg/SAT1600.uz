@@ -661,8 +661,8 @@ export default function Home() {
               <span>Students know exactly what to study after the diagnostic.</span>
             </div>
           </div>
-          <Link className="platform-ad-section__cta" href="/mock-test">
-            <span>Start free diagnostic</span>
+          <Link className="platform-ad-section__cta" href="/pricing">
+            <span>Choose plan</span>
             <ArrowRight size={18} />
           </Link>
         </div>
@@ -882,7 +882,7 @@ export default function Home() {
             confirmation. These are the questions students and parents usually ask first.
           </p>
           <Link className="homepage-faq-section__cta" href="/pricing">
-            <span>View pricing</span>
+            <span>Choose plan</span>
             <ArrowRight size={18} />
           </Link>
         </div>

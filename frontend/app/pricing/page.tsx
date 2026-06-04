@@ -198,10 +198,10 @@ export default function PricingPage() {
             Tariffs and prices for serious SAT improvement.
           </h1>
           <p className="mt-7 max-w-3xl text-lg font-light leading-8 text-white/52">
-            One path: take the free diagnostic, read the demo-style report, choose a plan, pay with Paynet, then get access after receipt confirmation.
+            Choose a plan when you are ready to unlock practice, analytics, and My 1400+. If you are unsure, take the free diagnostic first.
           </p>
           <div className="mt-8 grid gap-2 sm:grid-cols-5">
-            {["Free diagnostic", "Demo report", "Choose plan", "Paynet payment", "Access"].map((step, index) => (
+            {["Choose plan", "Pay with Paynet", "Send receipt", "Get access", "Start practice"].map((step, index) => (
               <div className="border border-white/10 bg-black/25 p-3" key={step}>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">Step {index + 1}</p>
                 <p className="mt-2 text-sm font-semibold leading-5 text-white/72">{step}</p>
@@ -261,11 +261,11 @@ export default function PricingPage() {
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.38em] text-white/42">Main funnel</p>
               <h2 className="mt-4 max-w-4xl text-4xl font-light leading-tight text-white md:text-5xl">
-                Free diagnostic to demo report to pricing to Paynet to access.
+                Ready to continue? Choose Pro, pay with Paynet, and get access after receipt confirmation.
               </h2>
             </div>
-            <Link className="flex h-16 min-w-[270px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white" href="/mock-test">
-              Start Free Diagnostic
+            <Link className="flex h-16 min-w-[270px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro">
+              Choose Pro
               <ArrowRight size={20} />
             </Link>
           </div>

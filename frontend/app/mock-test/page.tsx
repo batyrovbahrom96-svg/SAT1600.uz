@@ -213,7 +213,7 @@ export default function MockTestAccessPage() {
               View demo report <ArrowRight size={18} />
             </Link>
             <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/pricing">
-              See pricing <ArrowRight size={18} />
+              Choose plan <ArrowRight size={18} />
             </Link>
           </div>
         </div>
