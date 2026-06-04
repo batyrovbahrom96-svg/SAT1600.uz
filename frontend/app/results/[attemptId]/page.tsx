@@ -169,10 +169,6 @@ export default function ResultsPage() {
     return () => window.clearTimeout(timer);
   }, [analytics, attemptId, reportResults]);
 
-  if (attemptId === "demo") {
-    return <ResultsUnavailableNotice />;
-  }
-
   if (!reportResults || !analytics) {
     return (
       <main className="min-h-screen bg-[#101112] text-white">

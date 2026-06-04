@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BarChart3, LockKeyhole, RotateCcw, UserPlus } from "lucide-react";
+import { ArrowRight, BarChart3, Check, LockKeyhole, RotateCcw, UserPlus } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { ApiError, api, getToken } from "@/lib/api";
 
@@ -154,40 +154,68 @@ export default function MockTestAccessPage() {
     <main className="min-h-screen bg-[#101112] text-white">
       <LuxuryNavbar />
 
-      <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1fr_440px] lg:items-center">
+      <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1fr_520px] lg:items-center">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Student access required</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Free diagnostic preview</p>
           <h1 className="mt-6 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
-            Sign in before choosing a mock test.
+            See what the SAT diagnostic gives you before signing in.
           </h1>
           <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-            Every mock test needs an account so your attempt, score report, mistakes, and progress history stay connected to you.
+            Preview the score report, weak-area map, and first study route. Create an account only when you are ready to save a real mock test attempt.
           </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            {["Bluebook-style diagnostic", "Score and section preview", "Weak topic map", "First 7-day route"].map((item) => (
+              <div className="flex items-center gap-3 border border-white/10 bg-white/[0.035] p-3 text-sm text-white/64" key={item}>
+                <Check size={16} />
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="border border-white/10 bg-white/[0.035] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
           <div className="border-b border-white/10 pb-5">
             <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
-              <LockKeyhole size={22} />
+              <BarChart3 size={22} />
             </div>
-            <h2 className="mt-5 text-2xl font-light text-white">Continue to Mock Test</h2>
+            <h2 className="mt-5 text-2xl font-light text-white">Example diagnostic report</h2>
             <p className="mt-3 text-sm font-light leading-6 text-white/48">
-              Create an account if this is your first test, or sign in to continue with your saved workspace.
+              This is what students see after finishing the real mock test.
             </p>
+          </div>
+
+          <div className="mt-5 grid border border-white/10 bg-black/20">
+            <ScoreMetric label="Overall" value={1210} />
+            <div className="grid grid-cols-2 border-t border-white/10">
+              <ScoreMetric label="English" value={610} />
+              <ScoreMetric label="Math" value={600} />
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            {[
+              ["Weakest area", "Command of Evidence"],
+              ["Mistake pattern", "Causal gap trap"],
+              ["First focus", "Linear equations + grammar boundaries"]
+            ].map(([label, value]) => (
+              <div className="border border-white/10 bg-black/20 p-3" key={label}>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{label}</p>
+                <p className="mt-2 text-sm text-white/72">{value}</p>
+              </div>
+            ))}
           </div>
 
           <div className="mt-5 grid gap-3">
             <Link className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/register">
-              Sign Up <UserPlus size={18} />
+              Start real diagnostic <UserPlus size={18} />
+            </Link>
+            <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/results/demo">
+              View sample report <ArrowRight size={18} />
             </Link>
             <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
-              Sign In <ArrowRight size={18} />
+              Sign in to saved test <LockKeyhole size={18} />
             </Link>
           </div>
-
-          <p className="mt-5 text-xs font-light leading-5 text-white/35">
-            After signing up or signing in, you will be taken to the mock test dashboard.
-          </p>
         </div>
       </section>
     </main>
