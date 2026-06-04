@@ -490,6 +490,19 @@ export default function Home() {
             <p>Results Proof</p>
             <h2>Verified SAT growth with student videos and score reports.</h2>
             <span>Tap a result to see the student video and official SAT score report where available.</span>
+            <div className="parent-feedback" aria-label="Verified parent feedback">
+              <p>Parent Feedback</p>
+              <div className="parent-feedback__bubble">
+                <span>Muslima's mother - Telegram</span>
+                <strong>Assalomu alaykum.</strong>
+                <em>
+                  Raxmat, bu natijalarda sizning hissangiz ham katta. Allohim sizni qo'llab-quvvatlasin.
+                  O'quvchilaringizni hammasi yuqori ballari bilan sizni va ota-onasini yuzini yorug'
+                  qilsin. Amin.
+                </em>
+              </div>
+              <span>More Uzbek and Russian parent comments will be added after permission.</span>
+            </div>
           </div>
 
           <div className="results-wall__carousel">

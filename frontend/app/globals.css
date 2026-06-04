@@ -1999,6 +1999,63 @@ button, input {
   line-height: 1.6;
 }
 
+.parent-feedback {
+  display: grid;
+  max-width: 330px;
+  margin-top: 22px;
+  gap: 10px;
+}
+
+.parent-feedback > p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.34em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.parent-feedback__bubble {
+  display: grid;
+  gap: 7px;
+  padding: 13px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px 18px 18px 4px;
+  background: rgba(35, 54, 73, 0.76);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.parent-feedback__bubble span {
+  color: rgba(216, 232, 248, 0.58);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.parent-feedback__bubble strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.parent-feedback__bubble em {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.parent-feedback > span {
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 .results-wall__carousel {
   position: relative;
   min-width: 0;
