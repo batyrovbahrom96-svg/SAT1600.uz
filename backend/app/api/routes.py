@@ -6,7 +6,7 @@ import smtplib
 from urllib import error, request
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from collections import Counter, defaultdict
 
 from sqlalchemy import select, text
@@ -16,7 +16,7 @@ from app.api.deps import get_current_user, require_admin
 from app.core.config import get_settings
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db, get_engine
-from app.models import Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, Test, TestAttempt, TestTelemetrySummary, User
+from app.models import Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, Subscription, Test, TestAttempt, TestTelemetrySummary, User
 from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, ResultsOut, TokenResponse, VerificationCodeRequest
 from app.services.graph_engine import generate_linear_graph, generate_sat_graph_set
 from app.services.sat_engine import (
@@ -30,6 +30,7 @@ from app.services.sat_engine import (
     save_answer,
     start_attempt,
 )
+from app.services.telegram_payments import handle_telegram_update
 
 router = APIRouter(prefix="/api")
 verification_codes: dict[str, dict[str, datetime | str]] = {}
@@ -119,6 +120,46 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> TokenResponse:
 @router.get("/auth/me")
 def current_user_profile(user: User = Depends(get_current_user)) -> dict:
     return {"full_name": user.full_name, "role": user.role}
+
+
+@router.get("/subscriptions/me")
+def my_subscription(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    subscription = (
+        db.execute(
+            select(Subscription)
+            .where(Subscription.user_id == user.id)
+            .order_by(Subscription.created_at.desc())
+        )
+        .scalars()
+        .first()
+    )
+    if not subscription:
+        return {"has_active_subscription": False, "subscription": None}
+
+    now = datetime.utcnow()
+    is_active = subscription.status == "active" and (
+        subscription.current_period_end is None or subscription.current_period_end > now
+    )
+    return {
+        "has_active_subscription": is_active,
+        "subscription": {
+            "plan": subscription.plan,
+            "status": subscription.status,
+            "provider": subscription.provider,
+            "current_period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+        },
+    }
+
+
+@router.post("/telegram/webhook")
+async def telegram_webhook(request: Request, db: Session = Depends(get_db)) -> dict:
+    settings = get_settings()
+    if settings.telegram_webhook_secret:
+        secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+        if secret != settings.telegram_webhook_secret:
+            raise HTTPException(status_code=403, detail="Invalid Telegram webhook secret")
+    update = await request.json()
+    return handle_telegram_update(update, db)
 
 
 def _send_verification_email(email: str, code: str) -> bool:

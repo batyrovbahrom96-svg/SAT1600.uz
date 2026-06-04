@@ -7,6 +7,7 @@ import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 
 const telegramUsername = "FounderSATTESTUZ";
 const telegramDisplayName = "@FounderSATTESTUZ";
+const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || telegramUsername;
 const paynetQrPayload =
   "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
 const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(paynetQrPayload)}`;
@@ -41,6 +42,7 @@ type PlanAction =
 type SelectedPlan = {
   description: string;
   label: string;
+  planKey: "pro" | "elite";
   price: string;
   title: string;
 };
@@ -136,11 +138,9 @@ function PriceCard({
 
 export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan | null>(null);
-  const [receiptReady, setReceiptReady] = useState(false);
 
   function telegramReceiptUrl(plan: SelectedPlan) {
-    const message = `Assalomu alaykum, I paid for ${plan.title}. I will send the payment screenshot now.`;
-    return `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
+    return `https://t.me/${telegramBotUsername}?start=${plan.planKey}`;
   }
 
   function getPlanSelection(plan: string): SelectedPlan | null {
@@ -148,6 +148,7 @@ export default function PricingPage() {
       return {
         description: "The main plan for students who want targeted SAT practice, full analytics, and a personal My 1400+ route.",
         label: "Most useful",
+        planKey: "pro",
         price: `${prices.pro} / month`,
         title: "SAT Platform Pro"
       };
@@ -157,6 +158,7 @@ export default function PricingPage() {
       return {
         description: "High-touch preparation for students who need personal structure, strategy, and weekly correction.",
         label: "Elite program",
+        planKey: "elite",
         price: `${prices.elite} / month`,
         title: "1400+ Elite"
       };
@@ -167,7 +169,6 @@ export default function PricingPage() {
 
   function closePlanPanel() {
     setSelectedPlan(null);
-    setReceiptReady(false);
     window.history.replaceState(null, "", "/pricing");
   }
 
@@ -177,7 +178,6 @@ export default function PricingPage() {
 
     if (plan) {
       setSelectedPlan(getPlanSelection(plan));
-      setReceiptReady(false);
     }
   }, []);
 
@@ -201,7 +201,7 @@ export default function PricingPage() {
             Choose a plan when you are ready to unlock practice, analytics, and My 1400+. If you are unsure, take the free diagnostic first.
           </p>
           <div className="mt-8 grid gap-2 sm:grid-cols-5">
-            {["Choose plan", "Pay with Paynet", "Send receipt", "Get access", "Start practice"].map((step, index) => (
+            {["Choose plan", "Pay any method", "Send receipt to bot", "Founder approves", "Start practice"].map((step, index) => (
               <div className="border border-white/10 bg-black/25 p-3" key={step}>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">Step {index + 1}</p>
                 <p className="mt-2 text-sm font-semibold leading-5 text-white/72">{step}</p>
@@ -232,7 +232,7 @@ export default function PricingPage() {
           <PriceCard
             action={{
               href: "/pricing?plan=pro",
-              text: "Pay with Paynet"
+              text: "Pay and activate"
             }}
             accent="light"
             description="The main plan for students who want targeted SAT practice and a visible score-growth route."
@@ -245,7 +245,7 @@ export default function PricingPage() {
           <PriceCard
             action={{
               href: "/pricing?plan=elite",
-              text: "Pay with Paynet"
+              text: "Pay and activate"
             }}
             accent="gold"
             description="High-touch preparation for students who need personal structure, strategy, and weekly correction."
@@ -261,7 +261,7 @@ export default function PricingPage() {
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.38em] text-white/42">Main funnel</p>
               <h2 className="mt-4 max-w-4xl text-4xl font-light leading-tight text-white md:text-5xl">
-                Ready to continue? Choose Pro, pay with Paynet, and get access after receipt confirmation.
+                Ready to continue? Choose Pro, pay by Click, Payme, Paynet, card, or transfer, then activate through Telegram.
               </h2>
             </div>
             <Link className="flex h-16 min-w-[270px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro">
@@ -307,9 +307,9 @@ export default function PricingPage() {
 
               <aside className="flex flex-col border border-white/10 bg-white/[0.035] p-4">
                 <Sparkles className="text-white/70" size={20} />
-                <h3 className="mt-3 text-2xl font-light text-white">Pay with Paynet</h3>
+                <h3 className="mt-3 text-2xl font-light text-white">Pay by any method</h3>
                 <p className="mt-3 text-sm font-light leading-6 text-white/54">
-                  Scan the QR code, complete the payment, then send your receipt to {telegramDisplayName}.
+                  Pay by Click, Payme, Paynet, card, or transfer. Then send your receipt to the SATTEST.UZ bot for Founder approval.
                 </p>
                 <div className="mt-4 border border-white/12 bg-white p-3">
                   <img
@@ -319,9 +319,10 @@ export default function PricingPage() {
                   />
                 </div>
                 <ol className="mt-4 grid gap-2 text-xs font-light leading-5 text-white/58">
-                  <li>1. Scan this QR in Paynet or your banking app.</li>
+                  <li>1. Use this Paynet QR or pay by Click, Payme, card, or transfer.</li>
                   <li>2. Complete payment for {selectedPlan.title}.</li>
-                  <li>3. Send the payment screenshot in Telegram.</li>
+                  <li>3. Open the bot and send receipt with caption: your-email@example.com {selectedPlan.planKey}.</li>
+                  <li>4. Founder {telegramDisplayName} approves access for 30 days.</li>
                 </ol>
                 <div className="mt-auto grid gap-2 pt-4">
                   <a
@@ -330,31 +331,12 @@ export default function PricingPage() {
                     rel="noreferrer"
                     target="_blank"
                   >
-                    Send receipt
+                    Send receipt to bot
                     <ArrowRight size={18} />
                   </a>
-                  <label className="grid gap-2 border border-white/12 bg-black/25 p-3 text-[11px] font-black uppercase tracking-[0.16em] text-white/70">
-                    Upload receipt
-                    <input
-                      accept="image/*,.pdf"
-                      className="text-xs font-medium normal-case tracking-normal text-white/58 file:mr-2 file:border-0 file:bg-white file:px-3 file:py-2 file:text-[11px] file:font-black file:uppercase file:tracking-[0.12em] file:text-black"
-                      onChange={(event) => setReceiptReady(event.target.files ? event.target.files.length > 0 : false)}
-                      type="file"
-                    />
-                  </label>
-                  <button
-                    className={[
-                      "flex h-11 items-center justify-between border px-4 text-left text-[11px] font-black uppercase tracking-[0.16em] transition-colors",
-                      receiptReady
-                        ? "border-emerald-400 bg-emerald-400 text-black"
-                        : "cursor-not-allowed border-white/12 bg-black/25 text-white/32"
-                    ].join(" ")}
-                    disabled={!receiptReady}
-                    type="button"
-                  >
-                    Receipt uploaded
-                    <Check size={18} />
-                  </button>
+                  <div className="border border-white/12 bg-black/25 p-3 text-xs font-light leading-5 text-white/52">
+                    The bot forwards your receipt to Founder for manual approval and activates your subscription after confirmation.
+                  </div>
                 </div>
               </aside>
             </div>

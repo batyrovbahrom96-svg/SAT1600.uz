@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     smtp_from_name: str = "SATTEST.UZ Email Bot"
     resend_api_key: str | None = None
     resend_from_email: str | None = None
+    telegram_bot_token: str | None = None
+    telegram_webhook_secret: str | None = None
+    telegram_admin_chat_id: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
