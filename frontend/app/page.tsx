@@ -13,8 +13,8 @@ const slides = [
     eyebrow: "Diagnostic first. Clear plan next.",
     title: ["Your SAT", "Growth Plan"],
     body: "Take one mock test and get a personal route for steady score growth.",
-    cta: "Start diagnostic test",
-    href: "/register",
+    cta: "Start free diagnostic",
+    href: "/mock-test",
     vertical: ["S", "A", "T", "1", "6", "0", "0"],
     stat: "01"
   },
@@ -24,8 +24,8 @@ const slides = [
     eyebrow: "Know every lost point",
     title: ["Weakness", "Analytics"],
     body: "See weak skills, trap patterns, timing pressure, and the next task to fix.",
-    cta: "View diagnostic preview",
-    href: "/register",
+    cta: "View demo report",
+    href: "/results/demo",
     vertical: ["A", "N", "A", "L", "Y", "T", "I", "C", "S"],
     stat: "02"
   },
@@ -35,8 +35,8 @@ const slides = [
     eyebrow: "Built for steady score growth",
     title: ["30-Day", "Improvement"],
     body: "Daily Reading, Writing, and Math work built from diagnostic mistakes.",
-    cta: "Create account",
-    href: "/register",
+    cta: "See pricing",
+    href: "/pricing",
     vertical: ["P", "R", "O", "G", "R", "E", "S", "S"],
     stat: "03"
   }
@@ -662,7 +662,7 @@ export default function Home() {
             </div>
           </div>
           <Link className="platform-ad-section__cta" href="/mock-test">
-            <span>Start diagnostic mock test</span>
+            <span>Start free diagnostic</span>
             <ArrowRight size={18} />
           </Link>
         </div>

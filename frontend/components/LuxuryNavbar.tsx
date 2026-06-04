@@ -10,11 +10,11 @@ export function LuxuryNavbar() {
   const [studentName, setStudentName] = useState<string | null>(null);
   const navItems = [
     { label: "About Us", href: "/about-us" },
-    { label: "Mock Test", href: "/mock-test" },
+    { label: "Free Diagnostic", href: "/mock-test" },
     { label: "Practice", href: "/practice" },
-    { label: "Results", href: "/results/demo" },
+    { label: "Demo Report", href: "/results/demo" },
     { label: "My 1400+", href: "/my-1400" },
-    { label: "Pricing", href: "/pricing" }
+    { label: "Pricing & Pay", href: "/pricing" }
   ];
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export function LuxuryNavbar() {
           ) : (
             <>
               <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/mock-test">
-                Start Test
+                Start Free Diagnostic
               </Link>
               <Link className="h-11 border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] leading-[44px] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
                 Login

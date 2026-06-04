@@ -79,11 +79,11 @@ export default function AboutUsPage() {
           </p>
           <div className="about-hero__actions">
             <Link href="/mock-test">
-              Start Diagnostic Test
+              Start Free Diagnostic
               <ArrowRight size={18} />
             </Link>
-            <Link href="/my-1400">
-              View My 1400+
+            <Link href="/results/demo">
+              View Demo Report
               <ArrowRight size={18} />
             </Link>
           </div>

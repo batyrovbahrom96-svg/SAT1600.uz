@@ -198,19 +198,27 @@ export default function PricingPage() {
             Tariffs and prices for serious SAT improvement.
           </h1>
           <p className="mt-7 max-w-3xl text-lg font-light leading-8 text-white/52">
-            Start with a diagnostic mock test. Then unlock the practice, analytics, and personal 1400+ route that tells students exactly what to fix next.
+            One path: take the free diagnostic, read the demo-style report, choose a plan, pay with Paynet, then get access after receipt confirmation.
           </p>
+          <div className="mt-8 grid gap-2 sm:grid-cols-5">
+            {["Free diagnostic", "Demo report", "Choose plan", "Paynet payment", "Access"].map((step, index) => (
+              <div className="border border-white/10 bg-black/25 p-3" key={step}>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">Step {index + 1}</p>
+                <p className="mt-2 text-sm font-semibold leading-5 text-white/72">{step}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
         <div className="grid gap-6 lg:grid-cols-3">
           <PriceCard
-            action={{ href: "/mock-test", text: "Start Free" }}
+            action={{ href: "/mock-test", text: "Start Free Diagnostic" }}
             accent="dark"
             description="For students who want to see their real SAT level before choosing a paid route."
             features={[
-              "1 full diagnostic SAT mock test",
+              "1 free diagnostic SAT mock test",
               "Overall score preview",
               "Reading/Writing and Math section scores",
               "Limited mistake preview",
@@ -224,7 +232,7 @@ export default function PricingPage() {
           <PriceCard
             action={{
               href: "/pricing?plan=pro",
-              text: "Unlock Pro"
+              text: "Pay with Paynet"
             }}
             accent="light"
             description="The main plan for students who want targeted SAT practice and a visible score-growth route."
@@ -237,7 +245,7 @@ export default function PricingPage() {
           <PriceCard
             action={{
               href: "/pricing?plan=elite",
-              text: "Join Elite"
+              text: "Pay with Paynet"
             }}
             accent="gold"
             description="High-touch preparation for students who need personal structure, strategy, and weekly correction."
@@ -251,13 +259,13 @@ export default function PricingPage() {
         <section className="mt-6 border border-white/10 bg-black/25 p-6 md:p-8">
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.38em] text-white/42">Recommended first step</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.38em] text-white/42">Main funnel</p>
               <h2 className="mt-4 max-w-4xl text-4xl font-light leading-tight text-white md:text-5xl">
-                Take one diagnostic. See the score gap. Then choose the plan.
+                Free diagnostic to demo report to pricing to Paynet to access.
               </h2>
             </div>
             <Link className="flex h-16 min-w-[270px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white" href="/mock-test">
-              Start Mock Test
+              Start Free Diagnostic
               <ArrowRight size={20} />
             </Link>
           </div>

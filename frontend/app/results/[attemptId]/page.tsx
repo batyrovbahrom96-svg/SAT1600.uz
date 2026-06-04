@@ -330,10 +330,10 @@ export default function ResultsPage() {
             </button>
             <button
               className="inline-flex h-12 items-center gap-3 border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push(attemptId === "demo" ? "/pricing" : "/dashboard")}
               type="button"
             >
-              <RefreshCcw size={18} /> New test
+              <RefreshCcw size={18} /> {attemptId === "demo" ? "Choose plan" : "New test"}
             </button>
           </div>
         </div>
@@ -543,7 +543,7 @@ function ResultsUnavailableNotice() {
           </p>
 
           <div className="mt-9 grid gap-3 sm:grid-cols-3">
-            {["Create account", "Take mock test", "Open report"].map((step, index) => (
+            {["Free diagnostic", "Demo report", "Choose pricing"].map((step, index) => (
               <div className="border border-white/10 bg-white/[0.035] p-4" key={step}>
                 <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/35">Step {index + 1}</p>
                 <p className="mt-3 text-lg font-light text-white">{step}</p>
@@ -553,9 +553,9 @@ function ResultsUnavailableNotice() {
 
           <Link
             className="mt-9 inline-flex h-14 items-center gap-4 border border-white bg-white px-7 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-            href="/register"
+            href="/mock-test"
           >
-            Start diagnostic mock test <ArrowRight size={18} />
+            Start free diagnostic <ArrowRight size={18} />
           </Link>
         </div>
 

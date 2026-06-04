@@ -171,16 +171,16 @@ function My1400PreviewDashboard({
           <div className="mt-6 grid gap-3">
             {showAuthActions ? (
               <>
-                <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/register">
-                  Create account <ArrowRight size={18} />
+                <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/mock-test">
+                  Start free diagnostic <ArrowRight size={18} />
                 </Link>
-                <Link className="flex items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
-                  Sign in <ArrowRight size={18} />
+                <Link className="flex items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/results/demo">
+                  View demo report <ArrowRight size={18} />
                 </Link>
               </>
             ) : (
               <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/mock-test">
-                Start diagnostic <ArrowRight size={18} />
+                Start free diagnostic <ArrowRight size={18} />
               </Link>
             )}
           </div>

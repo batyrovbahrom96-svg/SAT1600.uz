@@ -207,13 +207,13 @@ export default function MockTestAccessPage() {
 
           <div className="mt-5 grid gap-3">
             <Link className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/register">
-              Start real diagnostic <UserPlus size={18} />
+              Start free diagnostic <UserPlus size={18} />
             </Link>
             <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/results/demo">
-              View sample report <ArrowRight size={18} />
+              View demo report <ArrowRight size={18} />
             </Link>
-            <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
-              Sign in to saved test <LockKeyhole size={18} />
+            <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/pricing">
+              See pricing <ArrowRight size={18} />
             </Link>
           </div>
         </div>
