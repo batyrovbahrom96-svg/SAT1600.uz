@@ -69,6 +69,41 @@ const partnerLogos = [
   { logo: "/assets/partners/Richmond%20School.png", name: "Richmond School" }
 ];
 
+const homepageFaqs = [
+  {
+    question: "When do I get access?",
+    answer: "After payment, send your receipt in Telegram. Your account is activated manually after the payment is checked."
+  },
+  {
+    question: "Can I cancel?",
+    answer: "Yes. The monthly plan is not a long contract. You can stop before the next month and keep using access until the paid period ends."
+  },
+  {
+    question: "Is there a refund?",
+    answer: "Refunds are reviewed case by case before the account is actively used. After mock tests, reports, or practice access are used, the payment is normally not refundable."
+  },
+  {
+    question: "How many mock tests?",
+    answer: "The free plan includes one diagnostic mock preview. Pro is built for repeated practice and diagnostic analytics. Elite adds personal review and strategy support."
+  },
+  {
+    question: "Is this official SAT?",
+    answer: "No. SATTEST.UZ is an independent SAT preparation platform. SAT is a trademark of College Board, and this site is not endorsed by College Board."
+  },
+  {
+    question: "Do I need a teacher?",
+    answer: "For self-study students, Pro gives structure and targeted practice. If a student needs personal correction, parent updates, and strategy, Elite is the better route."
+  },
+  {
+    question: "What happens after I pay?",
+    answer: "You scan the Paynet QR, send the payment screenshot to Telegram, then receive access to the purchased plan after confirmation."
+  },
+  {
+    question: "How do parents track progress?",
+    answer: "Parents can follow mock scores, weak topics, completed practice, and review updates. Elite students can also receive more personal progress communication."
+  }
+];
+
 function shouldSkipHomeIntro() {
   if (typeof window === "undefined") return false;
   const params = new URLSearchParams(window.location.search);
@@ -835,6 +870,30 @@ export default function Home() {
             <strong>Improve</strong>
             <p>Repeat targeted drills, review explanations, and confirm progress with section tests.</p>
           </div>
+        </div>
+      </section>
+
+      <section className="homepage-faq-section" aria-labelledby="homepage-faq-title">
+        <div className="homepage-faq-section__intro">
+          <p className="homepage-faq-section__eyebrow">Pricing FAQ</p>
+          <h2 id="homepage-faq-title">Clear answers before a parent pays.</h2>
+          <p>
+            The payment process is simple for now: pay by QR, send the receipt, and get access after
+            confirmation. These are the questions students and parents usually ask first.
+          </p>
+          <Link className="homepage-faq-section__cta" href="/pricing">
+            <span>View pricing</span>
+            <ArrowRight size={18} />
+          </Link>
+        </div>
+
+        <div className="homepage-faq-section__list">
+          {homepageFaqs.map((faq) => (
+            <article className="homepage-faq-section__item" key={faq.question}>
+              <h3>{faq.question}</h3>
+              <p>{faq.answer}</p>
+            </article>
+          ))}
         </div>
       </section>
 
