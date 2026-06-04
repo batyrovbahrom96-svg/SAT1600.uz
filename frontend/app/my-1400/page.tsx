@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, LockKeyhole, Route } from "lucide-react";
+import { ArrowRight, Check, LockKeyhole, Route } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { api, getToken } from "@/lib/api";
@@ -39,26 +39,47 @@ export default function My1400Page() {
     return (
       <main className="min-h-screen bg-[#101112] text-white">
         <LuxuryNavbar />
-        <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1fr_440px] lg:items-center">
+        <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1fr_520px] lg:items-center">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Student login required</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">My 1400+ preview</p>
             <h1 className="mt-6 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
-              Sign in to open your 1400+ curriculum.
+              Preview the personal route before signing in.
             </h1>
             <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-              Your personal route is built from your diagnostic SAT mock test. Log in first so SATTEST.UZ can connect the curriculum to your own score, mistakes, and weak topics.
+              My 1400+ turns a diagnostic report into priority skills, daily tasks, and weekly score-growth checkpoints.
             </p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {["Score gap target", "Priority weak topics", "Daily study route", "Weekly checkpoint"].map((item) => (
+                <div className="flex items-center gap-3 border border-white/10 bg-white/[0.035] p-3 text-sm text-white/64" key={item}>
+                  <Check size={16} />
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="border border-white/10 bg-white/[0.035] p-5">
             <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
-              <LockKeyhole size={22} />
+              <Route size={22} />
             </div>
-            <h2 className="mt-5 text-2xl font-light text-white">Open My 1400+</h2>
+            <h2 className="mt-5 text-2xl font-light text-white">Sample 1400+ route</h2>
             <p className="mt-3 text-sm font-light leading-6 text-white/48">
-              Sign in or create an account. After the diagnostic, this button opens the curriculum directly.
+              Example route for a student at 1210 aiming for 1400+.
             </p>
-            <div className="mt-6 grid gap-3">
+            <div className="mt-5 grid gap-3">
+              {[
+                ["Week 1", "Fix Advanced Math signs and percent-base errors"],
+                ["Week 2", "Raise Expression of Ideas accuracy to 80%+"],
+                ["Week 3", "Timed mixed modules with trap review"],
+                ["Week 4", "Full mock retake and score-gap update"]
+              ].map(([label, task]) => (
+                <div className="border border-white/10 bg-black/20 p-3" key={label}>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{label}</p>
+                  <p className="mt-2 text-sm leading-6 text-white/70">{task}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 grid gap-3">
               <Link className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/login">
                 Sign in <ArrowRight size={18} />
               </Link>
