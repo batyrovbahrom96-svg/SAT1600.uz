@@ -31,16 +31,6 @@ export const studentResults: StudentResult[] = [
     video: "/assets/video/student-jasmina-1200score.mp4"
   },
   {
-    name: "Zafar Bazarov",
-    score: "1150 SAT",
-    improvement: "Improved from 1100 to 1150",
-    method: "Math-focused correction + SAT practice",
-    evidence: "Video + SAT score report",
-    testDate: "May 2, 2026",
-    certificate: "/assets/results/zafar-bazarov-1150-sat.jpg",
-    video: "/assets/video/student-zafar-bazarov-1250sat.mp4"
-  },
-  {
     name: "Ulugbek Abdurahmonov",
     score: "1100 SAT",
     improvement: "Improved from 900 to 1100 at age 16",
