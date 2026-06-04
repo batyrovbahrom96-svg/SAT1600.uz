@@ -148,6 +148,28 @@ export default function CurriculumPage() {
           <SummaryCard icon={<Trophy size={22} />} label="Score gap" value={`${Math.max(0, 1400 - results.score_total)} pts`} detail="Main goal for this cycle" />
         </div>
 
+        <section className="mt-6 border border-emerald-300/25 bg-emerald-300/[0.06] p-5">
+          <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.36em] text-emerald-100/58">Exercises require Pro</p>
+              <h2 className="mt-4 text-3xl font-light leading-tight text-white md:text-4xl">
+                Your route is ready. Unlock the practice engine to use it.
+              </h2>
+              <p className="mt-3 max-w-3xl text-sm font-light leading-7 text-white/58">
+                The free diagnostic identifies the score leaks. Pro unlocks the actual daily exercises,
+                supervised theory, section work, and retake cycle that repairs them.
+              </p>
+            </div>
+            <button
+              className="flex h-14 min-w-[250px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
+              onClick={() => router.push("/pricing?plan=pro")}
+              type="button"
+            >
+              Unlock Pro <ArrowRight size={18} />
+            </button>
+          </div>
+        </section>
+
         <section className="mt-6 grid gap-5 lg:grid-cols-2">
           {plan.blocks.map((block) => (
             <article className="border border-white/10 bg-white/[0.035] p-6" key={block.section}>
@@ -163,11 +185,11 @@ export default function CurriculumPage() {
                   <button
                     className="flex items-center justify-between border border-white/10 bg-black/20 px-4 py-3 text-left transition-colors hover:border-white/35 hover:bg-white/[0.06]"
                     key={topic}
-                    onClick={() => openPractice({ ...block, focus: [topic] })}
+                    onClick={() => router.push("/pricing?plan=pro")}
                     type="button"
                   >
                     <span className="text-sm font-light text-white/70">{topic}</span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">Weakness</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-100/55">Locked exercise</span>
                   </button>
                 ))}
               </div>
@@ -180,10 +202,10 @@ export default function CurriculumPage() {
               </div>
               <button
                 className="mt-5 flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-                onClick={() => openPractice(block)}
+                onClick={() => router.push("/pricing?plan=pro")}
                 type="button"
               >
-                Start section work <ArrowRight size={18} />
+                Unlock exercises <ArrowRight size={18} />
               </button>
             </article>
           ))}

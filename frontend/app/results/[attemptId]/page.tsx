@@ -479,6 +479,44 @@ export default function ResultsPage() {
           )}
         </section>
 
+        <section className="mt-6 border border-emerald-300/25 bg-emerald-300/[0.06] p-5">
+          <div className="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-center">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.36em] text-emerald-100/58">1400+ route locked</p>
+              <h2 className="mt-4 text-3xl font-light leading-tight text-white md:text-4xl">
+                You can see the problem. Pro gives the exercises to fix it.
+              </h2>
+              <p className="mt-4 max-w-3xl text-sm font-light leading-7 text-white/58">
+                This free diagnostic shows your score leaks, weak topics, trap patterns, and missed-question
+                explanations. The full My 1400+ route unlocks daily exercises, supervised theory, retake dates,
+                and progress tracking for these exact weaknesses.
+              </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {(analytics.weaknesses.length ? analytics.weaknesses : ["Reading/Writing", "Math", "Timing"]).slice(0, 3).map((weakness) => (
+                  <div className="border border-white/10 bg-black/20 p-3" key={weakness}>
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">Needs repair</p>
+                    <p className="mt-2 text-sm font-semibold text-white/76">{weakness}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="border border-white/10 bg-black/25 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/38">Locked next assignment</p>
+              <p className="mt-3 text-sm leading-6 text-white/62">
+                18 targeted questions, 1 supervised theory block, mistake notebook correction, and a mini retake
+                generated from this report.
+              </p>
+              <button
+                className="mt-5 flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-white"
+                onClick={() => router.push("/pricing?plan=pro")}
+                type="button"
+              >
+                Unlock with Pro <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        </section>
+
         <section className="mt-6 border border-white/10 bg-white/[0.035] p-5">
           <div className="flex items-center gap-3">
             <ClipboardList className="text-white/55" />
@@ -495,7 +533,7 @@ export default function ResultsPage() {
       {showCurriculumPanel ? (
         <CurriculumPrompt
           onClose={() => setShowCurriculumPanel(false)}
-          onOpen={() => router.push(`/curriculum/${attemptId}`)}
+          onOpen={() => router.push("/pricing?plan=pro")}
           score={reportResults.score_total}
           weaknesses={analytics.weaknesses}
         />

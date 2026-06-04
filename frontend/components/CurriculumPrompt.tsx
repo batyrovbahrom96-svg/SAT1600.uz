@@ -33,12 +33,13 @@ export function CurriculumPrompt({
               <div className="flex h-16 w-16 items-center justify-center border border-yellow-200/20 bg-yellow-200/10 text-yellow-100">
                 <GraduationCap size={30} />
               </div>
-              <p className="mt-7 text-[10px] font-black uppercase tracking-[0.42em] text-white/38">1400+ curriculum ready</p>
+              <p className="mt-7 text-[10px] font-black uppercase tracking-[0.42em] text-white/38">1400+ exercise route ready</p>
               <h2 className="mt-5 max-w-3xl text-5xl font-light leading-none text-white md:text-7xl">
-                Turn this result into your personal SAT route.
+                Your weak topics are clear. The full exercise route is the next step.
               </h2>
               <p className="mt-6 max-w-2xl text-base font-light leading-8 text-white/55">
-                SATTEST.UZ will start from the weaknesses in this diagnostic, then bind practice to full Reading and Writing and Math section work until the student is moving toward 1400+.
+                The diagnostic shows where points are being lost. Pro unlocks the personal 1400+ route,
+                supervised theory, daily exercises, and section work needed to repair those exact mistakes.
               </p>
             </div>
 
@@ -87,14 +88,14 @@ export function CurriculumPrompt({
               onClick={onClose}
               type="button"
             >
-              Review later
+              Stay on report
             </button>
             <button
               className="flex h-12 items-center justify-center gap-3 border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
               onClick={onOpen}
               type="button"
             >
-              Open curriculum <ArrowRight size={18} />
+              Unlock exercise route <ArrowRight size={18} />
             </button>
           </div>
         </section>
