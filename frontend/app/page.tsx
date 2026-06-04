@@ -487,8 +487,9 @@ export default function Home() {
           aria-label="Student SAT results"
         >
           <div className="results-wall__copy">
-            <p>Student Results</p>
-            <h2>Real score growth from SATTEST.UZ students.</h2>
+            <p>Results Proof</p>
+            <h2>Verified SAT growth with student videos and score reports.</h2>
+            <span>Tap a result to see the student video and official SAT score report where available.</span>
           </div>
 
           <div className="results-wall__carousel">
@@ -526,6 +527,7 @@ export default function Home() {
                     <strong>{result.name}</strong>
                     <span>{result.score}</span>
                     <span>{result.improvement}</span>
+                    <em>{result.evidence}</em>
                   </span>
                 </button>
               ))}
@@ -828,7 +830,7 @@ export default function Home() {
           className="results-modal"
           role="dialog"
           aria-modal="true"
-          aria-label={`${activeResultVideo.name} SAT result video`}
+          aria-label={`${activeResultVideo.name} SAT result proof`}
         >
           <button
             className="results-modal__backdrop"
@@ -845,17 +847,39 @@ export default function Home() {
             >
               <X size={18} />
             </button>
-            <video
-              className="results-modal__video"
-              src={activeResultVideo.video}
-              controls
-              autoPlay
-              playsInline
-            />
+            <div
+              className={`results-modal__proofGrid ${
+                activeResultVideo.certificate ? "" : "results-modal__proofGrid--single"
+              }`}
+            >
+              <div>
+                <video
+                  className="results-modal__video"
+                  src={activeResultVideo.video}
+                  controls
+                  autoPlay
+                  playsInline
+                />
+              </div>
+              {activeResultVideo.certificate ? (
+                <div className="results-modal__certificatePanel">
+                  <img
+                    alt={`${activeResultVideo.name} SAT score report`}
+                    className="results-modal__certificate"
+                    src={activeResultVideo.certificate}
+                  />
+                </div>
+              ) : null}
+            </div>
             <div className="results-modal__caption">
               <strong>{activeResultVideo.name}</strong>
               <span>{activeResultVideo.score}</span>
               <span>{activeResultVideo.improvement}</span>
+              <span>{activeResultVideo.method}</span>
+              <span>
+                {activeResultVideo.testDate ? `SAT test: ${activeResultVideo.testDate}` : activeResultVideo.evidence}
+              </span>
+              <small>Result proof is shared for credibility. Parent comments will be added after written permission.</small>
             </div>
           </div>
         </div>

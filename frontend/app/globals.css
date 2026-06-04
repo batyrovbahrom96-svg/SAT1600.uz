@@ -1989,6 +1989,16 @@ button, input {
   line-height: 1.18;
 }
 
+.results-wall__copy > span {
+  display: block;
+  max-width: 300px;
+  margin-top: 16px;
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
 .results-wall__carousel {
   position: relative;
   min-width: 0;
@@ -2142,6 +2152,21 @@ button, input {
   text-transform: uppercase;
 }
 
+.results-card__meta em {
+  width: fit-content;
+  margin-top: 4px;
+  padding: 5px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
 .results-wall__close {
   position: absolute;
   top: 14px;
@@ -2180,8 +2205,20 @@ button, input {
 .results-modal__dialog {
   position: relative;
   z-index: 1;
-  width: min(440px, 88vw);
+  width: min(1040px, 92vw);
   color: #fff;
+}
+
+.results-modal__proofGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.68fr) minmax(320px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.results-modal__proofGrid--single {
+  grid-template-columns: minmax(260px, 520px);
+  justify-content: center;
 }
 
 .results-modal__video {
@@ -2193,6 +2230,21 @@ button, input {
   background: #050505;
   object-fit: contain;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.58);
+}
+
+.results-modal__certificatePanel {
+  min-height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #f6f6f4;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+}
+
+.results-modal__certificate {
+  display: block;
+  width: 100%;
+  height: min(76vh, 620px);
+  object-fit: contain;
+  background: #f6f6f4;
 }
 
 .results-modal__close {
@@ -2224,6 +2276,14 @@ button, input {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+}
+
+.results-modal__caption small {
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 .platform-ad-section {
@@ -3225,6 +3285,25 @@ button, input {
 
   .results-card {
     aspect-ratio: 16 / 10;
+  }
+
+  .results-modal {
+    padding: 4vh 5vw;
+  }
+
+  .results-modal__dialog {
+    width: 92vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .results-modal__proofGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .results-modal__video,
+  .results-modal__certificate {
+    max-height: 48vh;
   }
 
   .platform-ad-section {
