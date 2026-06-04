@@ -6,6 +6,7 @@ import {
   ArrowRight,
   BookOpenText,
   Calculator,
+  CheckCircle2,
   Crown,
   LockKeyhole,
   PenLine,
@@ -36,6 +37,43 @@ const practiceSections = [
     href: "/practice/math"
   }
 ];
+
+const sampleQuestions = [
+  {
+    skill: "Reading",
+    title: "Command of Evidence",
+    prompt:
+      "A study found that students who reviewed every missed SAT question improved faster than students who only watched new lessons. Which choice best states the finding?",
+    options: [
+      "New lessons are unnecessary for SAT improvement.",
+      "Reviewing mistakes can be more useful than adding more content.",
+      "Students should stop taking full mock tests.",
+      "SAT scores improve only when students study every day."
+    ],
+    correctIndex: 1,
+    explanation:
+      "The evidence compares mistake review with only watching new lessons. The correct answer keeps that exact relationship without adding a stronger claim."
+  },
+  {
+    skill: "Writing",
+    title: "Transitions",
+    prompt:
+      "The student understood the formula. ___, she lost points because she used the wrong sign under time pressure.",
+    options: ["Therefore", "However", "For example", "Similarly"],
+    correctIndex: 1,
+    explanation:
+      "The second sentence contrasts understanding the formula with still losing points, so 'However' preserves the logic."
+  },
+  {
+    skill: "Math",
+    title: "Advanced Math",
+    prompt: "If f(x) = |x - 4x|, what positive value of a makes f(5) - f(a) = -15?",
+    options: ["5", "10", "15", "30"],
+    correctIndex: 1,
+    explanation:
+      "Simplify f(x) to |-3x|. Then f(5) = 15, so 15 - f(a) = -15 and f(a) = 30. That gives |-3a| = 30, so the positive value is 10."
+  }
+] as const;
 
 type MasteryStatus = "mastered" | "proficient" | "familiar" | "attempted" | "not-started" | "quiz" | "unit-test";
 
@@ -184,6 +222,112 @@ function ProgressTable({ table }: { table: (typeof progressTables)[number] }) {
   );
 }
 
+function SamplePracticePreview() {
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const answeredCount = Object.keys(answers).length;
+
+  return (
+    <section className="mt-10 border border-white/10 bg-white/[0.035] p-5 md:p-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Try 3 real samples</p>
+          <h2 className="mt-4 max-w-3xl text-4xl font-light leading-tight text-white md:text-5xl">
+            Answer first. Then see why the trap worked.
+          </h2>
+        </div>
+        <div className="border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/58">
+          {answeredCount}/3 explained
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        {sampleQuestions.map((question, questionIndex) => {
+          const selected = answers[questionIndex];
+          const hasAnswer = selected !== undefined;
+          const isCorrect = selected === question.correctIndex;
+
+          return (
+            <article className="flex min-h-[440px] flex-col border border-white/10 bg-black/20 p-4" key={question.title}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/36">{question.skill}</p>
+                  <h3 className="mt-2 text-2xl font-light text-white">{question.title}</h3>
+                </div>
+                {hasAnswer ? (
+                  <span className={`border px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
+                    isCorrect ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100" : "border-red-300/30 bg-red-300/10 text-red-100"
+                  }`}>
+                    {isCorrect ? "Correct" : "Trap"}
+                  </span>
+                ) : null}
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-white/66">{question.prompt}</p>
+
+              <div className="mt-4 grid gap-2">
+                {question.options.map((option, optionIndex) => {
+                  const isSelected = selected === optionIndex;
+                  const isRight = question.correctIndex === optionIndex;
+                  const optionClass = hasAnswer
+                    ? isRight
+                      ? "border-emerald-300/45 bg-emerald-300/10 text-white"
+                      : isSelected
+                        ? "border-red-300/45 bg-red-300/10 text-white"
+                        : "border-white/10 bg-transparent text-white/45"
+                    : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/35 hover:text-white";
+
+                  return (
+                    <button
+                      className={`min-h-12 border px-3 py-3 text-left text-sm leading-5 transition-colors ${optionClass}`}
+                      key={option}
+                      onClick={() => setAnswers((current) => ({ ...current, [questionIndex]: optionIndex }))}
+                      type="button"
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-auto pt-4">
+                {hasAnswer ? (
+                  <div className="border border-white/10 bg-white/[0.04] p-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <CheckCircle2 size={16} className="text-emerald-200/80" />
+                      Explanation unlocked
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-white/56">{question.explanation}</p>
+                  </div>
+                ) : (
+                  <div className="border border-dashed border-white/15 p-3 text-sm leading-6 text-white/40">
+                    Choose an answer to reveal the explanation.
+                  </div>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 grid gap-4 border border-white/10 bg-black/30 p-5 md:grid-cols-[1fr_340px] md:items-center">
+        <div>
+          <div className="flex items-center gap-3">
+            <LockKeyhole size={18} className="text-white/50" />
+            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/38">Pro wall</p>
+          </div>
+          <h3 className="mt-3 text-2xl font-light text-white">27 targeted questions are waiting after these samples.</h3>
+          <p className="mt-2 text-sm leading-6 text-white/48">
+            Pro unlocks the full drill, timed retake, mistake notebook, and the next weak-topic assignment.
+          </p>
+        </div>
+        <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro">
+          Unlock Pro <ArrowRight size={18} />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export default function PracticeAccessPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
@@ -278,6 +422,8 @@ export default function PracticeAccessPage() {
             })}
           </div>
 
+          <SamplePracticePreview />
+
           <section className="mt-14 border-t border-white/10 pt-10">
             <div className="max-w-4xl">
               <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Progress in process</p>
@@ -350,6 +496,8 @@ export default function PracticeAccessPage() {
             );
           })}
         </div>
+
+        <SamplePracticePreview />
 
         <section className="mt-14 border-t border-white/10 pt-10">
           <div className="max-w-4xl">

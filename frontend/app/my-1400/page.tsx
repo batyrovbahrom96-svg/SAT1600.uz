@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, BarChart3, BookOpen, CalendarDays, Check, Clock, FileText, Target, Users, type LucideIcon } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpen, CalendarDays, Check, CheckCircle2, Clock, FileText, LockKeyhole, Target, Users, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { api, getToken } from "@/lib/api";
@@ -78,6 +78,28 @@ const sampleDayPlan = [
   ["Practice", "18 Advanced Math questions, first 10 untimed", "55 min"],
   ["Timed set", "12 transition and sentence-placement questions", "25 min"],
   ["Review", "Write trap, rule, and faster method for every miss", "35 min"]
+] as const;
+
+const routeSampleQuestions = [
+  {
+    label: "Assignment 1",
+    skill: "Advanced Math",
+    prompt: "A quadratic has roots 3 and 7. Which expression could represent the quadratic?",
+    options: ["(x + 3)(x + 7)", "(x - 3)(x - 7)", "(x - 10)(x + 21)", "(x - 4)(x - 6)"],
+    correctIndex: 1,
+    explanation:
+      "Roots are the x-values that make the expression equal to zero. To make x = 3 and x = 7 work, the factors must be (x - 3)(x - 7)."
+  },
+  {
+    label: "Assignment 2",
+    skill: "Writing",
+    prompt:
+      "The experiment produced accurate results. ___, the team repeated the trial to confirm that the pattern was reliable.",
+    options: ["Nevertheless", "For this reason", "Similarly", "In contrast"],
+    correctIndex: 1,
+    explanation:
+      "The second sentence gives the reason for repeating the trial. 'For this reason' connects the accurate results to the confirmation step."
+  }
 ] as const;
 
 export default function My1400Page() {
@@ -217,6 +239,8 @@ function My1400PreviewDashboard({
         </div>
       </div>
 
+      <RouteSampleQuestions />
+
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
         {routeSteps.map(([step, title, body]) => (
           <div className="border border-white/10 bg-white/[0.035] p-5" key={step}>
@@ -307,6 +331,117 @@ function My1400PreviewDashboard({
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function RouteSampleQuestions() {
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const answeredCount = Object.keys(answers).length;
+
+  return (
+    <section className="mt-5 border border-white/10 bg-white/[0.035] p-5 md:p-6">
+      <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Today unlocked preview</p>
+          <h2 className="mt-4 text-4xl font-light leading-tight text-white md:text-5xl">
+            Try the first 2 tasks from the route.
+          </h2>
+          <p className="mt-4 text-sm font-light leading-7 text-white/52">
+            The student should not only read a plan. They should feel the plan start correcting them immediately:
+            answer, see the trap, then continue into the locked Pro assignment.
+          </p>
+          <div className="mt-5 border border-white/10 bg-black/20 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/36">Progress</p>
+            <strong className="mt-2 block text-2xl font-light text-white">{answeredCount}/2 explanations opened</strong>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {routeSampleQuestions.map((question, questionIndex) => {
+            const selected = answers[questionIndex];
+            const hasAnswer = selected !== undefined;
+            const isCorrect = selected === question.correctIndex;
+
+            return (
+              <article className="flex min-h-[420px] flex-col border border-white/10 bg-black/20 p-4" key={question.label}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/36">{question.label}</p>
+                    <h3 className="mt-2 text-2xl font-light text-white">{question.skill}</h3>
+                  </div>
+                  {hasAnswer ? (
+                    <span className={`border px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
+                      isCorrect ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100" : "border-red-300/30 bg-red-300/10 text-red-100"
+                    }`}>
+                      {isCorrect ? "Ready" : "Fix"}
+                    </span>
+                  ) : null}
+                </div>
+
+                <p className="mt-4 text-sm leading-6 text-white/66">{question.prompt}</p>
+
+                <div className="mt-4 grid gap-2">
+                  {question.options.map((option, optionIndex) => {
+                    const isSelected = selected === optionIndex;
+                    const isRight = question.correctIndex === optionIndex;
+                    const optionClass = hasAnswer
+                      ? isRight
+                        ? "border-emerald-300/45 bg-emerald-300/10 text-white"
+                        : isSelected
+                          ? "border-red-300/45 bg-red-300/10 text-white"
+                          : "border-white/10 bg-transparent text-white/45"
+                      : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/35 hover:text-white";
+
+                    return (
+                      <button
+                        className={`min-h-12 border px-3 py-3 text-left text-sm leading-5 transition-colors ${optionClass}`}
+                        key={option}
+                        onClick={() => setAnswers((current) => ({ ...current, [questionIndex]: optionIndex }))}
+                        type="button"
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-auto pt-4">
+                  {hasAnswer ? (
+                    <div className="border border-white/10 bg-white/[0.04] p-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                        <CheckCircle2 size={16} className="text-emerald-200/80" />
+                        Route feedback
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-white/56">{question.explanation}</p>
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-white/15 p-3 text-sm leading-6 text-white/40">
+                      Choose an answer to see how My 1400+ corrects the mistake.
+                    </div>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-4 border border-white/10 bg-black/30 p-5 md:grid-cols-[1fr_340px] md:items-center">
+        <div>
+          <div className="flex items-center gap-3">
+            <LockKeyhole size={18} className="text-white/50" />
+            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/38">Locked after preview</p>
+          </div>
+          <h3 className="mt-3 text-2xl font-light text-white">Today still has 28 tasks, a timed set, and parent progress snapshot locked.</h3>
+          <p className="mt-2 text-sm leading-6 text-white/48">
+            Pro opens the full daily route, updates it after each result, and keeps the student from guessing what to study.
+          </p>
+        </div>
+        <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro">
+          Unlock Pro <ArrowRight size={18} />
+        </Link>
       </div>
     </section>
   );
