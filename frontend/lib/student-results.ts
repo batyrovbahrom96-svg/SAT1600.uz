@@ -11,11 +11,13 @@ export type StudentResult = {
 
 export const studentResults: StudentResult[] = [
   {
-    name: "Muslima",
+    name: "Muslima Xalikova",
     score: "1330 SAT",
     improvement: "Reached 1330 SAT in 3 months",
     method: "Diagnostic plan + targeted SAT practice",
-    evidence: "Student result video",
+    evidence: "Video + SAT score report",
+    testDate: "March 14, 2026",
+    certificate: "/assets/results/muslima-xalikova-1330-sat.png",
     video: "/assets/video/student-muslima-1330sat.mp4"
   },
   {
