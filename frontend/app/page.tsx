@@ -891,6 +891,10 @@ export default function Home() {
             SAT preparation is easier to trust when parents can see the student&apos;s score path,
             weak areas, completed work, and the next correction plan every week.
           </p>
+          <p lang="ru">
+            Родителям легче доверять подготовке, когда они видят путь к баллу, слабые темы,
+            выполненные задания и следующий план исправления каждую неделю.
+          </p>
           <Link className="parent-journey-section__cta" href="/pricing">
             <span>Unlock weekly tracking</span>
             <ArrowRight size={18} />
@@ -902,10 +906,12 @@ export default function Home() {
             <div>
               <span>Weekly parent update</span>
               <strong>Every Sunday</strong>
+              <p lang="ru">Еженедельный отчет для родителей</p>
             </div>
             <div>
               <span>Current focus</span>
               <strong>Advanced Math + transitions</strong>
+              <p lang="ru">Текущий фокус: Advanced Math и transitions</p>
             </div>
           </div>
 
@@ -914,21 +920,25 @@ export default function Home() {
               <span>01</span>
               <h3>What parents receive weekly</h3>
               <p>Mock score, completed practice count, missed-topic list, and the next 7-day assignment.</p>
+              <p lang="ru">Балл за mock test, количество выполненных заданий, список слабых тем и план на следующие 7 дней.</p>
             </article>
             <article>
               <span>02</span>
               <h3>How progress is tracked</h3>
               <p>Reading/Writing and Math scores are compared with accuracy, timing, and repeated trap patterns.</p>
+              <p lang="ru">Баллы Reading/Writing и Math сравниваются с точностью, временем и повторяющимися ошибками.</p>
             </article>
             <article>
               <span>03</span>
               <h3>How weak areas are reported</h3>
               <p>Parents see exact weak skills such as transitions, evidence questions, algebra, or advanced math.</p>
+              <p lang="ru">Родители видят конкретные слабые навыки: transitions, evidence questions, algebra или advanced math.</p>
             </article>
             <article>
               <span>04</span>
               <h3>When to expect score growth</h3>
               <p>Small movement can appear after 7-14 days; serious score growth needs repeated mock-test cycles.</p>
+              <p lang="ru">Первые изменения возможны через 7-14 дней; серьезный рост требует повторных циклов mock test.</p>
             </article>
           </div>
         </div>
