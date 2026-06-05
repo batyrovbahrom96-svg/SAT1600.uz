@@ -92,7 +92,7 @@ export function LuxuryNavbar() {
               <Link className="hidden h-11 max-w-[240px] items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/dashboard">
                 <span className="truncate">{studentName}</span>
               </Link>
-              <button className="h-11 border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] leading-[44px] text-white/70 transition-colors hover:border-white/35 hover:text-white" onClick={logout} type="button">
+              <button className="flex h-11 min-w-[112px] items-center justify-center whitespace-nowrap border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/70 transition-colors hover:border-white/35 hover:text-white" onClick={logout} type="button">
                 Log out
               </button>
             </>
