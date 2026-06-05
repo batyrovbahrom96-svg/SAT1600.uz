@@ -1941,7 +1941,9 @@ button, input {
   grid-template-columns: minmax(210px, 0.84fr) minmax(360px, 1fr);
   gap: 22px;
   width: min(780px, 62vw);
+  max-height: calc(100vh - 150px);
   padding: 18px;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 2px;
   background:
@@ -1968,7 +1970,24 @@ button, input {
 
 .results-wall__copy {
   align-self: end;
+  max-height: calc(100vh - 188px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 8px 18px 4px 2px;
+  scrollbar-color: rgba(255, 255, 255, 0.36) rgba(255, 255, 255, 0.08);
+  scrollbar-width: thin;
+}
+
+.results-wall__copy::-webkit-scrollbar {
+  width: 6px;
+}
+
+.results-wall__copy::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.results-wall__copy::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.32);
 }
 
 .results-wall__copy p {
@@ -3497,11 +3516,13 @@ button, input {
     top: 112px;
     grid-template-columns: 1fr;
     width: min(420px, 86vw);
+    max-height: calc(100vh - 136px);
     gap: 18px;
     padding: 18px;
   }
 
   .results-wall__copy {
+    max-height: calc(58vh - 48px);
     padding: 0 34px 0 0;
   }
 
