@@ -18,6 +18,70 @@ type Results = {
   score_math: number;
 };
 
+type MiniQuestion = {
+  section: "Reading" | "Writing" | "Math";
+  topic: string;
+  prompt: string;
+  choices: string[];
+  answerIndex: number;
+  explanation: string;
+};
+
+const miniDiagnosticQuestions: MiniQuestion[] = [
+  {
+    section: "Reading",
+    topic: "Command of Evidence",
+    prompt:
+      "A researcher found that students who reviewed missed SAT questions improved faster than students who only watched new lessons. Which choice best states the finding?",
+    choices: [
+      "New lessons are unnecessary for SAT improvement.",
+      "Reviewing mistakes can be more useful than only adding new content.",
+      "Students should stop taking full mock tests.",
+      "SAT scores improve only when students study every day."
+    ],
+    answerIndex: 1,
+    explanation:
+      "The evidence compares mistake review with only watching new lessons. The correct answer keeps that exact relationship without exaggerating it."
+  },
+  {
+    section: "Writing",
+    topic: "Transitions",
+    prompt:
+      "The student understood the formula. ___, she lost points because she used the wrong sign under time pressure.",
+    choices: ["Therefore", "However", "For example", "Similarly"],
+    answerIndex: 1,
+    explanation:
+      "The second sentence contrasts understanding the formula with still losing points, so 'However' preserves the logic."
+  },
+  {
+    section: "Math",
+    topic: "Advanced Math",
+    prompt: "If f(x) = |x - 4x|, what positive value of a makes f(5) - f(a) = -15?",
+    choices: ["5", "10", "15", "30"],
+    answerIndex: 1,
+    explanation:
+      "Simplify f(x) to |-3x|. Then f(5) = 15, so 15 - f(a) = -15 and f(a) = 30. That gives |-3a| = 30, so a = 10."
+  },
+  {
+    section: "Writing",
+    topic: "Boundaries",
+    prompt: "Which choice completes the sentence correctly? The sensor failed ___ the team repeated the trial.",
+    choices: [", the", "; the", "the", ", and, the"],
+    answerIndex: 1,
+    explanation:
+      "Both sides are complete sentences. A semicolon correctly joins two related independent clauses."
+  },
+  {
+    section: "Math",
+    topic: "Linear Equations",
+    prompt: "If 3(x - 2) + 2x = 19, what is the value of x?",
+    choices: ["3", "4", "5", "7"],
+    answerIndex: 2,
+    explanation:
+      "Distribute first: 3x - 6 + 2x = 19, so 5x = 25 and x = 5."
+  }
+];
+
 export default function MockTestAccessPage() {
   const router = useRouter();
   const [tests, setTests] = useState<Test[]>([]);
@@ -26,6 +90,8 @@ export default function MockTestAccessPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [message, setMessage] = useState("");
   const [preTestStep, setPreTestStep] = useState<"dashboard" | "instructions" | "preparing">("dashboard");
+  const [miniIndex, setMiniIndex] = useState(0);
+  const [miniAnswers, setMiniAnswers] = useState<Record<number, number>>({});
   const latestAttemptId = history?.score_history.at(-1)?.attempt_id;
   const diagnosticTest = tests[0];
 
@@ -151,20 +217,57 @@ export default function MockTestAccessPage() {
   }
 
   return (
+    <MiniDiagnostic
+      answers={miniAnswers}
+      currentIndex={miniIndex}
+      onAnswer={(answerIndex) => setMiniAnswers((current) => ({ ...current, [miniIndex]: answerIndex }))}
+      onNext={() => setMiniIndex((index) => Math.min(miniDiagnosticQuestions.length, index + 1))}
+      onRestart={() => {
+        setMiniAnswers({});
+        setMiniIndex(0);
+      }}
+    />
+  );
+}
+
+function MiniDiagnostic({
+  answers,
+  currentIndex,
+  onAnswer,
+  onNext,
+  onRestart
+}: {
+  answers: Record<number, number>;
+  currentIndex: number;
+  onAnswer: (answerIndex: number) => void;
+  onNext: () => void;
+  onRestart: () => void;
+}) {
+  const isComplete = currentIndex >= miniDiagnosticQuestions.length;
+  const answeredCount = Object.keys(answers).length;
+  const correctCount = miniDiagnosticQuestions.reduce((total, question, index) => total + (answers[index] === question.answerIndex ? 1 : 0), 0);
+  const currentQuestion = miniDiagnosticQuestions[currentIndex];
+  const currentAnswer = answers[currentIndex];
+  const missedTopics = miniDiagnosticQuestions
+    .filter((question, index) => answers[index] !== undefined && answers[index] !== question.answerIndex)
+    .map((question) => question.topic);
+  const projectedScore = 820 + correctCount * 90;
+
+  return (
     <main className="min-h-screen bg-[#101112] text-white">
       <LuxuryNavbar />
 
-      <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1fr_520px] lg:items-center">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Free diagnostic preview</p>
+      <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-8 px-5 py-10 md:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+        <div className="lg:sticky lg:top-24">
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Mini diagnostic</p>
           <h1 className="mt-6 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
-            See what the SAT diagnostic gives you before signing in.
+            Try the SAT diagnostic before signing in.
           </h1>
           <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-            Preview the score report, weak-area map, and first study route. Create an account only when you are ready to save a real mock test attempt.
+            Answer 5 SAT-style questions. SATTEST.UZ will show a quick weakness snapshot, then you can create an account to save the full mock test.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {["Bluebook-style diagnostic", "Score and section preview", "Weak topic map", "First 7-day route"].map((item) => (
+            {["No login required", "Instant feedback", "Weak-topic snapshot", "Full mock saved after signup"].map((item) => (
               <div className="flex items-center gap-3 border border-white/10 bg-white/[0.035] p-3 text-sm text-white/64" key={item}>
                 <Check size={16} />
                 {item}
@@ -173,50 +276,127 @@ export default function MockTestAccessPage() {
           </div>
         </div>
 
-        <div className="border border-white/10 bg-white/[0.035] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
-          <div className="border-b border-white/10 pb-5">
-            <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
-              <BarChart3 size={22} />
-            </div>
-            <h2 className="mt-5 text-2xl font-light text-white">Example diagnostic report</h2>
-            <p className="mt-3 text-sm font-light leading-6 text-white/48">
-              This is what students see after finishing the real mock test.
-            </p>
-          </div>
-
-          <div className="mt-5 grid border border-white/10 bg-black/20">
-            <ScoreMetric label="Overall" value={1210} />
-            <div className="grid grid-cols-2 border-t border-white/10">
-              <ScoreMetric label="English" value={610} />
-              <ScoreMetric label="Math" value={600} />
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            {[
-              ["Weakest area", "Command of Evidence"],
-              ["Mistake pattern", "Causal gap trap"],
-              ["First focus", "Linear equations + grammar boundaries"]
-            ].map(([label, value]) => (
-              <div className="border border-white/10 bg-black/20 p-3" key={label}>
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{label}</p>
-                <p className="mt-2 text-sm text-white/72">{value}</p>
+        {isComplete ? (
+          <section className="border border-white/10 bg-white/[0.035] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+            <div className="border-b border-white/10 pb-5">
+              <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
+                <BarChart3 size={22} />
               </div>
-            ))}
-          </div>
+              <h2 className="mt-5 text-4xl font-light leading-tight text-white">Your mini diagnostic snapshot</h2>
+              <p className="mt-3 text-sm font-light leading-6 text-white/48">
+                This is a short preview, not a saved SAT score. The full diagnostic creates your real score report and 1400+ route.
+              </p>
+            </div>
 
-          <div className="mt-5 grid gap-3">
-            <Link className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/register">
-              Start free diagnostic <UserPlus size={18} />
-            </Link>
-            <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/results/demo">
-              View demo report <ArrowRight size={18} />
-            </Link>
-            <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/pricing">
-              Choose plan <ArrowRight size={18} />
-            </Link>
-          </div>
-        </div>
+            <div className="mt-5 grid border border-white/10 bg-black/20">
+              <ScoreMetric label="Projected range" value={projectedScore} />
+              <div className="grid grid-cols-2 border-t border-white/10">
+                <ScoreMetric label="Correct" value={correctCount} />
+                <ScoreMetric label="Questions" value={miniDiagnosticQuestions.length} />
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              {(missedTopics.length ? missedTopics : ["Higher-difficulty timing"]).slice(0, 3).map((topic, index) => (
+                <div className="border border-red-200/15 bg-red-400/10 p-3" key={`${topic}-${index}`}>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-red-100/55">Priority weakness</p>
+                  <p className="mt-2 text-sm font-semibold text-red-50">{topic}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 border border-emerald-300/20 bg-emerald-300/[0.07] p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-100/62">Next step</p>
+              <p className="mt-3 text-sm font-light leading-6 text-white/62">
+                Create an account to take the full diagnostic. Your real report will save every mistake, timing pattern, and daily route.
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-[1fr_1fr]">
+              <Link className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/register">
+                Save full diagnostic <UserPlus size={18} />
+              </Link>
+              <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/pricing?plan=pro">
+                Unlock Pro <ArrowRight size={18} />
+              </Link>
+              <button
+                className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white md:col-span-2"
+                onClick={onRestart}
+                type="button"
+              >
+                Restart mini diagnostic <RotateCcw size={18} />
+              </button>
+            </div>
+          </section>
+        ) : currentQuestion ? (
+          <section className="border border-white/10 bg-white/[0.035] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+            <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38">
+                  {currentQuestion.section} · Question {currentIndex + 1} of {miniDiagnosticQuestions.length}
+                </p>
+                <h2 className="mt-3 text-3xl font-light text-white">{currentQuestion.topic}</h2>
+              </div>
+              <div className="border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/58">
+                {answeredCount}/{miniDiagnosticQuestions.length} answered
+              </div>
+            </div>
+
+            <p className="mt-8 max-w-4xl text-2xl font-light leading-snug text-white md:text-3xl">
+              {currentQuestion.prompt}
+            </p>
+
+            <div className="mt-8 grid gap-3">
+              {currentQuestion.choices.map((choice, index) => {
+                const hasAnswer = currentAnswer !== undefined;
+                const isSelected = currentAnswer === index;
+                const isCorrect = currentQuestion.answerIndex === index;
+                const optionClass = hasAnswer
+                  ? isCorrect
+                    ? "border-emerald-300/45 bg-emerald-300/10 text-emerald-100"
+                    : isSelected
+                      ? "border-red-300/45 bg-red-300/10 text-red-100"
+                      : "border-white/10 bg-black/15 text-white/42"
+                  : "border-white/10 bg-black/20 text-white/72 hover:border-white/35 hover:bg-white/[0.06]";
+
+                return (
+                  <button
+                    className={`flex min-h-14 items-center gap-4 border px-4 py-4 text-left text-base transition-colors ${optionClass}`}
+                    disabled={hasAnswer}
+                    key={choice}
+                    onClick={() => onAnswer(index)}
+                    type="button"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current text-xs font-black">
+                      {String.fromCharCode(65 + index)}
+                    </span>
+                    {choice}
+                  </button>
+                );
+              })}
+            </div>
+
+            {currentAnswer !== undefined ? (
+              <div className="mt-6 border border-white/10 bg-black/25 p-4">
+                <p className="text-sm font-semibold text-white">
+                  {currentAnswer === currentQuestion.answerIndex ? "Correct." : "Trap found."}
+                </p>
+                <p className="mt-2 text-sm font-light leading-6 text-white/58">{currentQuestion.explanation}</p>
+              </div>
+            ) : null}
+
+            <div className="mt-6 flex justify-end">
+              <button
+                className="flex h-13 min-w-[230px] items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white disabled:cursor-not-allowed disabled:opacity-35"
+                disabled={currentAnswer === undefined}
+                onClick={onNext}
+                type="button"
+              >
+                {currentIndex === miniDiagnosticQuestions.length - 1 ? "See snapshot" : "Next question"} <ArrowRight size={18} />
+              </button>
+            </div>
+          </section>
+        ) : null}
       </section>
     </main>
   );
