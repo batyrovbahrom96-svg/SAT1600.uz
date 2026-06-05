@@ -76,11 +76,13 @@ def _handle_message(message: dict, db: Session | None) -> dict:
         return {"ok": True}
 
     if db is None:
-        _send_message(
-            chat_id,
-            "Receipt received. Founder will verify it manually.\n\n"
-            "Your access will be activated after confirmation. Please keep this chat open.",
-        )
+        settings = get_settings()
+        if chat_id != str(settings.telegram_admin_chat_id):
+            _send_message(
+                chat_id,
+                "Receipt received. SATTEST.UZ Founder has been notified.\n\n"
+                "Your Pro access will be activated shortly after payment confirmation. Please keep this chat open.",
+            )
         _notify_admin_for_manual_approval(email, plan, message)
         return {"ok": True, "mode": "manual_no_database"}
 
@@ -220,12 +222,12 @@ def _notify_admin_for_manual_approval(email: str, plan: str, message: dict) -> N
     price = f"{PLAN_PRICES[plan]:,}".replace(",", " ")
     text = (
         "New SATTEST.UZ payment receipt received.\n\n"
-        "Database is not connected on this bot service, so approval is manual for now.\n\n"
         f"Email: {email}\n"
         f"Plan: {plan.upper()}\n"
         f"Amount: {price} UZS\n"
         f"Telegram sender: {sender_line}\n\n"
-        "Check the copied receipt above, then activate access manually in the live admin/database service."
+        "Action needed: verify the payment, then activate Pro access for this email.\n\n"
+        "Automatic website activation is paused because this bot service is not connected to the live platform database yet."
     )
 
     _copy_message(settings.telegram_admin_chat_id, message["chat"]["id"], message["message_id"])
