@@ -6,12 +6,14 @@ export function CurriculumPrompt({
   onClose,
   onOpen,
   score,
-  weaknesses
+  weaknesses,
+  isUnlocked = false
 }: {
   onClose: () => void;
   onOpen: () => void;
   score: number;
   weaknesses: string[];
+  isUnlocked?: boolean;
 }) {
   const firstWeaknesses = weaknesses.slice(0, 3);
 
@@ -33,13 +35,18 @@ export function CurriculumPrompt({
               <div className="flex h-16 w-16 items-center justify-center border border-yellow-200/20 bg-yellow-200/10 text-yellow-100">
                 <GraduationCap size={30} />
               </div>
-              <p className="mt-7 text-[10px] font-black uppercase tracking-[0.42em] text-white/38">1400+ exercise route ready</p>
+              <p className="mt-7 text-[10px] font-black uppercase tracking-[0.42em] text-white/38">
+                {isUnlocked ? "1400+ exercise route unlocked" : "1400+ exercise route ready"}
+              </p>
               <h2 className="mt-5 max-w-3xl text-5xl font-light leading-none text-white md:text-7xl">
-                Your weak topics are clear. The full exercise route is the next step.
+                {isUnlocked
+                  ? "Your weak topics are clear. Open your exercise route now."
+                  : "Your weak topics are clear. The full exercise route is the next step."}
               </h2>
               <p className="mt-6 max-w-2xl text-base font-light leading-8 text-white/55">
-                The diagnostic shows where points are being lost. Pro unlocks the personal 1400+ route,
-                supervised theory, daily exercises, and section work needed to repair those exact mistakes.
+                {isUnlocked
+                  ? "Your subscription is active. Continue into the personal 1400+ route, supervised theory, daily exercises, and section work needed to repair those exact mistakes."
+                  : "The diagnostic shows where points are being lost. Pro unlocks the personal 1400+ route, supervised theory, daily exercises, and section work needed to repair those exact mistakes."}
               </p>
             </div>
 
@@ -95,7 +102,7 @@ export function CurriculumPrompt({
               onClick={onOpen}
               type="button"
             >
-              Unlock exercise route <ArrowRight size={18} />
+              {isUnlocked ? "Open exercise route" : "Unlock exercise route"} <ArrowRight size={18} />
             </button>
           </div>
         </section>

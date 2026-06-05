@@ -256,6 +256,7 @@ export default function ResultsPage() {
   const [message, setMessage] = useState("");
   const [showCurriculumPanel, setShowCurriculumPanel] = useState(false);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
 
   useEffect(() => {
     if (!attemptId) return;
@@ -275,20 +276,30 @@ export default function ResultsPage() {
   }, [attemptId, router]);
 
   useEffect(() => {
-    if (attemptId === "demo") return;
+    if (attemptId === "demo") {
+      setSubscriptionChecked(true);
+      return;
+    }
     getSubscriptionStatus()
       .then((status) => setHasActiveSubscription(status.has_active_subscription))
-      .catch(() => setHasActiveSubscription(false));
+      .catch(() => setHasActiveSubscription(false))
+      .finally(() => setSubscriptionChecked(true));
   }, [attemptId]);
 
   const reportResults = results ?? (attemptId === "demo" ? demoResults : null);
   const analytics = useMemo(() => reportResults ? buildReportAnalytics(reportResults) : null, [reportResults]);
 
   useEffect(() => {
-    if (!reportResults || !analytics || attemptId === "demo" || hasActiveSubscription) return undefined;
+    if (!reportResults || !analytics || !subscriptionChecked || attemptId === "demo" || hasActiveSubscription) return undefined;
     const timer = window.setTimeout(() => setShowCurriculumPanel(true), 2200);
     return () => window.clearTimeout(timer);
-  }, [analytics, attemptId, hasActiveSubscription, reportResults]);
+  }, [analytics, attemptId, hasActiveSubscription, reportResults, subscriptionChecked]);
+
+  useEffect(() => {
+    if (hasActiveSubscription) {
+      setShowCurriculumPanel(false);
+    }
+  }, [hasActiveSubscription]);
 
   if (!reportResults || !analytics) {
     return (
@@ -548,6 +559,7 @@ export default function ResultsPage() {
           onOpen={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro")}
           score={reportResults.score_total}
           weaknesses={analytics.weaknesses}
+          isUnlocked={hasActiveSubscription}
         />
       ) : null}
     </main>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, BookOpenCheck, CalendarDays, CheckCircle2, Clock3, Crown, LineChart, Target, TrendingUp, XCircle } from "lucide-react";
 import { CurriculumPrompt } from "@/components/CurriculumPrompt";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { ApiError, api, getToken } from "@/lib/api";
+import { ApiError, api, getSubscriptionStatus, getToken } from "@/lib/api";
 
 type Test = { id: string; title: string; description: string; is_premium: boolean };
 type ScoreHistoryItem = { attempt_id: string; score: number; date: string };
@@ -53,6 +53,8 @@ export default function DashboardPage() {
   const [requestedAttemptId, setRequestedAttemptId] = useState<string | null>(null);
   const [canShowCabinet, setCanShowCabinet] = useState(false);
   const [showCurriculumPanel, setShowCurriculumPanel] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
   const [message, setMessage] = useState("");
   const attempts = history?.attempts ?? 0;
   const latestScore = history?.score_history.at(-1)?.score;
@@ -88,7 +90,17 @@ export default function DashboardPage() {
       console.log("API unavailable, continue");
       router.replace("/practice");
     });
+    getSubscriptionStatus()
+      .then((status) => setHasActiveSubscription(status.has_active_subscription))
+      .catch(() => setHasActiveSubscription(false))
+      .finally(() => setSubscriptionChecked(true));
   }, [router]);
+
+  useEffect(() => {
+    if (hasActiveSubscription) {
+      setShowCurriculumPanel(false);
+    }
+  }, [hasActiveSubscription]);
 
   useEffect(() => {
     if (!latestAttemptId) {
@@ -102,10 +114,10 @@ export default function DashboardPage() {
   }, [latestAttemptId]);
 
   useEffect(() => {
-    if (!diagnosticResults || !latestAttemptId) return undefined;
+    if (!diagnosticResults || !latestAttemptId || !subscriptionChecked || hasActiveSubscription) return undefined;
     const timer = window.setTimeout(() => setShowCurriculumPanel(true), 1400);
     return () => window.clearTimeout(timer);
-  }, [diagnosticResults, latestAttemptId]);
+  }, [diagnosticResults, hasActiveSubscription, latestAttemptId, subscriptionChecked]);
 
   async function start(testId: string) {
     try {
@@ -455,6 +467,7 @@ export default function DashboardPage() {
           onOpen={() => router.push(`/curriculum/${latestAttemptId}`)}
           score={diagnosticResults.score_total}
           weaknesses={diagnosticSummary?.weaknesses ?? []}
+          isUnlocked={hasActiveSubscription}
         />
       ) : null}
     </main>
