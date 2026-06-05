@@ -222,7 +222,7 @@ function ProgressTable({ table }: { table: (typeof progressTables)[number] }) {
   );
 }
 
-function SamplePracticePreview() {
+function SamplePracticePreview({ isUnlocked = false }: { isUnlocked?: boolean }) {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const answeredCount = Object.keys(answers).length;
 
@@ -312,16 +312,28 @@ function SamplePracticePreview() {
       <div className="mt-5 grid gap-4 border border-white/10 bg-black/30 p-5 md:grid-cols-[1fr_340px] md:items-center">
         <div>
           <div className="flex items-center gap-3">
-            <LockKeyhole size={18} className="text-white/50" />
-            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/38">Pro wall</p>
+            {isUnlocked ? (
+              <CheckCircle2 size={18} className="text-emerald-200/80" />
+            ) : (
+              <LockKeyhole size={18} className="text-white/50" />
+            )}
+            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/38">
+              {isUnlocked ? "Pro practice active" : "Pro wall"}
+            </p>
           </div>
-          <h3 className="mt-3 text-2xl font-light text-white">27 targeted questions are waiting after these samples.</h3>
+          <h3 className="mt-3 text-2xl font-light text-white">
+            {isUnlocked
+              ? "Your full targeted practice sets are open."
+              : "27 targeted questions are waiting after these samples."}
+          </h3>
           <p className="mt-2 text-sm leading-6 text-white/48">
-            Pro unlocks the full drill, timed retake, mistake notebook, and the next weak-topic assignment.
+            {isUnlocked
+              ? "Continue into Reading, Writing, or Math practice. Your paid account can use the full drill sets, topic practice, and mastery map."
+              : "Pro unlocks the full drill, timed retake, mistake notebook, and the next weak-topic assignment."}
           </p>
         </div>
-        <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro">
-          Unlock Pro <ArrowRight size={18} />
+        <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href={isUnlocked ? "/practice/reading" : "/pricing?plan=pro"}>
+          {isUnlocked ? "Start full practice" : "Unlock Pro"} <ArrowRight size={18} />
         </Link>
       </div>
     </section>
@@ -432,7 +444,7 @@ export default function PracticeAccessPage() {
             })}
           </div>
 
-          <SamplePracticePreview />
+          <SamplePracticePreview isUnlocked />
 
           <section className="mt-14 border-t border-white/10 pt-10">
             <div className="max-w-4xl">
