@@ -1943,7 +1943,9 @@ button, input {
   width: min(780px, 62vw);
   max-height: calc(100vh - 150px);
   padding: 18px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 2px;
   background:
@@ -1960,6 +1962,20 @@ button, input {
   transition:
     opacity 0.8s ease,
     transform 1.1s cubic-bezier(0.43, 0.195, 0.02, 1);
+  scrollbar-color: rgba(255, 255, 255, 0.36) rgba(255, 255, 255, 0.08);
+  scrollbar-width: thin;
+}
+
+.results-wall::-webkit-scrollbar {
+  width: 7px;
+}
+
+.results-wall::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.results-wall::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.32);
 }
 
 .results-wall.is-visible {
@@ -1970,24 +1986,7 @@ button, input {
 
 .results-wall__copy {
   align-self: end;
-  max-height: calc(100vh - 188px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
   padding: 8px 18px 4px 2px;
-  scrollbar-color: rgba(255, 255, 255, 0.36) rgba(255, 255, 255, 0.08);
-  scrollbar-width: thin;
-}
-
-.results-wall__copy::-webkit-scrollbar {
-  width: 6px;
-}
-
-.results-wall__copy::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.results-wall__copy::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.32);
 }
 
 .results-wall__copy p {
@@ -3522,7 +3521,6 @@ button, input {
   }
 
   .results-wall__copy {
-    max-height: calc(58vh - 48px);
     padding: 0 34px 0 0;
   }
 
