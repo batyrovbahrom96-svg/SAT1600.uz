@@ -162,6 +162,16 @@ async def telegram_webhook(request: Request, db: Session = Depends(get_db)) -> d
     return handle_telegram_update(update, db)
 
 
+@router.get("/telegram/status")
+def telegram_status() -> dict:
+    settings = get_settings()
+    return {
+        "bot_token_configured": bool(settings.telegram_bot_token),
+        "webhook_secret_configured": bool(settings.telegram_webhook_secret),
+        "admin_chat_id_configured": bool(settings.telegram_admin_chat_id),
+    }
+
+
 def _send_verification_email(email: str, code: str) -> bool:
     settings = get_settings()
     if settings.resend_api_key:
