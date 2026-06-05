@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request
 from collections import Counter, defaultdict
 
-from sqlalchemy import select, text
+from sqlalchemy import or_, select, text
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_user, require_admin
@@ -124,6 +124,31 @@ def current_user_profile(user: User = Depends(get_current_user)) -> dict:
 
 @router.get("/subscriptions/me")
 def my_subscription(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    now = datetime.utcnow()
+    active_subscription = (
+        db.execute(
+            select(Subscription)
+            .where(
+                Subscription.user_id == user.id,
+                Subscription.status == "active",
+                or_(Subscription.current_period_end.is_(None), Subscription.current_period_end > now),
+            )
+            .order_by(Subscription.created_at.desc())
+        )
+        .scalars()
+        .first()
+    )
+    if active_subscription:
+        return {
+            "has_active_subscription": True,
+            "subscription": {
+                "plan": active_subscription.plan,
+                "status": active_subscription.status,
+                "provider": active_subscription.provider,
+                "current_period_end": active_subscription.current_period_end.isoformat() if active_subscription.current_period_end else None,
+            },
+        }
+
     subscription = (
         db.execute(
             select(Subscription)
@@ -136,12 +161,8 @@ def my_subscription(db: Session = Depends(get_db), user: User = Depends(get_curr
     if not subscription:
         return {"has_active_subscription": False, "subscription": None}
 
-    now = datetime.utcnow()
-    is_active = subscription.status == "active" and (
-        subscription.current_period_end is None or subscription.current_period_end > now
-    )
     return {
-        "has_active_subscription": is_active,
+        "has_active_subscription": False,
         "subscription": {
             "plan": subscription.plan,
             "status": subscription.status,

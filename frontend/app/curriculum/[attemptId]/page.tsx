@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowRight, BookOpenCheck, CalendarDays, GraduationCap, Target, Timer, Trophy } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { ApiError, api } from "@/lib/api";
+import { ApiError, api, getSubscriptionStatus } from "@/lib/api";
 
 type ResultQuestion = {
   id: string;
@@ -74,6 +74,8 @@ export default function CurriculumPage() {
   const [activeQuestion, setActiveQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
 
   useEffect(() => {
     if (!attemptId) return;
@@ -85,6 +87,13 @@ export default function CurriculumPage() {
       setMessage(error instanceof Error ? error.message : "Unable to load your curriculum.");
     });
   }, [attemptId, router]);
+
+  useEffect(() => {
+    getSubscriptionStatus()
+      .then((status) => setHasActiveSubscription(status.has_active_subscription))
+      .catch(() => setHasActiveSubscription(false))
+      .finally(() => setSubscriptionChecked(true));
+  }, []);
 
   const plan = useMemo(() => results ? buildCurriculum(results) : null, [results]);
   const lesson = useMemo(() => activeBlock ? buildPracticeLesson(activeBlock) : null, [activeBlock]);
@@ -151,21 +160,26 @@ export default function CurriculumPage() {
         <section className="mt-6 border border-emerald-300/25 bg-emerald-300/[0.06] p-5">
           <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.36em] text-emerald-100/58">Exercises require Pro</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.36em] text-emerald-100/58">
+                {hasActiveSubscription ? "Pro access active" : "Exercises require Pro"}
+              </p>
               <h2 className="mt-4 text-3xl font-light leading-tight text-white md:text-4xl">
-                Your route is ready. Unlock the practice engine to use it.
+                {hasActiveSubscription
+                  ? "Your route is unlocked. Start the practice engine."
+                  : "Your route is ready. Unlock the practice engine to use it."}
               </h2>
               <p className="mt-3 max-w-3xl text-sm font-light leading-7 text-white/58">
-                The free diagnostic identifies the score leaks. Pro unlocks the actual daily exercises,
-                supervised theory, section work, and retake cycle that repairs them.
+                {hasActiveSubscription
+                  ? "Your approved payment is active on this account. Open a weak-topic exercise below, review the supervised theory, and retake the section when the set is complete."
+                  : "The free diagnostic identifies the score leaks. Pro unlocks the actual daily exercises, supervised theory, section work, and retake cycle that repairs them."}
               </p>
             </div>
             <button
               className="flex h-14 min-w-[250px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-              onClick={() => router.push("/pricing?plan=pro")}
+              onClick={() => hasActiveSubscription ? plan.blocks[0] && openPractice(plan.blocks[0]) : router.push("/pricing?plan=pro")}
               type="button"
             >
-              Unlock Pro <ArrowRight size={18} />
+              {subscriptionChecked && hasActiveSubscription ? "Start Pro route" : "Unlock Pro"} <ArrowRight size={18} />
             </button>
           </div>
         </section>
@@ -185,11 +199,13 @@ export default function CurriculumPage() {
                   <button
                     className="flex items-center justify-between border border-white/10 bg-black/20 px-4 py-3 text-left transition-colors hover:border-white/35 hover:bg-white/[0.06]"
                     key={topic}
-                    onClick={() => router.push("/pricing?plan=pro")}
+                    onClick={() => hasActiveSubscription ? openPractice(block) : router.push("/pricing?plan=pro")}
                     type="button"
                   >
                     <span className="text-sm font-light text-white/70">{topic}</span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-100/55">Locked exercise</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-100/55">
+                      {hasActiveSubscription ? "Open exercise" : "Locked exercise"}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -202,10 +218,10 @@ export default function CurriculumPage() {
               </div>
               <button
                 className="mt-5 flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-                onClick={() => router.push("/pricing?plan=pro")}
+                onClick={() => hasActiveSubscription ? openPractice(block) : router.push("/pricing?plan=pro")}
                 type="button"
               >
-                Unlock exercises <ArrowRight size={18} />
+                {hasActiveSubscription ? "Start exercises" : "Unlock exercises"} <ArrowRight size={18} />
               </button>
             </article>
           ))}

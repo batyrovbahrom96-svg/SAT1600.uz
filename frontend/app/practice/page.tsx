@@ -15,7 +15,7 @@ import {
   Zap
 } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { getToken } from "@/lib/api";
+import { getSubscriptionStatus, getToken } from "@/lib/api";
 
 const practiceSections = [
   {
@@ -331,11 +331,21 @@ function SamplePracticePreview() {
 export default function PracticeAccessPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [selectedSection, setSelectedSection] = useState("SAT Reading");
 
   useEffect(() => {
-    setIsLoggedIn(Boolean(getToken()));
-    setHasCheckedAuth(true);
+    const token = getToken();
+    setIsLoggedIn(Boolean(token));
+    if (!token) {
+      setHasCheckedAuth(true);
+      return;
+    }
+
+    getSubscriptionStatus()
+      .then((status) => setHasActiveSubscription(status.has_active_subscription))
+      .catch(() => setHasActiveSubscription(false))
+      .finally(() => setHasCheckedAuth(true));
   }, []);
 
   if (!hasCheckedAuth) {
@@ -350,7 +360,7 @@ export default function PracticeAccessPage() {
     );
   }
 
-  if (isLoggedIn) {
+  if (isLoggedIn && hasActiveSubscription) {
     return (
       <main className="min-h-screen bg-[#101112] text-white">
         <LuxuryNavbar />
@@ -441,6 +451,43 @@ export default function PracticeAccessPage() {
               ))}
             </div>
           </section>
+        </section>
+      </main>
+    );
+  }
+
+  if (isLoggedIn) {
+    return (
+      <main className="min-h-screen bg-[#101112] text-white">
+        <LuxuryNavbar />
+
+        <section className="mx-auto min-h-[calc(100vh-81px)] max-w-7xl px-5 py-14 md:px-8">
+          <div className="grid gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1fr_440px] lg:items-end">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Practice preview</p>
+              <h1 className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl">
+                Your account is ready. Pro unlocks the full practice engine.
+              </h1>
+              <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
+                Try the sample questions below, then unlock Pro to use every Reading, Writing, and Math drill with progress tracking.
+              </p>
+            </div>
+
+            <div className="border border-emerald-300/25 bg-emerald-300/[0.06] p-5">
+              <div className="flex h-12 w-12 items-center justify-center border border-emerald-300/20 bg-black/20 text-emerald-100">
+                <LockKeyhole size={22} />
+              </div>
+              <h2 className="mt-5 text-2xl font-light text-white">Payment required</h2>
+              <p className="mt-3 text-sm font-light leading-6 text-white/58">
+                After payment approval, this page switches to the unlocked practice dashboard automatically on refresh.
+              </p>
+              <Link className="mt-5 flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro">
+                Unlock Pro <ArrowRight size={18} />
+              </Link>
+            </div>
+          </div>
+
+          <SamplePracticePreview />
         </section>
       </main>
     );

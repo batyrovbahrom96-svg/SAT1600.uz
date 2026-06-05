@@ -38,6 +38,16 @@ export type Question = {
   choices: { label: string; text: string }[];
 };
 
+export type SubscriptionStatus = {
+  has_active_subscription: boolean;
+  subscription: {
+    plan: string;
+    status: string;
+    provider?: string | null;
+    current_period_end?: string | null;
+  } | null;
+};
+
 function getSafeStorage() {
   if (typeof window === "undefined") return null;
   try {
@@ -115,6 +125,10 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     throw new ApiError(formatApiErrorDetail(body.detail), response.status);
   }
   return response.json();
+}
+
+export async function getSubscriptionStatus() {
+  return api<SubscriptionStatus>("/api/subscriptions/me");
 }
 
 export function saveAuth(token: string, fullName?: string | null) {

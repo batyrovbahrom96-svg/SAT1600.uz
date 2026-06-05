@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { CurriculumPrompt } from "@/components/CurriculumPrompt";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { ApiError, api } from "@/lib/api";
+import { ApiError, api, getSubscriptionStatus } from "@/lib/api";
 
 type ResultQuestion = {
   id: string;
@@ -255,6 +255,7 @@ export default function ResultsPage() {
   const [results, setResults] = useState<Results | null>(null);
   const [message, setMessage] = useState("");
   const [showCurriculumPanel, setShowCurriculumPanel] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
 
   useEffect(() => {
     if (!attemptId) return;
@@ -273,14 +274,21 @@ export default function ResultsPage() {
     });
   }, [attemptId, router]);
 
+  useEffect(() => {
+    if (attemptId === "demo") return;
+    getSubscriptionStatus()
+      .then((status) => setHasActiveSubscription(status.has_active_subscription))
+      .catch(() => setHasActiveSubscription(false));
+  }, [attemptId]);
+
   const reportResults = results ?? (attemptId === "demo" ? demoResults : null);
   const analytics = useMemo(() => reportResults ? buildReportAnalytics(reportResults) : null, [reportResults]);
 
   useEffect(() => {
-    if (!reportResults || !analytics || attemptId === "demo") return undefined;
+    if (!reportResults || !analytics || attemptId === "demo" || hasActiveSubscription) return undefined;
     const timer = window.setTimeout(() => setShowCurriculumPanel(true), 2200);
     return () => window.clearTimeout(timer);
-  }, [analytics, attemptId, reportResults]);
+  }, [analytics, attemptId, hasActiveSubscription, reportResults]);
 
   if (!reportResults || !analytics) {
     return (
@@ -482,14 +490,18 @@ export default function ResultsPage() {
         <section className="mt-6 border border-emerald-300/25 bg-emerald-300/[0.06] p-5">
           <div className="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-center">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.36em] text-emerald-100/58">1400+ route locked</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.36em] text-emerald-100/58">
+                {hasActiveSubscription ? "1400+ route active" : "1400+ route locked"}
+              </p>
               <h2 className="mt-4 text-3xl font-light leading-tight text-white md:text-4xl">
-                You can see the problem. Pro gives the exercises to fix it.
+                {hasActiveSubscription
+                  ? "You can see the problem. Now open the exercises that fix it."
+                  : "You can see the problem. Pro gives the exercises to fix it."}
               </h2>
               <p className="mt-4 max-w-3xl text-sm font-light leading-7 text-white/58">
-                This free diagnostic shows your score leaks, weak topics, trap patterns, and missed-question
-                explanations. The full My 1400+ route unlocks daily exercises, supervised theory, retake dates,
-                and progress tracking for these exact weaknesses.
+                {hasActiveSubscription
+                  ? "Your approved subscription is active. Continue from this diagnostic into the daily route, supervised theory, retake dates, and progress tracking for these exact weaknesses."
+                  : "This free diagnostic shows your score leaks, weak topics, trap patterns, and missed-question explanations. The full My 1400+ route unlocks daily exercises, supervised theory, retake dates, and progress tracking for these exact weaknesses."}
               </p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 {(analytics.weaknesses.length ? analytics.weaknesses : ["Reading/Writing", "Math", "Timing"]).slice(0, 3).map((weakness) => (
@@ -508,10 +520,10 @@ export default function ResultsPage() {
               </p>
               <button
                 className="mt-5 flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-white"
-                onClick={() => router.push("/pricing?plan=pro")}
+                onClick={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro")}
                 type="button"
               >
-                Unlock with Pro <ArrowRight size={18} />
+                {hasActiveSubscription ? "Open my route" : "Unlock with Pro"} <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -533,7 +545,7 @@ export default function ResultsPage() {
       {showCurriculumPanel ? (
         <CurriculumPrompt
           onClose={() => setShowCurriculumPanel(false)}
-          onOpen={() => router.push("/pricing?plan=pro")}
+          onOpen={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro")}
           score={reportResults.score_total}
           weaknesses={analytics.weaknesses}
         />
