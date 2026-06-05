@@ -3084,6 +3084,150 @@ button, input {
   line-height: 1.65;
 }
 
+.parent-journey-section {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.72fr) minmax(0, 1fr);
+  gap: clamp(34px, 5vw, 82px);
+  align-items: start;
+  padding: clamp(74px, 9vh, 118px) 7.15vw;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(circle at 78% 18%, rgba(214, 199, 140, 0.12), transparent 28%),
+    linear-gradient(135deg, #080808 0%, #141414 56%, #070707 100%);
+}
+
+.parent-journey-section__intro,
+.parent-journey-section__dashboard {
+  position: relative;
+  z-index: 2;
+}
+
+.parent-journey-section__eyebrow {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.44em;
+  text-transform: uppercase;
+}
+
+.parent-journey-section h2 {
+  max-width: 760px;
+  margin-top: 26px;
+  color: #fff;
+  font-size: clamp(42px, 5vw, 84px);
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 1.04;
+}
+
+.parent-journey-section__intro > p:not(.parent-journey-section__eyebrow) {
+  max-width: 640px;
+  margin-top: 28px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: clamp(17px, 1.35vw, 24px);
+  font-weight: 300;
+  line-height: 1.65;
+}
+
+.parent-journey-section__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: min(100%, 330px);
+  min-height: 64px;
+  margin-top: 34px;
+  padding: 0 24px;
+  border: 1px solid #fff;
+  background: #fff;
+  color: #050505;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.parent-journey-section__cta:hover {
+  background: transparent;
+  color: #fff;
+}
+
+.parent-journey-section__dashboard {
+  padding: clamp(22px, 3vw, 36px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.018)),
+    rgba(0, 0, 0, 0.28);
+  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.48);
+}
+
+.parent-journey-section__summary {
+  display: grid;
+  grid-template-columns: 0.82fr 1fr;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.parent-journey-section__summary div {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.parent-journey-section__summary div:last-child {
+  border-right: 0;
+}
+
+.parent-journey-section__summary span,
+.parent-journey-section__cards span {
+  color: rgba(214, 199, 140, 0.76);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.parent-journey-section__summary strong {
+  color: #fff;
+  font-size: clamp(22px, 2.3vw, 34px);
+  font-weight: 300;
+  line-height: 1.15;
+}
+
+.parent-journey-section__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.parent-journey-section__cards article {
+  min-height: 210px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.parent-journey-section__cards h3 {
+  margin-top: 28px;
+  color: #fff;
+  font-size: clamp(20px, 1.8vw, 28px);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.parent-journey-section__cards p {
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
 .homepage-faq-section {
   position: relative;
   z-index: 4;
@@ -3629,6 +3773,34 @@ button, input {
     grid-template-columns: 1fr;
   }
 
+  .parent-journey-section {
+    grid-template-columns: 1fr;
+    gap: 42px;
+    padding: 72px 7vw 88px;
+  }
+
+  .parent-journey-section h2 {
+    font-size: clamp(40px, 10vw, 64px);
+  }
+
+  .parent-journey-section__summary,
+  .parent-journey-section__cards {
+    grid-template-columns: 1fr;
+  }
+
+  .parent-journey-section__summary div {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .parent-journey-section__summary div:last-child {
+    border-bottom: 0;
+  }
+
+  .parent-journey-section__cards article {
+    min-height: auto;
+  }
+
   .homepage-faq-section {
     grid-template-columns: 1fr;
     gap: 42px;
@@ -3687,6 +3859,15 @@ button, input {
 
   .platform-ad-section {
     padding-top: 56px;
+  }
+
+  .parent-journey-section__dashboard,
+  .parent-journey-section__cards article {
+    padding: 20px;
+  }
+
+  .parent-journey-section__cta {
+    width: 100%;
   }
 
   .platform-ad-section__advantages div {

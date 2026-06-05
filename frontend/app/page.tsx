@@ -883,6 +883,57 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="parent-journey-section" aria-labelledby="parent-journey-title">
+        <div className="parent-journey-section__intro">
+          <p className="parent-journey-section__eyebrow">For parents</p>
+          <h2 id="parent-journey-title">You see what changed, not just what was studied.</h2>
+          <p>
+            SAT preparation is easier to trust when parents can see the student&apos;s score path,
+            weak areas, completed work, and the next correction plan every week.
+          </p>
+          <Link className="parent-journey-section__cta" href="/pricing">
+            <span>Unlock weekly tracking</span>
+            <ArrowRight size={18} />
+          </Link>
+        </div>
+
+        <div className="parent-journey-section__dashboard" aria-label="Parent progress tracking preview">
+          <div className="parent-journey-section__summary">
+            <div>
+              <span>Weekly parent update</span>
+              <strong>Every Sunday</strong>
+            </div>
+            <div>
+              <span>Current focus</span>
+              <strong>Advanced Math + transitions</strong>
+            </div>
+          </div>
+
+          <div className="parent-journey-section__cards">
+            <article>
+              <span>01</span>
+              <h3>What parents receive weekly</h3>
+              <p>Mock score, completed practice count, missed-topic list, and the next 7-day assignment.</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>How progress is tracked</h3>
+              <p>Reading/Writing and Math scores are compared with accuracy, timing, and repeated trap patterns.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>How weak areas are reported</h3>
+              <p>Parents see exact weak skills such as transitions, evidence questions, algebra, or advanced math.</p>
+            </article>
+            <article>
+              <span>04</span>
+              <h3>When to expect score growth</h3>
+              <p>Small movement can appear after 7-14 days; serious score growth needs repeated mock-test cycles.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section className="homepage-faq-section" aria-labelledby="homepage-faq-title">
         <div className="homepage-faq-section__intro">
           <p className="homepage-faq-section__eyebrow">Pricing FAQ</p>
