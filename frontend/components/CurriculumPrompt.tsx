@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BookOpenCheck, GraduationCap, Target, X } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CalendarDays, GraduationCap, Lock, Target, Timer, X } from "lucide-react";
 
 export function CurriculumPrompt({
   onClose,
@@ -16,6 +16,8 @@ export function CurriculumPrompt({
   isUnlocked?: boolean;
 }) {
   const firstWeaknesses = weaknesses.slice(0, 3);
+  const lockedTasks = buildLockedTasks(firstWeaknesses);
+  const nextMockDate = nextMockLabel();
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/78 px-5 py-8 text-white backdrop-blur-md">
@@ -41,12 +43,12 @@ export function CurriculumPrompt({
               <h2 className="mt-5 max-w-3xl text-5xl font-light leading-none text-white md:text-7xl">
                 {isUnlocked
                   ? "Your weak topics are clear. Open your exercise route now."
-                  : "Your weak topics are clear. The full exercise route is the next step."}
+                  : "You now know why the score is stuck. The exact exercises are waiting."}
               </h2>
               <p className="mt-6 max-w-2xl text-base font-light leading-8 text-white/55">
                 {isUnlocked
                   ? "Your subscription is active. Continue into the personal 1400+ route, supervised theory, daily exercises, and section work needed to repair those exact mistakes."
-                  : "The diagnostic shows where points are being lost. Pro unlocks the personal 1400+ route, supervised theory, daily exercises, and section work needed to repair those exact mistakes."}
+                  : "The diagnostic exposed the leaks. Pro opens the locked drills, supervised theory, timed retake, and mistake notebook built from these exact missed patterns."}
               </p>
             </div>
 
@@ -76,14 +78,43 @@ export function CurriculumPrompt({
                 </div>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="border border-white/10 bg-black/20 p-4">
-                  <BookOpenCheck className="text-white/55" size={20} />
-                  <div className="mt-3 text-sm font-light text-white">Full Reading and Writing section work</div>
-                </div>
-                <div className="border border-white/10 bg-black/20 p-4">
-                  <BookOpenCheck className="text-white/55" size={20} />
-                  <div className="mt-3 text-sm font-light text-white">Full Math section work</div>
+              <div className="grid gap-3">
+                {lockedTasks.map((task) => {
+                  const Icon = task.icon;
+                  return (
+                    <div
+                      className={`relative overflow-hidden border border-white/10 bg-black/25 p-4 ${
+                        isUnlocked ? "" : "shadow-[inset_0_0_70px_rgba(255,255,255,0.025)]"
+                      }`}
+                      key={task.title}
+                    >
+                      {!isUnlocked ? (
+                        <span className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center border border-white/10 bg-black/35 text-white/45">
+                          <Lock size={15} />
+                        </span>
+                      ) : null}
+                      <div className={isUnlocked ? "" : "blur-[1.2px]"}>
+                        <div className="flex items-center gap-3 text-white/55">
+                          <Icon size={18} />
+                          <span className="text-[10px] font-black uppercase tracking-[0.24em] text-white/36">
+                            {task.label}
+                          </span>
+                        </div>
+                        <div className="mt-3 text-xl font-light text-white">{task.title}</div>
+                        <div className="mt-2 text-sm font-light leading-6 text-white/48">{task.detail}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="border border-yellow-200/15 bg-yellow-200/[0.055] p-4">
+                  <div className="flex items-center gap-3 text-yellow-100/70">
+                    <CalendarDays size={18} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.24em]">Next proof point</span>
+                  </div>
+                  <div className="mt-3 text-xl font-light text-white">Next mini mock scheduled</div>
+                  <div className="mt-2 text-sm font-light leading-6 text-white/52">
+                    {nextMockDate}. Unlock Pro to start the repair cycle and retake the weak section.
+                  </div>
                 </div>
               </div>
             </div>
@@ -109,4 +140,35 @@ export function CurriculumPrompt({
       </div>
     </div>
   );
+}
+
+function buildLockedTasks(weaknesses: string[]) {
+  const [first = "Advanced Math", second = "Transitions", third = "Evidence traps"] = weaknesses;
+
+  return [
+    {
+      icon: BookOpenCheck,
+      label: "Locked drill",
+      title: `18 ${first} questions ready`,
+      detail: "Generated from the diagnostic misses, with explanations after each answer."
+    },
+    {
+      icon: Target,
+      label: "Locked repair set",
+      title: `12 ${second} drills ready`,
+      detail: "Short focused set to stop the repeated trap that cost points."
+    },
+    {
+      icon: Timer,
+      label: "Locked timed work",
+      title: `7 ${third} timed questions ready`,
+      detail: "Practice under pressure before the next section retake."
+    }
+  ];
+}
+
+function nextMockLabel() {
+  const next = new Date();
+  next.setDate(next.getDate() + 7);
+  return new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(next);
 }

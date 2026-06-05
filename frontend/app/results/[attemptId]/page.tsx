@@ -23,6 +23,7 @@ import {
   ClipboardList,
   Download,
   Lightbulb,
+  Lock,
   RefreshCcw,
   Route,
   Target,
@@ -507,12 +508,12 @@ export default function ResultsPage() {
               <h2 className="mt-4 text-3xl font-light leading-tight text-white md:text-4xl">
                 {hasActiveSubscription
                   ? "You can see the problem. Now open the exercises that fix it."
-                  : "You can see the problem. Pro gives the exercises to fix it."}
+                  : "You found the leaks. Your repair work is already waiting."}
               </h2>
               <p className="mt-4 max-w-3xl text-sm font-light leading-7 text-white/58">
                 {hasActiveSubscription
                   ? "Your approved subscription is active. Continue from this diagnostic into the daily route, supervised theory, retake dates, and progress tracking for these exact weaknesses."
-                  : "This free diagnostic shows your score leaks, weak topics, trap patterns, and missed-question explanations. The full My 1400+ route unlocks daily exercises, supervised theory, retake dates, and progress tracking for these exact weaknesses."}
+                  : "This diagnostic shows exactly why points are disappearing. The next step is not more guessing: unlock the drills, theory blocks, and retake cycle built from these exact misses."}
               </p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 {(analytics.weaknesses.length ? analytics.weaknesses : ["Reading/Writing", "Math", "Timing"]).slice(0, 3).map((weakness) => (
@@ -524,10 +525,25 @@ export default function ResultsPage() {
               </div>
             </div>
             <div className="border border-white/10 bg-black/25 p-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/38">Locked next assignment</p>
-              <p className="mt-3 text-sm leading-6 text-white/62">
-                18 targeted questions, 1 supervised theory block, mistake notebook correction, and a mini retake
-                generated from this report.
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/38">
+                {hasActiveSubscription ? "Next assignment" : "Locked next assignment"}
+              </p>
+              <div className="mt-4 grid gap-2">
+                {buildLockedAssignments(analytics.weaknesses).map((assignment) => (
+                  <div className="flex items-center justify-between gap-3 border border-white/10 bg-white/[0.035] px-3 py-3" key={assignment}>
+                    <span className={`text-sm font-light text-white/70 ${hasActiveSubscription ? "" : "blur-[1px]"}`}>{assignment}</span>
+                    {hasActiveSubscription ? (
+                      <CheckCircle2 className="text-emerald-100/60" size={17} />
+                    ) : (
+                      <Lock className="text-white/35" size={16} />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-sm leading-6 text-white/55">
+                {hasActiveSubscription
+                  ? "Start the first set now and retake the weak section after completion."
+                  : "These are ready from your report. Pro opens the questions, explanations, and the next mini mock."}
               </p>
               <button
                 className="mt-5 flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-white"
@@ -704,6 +720,16 @@ function buildReportAnalytics(results: Results) {
     scoreBand: scoreBand(results.score_total),
     studyPlan
   };
+}
+
+function buildLockedAssignments(weaknesses: string[]) {
+  const [first = "Advanced Math", second = "Transitions", third = "Evidence traps"] = weaknesses;
+
+  return [
+    `18 ${cleanLabel(first)} questions ready`,
+    `12 ${cleanLabel(second)} drills ready`,
+    `Next mini mock scheduled after ${cleanLabel(third)} repair`
+  ];
 }
 
 function buildSectionSummaries(results: Results, questions: ResultQuestion[]): SectionSummary[] {

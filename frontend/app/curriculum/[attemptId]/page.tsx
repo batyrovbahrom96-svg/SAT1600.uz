@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowRight, BookOpenCheck, CalendarDays, GraduationCap, Target, Timer, Trophy } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CalendarDays, GraduationCap, Lock, Target, Timer, Trophy } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { ApiError, api, getSubscriptionStatus } from "@/lib/api";
 
@@ -166,13 +166,25 @@ export default function CurriculumPage() {
               <h2 className="mt-4 text-3xl font-light leading-tight text-white md:text-4xl">
                 {hasActiveSubscription
                   ? "Your route is unlocked. Start the practice engine."
-                  : "Your route is ready. Unlock the practice engine to use it."}
+                  : "Your route is ready. The exact exercises are locked below."}
               </h2>
               <p className="mt-3 max-w-3xl text-sm font-light leading-7 text-white/58">
                 {hasActiveSubscription
                   ? "Your approved payment is active on this account. Open a weak-topic exercise below, review the supervised theory, and retake the section when the set is complete."
-                  : "The free diagnostic identifies the score leaks. Pro unlocks the actual daily exercises, supervised theory, section work, and retake cycle that repairs them."}
+                  : "The free diagnostic identified the score leaks. Pro opens the actual question sets, supervised theory, mistake notebook, and the next mini mock needed to repair them."}
               </p>
+              {!hasActiveSubscription ? (
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  {buildLockedRoutePreview(plan.blocks).map((item) => (
+                    <div className="border border-white/10 bg-black/25 p-3" key={item}>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-light text-white/68 blur-[1px]">{item}</p>
+                        <Lock className="shrink-0 text-white/35" size={16} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <button
               className="flex h-14 min-w-[250px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
@@ -197,12 +209,16 @@ export default function CurriculumPage() {
               <div className="mt-5 grid gap-2">
                 {block.focus.map((topic) => (
                   <button
-                    className="flex items-center justify-between border border-white/10 bg-black/20 px-4 py-3 text-left transition-colors hover:border-white/35 hover:bg-white/[0.06]"
+                    className={`flex items-center justify-between border border-white/10 bg-black/20 px-4 py-3 text-left transition-colors hover:border-white/35 hover:bg-white/[0.06] ${
+                      hasActiveSubscription ? "" : "relative overflow-hidden"
+                    }`}
                     key={topic}
                     onClick={() => hasActiveSubscription ? openPractice(block) : router.push("/pricing?plan=pro")}
                     type="button"
                   >
-                    <span className="text-sm font-light text-white/70">{topic}</span>
+                    <span className={`text-sm font-light text-white/70 ${hasActiveSubscription ? "" : "blur-[1px]"}`}>
+                      {topic}
+                    </span>
                     <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-100/55">
                       {hasActiveSubscription ? "Open exercise" : "Locked exercise"}
                     </span>
@@ -299,6 +315,19 @@ function buildCurriculum(results: Results) {
       `Take a mixed checkpoint and update the next 7-day sprint from the new mistakes.`
     ]
   };
+}
+
+function buildLockedRoutePreview(blocks: CurriculumBlock[]) {
+  const mathBlock = blocks.find((block) => block.section === "Math");
+  const readingBlock = blocks.find((block) => block.section === "Reading and Writing");
+  const mathTopic = mathBlock?.focus[0] || "Advanced Math";
+  const readingTopic = readingBlock?.focus[0] || "Transitions";
+
+  return [
+    `18 ${mathTopic} questions ready`,
+    `12 ${readingTopic} drills ready`,
+    "Next mini mock scheduled"
+  ];
 }
 
 function sectionWeaknesses(results: Results, section: "reading_writing" | "math", fallback: string[]) {
