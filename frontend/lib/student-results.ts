@@ -21,20 +21,20 @@ export const studentResults: StudentResult[] = [
     video: "/assets/video/student-muslima-1330sat.mp4"
   },
   {
-    name: "Verified SAT Student 1",
-    score: "SAT score report shown",
-    improvement: "New student result proof",
+    name: "David Sarkisov",
+    score: "1200 SAT",
+    improvement: "Scored 1200 SAT",
     method: "SAT preparation + score report review",
-    evidence: "Video + SAT score report shown",
+    evidence: "Video + SAT score report",
     testDate: "June 5, 2026",
     video: "/assets/video/student-result-proof-2026-06-05-a.mp4"
   },
   {
-    name: "Verified SAT Student 2",
-    score: "SAT score report shown",
-    improvement: "New student result proof",
+    name: "Said Usmanov",
+    score: "1200 SAT",
+    improvement: "Scored 1200 SAT",
     method: "SAT preparation + score report review",
-    evidence: "Video + SAT score report shown",
+    evidence: "Video + SAT score report",
     testDate: "June 5, 2026",
     video: "/assets/video/student-result-proof-2026-06-05-b.mp4"
   },
