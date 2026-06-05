@@ -2402,6 +2402,242 @@ button, input {
   line-height: 1.6;
 }
 
+.founder-trust-section {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1fr);
+  gap: clamp(34px, 5vw, 82px);
+  align-items: center;
+  min-height: 100vh;
+  padding: clamp(78px, 10vh, 128px) 7.15vw;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(circle at 20% 28%, rgba(214, 199, 140, 0.12), transparent 28%),
+    radial-gradient(circle at 82% 74%, rgba(255, 255, 255, 0.07), transparent 28%),
+    linear-gradient(135deg, #050505 0%, #141414 56%, #070707 100%);
+}
+
+.founder-trust-section__media,
+.founder-trust-section__copy {
+  position: relative;
+  z-index: 2;
+}
+
+.founder-trust-section__media {
+  display: grid;
+  gap: 16px;
+}
+
+.founder-trust-section__photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.52);
+}
+
+.founder-trust-section__score {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 24px;
+  align-items: end;
+  padding: 24px;
+  border: 1px solid rgba(214, 199, 140, 0.28);
+  background:
+    linear-gradient(135deg, rgba(214, 199, 140, 0.12), rgba(255, 255, 255, 0.025)),
+    rgba(0, 0, 0, 0.32);
+}
+
+.founder-trust-section__score span,
+.founder-trust-section__eyebrow,
+.founder-trust-section__highlights span {
+  color: rgba(214, 199, 140, 0.78);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.38em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.founder-trust-section__score strong {
+  grid-row: span 2;
+  color: #fff;
+  font-size: clamp(58px, 7vw, 118px);
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 0.85;
+}
+
+.founder-trust-section__score p {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.founder-trust-section h2 {
+  max-width: 880px;
+  margin-top: 26px;
+  color: #fff;
+  font-size: clamp(44px, 5vw, 88px);
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 1.03;
+}
+
+.founder-trust-section__copy > p:not(.founder-trust-section__eyebrow) {
+  max-width: 760px;
+  margin-top: 28px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: clamp(18px, 1.42vw, 25px);
+  font-weight: 300;
+  line-height: 1.65;
+}
+
+.founder-trust-section__highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 34px;
+}
+
+.founder-trust-section__highlights div {
+  min-height: 124px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.024);
+}
+
+.founder-trust-section__highlights strong {
+  display: block;
+  margin-top: 16px;
+  color: #fff;
+  font-size: clamp(18px, 1.6vw, 25px);
+  font-weight: 600;
+  line-height: 1.22;
+}
+
+.founder-trust-section__proof {
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-top: 18px;
+}
+
+.founder-trust-section__certificate {
+  position: relative;
+  display: block;
+  min-height: 230px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #f6f6f4;
+  text-align: left;
+}
+
+.founder-trust-section__certificate img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.founder-trust-section__certificate span {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.founder-trust-section__proof > div {
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.founder-trust-section__proof strong {
+  color: #fff;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.founder-trust-section__proof p {
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.founder-trust-section__proof a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  color: #d6c78c;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.founder-proof-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 82;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5vh 7.15vw;
+}
+
+.founder-proof-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.founder-proof-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(780px, 92vw);
+  max-height: 90vh;
+}
+
+.founder-proof-modal__dialog img {
+  display: block;
+  width: 100%;
+  max-height: 86vh;
+  object-fit: contain;
+  background: #f6f6f4;
+  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.58);
+}
+
+.founder-proof-modal__close {
+  position: absolute;
+  top: -46px;
+  right: 0;
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .platform-ad-section {
   position: relative;
   z-index: 5;
@@ -3746,6 +3982,26 @@ button, input {
     max-height: 48vh;
   }
 
+  .founder-trust-section {
+    grid-template-columns: 1fr;
+    gap: 42px;
+    min-height: auto;
+    padding: 72px 7vw 88px;
+  }
+
+  .founder-trust-section h2 {
+    font-size: clamp(40px, 10vw, 64px);
+  }
+
+  .founder-trust-section__highlights,
+  .founder-trust-section__proof {
+    grid-template-columns: 1fr;
+  }
+
+  .founder-trust-section__certificate {
+    min-height: 360px;
+  }
+
   .platform-ad-section {
     grid-template-columns: 1fr;
     gap: 42px;
@@ -3888,6 +4144,18 @@ button, input {
 
   .platform-ad-section {
     padding-top: 56px;
+  }
+
+  .founder-trust-section__score {
+    grid-template-columns: 1fr;
+  }
+
+  .founder-trust-section__score strong {
+    grid-row: auto;
+  }
+
+  .founder-trust-section__certificate {
+    min-height: 300px;
   }
 
   .parent-journey-section__dashboard,

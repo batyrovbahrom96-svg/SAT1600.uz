@@ -163,6 +163,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(() => !shouldSkipHomeIntro());
   const [showResultsWall, setShowResultsWall] = useState(false);
   const [activeResultVideo, setActiveResultVideo] = useState<StudentResult | null>(null);
+  const [activeFounderProof, setActiveFounderProof] = useState(false);
   const [isPlatformVideoMuted, setIsPlatformVideoMuted] = useState(true);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
@@ -639,6 +640,70 @@ export default function Home() {
         </nav>
       </div>
 
+      <section className="founder-trust-section" aria-labelledby="founder-trust-title">
+        <div className="founder-trust-section__media">
+          <img
+            className="founder-trust-section__photo"
+            src="/assets/brand/founder-bakhrom-botirov.jpg"
+            alt="Bakhrom Botirov, founder of SATTEST.UZ"
+          />
+          <div className="founder-trust-section__score">
+            <span>Founder SAT score</span>
+            <strong>1540</strong>
+            <p>Reading/Writing 760 · Math 780</p>
+          </div>
+        </div>
+
+        <div className="founder-trust-section__copy">
+          <p className="founder-trust-section__eyebrow">Founder trust</p>
+          <h2 id="founder-trust-title">Built by a teacher who has taken the SAT seriously himself.</h2>
+          <p>
+            I am Bakhrom Botirov, founder of SATTEST.UZ and CEO of Richmond School. I hold CELTA and
+            PGCEi credentials, scored 1540 on the SAT, and have been teaching since 2021.
+          </p>
+
+          <div className="founder-trust-section__highlights">
+            <div>
+              <span>1540 SAT</span>
+              <strong>Personal score proof</strong>
+            </div>
+            <div>
+              <span>Since 2021</span>
+              <strong>SAT teaching experience</strong>
+            </div>
+            <div>
+              <span>CELTA + PGCEi</span>
+              <strong>International teaching training</strong>
+            </div>
+            <div>
+              <span>Richmond School</span>
+              <strong>Founder and CEO</strong>
+            </div>
+          </div>
+
+          <div className="founder-trust-section__proof">
+            <button
+              className="founder-trust-section__certificate"
+              onClick={() => setActiveFounderProof(true)}
+              type="button"
+            >
+              <img src="/assets/results/bakhrom-botirov-1540-sat.jpg" alt="Bakhrom Botirov 1540 SAT score report" />
+              <span>View 1540 SAT proof</span>
+            </button>
+            <div>
+              <strong>Why SATTEST.UZ exists</strong>
+              <p>
+                The platform was built so students do not waste months guessing what to study.
+                A diagnostic should show the exact weak skills, then turn them into daily repair work.
+              </p>
+              <Link href="https://t.me/FounderSATTESTUZ" target="_blank" rel="noreferrer">
+                Telegram: @FounderSATTESTUZ <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="platform-ad-section" aria-labelledby="platform-ad-title">
         <video
           className="platform-ad-section__backgroundVideo"
@@ -1034,6 +1099,33 @@ export default function Home() {
               </span>
               <small>Result proof is shared for credibility. Parent comments will be added after written permission.</small>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {activeFounderProof ? (
+        <div
+          className="founder-proof-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Bakhrom Botirov 1540 SAT score proof"
+        >
+          <button
+            className="founder-proof-modal__backdrop"
+            onClick={() => setActiveFounderProof(false)}
+            type="button"
+            aria-label="Close founder SAT proof"
+          />
+          <div className="founder-proof-modal__dialog">
+            <button
+              className="founder-proof-modal__close"
+              onClick={() => setActiveFounderProof(false)}
+              type="button"
+              aria-label="Close founder SAT proof"
+            >
+              <X size={18} />
+            </button>
+            <img src="/assets/results/bakhrom-botirov-1540-sat.jpg" alt="Bakhrom Botirov 1540 SAT score report" />
           </div>
         </div>
       ) : null}
