@@ -659,8 +659,8 @@ export default function Home() {
           <h2 id="founder-trust-title">SATTEST.UZ was initiated and crafted by the Botirov Brothers.</h2>
           <p>
             Particularly, Bakhrom Botirov is the founder and CEO of Richmond School, a CELTA and PGCEi
-            holder, a 1540 SAT scorer, and has been teaching since 2021. Doniyor Botirov brings the
-            same serious academic standard with a 1590 SAT result.
+            holder, a 1540 SAT scorer, and has been teaching since 2021. Doniyor Botirov is the founder
+            of Mr. Doniyor Learning Center and brings the same serious academic standard with a 1590 SAT result.
           </p>
 
           <div className="founder-trust-section__highlights">
@@ -670,7 +670,7 @@ export default function Home() {
             </div>
             <div>
               <span>1590 SAT</span>
-              <strong>Doniyor Botirov score proof</strong>
+              <strong>Doniyor Botirov, founder of Mr. Doniyor Learning Center</strong>
             </div>
             <div>
               <span>Since 2021</span>
