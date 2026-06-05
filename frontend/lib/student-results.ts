@@ -25,9 +25,9 @@ export const studentResults: StudentResult[] = [
     score: "1200 SAT",
     improvement: "Scored 1200 SAT",
     method: "SAT preparation + score report review",
-    evidence: "Video + SATTEST result proof",
+    evidence: "Video + SAT score report",
     testDate: "June 5, 2026",
-    certificate: "/assets/results/david-sarkisov-1200-sat.svg",
+    certificate: "/assets/results/david-sarkisov-1200-sat.jpg",
     video: "/assets/video/student-result-proof-2026-06-05-a.mp4"
   },
   {
@@ -35,9 +35,9 @@ export const studentResults: StudentResult[] = [
     score: "1200 SAT",
     improvement: "Scored 1200 SAT",
     method: "SAT preparation + score report review",
-    evidence: "Video + SATTEST result proof",
+    evidence: "Video + SAT score report",
     testDate: "June 5, 2026",
-    certificate: "/assets/results/said-usmanov-1200-sat.svg",
+    certificate: "/assets/results/said-usmanov-1200-sat.jpg",
     video: "/assets/video/student-result-proof-2026-06-05-b.mp4"
   },
   {
