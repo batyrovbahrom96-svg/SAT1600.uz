@@ -21,6 +21,24 @@ export const studentResults: StudentResult[] = [
     video: "/assets/video/student-muslima-1330sat.mp4"
   },
   {
+    name: "Verified SAT Student 1",
+    score: "SAT score report shown",
+    improvement: "New student result proof",
+    method: "SAT preparation + score report review",
+    evidence: "Video + SAT score report shown",
+    testDate: "June 5, 2026",
+    video: "/assets/video/student-result-proof-2026-06-05-a.mp4"
+  },
+  {
+    name: "Verified SAT Student 2",
+    score: "SAT score report shown",
+    improvement: "New student result proof",
+    method: "SAT preparation + score report review",
+    evidence: "Video + SAT score report shown",
+    testDate: "June 5, 2026",
+    video: "/assets/video/student-result-proof-2026-06-05-b.mp4"
+  },
+  {
     name: "Jasmina Abdihamidova",
     score: "1200 SAT",
     improvement: "Improved from 1000 to 1200",
