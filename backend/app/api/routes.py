@@ -152,14 +152,25 @@ def my_subscription(db: Session = Depends(get_db), user: User = Depends(get_curr
 
 
 @router.post("/telegram/webhook")
-async def telegram_webhook(request: Request, db: Session = Depends(get_db)) -> dict:
+async def telegram_webhook(request: Request) -> dict:
     settings = get_settings()
     if settings.telegram_webhook_secret:
         secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
         if secret != settings.telegram_webhook_secret:
             raise HTTPException(status_code=403, detail="Invalid Telegram webhook secret")
     update = await request.json()
-    return handle_telegram_update(update, db)
+    db_generator = get_db()
+    db: Session | None = None
+    try:
+        db = next(db_generator)
+    except RuntimeError as exc:
+        print(f"Telegram webhook running without database: {exc}")
+        return handle_telegram_update(update, None)
+
+    try:
+        return handle_telegram_update(update, db)
+    finally:
+        db_generator.close()
 
 
 @router.get("/telegram/status")
@@ -169,6 +180,7 @@ def telegram_status() -> dict:
         "bot_token_configured": bool(settings.telegram_bot_token),
         "webhook_secret_configured": bool(settings.telegram_webhook_secret),
         "admin_chat_id_configured": bool(settings.telegram_admin_chat_id),
+        "database_configured": bool(settings.database_url),
     }
 
 

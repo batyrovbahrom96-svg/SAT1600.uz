@@ -30,7 +30,7 @@ PLAN_PRICES = {
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
 
-def handle_telegram_update(update: dict, db: Session) -> dict:
+def handle_telegram_update(update: dict, db: Session | None) -> dict:
     if callback_query := update.get("callback_query"):
         return _handle_callback(callback_query, db)
 
@@ -40,7 +40,7 @@ def handle_telegram_update(update: dict, db: Session) -> dict:
     return {"ok": True, "ignored": True}
 
 
-def _handle_message(message: dict, db: Session) -> dict:
+def _handle_message(message: dict, db: Session | None) -> dict:
     chat_id = str(message.get("chat", {}).get("id", ""))
     if not chat_id:
         return {"ok": True, "ignored": True}
@@ -75,6 +75,15 @@ def _handle_message(message: dict, db: Session) -> dict:
         )
         return {"ok": True}
 
+    if db is None:
+        _send_message(
+            chat_id,
+            "Receipt received. Founder will verify it manually.\n\n"
+            "Your access will be activated after confirmation. Please keep this chat open.",
+        )
+        _notify_admin_for_manual_approval(email, plan, message)
+        return {"ok": True, "mode": "manual_no_database"}
+
     user = db.execute(select(User).where(User.email == email.lower())).scalar_one_or_none()
     if not user:
         _send_message(
@@ -106,7 +115,7 @@ def _handle_message(message: dict, db: Session) -> dict:
     return {"ok": True, "subscription_id": str(subscription.id)}
 
 
-def _handle_callback(callback_query: dict, db: Session) -> dict:
+def _handle_callback(callback_query: dict, db: Session | None) -> dict:
     callback_id = callback_query.get("id")
     data = str(callback_query.get("data") or "")
     admin_chat_id = str(callback_query.get("message", {}).get("chat", {}).get("id", ""))
@@ -117,6 +126,10 @@ def _handle_callback(callback_query: dict, db: Session) -> dict:
         return {"ok": True, "ignored": True}
 
     action, _, raw_subscription_id = data.partition(":")
+    if db is None:
+        _answer_callback(callback_id, "Database is not connected, approve manually.")
+        return {"ok": True, "manual": True}
+
     if action not in {"approve", "deny"}:
         _answer_callback(callback_id, "Unknown action.")
         return {"ok": True, "ignored": True}
@@ -190,6 +203,33 @@ def _notify_admin_for_approval(subscription: Subscription, user: User, message: 
 
     _copy_message(settings.telegram_admin_chat_id, message["chat"]["id"], message["message_id"])
     _send_message(settings.telegram_admin_chat_id, text, reply_markup=keyboard)
+
+
+def _notify_admin_for_manual_approval(email: str, plan: str, message: dict) -> None:
+    settings = get_settings()
+    if not settings.telegram_admin_chat_id:
+        return
+
+    from_user = message.get("from", {})
+    sender = " ".join(part for part in [from_user.get("first_name"), from_user.get("last_name")] if part)
+    username = from_user.get("username")
+    sender_line = sender or "Unknown Telegram user"
+    if username:
+        sender_line += f" (@{username})"
+
+    price = f"{PLAN_PRICES[plan]:,}".replace(",", " ")
+    text = (
+        "New SATTEST.UZ payment receipt received.\n\n"
+        "Database is not connected on this bot service, so approval is manual for now.\n\n"
+        f"Email: {email}\n"
+        f"Plan: {plan.upper()}\n"
+        f"Amount: {price} UZS\n"
+        f"Telegram sender: {sender_line}\n\n"
+        "Check the copied receipt above, then activate access manually in the live admin/database service."
+    )
+
+    _copy_message(settings.telegram_admin_chat_id, message["chat"]["id"], message["message_id"])
+    _send_message(settings.telegram_admin_chat_id, text)
 
 
 def _subscription_summary(subscription: Subscription, user: User | None) -> str:
