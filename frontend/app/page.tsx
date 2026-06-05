@@ -885,60 +885,62 @@ export default function Home() {
 
       <section className="parent-journey-section" aria-labelledby="parent-journey-title">
         <div className="parent-journey-section__intro">
-          <p className="parent-journey-section__eyebrow">For parents</p>
-          <h2 id="parent-journey-title">You see what changed, not just what was studied.</h2>
-          <p>
-            SAT preparation is easier to trust when parents can see the student&apos;s score path,
-            weak areas, completed work, and the next correction plan every week.
-          </p>
+          <p className="parent-journey-section__eyebrow">Для родителей / Ota-onalar uchun</p>
+          <h2 id="parent-journey-title">Вы видите реальный прогресс, а не просто факт занятий.</h2>
           <p lang="ru">
             Родителям легче доверять подготовке, когда они видят путь к баллу, слабые темы,
             выполненные задания и следующий план исправления каждую неделю.
           </p>
+          <p lang="uz">
+            Ota-onalar har hafta o'quvchining ball yo'nalishi, zaif mavzulari, bajarilgan
+            mashqlari va keyingi tuzatish rejasini ko'rsa, tayyorgarlikka ishonch kuchayadi.
+          </p>
           <Link className="parent-journey-section__cta" href="/pricing">
-            <span>Unlock weekly tracking</span>
+            <span>Открыть контроль / Nazoratni ochish</span>
             <ArrowRight size={18} />
           </Link>
         </div>
 
-        <div className="parent-journey-section__dashboard" aria-label="Parent progress tracking preview">
+        <div className="parent-journey-section__dashboard" aria-label="Parent progress tracking preview in Russian and Uzbek">
           <div className="parent-journey-section__summary">
             <div>
-              <span>Weekly parent update</span>
-              <strong>Every Sunday</strong>
+              <span>Еженедельный отчет</span>
+              <strong>Каждое воскресенье</strong>
               <p lang="ru">Еженедельный отчет для родителей</p>
+              <p lang="uz">Ota-onalar uchun haftalik hisobot</p>
             </div>
             <div>
-              <span>Current focus</span>
-              <strong>Advanced Math + transitions</strong>
-              <p lang="ru">Текущий фокус: Advanced Math и transitions</p>
+              <span>Текущий фокус</span>
+              <strong>Сложная математика + переходы</strong>
+              <p lang="ru">Текущий фокус: сложная математика и переходы в Reading/Writing</p>
+              <p lang="uz">Hozirgi fokus: murakkab matematika va Reading/Writing o'tishlari</p>
             </div>
           </div>
 
           <div className="parent-journey-section__cards">
             <article>
               <span>01</span>
-              <h3>What parents receive weekly</h3>
-              <p>Mock score, completed practice count, missed-topic list, and the next 7-day assignment.</p>
+              <h3>Что родители получают каждую неделю</h3>
               <p lang="ru">Балл за mock test, количество выполненных заданий, список слабых тем и план на следующие 7 дней.</p>
+              <p lang="uz">Mock test bali, bajarilgan mashqlar soni, zaif mavzular ro'yxati va keyingi 7 kunlik reja.</p>
             </article>
             <article>
               <span>02</span>
-              <h3>How progress is tracked</h3>
-              <p>Reading/Writing and Math scores are compared with accuracy, timing, and repeated trap patterns.</p>
+              <h3>Как отслеживается прогресс</h3>
               <p lang="ru">Баллы Reading/Writing и Math сравниваются с точностью, временем и повторяющимися ошибками.</p>
+              <p lang="uz">Reading/Writing va Math ballari aniqlik, vaqt va takrorlanadigan xatolar bilan solishtiriladi.</p>
             </article>
             <article>
               <span>03</span>
-              <h3>How weak areas are reported</h3>
-              <p>Parents see exact weak skills such as transitions, evidence questions, algebra, or advanced math.</p>
+              <h3>Как показываются слабые места</h3>
               <p lang="ru">Родители видят конкретные слабые навыки: transitions, evidence questions, algebra или advanced math.</p>
+              <p lang="uz">Ota-onalar aniq zaif ko'nikmalarni ko'radi: transitions, evidence questions, algebra yoki advanced math.</p>
             </article>
             <article>
               <span>04</span>
-              <h3>When to expect score growth</h3>
-              <p>Small movement can appear after 7-14 days; serious score growth needs repeated mock-test cycles.</p>
+              <h3>Когда ожидать рост балла</h3>
               <p lang="ru">Первые изменения возможны через 7-14 дней; серьезный рост требует повторных циклов mock test.</p>
+              <p lang="uz">Dastlabki o'zgarishlar 7-14 kunda ko'rinishi mumkin; katta o'sish uchun takroriy mock test sikllari kerak.</p>
             </article>
           </div>
         </div>

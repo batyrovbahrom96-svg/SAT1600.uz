@@ -3137,6 +3137,12 @@ button, input {
   font-size: clamp(16px, 1.18vw, 21px);
 }
 
+.parent-journey-section__intro > p[lang="uz"] {
+  margin-top: 14px;
+  color: rgba(214, 199, 140, 0.58);
+  font-size: clamp(16px, 1.18vw, 21px);
+}
+
 .parent-journey-section__cta {
   display: inline-flex;
   align-items: center;
@@ -3243,6 +3249,11 @@ button, input {
 
 .parent-journey-section__cards p[lang="ru"] {
   color: rgba(255, 255, 255, 0.42);
+  font-size: 14px;
+}
+
+.parent-journey-section__cards p[lang="uz"] {
+  color: rgba(214, 199, 140, 0.52);
   font-size: 14px;
 }
 
