@@ -16,15 +16,12 @@ from app.models import Subscription, User
 PLAN_ALIASES = {
     "pro": "pro",
     "platform": "pro",
+    "sattest pro": "pro",
     "sat platform pro": "pro",
-    "elite": "elite",
-    "1400": "elite",
-    "1400+": "elite",
 }
 
 PLAN_PRICES = {
-    "pro": 149000,
-    "elite": 990000,
+    "pro": 200000,
 }
 
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")

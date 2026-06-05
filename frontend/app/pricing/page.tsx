@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, Crown, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, Sparkles, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 
 const telegramUsername = "FounderSATTESTUZ";
@@ -13,8 +13,7 @@ const paynetQrPayload =
 const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(paynetQrPayload)}`;
 
 const prices = {
-  pro: "149 000 UZS",
-  elite: "990 000 UZS"
+  pro: "200 000 UZS"
 } as const;
 
 const platformFeatures = [
@@ -23,14 +22,6 @@ const platformFeatures = [
   "Mistake and weakness targeting by topic",
   "Personal My 1400+ curriculum route",
   "Progress tracking for score growth"
-];
-
-const eliteFeatures = [
-  "Everything in SAT Platform Pro",
-  "Personal study roadmap for 1400+",
-  "Weekly strategy and mistake review",
-  "Priority weak-topic practice plan",
-  "Guidance for serious score improvement"
 ];
 
 type PlanAction =
@@ -42,7 +33,7 @@ type PlanAction =
 type SelectedPlan = {
   description: string;
   label: string;
-  planKey: "pro" | "elite";
+  planKey: "pro";
   price: string;
   title: string;
 };
@@ -57,7 +48,7 @@ function PriceCard({
   title
 }: {
   action: PlanAction;
-  accent: "light" | "dark" | "gold";
+  accent: "light" | "dark";
   description: string;
   features: string[];
   label: string;
@@ -65,7 +56,6 @@ function PriceCard({
   title: string;
 }) {
   const isLight = accent === "light";
-  const isGold = accent === "gold";
 
   return (
     <article
@@ -73,8 +63,7 @@ function PriceCard({
         "group relative flex min-h-[620px] flex-col overflow-hidden border p-5 transition-all duration-300",
         isLight
           ? "border-white bg-white text-black shadow-[0_30px_80px_rgba(255,255,255,0.08)]"
-          : "border-white/12 bg-white/[0.035] text-white hover:border-white/30",
-        isGold ? "shadow-[0_0_80px_rgba(255,255,255,0.08)]" : ""
+          : "border-white/12 bg-white/[0.035] text-white hover:border-white/30"
       ].join(" ")}
     >
       <div
@@ -86,17 +75,15 @@ function PriceCard({
         <div
           className={[
             "absolute inset-0 opacity-80",
-            isGold
-              ? "bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.22),transparent_30%),linear-gradient(135deg,#151515,#2a2a2a,#0f0f0f)]"
-              : isLight
-                ? "bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.24),transparent_32%),linear-gradient(135deg,#050505,#202020)]"
-                : "bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.14),transparent_28%),linear-gradient(135deg,#191919,#101112)]"
+            isLight
+              ? "bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.24),transparent_32%),linear-gradient(135deg,#050505,#202020)]"
+              : "bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.14),transparent_28%),linear-gradient(135deg,#191919,#101112)]"
           ].join(" ")}
         />
         <div className="relative">
           <div className="flex items-center justify-between gap-4">
             <p className="text-[10px] font-black uppercase tracking-[0.35em] text-white/58">{label}</p>
-            {isGold ? <Crown size={22} /> : <Sparkles size={20} />}
+            <Sparkles size={20} />
           </div>
           <h2 className="mt-5 text-3xl font-light leading-tight md:text-4xl">{title}</h2>
           <p className="mt-5 text-4xl font-black tracking-tight md:text-5xl">{price}</p>
@@ -150,17 +137,7 @@ export default function PricingPage() {
         label: "Most useful",
         planKey: "pro",
         price: `${prices.pro} / month`,
-        title: "SAT Platform Pro"
-      };
-    }
-
-    if (plan === "elite") {
-      return {
-        description: "High-touch preparation for students who need personal structure, strategy, and weekly correction.",
-        label: "Elite program",
-        planKey: "elite",
-        price: `${prices.elite} / month`,
-        title: "1400+ Elite"
+        title: "SATTEST Pro"
       };
     }
 
@@ -212,7 +189,7 @@ export default function PricingPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-2">
           <PriceCard
             action={{ href: "/mock-test", text: "Start Free Diagnostic" }}
             accent="dark"
@@ -239,20 +216,7 @@ export default function PricingPage() {
             features={platformFeatures}
             label="Most useful"
             price={`${prices.pro} / month`}
-            title="SAT Platform Pro"
-          />
-
-          <PriceCard
-            action={{
-              href: "/pricing?plan=elite",
-              text: "Pay and activate"
-            }}
-            accent="gold"
-            description="High-touch preparation for students who need personal structure, strategy, and weekly correction."
-            features={eliteFeatures}
-            label="Elite program"
-            price={`${prices.elite} / month`}
-            title="1400+ Elite"
+            title="SATTEST Pro"
           />
         </div>
 
