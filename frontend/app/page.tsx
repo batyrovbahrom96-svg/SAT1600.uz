@@ -104,19 +104,6 @@ const homepageFaqs = [
   }
 ];
 
-const localizedTrustNotes = [
-  {
-    language: "Uzbek",
-    title: "Natijalar isboti",
-    body: "Har bir natija uchun video va SAT score report ko'rsatiladi. Ota-onalar izohlari faqat ruxsat olingandan keyin qo'shiladi."
-  },
-  {
-    language: "Russian",
-    title: "Доказательство результатов",
-    body: "К каждому результату добавляются видео и SAT score report. Комментарии родителей будут опубликованы только после разрешения."
-  }
-];
-
 const localizedPaymentNotes = [
   {
     language: "Uzbek",
@@ -560,16 +547,6 @@ export default function Home() {
                   qilsin. Amin.
                 </em>
               </div>
-              <span>More Uzbek and Russian parent comments will be added after permission.</span>
-            </div>
-            <div className="results-wall__language-notes" aria-label="Uzbek and Russian result proof notes">
-              {localizedTrustNotes.map((note) => (
-                <div className="language-note" key={note.language}>
-                  <span>{note.language}</span>
-                  <strong>{note.title}</strong>
-                  <p>{note.body}</p>
-                </div>
-              ))}
             </div>
           </div>
 
