@@ -2002,7 +2002,7 @@ button, input {
 .results-wall__language-notes {
   display: grid;
   max-width: 330px;
-  margin-top: 18px;
+  margin-top: 14px;
   gap: 8px;
 }
 
@@ -2043,7 +2043,7 @@ button, input {
 .parent-feedback {
   display: grid;
   max-width: 330px;
-  margin-top: 22px;
+  margin-top: 16px;
   gap: 10px;
 }
 
