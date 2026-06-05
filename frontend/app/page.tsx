@@ -84,7 +84,7 @@ const homepageFaqs = [
   },
   {
     question: "How many mock tests?",
-    answer: "The free plan includes one diagnostic mock preview. Pro is built for repeated practice and diagnostic analytics. Elite adds personal review and strategy support."
+    answer: "The free plan includes one mini diagnostic preview and one saved diagnostic after registration. SATTEST Pro is built for repeated practice, diagnostic analytics, and the personal My 1400+ route."
   },
   {
     question: "Is this official SAT?",
@@ -92,15 +92,39 @@ const homepageFaqs = [
   },
   {
     question: "Do I need a teacher?",
-    answer: "For self-study students, Pro gives structure and targeted practice. If a student needs personal correction, parent updates, and strategy, Elite is the better route."
+    answer: "For self-study students, SATTEST Pro gives structure and targeted practice. If a student needs personal correction or parent updates, contact the founder separately in Telegram."
   },
   {
     question: "What happens after I pay?",
-    answer: "You scan the Paynet QR, send the payment screenshot to Telegram, then receive access to the purchased plan after confirmation."
+    answer: "You scan the Paynet QR or pay by Click, Payme, card, or transfer. Then send the receipt to the Telegram bot with the same email used during registration."
   },
   {
     question: "How do parents track progress?",
-    answer: "Parents can follow mock scores, weak topics, completed practice, and review updates. Elite students can also receive more personal progress communication."
+    answer: "Parents can follow mock scores, weak topics, completed practice, and review updates. For personal progress communication, families can contact the founder in Telegram."
+  }
+];
+
+const localizedTrustNotes = [
+  {
+    language: "Uzbek",
+    title: "Natijalar isboti",
+    body: "Har bir natija uchun video va SAT score report ko'rsatiladi. Ota-onalar izohlari faqat ruxsat olingandan keyin qo'shiladi."
+  },
+  {
+    language: "Russian",
+    title: "Доказательство результатов",
+    body: "К каждому результату добавляются видео и SAT score report. Комментарии родителей будут опубликованы только после разрешения."
+  }
+];
+
+const localizedPaymentNotes = [
+  {
+    language: "Uzbek",
+    body: "To'lovdan keyin chekni Telegram botga yuboring. Ro'yxatdan o'tgan emailni yozing. Tasdiqlangandan keyin Pro kirish ochiladi."
+  },
+  {
+    language: "Russian",
+    body: "После оплаты отправьте чек в Telegram-бот. Укажите email, который использовали при регистрации. После подтверждения откроется доступ Pro."
   }
 ];
 
@@ -525,6 +549,15 @@ export default function Home() {
             <p>Results Proof</p>
             <h2>Verified SAT growth with student videos and score reports.</h2>
             <span>Tap a result to see the student video and official SAT score report where available.</span>
+            <div className="results-wall__language-notes" aria-label="Uzbek and Russian result proof notes">
+              {localizedTrustNotes.map((note) => (
+                <div className="language-note" key={note.language}>
+                  <span>{note.language}</span>
+                  <strong>{note.title}</strong>
+                  <p>{note.body}</p>
+                </div>
+              ))}
+            </div>
             <div className="parent-feedback" aria-label="Verified parent feedback">
               <p>Parent Feedback</p>
               <div className="parent-feedback__bubble">
@@ -881,6 +914,14 @@ export default function Home() {
             The payment process is simple for now: pay by QR, send the receipt, and get access after
             confirmation. These are the questions students and parents usually ask first.
           </p>
+          <div className="homepage-faq-section__languageNotes" aria-label="Uzbek and Russian payment instructions">
+            {localizedPaymentNotes.map((note) => (
+              <div key={note.language}>
+                <span>{note.language}</span>
+                <p>{note.body}</p>
+              </div>
+            ))}
+          </div>
           <Link className="homepage-faq-section__cta" href="/pricing">
             <span>Choose plan</span>
             <ArrowRight size={18} />

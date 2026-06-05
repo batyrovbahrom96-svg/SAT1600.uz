@@ -24,6 +24,19 @@ const platformFeatures = [
   "Progress tracking for score growth"
 ];
 
+const parentPaymentNotes = [
+  {
+    language: "Uzbek",
+    title: "Ota-onalar uchun qisqa izoh",
+    body: "To'lov Click, Payme, Paynet, karta yoki o'tkazma orqali qilinadi. Chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring. Tasdiqlangandan keyin kirish 30 kunga ochiladi."
+  },
+  {
+    language: "Russian",
+    title: "Кратко для родителей",
+    body: "Оплату можно сделать через Click, Payme, Paynet, карту или перевод. Отправьте чек в Telegram-бот вместе с email, указанным при регистрации. После подтверждения доступ откроется на 30 дней."
+  }
+];
+
 type PlanAction =
   {
     href: string;
@@ -177,6 +190,15 @@ export default function PricingPage() {
           <p className="mt-7 max-w-3xl text-lg font-light leading-8 text-white/52">
             Choose a plan when you are ready to unlock practice, analytics, and My 1400+. If you are unsure, take the free diagnostic first.
           </p>
+          <div className="mt-6 grid gap-3 lg:grid-cols-2">
+            {parentPaymentNotes.map((note) => (
+              <div className="border border-white/10 bg-black/25 p-4" key={note.language}>
+                <p className="text-[10px] font-black uppercase tracking-[0.26em] text-white/35">{note.language}</p>
+                <h2 className="mt-2 text-lg font-semibold text-white">{note.title}</h2>
+                <p className="mt-2 text-sm font-light leading-6 text-white/58">{note.body}</p>
+              </div>
+            ))}
+          </div>
           <div className="mt-8 grid gap-2 sm:grid-cols-5">
             {["Choose plan", "Pay any method", "Send receipt to bot", "Founder approves", "Start practice"].map((step, index) => (
               <div className="border border-white/10 bg-black/25 p-3" key={step}>
@@ -288,6 +310,14 @@ export default function PricingPage() {
                   <li>3. Open the bot and send receipt with caption: your-email@example.com {selectedPlan.planKey}.</li>
                   <li>4. Founder {telegramDisplayName} approves access for 30 days.</li>
                 </ol>
+                <div className="mt-4 grid gap-2">
+                  {parentPaymentNotes.map((note) => (
+                    <div className="border border-white/10 bg-black/25 p-3" key={note.language}>
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{note.language}</p>
+                      <p className="mt-2 text-xs font-light leading-5 text-white/58">{note.body}</p>
+                    </div>
+                  ))}
+                </div>
                 <div className="mt-auto grid gap-2 pt-4">
                   <a
                     className="flex h-11 items-center justify-between border border-white bg-white px-4 text-[11px] font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-white"

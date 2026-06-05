@@ -1999,6 +1999,47 @@ button, input {
   line-height: 1.6;
 }
 
+.results-wall__language-notes {
+  display: grid;
+  max-width: 330px;
+  margin-top: 18px;
+  gap: 8px;
+}
+
+.language-note {
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.language-note span {
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.language-note strong {
+  display: block;
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.language-note p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  text-transform: none;
+}
+
 .parent-feedback {
   display: grid;
   max-width: 330px;
@@ -3082,6 +3123,36 @@ button, input {
   font-size: clamp(17px, 1.45vw, 25px);
   font-weight: 300;
   line-height: 1.65;
+}
+
+.homepage-faq-section__languageNotes {
+  display: grid;
+  max-width: 560px;
+  margin-top: 22px;
+  gap: 10px;
+}
+
+.homepage-faq-section__languageNotes div {
+  padding: 14px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.homepage-faq-section__languageNotes span {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.homepage-faq-section__languageNotes p {
+  margin-top: 8px !important;
+  color: rgba(255, 255, 255, 0.62) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: 1.6 !important;
 }
 
 .homepage-faq-section__cta {
