@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Play, Volume2, VolumeX, X } from "lucide-react";
 import { HomeThreeScene } from "@/components/HomeThreeScene";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { useLanguage, type Language } from "@/lib/i18n";
 import { studentResults, type StudentResult } from "@/lib/student-results";
 
 const slides = [
@@ -105,16 +106,337 @@ const homepageFaqs = [
   }
 ];
 
-const localizedPaymentNotes = [
+type HomeSlide = (typeof slides)[number];
+
+const homeCopy: Record<
+  Language,
   {
-    language: "Uzbek",
-    body: "To'lovdan keyin chekni Telegram botga yuboring. Ro'yxatdan o'tgan emailni yozing. Tasdiqlangandan keyin Pro kirish ochiladi."
-  },
-  {
-    language: "Russian",
-    body: "После оплаты отправьте чек в Telegram-бот. Укажите email, который использовали при регистрации. После подтверждения откроется доступ Pro."
+    slides: HomeSlide[];
+    partnerLabel: string;
+    results: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      parentLabel: string;
+      parentSource: string;
+      parentGreeting: string;
+      parentBody: string;
+      close: string;
+      prev: string;
+      next: string;
+    };
+    parent: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      cta: string;
+      summaryReportLabel: string;
+      summaryReportValue: string;
+      summaryReportBody: string;
+      summaryFocusLabel: string;
+      summaryFocusValue: string;
+      summaryFocusBody: string;
+      cards: Array<{ title: string; body: string }>;
+    };
+    faq: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      paymentLabel: string;
+      paymentBody: string;
+      cta: string;
+      items: Array<{ question: string; answer: string }>;
+    };
   }
-];
+> = {
+  en: {
+    slides,
+    partnerLabel: "Our Trusted Partners",
+    results: {
+      eyebrow: "Results Proof",
+      title: "Verified SAT growth with student videos and score reports.",
+      body: "Tap a result to see the student video and official SAT score report where available.",
+      parentLabel: "Parent Feedback",
+      parentSource: "Muslima's mother - Telegram",
+      parentGreeting: "Assalomu alaykum.",
+      parentBody:
+        "Thank you. Your contribution to these results is truly important. May Allah support you, and may all your students achieve high scores that make their parents proud. Amen.",
+      close: "Close student results",
+      prev: "Previous student video",
+      next: "Next student video"
+    },
+    parent: {
+      eyebrow: "For parents",
+      title: "You see real progress, not just attendance.",
+      body: "Parents trust preparation more when they can see the score path, weak topics, completed work, and the next correction plan every week.",
+      cta: "Open parent control",
+      summaryReportLabel: "Weekly report",
+      summaryReportValue: "Every Sunday",
+      summaryReportBody: "Weekly report for parents",
+      summaryFocusLabel: "Current focus",
+      summaryFocusValue: "Advanced Math + transitions",
+      summaryFocusBody: "Current focus: advanced Math and transitions in Reading/Writing",
+      cards: [
+        {
+          title: "What parents receive each week",
+          body: "Mock test score, completed task count, weak-topic list, and the plan for the next 7 days."
+        },
+        {
+          title: "How progress is tracked",
+          body: "Reading/Writing and Math scores are compared with accuracy, timing, and repeated mistakes."
+        },
+        {
+          title: "How weak areas are shown",
+          body: "Parents see exact weak skills such as transitions, evidence questions, algebra, or advanced math."
+        },
+        {
+          title: "When to expect score growth",
+          body: "Early changes can appear in 7-14 days; serious growth requires repeated mock-test cycles."
+        }
+      ]
+    },
+    faq: {
+      eyebrow: "Pricing FAQ",
+      title: "Clear answers before a parent pays.",
+      body: "The payment process is simple for now: pay by QR, send the receipt, and get access after confirmation. These are the questions students and parents usually ask first.",
+      paymentLabel: "Payment instruction",
+      paymentBody:
+        "After payment, send the receipt to the Telegram bot with the email used during registration. Pro access opens after confirmation.",
+      cta: "Choose plan",
+      items: homepageFaqs
+    }
+  },
+  ru: {
+    slides: [
+      {
+        ...slides[0],
+        nav: "Практика",
+        eyebrow: "Сначала диагностика. Потом ясный план.",
+        title: ["Ваш план", "роста SAT"],
+        body: "Пройдите один пробный тест и получите личный маршрут для стабильного роста балла.",
+        cta: "Начать диагностику"
+      },
+      {
+        ...slides[1],
+        nav: "Аналитика",
+        eyebrow: "Понимайте каждый потерянный балл",
+        title: ["Аналитика", "слабых мест"],
+        body: "Увидьте слабые навыки, ловушки, давление времени и следующую задачу для исправления.",
+        cta: "Открыть демо-отчет"
+      },
+      {
+        ...slides[2],
+        nav: "Рост",
+        eyebrow: "Система для стабильного роста",
+        title: ["30 дней", "улучшения"],
+        body: "Ежедневная работа по Reading, Writing и Math, построенная на ошибках диагностики.",
+        cta: "Смотреть цены"
+      }
+    ],
+    partnerLabel: "Образовательная экосистема",
+    results: {
+      eyebrow: "Доказательство результата",
+      title: "Подтвержденный рост SAT: видео учеников и отчеты с баллами.",
+      body: "Нажмите на результат, чтобы посмотреть видео ученика и официальный отчет SAT, если он доступен.",
+      parentLabel: "Отзыв родителя",
+      parentSource: "Мама Муслимы - Telegram",
+      parentGreeting: "Ассалому алайкум.",
+      parentBody:
+        "Спасибо. В этих результатах есть и ваш большой вклад. Пусть Аллах поддерживает вас, а ваши ученики получают высокие баллы и радуют своих родителей. Амин.",
+      close: "Закрыть результаты учеников",
+      prev: "Предыдущее видео ученика",
+      next: "Следующее видео ученика"
+    },
+    parent: {
+      eyebrow: "Для родителей",
+      title: "Вы видите реальный прогресс, а не просто факт занятий.",
+      body: "Родителям легче доверять подготовке, когда они каждую неделю видят путь к баллу, слабые темы, выполненные задания и следующий план исправления.",
+      cta: "Открыть контроль",
+      summaryReportLabel: "Еженедельный отчет",
+      summaryReportValue: "Каждое воскресенье",
+      summaryReportBody: "Еженедельный отчет для родителей",
+      summaryFocusLabel: "Текущий фокус",
+      summaryFocusValue: "Сложная математика + transitions",
+      summaryFocusBody: "Текущий фокус: сложная математика и transitions в Reading/Writing",
+      cards: [
+        {
+          title: "Что родители получают каждую неделю",
+          body: "Балл за mock test, количество выполненных заданий, список слабых тем и план на следующие 7 дней."
+        },
+        {
+          title: "Как отслеживается прогресс",
+          body: "Баллы Reading/Writing и Math сравниваются с точностью, временем и повторяющимися ошибками."
+        },
+        {
+          title: "Как показываются слабые места",
+          body: "Родители видят конкретные слабые навыки: transitions, evidence questions, algebra или advanced math."
+        },
+        {
+          title: "Когда ожидать рост балла",
+          body: "Первые изменения возможны через 7-14 дней; серьезный рост требует повторных циклов mock test."
+        }
+      ]
+    },
+    faq: {
+      eyebrow: "Вопросы по оплате",
+      title: "Понятные ответы до оплаты.",
+      body: "Процесс оплаты простой: оплатите по QR или другим способом, отправьте чек и получите доступ после подтверждения.",
+      paymentLabel: "Инструкция по оплате",
+      paymentBody:
+        "После оплаты отправьте чек в Telegram-бот вместе с email, указанным при регистрации. После подтверждения откроется доступ Pro.",
+      cta: "Выбрать план",
+      items: [
+        {
+          question: "Когда я получу доступ?",
+          answer: "После оплаты отправьте чек в Telegram. Аккаунт активируется вручную после проверки платежа."
+        },
+        {
+          question: "Можно ли отменить подписку?",
+          answer: "Да. Месячный план не является долгим контрактом. Вы можете остановиться до следующего месяца и пользоваться доступом до конца оплаченного периода."
+        },
+        {
+          question: "Есть ли возврат?",
+          answer: "Возврат рассматривается индивидуально до активного использования аккаунта. После mock tests, отчетов или практики платеж обычно не возвращается."
+        },
+        {
+          question: "Сколько mock tests доступно?",
+          answer: "Бесплатный план включает диагностический просмотр. SATTEST Pro создан для повторной практики, аналитики и личного маршрута My 1400+."
+        },
+        {
+          question: "Это официальный SAT?",
+          answer: "Нет. SATTEST.UZ — независимая платформа подготовки к SAT. SAT является товарным знаком College Board."
+        },
+        {
+          question: "Нужен ли преподаватель?",
+          answer: "Для самостоятельной подготовки Pro дает структуру и целевую практику. Для личной коррекции можно связаться с основателем в Telegram."
+        },
+        {
+          question: "Что происходит после оплаты?",
+          answer: "Вы оплачиваете через Paynet QR или другим способом, затем отправляете чек в Telegram-бот с email регистрации."
+        },
+        {
+          question: "Как родители отслеживают прогресс?",
+          answer: "Родители видят баллы mock tests, слабые темы, выполненную практику и план следующего исправления."
+        }
+      ]
+    }
+  },
+  uz: {
+    slides: [
+      {
+        ...slides[0],
+        nav: "Mashq",
+        eyebrow: "Avval diagnostika. Keyin aniq reja.",
+        title: ["SAT o'sish", "rejangiz"],
+        body: "Bitta sinov testini topshiring va barqaror ball o'sishi uchun shaxsiy yo'nalish oling.",
+        cta: "Diagnostikani boshlash"
+      },
+      {
+        ...slides[1],
+        nav: "Tahlil",
+        eyebrow: "Har bir yo'qotilgan ballni tushuning",
+        title: ["Zaif joylar", "tahlili"],
+        body: "Zaif ko'nikmalar, chalg'ituvchi xatolar, vaqt bosimi va keyingi tuzatish vazifasini ko'ring.",
+        cta: "Demo hisobot"
+      },
+      {
+        ...slides[2],
+        nav: "O'sish",
+        eyebrow: "Barqaror ball o'sishi uchun tizim",
+        title: ["30 kunlik", "o'sish"],
+        body: "Diagnostika xatolaridan tuzilgan kundalik Reading, Writing va Math ishlari.",
+        cta: "Narxlarni ko'rish"
+      }
+    ],
+    partnerLabel: "Ta'lim ekotizimi",
+    results: {
+      eyebrow: "Natija isboti",
+      title: "O'quvchi videolari va score reportlar bilan tasdiqlangan SAT o'sishi.",
+      body: "O'quvchi videosi va mavjud bo'lsa rasmiy SAT score reportni ko'rish uchun natijani bosing.",
+      parentLabel: "Ota-ona fikri",
+      parentSource: "Muslimaning onasi - Telegram",
+      parentGreeting: "Assalomu alaykum.",
+      parentBody:
+        "Rahmat, bu natijalarda sizning hissangiz ham katta. Allohim sizni qo'llab-quvvatlasin. O'quvchilaringiz yuqori ballari bilan ota-onasini xursand qilsin. Amin.",
+      close: "O'quvchi natijalarini yopish",
+      prev: "Oldingi o'quvchi videosi",
+      next: "Keyingi o'quvchi videosi"
+    },
+    parent: {
+      eyebrow: "Ota-onalar uchun",
+      title: "Siz faqat darsga qatnashishni emas, real progressni ko'rasiz.",
+      body: "Ota-onalar har hafta ball yo'nalishi, zaif mavzular, bajarilgan mashqlar va keyingi tuzatish rejasini ko'rsa, tayyorgarlikka ishonch kuchayadi.",
+      cta: "Nazoratni ochish",
+      summaryReportLabel: "Haftalik hisobot",
+      summaryReportValue: "Har yakshanba",
+      summaryReportBody: "Ota-onalar uchun haftalik hisobot",
+      summaryFocusLabel: "Hozirgi fokus",
+      summaryFocusValue: "Murakkab matematika + transitions",
+      summaryFocusBody: "Hozirgi fokus: murakkab matematika va Reading/Writing transitions",
+      cards: [
+        {
+          title: "Ota-onalar har hafta nima oladi",
+          body: "Mock test bali, bajarilgan mashqlar soni, zaif mavzular ro'yxati va keyingi 7 kunlik reja."
+        },
+        {
+          title: "Progress qanday kuzatiladi",
+          body: "Reading/Writing va Math ballari aniqlik, vaqt va takroriy xatolar bilan solishtiriladi."
+        },
+        {
+          title: "Zaif joylar qanday ko'rsatiladi",
+          body: "Ota-onalar transitions, evidence questions, algebra yoki advanced math kabi aniq zaif ko'nikmalarni ko'radi."
+        },
+        {
+          title: "Ball o'sishini qachon kutish mumkin",
+          body: "Dastlabki o'zgarishlar 7-14 kunda ko'rinishi mumkin; katta o'sish uchun takroriy mock test sikllari kerak."
+        }
+      ]
+    },
+    faq: {
+      eyebrow: "To'lov bo'yicha savollar",
+      title: "Ota-ona to'lov qilishidan oldin aniq javoblar.",
+      body: "To'lov jarayoni hozircha oddiy: QR orqali to'lang, chekni yuboring va tasdiqlangandan keyin kirish ochiladi.",
+      paymentLabel: "To'lov yo'riqnomasi",
+      paymentBody:
+        "To'lovdan keyin chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring. Tasdiqlangandan keyin Pro kirish ochiladi.",
+      cta: "Rejani tanlash",
+      items: [
+        {
+          question: "Kirish qachon ochiladi?",
+          answer: "To'lovdan keyin chekni Telegramga yuboring. To'lov tekshirilgandan so'ng akkaunt qo'lda faollashtiriladi."
+        },
+        {
+          question: "Bekor qilsam bo'ladimi?",
+          answer: "Ha. Oylik reja uzoq muddatli shartnoma emas. Keyingi oy oldidan to'xtatishingiz mumkin."
+        },
+        {
+          question: "Pul qaytariladimi?",
+          answer: "Akkaunt faol ishlatilishidan oldin qaytarish alohida ko'rib chiqiladi. Mock test, hisobot yoki practice ishlatilgandan keyin to'lov odatda qaytarilmaydi."
+        },
+        {
+          question: "Nechta mock test bor?",
+          answer: "Bepul reja diagnostik ko'rishni beradi. SATTEST Pro takroriy practice, analytics va My 1400+ yo'nalishi uchun qurilgan."
+        },
+        {
+          question: "Bu rasmiy SAT saytimi?",
+          answer: "Yo'q. SATTEST.UZ mustaqil SAT tayyorgarlik platformasi. SAT — College Board savdo belgisi."
+        },
+        {
+          question: "O'qituvchi kerakmi?",
+          answer: "Mustaqil tayyorlanadigan o'quvchilar uchun Pro strukturali practice beradi. Shaxsiy tuzatish uchun Telegram orqali bog'lanish mumkin."
+        },
+        {
+          question: "To'lovdan keyin nima bo'ladi?",
+          answer: "Paynet QR yoki boshqa usul orqali to'laysiz, keyin chekni ro'yxatdan o'tgan email bilan Telegram botga yuborasiz."
+        },
+        {
+          question: "Ota-onalar progressni qanday kuzatadi?",
+          answer: "Ota-onalar mock test ballari, zaif mavzular, bajarilgan mashqlar va keyingi tuzatish rejasini ko'radi."
+        }
+      ]
+    }
+  }
+};
 
 function shouldSkipHomeIntro() {
   if (typeof window === "undefined") return false;
@@ -151,6 +473,9 @@ function getLoaderDigits(value: number) {
 }
 
 export default function Home() {
+  const { language } = useLanguage();
+  const copy = homeCopy[language];
+  const slides = copy.slides;
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
   const [currentVideo, setCurrentVideo] = useState<(typeof videoSources)[number]>("1-2");
@@ -459,7 +784,7 @@ export default function Home() {
       <LuxuryNavbar />
 
       <section className="partner-marquee" aria-label="SAT learning and exam partners">
-        <p className="partner-marquee__label">Our Trusted Partners</p>
+        <p className="partner-marquee__label">{copy.partnerLabel}</p>
         <div className="partner-marquee__track" aria-hidden="true">
           {[...partnerLogos, ...partnerLogos, ...partnerLogos, ...partnerLogos].map((partner, index) => (
             <span className="partner-marquee__item" key={`${partner.name}-${index}`}>
@@ -536,19 +861,15 @@ export default function Home() {
           aria-label="Student SAT results"
         >
           <div className="results-wall__copy">
-            <p>Results Proof</p>
-            <h2>Verified SAT growth with student videos and score reports.</h2>
-            <span>Tap a result to see the student video and official SAT score report where available.</span>
+            <p>{copy.results.eyebrow}</p>
+            <h2>{copy.results.title}</h2>
+            <span>{copy.results.body}</span>
             <div className="parent-feedback" aria-label="Verified parent feedback">
-              <p>Parent Feedback</p>
+              <p>{copy.results.parentLabel}</p>
               <div className="parent-feedback__bubble">
-                <span>Muslima's mother - Telegram</span>
-                <strong>Assalomu alaykum.</strong>
-                <em>
-                  Raxmat, bu natijalarda sizning hissangiz ham katta. Allohim sizni qo'llab-quvvatlasin.
-                  O'quvchilaringizni hammasi yuqori ballari bilan sizni va ota-onasini yuzini yorug'
-                  qilsin. Amin.
-                </em>
+                <span>{copy.results.parentSource}</span>
+                <strong>{copy.results.parentGreeting}</strong>
+                <em>{copy.results.parentBody}</em>
               </div>
             </div>
           </div>
@@ -595,10 +916,10 @@ export default function Home() {
             </div>
 
             <div className="results-wall__controls" aria-label="Student result videos">
-              <button aria-label="Previous student video" onClick={() => scrollResults(-1)} type="button">
+              <button aria-label={copy.results.prev} onClick={() => scrollResults(-1)} type="button">
                 <ChevronLeft size={18} />
               </button>
-              <button aria-label="Next student video" onClick={() => scrollResults(1)} type="button">
+              <button aria-label={copy.results.next} onClick={() => scrollResults(1)} type="button">
                 <ChevronRight size={18} />
               </button>
             </div>
@@ -608,7 +929,7 @@ export default function Home() {
             className="results-wall__close"
             onClick={() => setShowResultsWall(false)}
             type="button"
-            aria-label="Close student results"
+            aria-label={copy.results.close}
           >
             <X size={16} />
           </button>
@@ -961,91 +1282,60 @@ export default function Home() {
 
       <section className="parent-journey-section" aria-labelledby="parent-journey-title">
         <div className="parent-journey-section__intro">
-          <p className="parent-journey-section__eyebrow">Для родителей / Ota-onalar uchun</p>
-          <h2 id="parent-journey-title">Вы видите реальный прогресс, а не просто факт занятий.</h2>
-          <p lang="ru">
-            Родителям легче доверять подготовке, когда они видят путь к баллу, слабые темы,
-            выполненные задания и следующий план исправления каждую неделю.
-          </p>
-          <p lang="uz">
-            Ota-onalar har hafta o'quvchining ball yo'nalishi, zaif mavzulari, bajarilgan
-            mashqlari va keyingi tuzatish rejasini ko'rsa, tayyorgarlikka ishonch kuchayadi.
-          </p>
+          <p className="parent-journey-section__eyebrow">{copy.parent.eyebrow}</p>
+          <h2 id="parent-journey-title">{copy.parent.title}</h2>
+          <p>{copy.parent.body}</p>
           <Link className="parent-journey-section__cta" href="/pricing">
-            <span>Открыть контроль / Nazoratni ochish</span>
+            <span>{copy.parent.cta}</span>
             <ArrowRight size={18} />
           </Link>
         </div>
 
-        <div className="parent-journey-section__dashboard" aria-label="Parent progress tracking preview in Russian and Uzbek">
+        <div className="parent-journey-section__dashboard" aria-label="Parent progress tracking preview">
           <div className="parent-journey-section__summary">
             <div>
-              <span>Еженедельный отчет</span>
-              <strong>Каждое воскресенье</strong>
-              <p lang="ru">Еженедельный отчет для родителей</p>
-              <p lang="uz">Ota-onalar uchun haftalik hisobot</p>
+              <span>{copy.parent.summaryReportLabel}</span>
+              <strong>{copy.parent.summaryReportValue}</strong>
+              <p>{copy.parent.summaryReportBody}</p>
             </div>
             <div>
-              <span>Текущий фокус</span>
-              <strong>Сложная математика + переходы</strong>
-              <p lang="ru">Текущий фокус: сложная математика и переходы в Reading/Writing</p>
-              <p lang="uz">Hozirgi fokus: murakkab matematika va Reading/Writing o'tishlari</p>
+              <span>{copy.parent.summaryFocusLabel}</span>
+              <strong>{copy.parent.summaryFocusValue}</strong>
+              <p>{copy.parent.summaryFocusBody}</p>
             </div>
           </div>
 
           <div className="parent-journey-section__cards">
-            <article>
-              <span>01</span>
-              <h3>Что родители получают каждую неделю</h3>
-              <p lang="ru">Балл за mock test, количество выполненных заданий, список слабых тем и план на следующие 7 дней.</p>
-              <p lang="uz">Mock test bali, bajarilgan mashqlar soni, zaif mavzular ro'yxati va keyingi 7 kunlik reja.</p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>Как отслеживается прогресс</h3>
-              <p lang="ru">Баллы Reading/Writing и Math сравниваются с точностью, временем и повторяющимися ошибками.</p>
-              <p lang="uz">Reading/Writing va Math ballari aniqlik, vaqt va takrorlanadigan xatolar bilan solishtiriladi.</p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>Как показываются слабые места</h3>
-              <p lang="ru">Родители видят конкретные слабые навыки: transitions, evidence questions, algebra или advanced math.</p>
-              <p lang="uz">Ota-onalar aniq zaif ko'nikmalarni ko'radi: transitions, evidence questions, algebra yoki advanced math.</p>
-            </article>
-            <article>
-              <span>04</span>
-              <h3>Когда ожидать рост балла</h3>
-              <p lang="ru">Первые изменения возможны через 7-14 дней; серьезный рост требует повторных циклов mock test.</p>
-              <p lang="uz">Dastlabki o'zgarishlar 7-14 kunda ko'rinishi mumkin; katta o'sish uchun takroriy mock test sikllari kerak.</p>
-            </article>
+            {copy.parent.cards.map((card, index) => (
+              <article key={card.title}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <h3>{card.title}</h3>
+                <p>{card.body}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
       <section className="homepage-faq-section" aria-labelledby="homepage-faq-title">
         <div className="homepage-faq-section__intro">
-          <p className="homepage-faq-section__eyebrow">Pricing FAQ</p>
-          <h2 id="homepage-faq-title">Clear answers before a parent pays.</h2>
-          <p>
-            The payment process is simple for now: pay by QR, send the receipt, and get access after
-            confirmation. These are the questions students and parents usually ask first.
-          </p>
-          <div className="homepage-faq-section__languageNotes" aria-label="Uzbek and Russian payment instructions">
-            {localizedPaymentNotes.map((note) => (
-              <div key={note.language}>
-                <span>{note.language}</span>
-                <p>{note.body}</p>
-              </div>
-            ))}
+          <p className="homepage-faq-section__eyebrow">{copy.faq.eyebrow}</p>
+          <h2 id="homepage-faq-title">{copy.faq.title}</h2>
+          <p>{copy.faq.body}</p>
+          <div className="homepage-faq-section__languageNotes" aria-label={copy.faq.paymentLabel}>
+            <div>
+              <span>{copy.faq.paymentLabel}</span>
+              <p>{copy.faq.paymentBody}</p>
+            </div>
           </div>
           <Link className="homepage-faq-section__cta" href="/pricing">
-            <span>Choose plan</span>
+            <span>{copy.faq.cta}</span>
             <ArrowRight size={18} />
           </Link>
         </div>
 
         <div className="homepage-faq-section__list">
-          {homepageFaqs.map((faq) => (
+          {copy.faq.items.map((faq) => (
             <article className="homepage-faq-section__item" key={faq.question}>
               <h3>{faq.question}</h3>
               <p>{faq.answer}</p>

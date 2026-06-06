@@ -3,19 +3,57 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, clearAuth, getStudentName, getToken } from "@/lib/api";
+import { languages, useLanguage, type Language } from "@/lib/i18n";
 
 const skipHomeIntroEvent = "sattest:skip-home-intro";
 
 export function LuxuryNavbar() {
   const [studentName, setStudentName] = useState<string | null>(null);
-  const navItems = [
-    { label: "About Us", href: "/about-us" },
-    { label: "Free Diagnostic", href: "/mock-test" },
-    { label: "Practice", href: "/practice" },
-    { label: "Demo Report", href: "/results/demo" },
-    { label: "My 1400+", href: "/my-1400" },
-    { label: "Pricing & Pay", href: "/pricing" }
-  ];
+  const { language, setLanguage } = useLanguage();
+  const navCopy: Record<Language, Array<{ label: string; href: string }>> = {
+    en: [
+      { label: "About Us", href: "/about-us" },
+      { label: "Free Diagnostic", href: "/mock-test" },
+      { label: "Practice", href: "/practice" },
+      { label: "Demo Report", href: "/results/demo" },
+      { label: "My 1400+", href: "/my-1400" },
+      { label: "Pricing & Pay", href: "/pricing" }
+    ],
+    ru: [
+      { label: "О нас", href: "/about-us" },
+      { label: "Бесплатная диагностика", href: "/mock-test" },
+      { label: "Практика", href: "/practice" },
+      { label: "Демо отчет", href: "/results/demo" },
+      { label: "Мой 1400+", href: "/my-1400" },
+      { label: "Цены и оплата", href: "/pricing" }
+    ],
+    uz: [
+      { label: "Biz haqimizda", href: "/about-us" },
+      { label: "Bepul diagnostika", href: "/mock-test" },
+      { label: "Mashqlar", href: "/practice" },
+      { label: "Demo hisobot", href: "/results/demo" },
+      { label: "Mening 1400+", href: "/my-1400" },
+      { label: "Narx va to'lov", href: "/pricing" }
+    ]
+  };
+  const navItems = navCopy[language];
+  const actionCopy = {
+    pricing: {
+      en: "Pricing & Paynet",
+      ru: "Цены и Paynet",
+      uz: "Narx va Paynet"
+    },
+    login: {
+      en: "Login",
+      ru: "Войти",
+      uz: "Kirish"
+    },
+    logout: {
+      en: "Log out",
+      ru: "Выйти",
+      uz: "Chiqish"
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -87,22 +125,37 @@ export function LuxuryNavbar() {
         </nav>
 
         <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center border border-white/10 bg-black/20 p-1" aria-label="Language selector">
+            {languages.map((item) => (
+              <button
+                className={[
+                  "h-9 px-2 text-[9px] font-black uppercase tracking-[0.12em] transition-colors sm:text-[10px]",
+                  language === item.code ? "bg-white text-black" : "text-white/50 hover:text-white"
+                ].join(" ")}
+                key={item.code}
+                onClick={() => setLanguage(item.code)}
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
           {studentName ? (
             <>
               <Link className="hidden h-11 max-w-[240px] items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/dashboard">
                 <span className="truncate">{studentName}</span>
               </Link>
               <button className="flex h-11 min-w-[112px] items-center justify-center whitespace-nowrap border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/70 transition-colors hover:border-white/35 hover:text-white" onClick={logout} type="button">
-                Log out
+                {actionCopy.logout[language]}
               </button>
             </>
           ) : (
             <>
               <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/pricing">
-                Pricing & Paynet
+                {actionCopy.pricing[language]}
               </Link>
               <Link className="h-11 border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] leading-[44px] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
-                Login
+                {actionCopy.login[language]}
               </Link>
             </>
           )}
