@@ -1954,7 +1954,7 @@ button, input {
   top: clamp(104px, 14vh, 126px);
   z-index: 12;
   display: grid;
-  grid-template-columns: minmax(210px, 0.84fr) minmax(360px, 1fr);
+  grid-template-columns: minmax(240px, 0.76fr) minmax(380px, 1.24fr);
   gap: 22px;
   width: min(780px, 62vw);
   max-height: calc(100vh - 150px);
@@ -2002,6 +2002,7 @@ button, input {
 
 .results-wall__copy {
   align-self: end;
+  min-width: 0;
   padding: 8px 18px 4px 2px;
 }
 
@@ -2021,6 +2022,7 @@ button, input {
   font-size: clamp(22px, 2vw, 30px);
   font-weight: 300;
   line-height: 1.18;
+  overflow-wrap: anywhere;
 }
 
 .results-wall__copy > span {
@@ -2273,6 +2275,7 @@ button, input {
   font-size: 17px;
   font-weight: 500;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .results-card__meta span {
@@ -2282,10 +2285,12 @@ button, input {
   letter-spacing: 0.08em;
   line-height: 1.35;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 .results-card__meta em {
   width: fit-content;
+  max-width: 100%;
   margin-top: 4px;
   padding: 5px 7px;
   border: 1px solid rgba(255, 255, 255, 0.22);
@@ -2297,6 +2302,7 @@ button, input {
   letter-spacing: 0.1em;
   line-height: 1.2;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 .results-wall__close {
@@ -2422,7 +2428,7 @@ button, input {
   position: relative;
   z-index: 4;
   display: grid;
-  grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1fr);
+  grid-template-columns: minmax(260px, min(36vw, 560px)) minmax(0, 1fr);
   gap: clamp(34px, 5vw, 82px);
   align-items: center;
   min-height: 100vh;
@@ -2438,11 +2444,14 @@ button, input {
 .founder-trust-section__media,
 .founder-trust-section__copy {
   position: relative;
+  min-width: 0;
   z-index: 2;
 }
 
 .founder-trust-section__media {
   display: grid;
+  width: 100%;
+  max-width: 560px;
   gap: 16px;
 }
 
@@ -2499,17 +2508,18 @@ button, input {
   max-width: 880px;
   margin-top: 26px;
   color: #fff;
-  font-size: clamp(44px, 5vw, 88px);
+  font-size: clamp(40px, 4.45vw, 76px);
   font-weight: 300;
   letter-spacing: 0;
-  line-height: 1.03;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
 }
 
 .founder-trust-section__copy > p:not(.founder-trust-section__eyebrow) {
   max-width: 760px;
   margin-top: 28px;
   color: rgba(255, 255, 255, 0.62);
-  font-size: clamp(18px, 1.42vw, 25px);
+  font-size: clamp(17px, 1.28vw, 23px);
   font-weight: 300;
   line-height: 1.65;
 }
@@ -2532,9 +2542,10 @@ button, input {
   display: block;
   margin-top: 16px;
   color: #fff;
-  font-size: clamp(18px, 1.6vw, 25px);
+  font-size: clamp(17px, 1.45vw, 24px);
   font-weight: 600;
-  line-height: 1.22;
+  line-height: 1.26;
+  overflow-wrap: anywhere;
 }
 
 .founder-trust-section__proof {
@@ -4632,5 +4643,109 @@ button, input {
   .results-wall__cards {
     grid-auto-columns: minmax(172px, 82%);
     margin-top: 4px;
+  }
+}
+
+html[lang="ru"] .results-wall__copy h2,
+html[lang="uz"] .results-wall__copy h2 {
+  font-size: clamp(21px, 1.75vw, 34px);
+  line-height: 1.14;
+  overflow-wrap: anywhere;
+}
+
+html[lang="ru"] .results-wall__copy > span,
+html[lang="uz"] .results-wall__copy > span,
+html[lang="ru"] .parent-feedback__bubble em,
+html[lang="uz"] .parent-feedback__bubble em {
+  font-size: clamp(11px, 0.78vw, 13px);
+}
+
+html[lang="ru"] .results-card__meta,
+html[lang="uz"] .results-card__meta {
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+}
+
+html[lang="ru"] .results-card__meta strong,
+html[lang="uz"] .results-card__meta strong {
+  font-size: clamp(14px, 1vw, 17px);
+}
+
+html[lang="ru"] .results-card__meta span,
+html[lang="uz"] .results-card__meta span {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
+html[lang="ru"] .results-card__meta em,
+html[lang="uz"] .results-card__meta em {
+  max-width: 100%;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+html[lang="ru"] .founder-trust-section h2,
+html[lang="uz"] .founder-trust-section h2 {
+  font-size: clamp(34px, 3.55vw, 64px);
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+html[lang="ru"] .founder-trust-section__copy > p:not(.founder-trust-section__eyebrow),
+html[lang="uz"] .founder-trust-section__copy > p:not(.founder-trust-section__eyebrow) {
+  font-size: clamp(16px, 1.08vw, 20px);
+  line-height: 1.58;
+}
+
+html[lang="ru"] .founder-trust-section__highlights strong,
+html[lang="uz"] .founder-trust-section__highlights strong {
+  font-size: clamp(16px, 1.2vw, 21px);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1320px) {
+  .founder-trust-section {
+    grid-template-columns: 1fr;
+    gap: 42px;
+    min-height: auto;
+  }
+
+  .founder-trust-section__media {
+    max-width: min(680px, 100%);
+  }
+
+  .founder-trust-section h2,
+  html[lang="ru"] .founder-trust-section h2,
+  html[lang="uz"] .founder-trust-section h2 {
+    max-width: 980px;
+    font-size: clamp(38px, 7vw, 72px);
+  }
+}
+
+@media (max-width: 1180px) {
+  html[lang="ru"] .results-wall__copy h2,
+  html[lang="uz"] .results-wall__copy h2 {
+    font-size: clamp(22px, 3vw, 32px);
+  }
+}
+
+@media (max-width: 900px) {
+  html[lang="ru"] .results-wall__copy h2,
+  html[lang="uz"] .results-wall__copy h2 {
+    font-size: clamp(20px, 5.3vw, 30px);
+  }
+}
+
+@media (max-width: 560px) {
+  html[lang="ru"] .results-wall__copy h2,
+  html[lang="uz"] .results-wall__copy h2 {
+    font-size: 19px;
+    line-height: 1.12;
+  }
+
+  html[lang="ru"] .founder-trust-section h2,
+  html[lang="uz"] .founder-trust-section h2 {
+    font-size: clamp(34px, 10vw, 48px);
   }
 }

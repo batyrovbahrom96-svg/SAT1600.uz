@@ -895,6 +895,9 @@ export function SiteTranslator() {
     activeTranslatorLanguage = next;
     setLanguage(next);
     if (typeof document !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("lang", next);
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
       translateNode(document.body, next);
       window.requestAnimationFrame(() => translateNode(document.body, next));
     }
@@ -918,17 +921,14 @@ export function SiteTranslator() {
       const target = event.target instanceof Element ? event.target.closest("[data-sattest-language]") : null;
       const next = target?.getAttribute("data-sattest-language");
       if (next === "en" || next === "ru" || next === "uz") {
+        event.preventDefault();
         applyLanguage(next);
       }
     };
 
     document.addEventListener("click", onLanguageClick);
-    document.addEventListener("pointerdown", onLanguageClick);
-    document.addEventListener("mousedown", onLanguageClick);
     return () => {
       document.removeEventListener("click", onLanguageClick);
-      document.removeEventListener("pointerdown", onLanguageClick);
-      document.removeEventListener("mousedown", onLanguageClick);
     };
   }, [setLanguage]);
 
@@ -946,9 +946,10 @@ export function SiteTranslator() {
           data-sattest-language={item.code}
           href={languageHref(item.code)}
           key={item.code}
-          onMouseDown={() => applyLanguage(item.code)}
-          onClick={() => applyLanguage(item.code)}
-          onPointerDown={() => applyLanguage(item.code)}
+          onClick={(event) => {
+            event.preventDefault();
+            applyLanguage(item.code);
+          }}
         >
           {item.label}
         </a>
