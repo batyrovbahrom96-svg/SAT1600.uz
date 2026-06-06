@@ -1,0 +1,9 @@
+{
+  "name": "sat1600-uz",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "serve": "npx --yes serve -p 5174 .",
+    "dev":   "npx --yes serve -p 5174 ."
+  }
+}
