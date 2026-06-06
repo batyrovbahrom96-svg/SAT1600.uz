@@ -4704,6 +4704,101 @@ html[lang="uz"] .founder-trust-section__highlights strong {
   overflow-wrap: anywhere;
 }
 
+html[lang="ru"] .founder-trust-section,
+html[lang="uz"] .founder-trust-section {
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: clamp(34px, 4vw, 56px);
+  overflow: hidden;
+}
+
+html[lang="ru"] .founder-trust-section__media,
+html[lang="uz"] .founder-trust-section__media {
+  width: min(920px, 100%);
+  max-width: 100%;
+}
+
+html[lang="ru"] .founder-trust-section__photo,
+html[lang="uz"] .founder-trust-section__photo {
+  aspect-ratio: 16 / 10;
+  max-height: 620px;
+}
+
+html[lang="ru"] .founder-trust-section__score,
+html[lang="uz"] .founder-trust-section__score {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+html[lang="ru"] .founder-trust-section__score span,
+html[lang="uz"] .founder-trust-section__score span,
+html[lang="ru"] .founder-trust-section__eyebrow,
+html[lang="uz"] .founder-trust-section__eyebrow,
+html[lang="ru"] .founder-trust-section__highlights span,
+html[lang="uz"] .founder-trust-section__highlights span {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+html[lang="ru"] .founder-trust-section__score strong,
+html[lang="uz"] .founder-trust-section__score strong {
+  font-size: clamp(48px, 7vw, 104px);
+}
+
+html[lang="ru"] .founder-trust-section__copy,
+html[lang="uz"] .founder-trust-section__copy {
+  max-width: 1180px;
+}
+
+html[lang="ru"] .founder-trust-section h2,
+html[lang="uz"] .founder-trust-section h2 {
+  max-width: 1040px;
+  font-size: clamp(42px, 5vw, 78px);
+  line-height: 1.06;
+}
+
+html[lang="ru"] .founder-trust-section__copy > p:not(.founder-trust-section__eyebrow),
+html[lang="uz"] .founder-trust-section__copy > p:not(.founder-trust-section__eyebrow) {
+  max-width: 1040px;
+  font-size: clamp(18px, 1.35vw, 24px);
+  line-height: 1.62;
+}
+
+html[lang="ru"] .founder-trust-section__highlights,
+html[lang="uz"] .founder-trust-section__highlights {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+html[lang="ru"] .founder-trust-section__highlights div,
+html[lang="uz"] .founder-trust-section__highlights div {
+  min-height: 156px;
+}
+
+html[lang="ru"] .founder-trust-section__proof,
+html[lang="uz"] .founder-trust-section__proof {
+  grid-template-columns: repeat(2, minmax(220px, 280px)) minmax(320px, 1fr);
+}
+
+html[lang="ru"] .founder-trust-section__certificate span,
+html[lang="uz"] .founder-trust-section__certificate span {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  word-break: normal;
+}
+
+html[lang="ru"] .founder-trust-section__proof > div,
+html[lang="uz"] .founder-trust-section__proof > div {
+  min-width: 0;
+}
+
+html[lang="ru"] .founder-trust-section__proof strong,
+html[lang="uz"] .founder-trust-section__proof strong {
+  font-size: clamp(24px, 2.4vw, 38px);
+  line-height: 1.18;
+}
+
 @media (max-width: 1320px) {
   .founder-trust-section {
     grid-template-columns: 1fr;
@@ -4728,6 +4823,18 @@ html[lang="uz"] .founder-trust-section__highlights strong {
   html[lang="uz"] .results-wall__copy h2 {
     font-size: clamp(22px, 3vw, 32px);
   }
+
+  html[lang="ru"] .founder-trust-section__highlights,
+  html[lang="uz"] .founder-trust-section__highlights,
+  html[lang="ru"] .founder-trust-section__proof,
+  html[lang="uz"] .founder-trust-section__proof {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html[lang="ru"] .founder-trust-section__proof > div,
+  html[lang="uz"] .founder-trust-section__proof > div {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 900px) {
@@ -4747,5 +4854,23 @@ html[lang="uz"] .founder-trust-section__highlights strong {
   html[lang="ru"] .founder-trust-section h2,
   html[lang="uz"] .founder-trust-section h2 {
     font-size: clamp(34px, 10vw, 48px);
+  }
+
+  html[lang="ru"] .founder-trust-section__highlights,
+  html[lang="uz"] .founder-trust-section__highlights,
+  html[lang="ru"] .founder-trust-section__proof,
+  html[lang="uz"] .founder-trust-section__proof {
+    grid-template-columns: 1fr;
+  }
+
+  html[lang="ru"] .founder-trust-section__score,
+  html[lang="uz"] .founder-trust-section__score {
+    grid-template-columns: 1fr;
+  }
+
+  html[lang="ru"] .founder-trust-section__score strong,
+  html[lang="uz"] .founder-trust-section__score strong {
+    grid-row: auto;
+    font-size: clamp(42px, 15vw, 72px);
   }
 }
