@@ -211,7 +211,7 @@ const homeCopy: Record<
       {
         ...slides[0],
         nav: "Практика",
-        eyebrow: "Сначала диагностика. Потом ясный план.",
+        eyebrow: "Сначала диагностика. Затем ясный план.",
         title: ["Ваш план", "роста SAT"],
         body: "Пройдите один пробный тест и получите личный маршрут для стабильного роста балла.",
         cta: "Начать диагностику"
@@ -233,7 +233,7 @@ const homeCopy: Record<
         cta: "Смотреть цены"
       }
     ],
-    partnerLabel: "Образовательная экосистема",
+    partnerLabel: "Наши надежные партнеры",
     results: {
       eyebrow: "Доказательство результата",
       title: "Подтвержденный рост SAT: видео учеников и отчеты с баллами.",
@@ -348,7 +348,7 @@ const homeCopy: Record<
         cta: "Narxlarni ko'rish"
       }
     ],
-    partnerLabel: "Ta'lim ekotizimi",
+    partnerLabel: "Ishonchli hamkorlarimiz",
     results: {
       eyebrow: "Natija isboti",
       title: "O'quvchi videolari va score reportlar bilan tasdiqlangan SAT o'sishi.",
@@ -459,7 +459,9 @@ function shouldSkipHomeIntro() {
     }
   }
   if (shouldSkipFromUrl) {
-    window.history.replaceState(null, "", "/");
+    params.delete("skipIntro");
+    const nextQuery = params.toString();
+    window.history.replaceState(null, "", nextQuery ? `/?${nextQuery}` : "/");
   }
   return shouldSkip;
 }
@@ -504,7 +506,10 @@ export default function Home() {
   }, [active]);
 
   const skipIntroNow = useCallback(() => {
-    window.history.replaceState(null, "", "/");
+    const params = new URLSearchParams(window.location.search);
+    params.delete("skipIntro");
+    const nextQuery = params.toString();
+    window.history.replaceState(null, "", nextQuery ? `/?${nextQuery}` : "/");
     setIsLoaderExiting(false);
     setIsLoading(false);
     setLoadingStage("numbers");

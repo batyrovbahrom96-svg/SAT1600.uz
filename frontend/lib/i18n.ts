@@ -15,7 +15,14 @@ export function getInitialLanguage(): Language {
   if (typeof window === "undefined") return "en";
 
   const requested = new URLSearchParams(window.location.search).get("lang");
-  if (requested === "ru" || requested === "uz" || requested === "en") return requested;
+  if (requested === "ru" || requested === "uz" || requested === "en") {
+    try {
+      window.localStorage?.setItem(storageKey, requested);
+    } catch {
+      // URL language still wins even when storage cannot be written.
+    }
+    return requested;
+  }
 
   try {
     const saved = window.localStorage?.getItem(storageKey);
@@ -37,7 +44,7 @@ export function setStoredLanguage(language: Language) {
 }
 
 export function useLanguage() {
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>(() => getInitialLanguage());
 
   useEffect(() => {
     setLanguage(getInitialLanguage());
