@@ -1,55 +1,60 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
-const tags = ["Digital SAT", "Mock tests", "Analytics", "1400+ route"];
-
-const technologyCards = [
+const advantages = [
   {
-    title: "Diagnostic engine",
-    body: "A mock test becomes a score map, weakness report, and first route for improvement."
+    number: "01 / 04",
+    title: "Diagnostic intelligence",
+    body: "See your score level, section gaps, and mistakes before choosing a paid route."
   },
   {
-    title: "Adaptive practice",
-    body: "Reading, Writing, and Math tasks are grouped around the mistakes holding the score down."
+    number: "02 / 04",
+    title: "Targeted practice",
+    body: "Train Reading, Writing, and Math by the weak topics that matter most."
   },
   {
-    title: "Growth tracking",
-    body: "Students and parents see progress, repeated traps, and what to study next."
+    number: "03 / 04",
+    title: "1400+ roadmap",
+    body: "Follow a personal curriculum route built for measurable score growth."
+  },
+  {
+    number: "04 / 04",
+    title: "Weekly correction",
+    body: "Elite students get structure, review, and focused strategy for serious gains."
   }
-];
-
-const highlights = [
-  "Bluebook-style mock pressure",
-  "Weak-topic practice plan",
-  "Mistake pattern explanations",
-  "Telegram payment confirmation"
 ];
 
 const plans = [
   {
+    kicker: "Free route",
+    number: "01",
     name: "Diagnostic Mock",
-    price: "Free",
-    body: "One diagnostic route for students who need to see their real SAT level first.",
+    price: "0 UZS",
+    body: "For students who want to see their real SAT level before choosing a paid route.",
     href: "/mock-test"
   },
   {
+    kicker: "Core platform",
+    number: "02",
     name: "SATTEST Pro",
-    price: "149 000 UZS",
-    body: "Monthly targeted practice, analytics, and a visible 1400+ study direction.",
+    price: "149 000 UZS / month",
+    body: "Targeted SAT practice, analytics, and a visible score-growth route.",
     href: "/pricing"
   },
   {
+    kicker: "Elite system",
+    number: "03",
     name: "1400+ Elite",
-    price: "990 000 UZS",
-    body: "High-touch roadmap, review, and weekly correction for serious score growth.",
+    price: "990 000 UZS / month",
+    body: "Personal structure, weekly correction, and strategy for serious score improvement.",
     href: "/pricing"
   }
 ];
 
-function Dashes() {
+function ParticleField() {
   return (
-    <div className="critical-dashes" aria-hidden="true">
-      {Array.from({ length: 46 }).map((_, index) => (
+    <div className="wq-particle-field" aria-hidden="true">
+      {Array.from({ length: 360 }).map((_, index) => (
         <span key={index} style={{ "--i": index } as CSSProperties} />
       ))}
     </div>
@@ -58,108 +63,107 @@ function Dashes() {
 
 export default function Home() {
   return (
-    <main className="critical-home">
-      <Dashes />
+    <main className="wq-home">
+      <ParticleField />
 
-      <header className="critical-nav">
-        <Link className="critical-logo" href="/">
-          sattest.uz
+      <header className="wq-header">
+        <Link className="wq-brand" href="/">
+          <span>SATTEST</span>
+          <strong>UZ</strong>
         </Link>
         <nav aria-label="Main navigation">
-          <Link href="#method">Method</Link>
+          <Link href="#method">Why SATTEST</Link>
           <Link href="#pricing">Pricing</Link>
-          <Link href="/about-us">References</Link>
-          <a className="critical-nav-cta" href="https://t.me/FounderSATTESTUZ" target="_blank" rel="noreferrer">
-            Let&apos;s talk
+          <Link href="/about-us">Results</Link>
+          <a href="https://t.me/FounderSATTESTUZ" target="_blank" rel="noreferrer">
+            Contact
           </a>
         </nav>
       </header>
 
-      <section className="critical-hero" id="hero">
-        <div className="critical-year">2026</div>
-        <div className="critical-badge">SAT preparation platform</div>
-        <h1>
-          Build The SAT
-          <br />
-          Score That
-          <br />
-          Moves You
-          <br />
-          Forward
-        </h1>
-        <div className="critical-hero-bottom">
-          <p>
-            SATTEST.UZ turns diagnostic mocks into weakness analytics, targeted practice,
-            and a clear route toward serious score growth.
-          </p>
-          <div className="critical-actions">
-            <Link className="critical-button is-green" href="/mock-test">
+      <section className="wq-hero" id="hero">
+        <div className="wq-hero-copy">
+          <p className="wq-eyebrow">SAT preparation platform</p>
+          <h1>
+            <span>Build</span>
+            <span>The SAT</span>
+            <span>Score That</span>
+            <span>Moves You</span>
+            <span>Forward</span>
+          </h1>
+          <Link className="wq-pill-button" href="/pricing">
+            View pricing
+            <span>+</span>
+          </Link>
+        </div>
+        <p className="wq-hero-text">
+          SATTEST.UZ gives serious students a clear diagnostic, targeted practice,
+          and a score-growth route from first mock to 1400+ strategy.
+        </p>
+      </section>
+
+      <section className="wq-statement" id="method">
+        <p className="wq-section-label">Our method</p>
+        <div className="wq-statement-grid">
+          <h2>
+            Diagnose precisely.
+            <br />
+            Practice deliberately.
+          </h2>
+          <div>
+            <p>
+              The platform turns every mock and practice set into a map of weak topics,
+              priority drills, and visible progress. Students do not just solve more
+              questions. They build the exact habits the digital SAT rewards.
+            </p>
+            <Link className="wq-pill-button is-dark" href="/mock-test">
               Start diagnostic
-            </Link>
-            <Link className="critical-button" href="/pricing">
-              View pricing
+              <span>+</span>
             </Link>
           </div>
         </div>
-        <div className="critical-tags">
-          {tags.map((tag) => (
-            <span key={tag}>{tag}</span>
-          ))}
-        </div>
       </section>
 
-      <section className="critical-section" id="method">
-        <span className="critical-label">Technology</span>
-        <div className="critical-section-head">
-          <h2>Built for focused SAT improvement.</h2>
-          <p>
-            The platform is not random practice. It is a simple loop: diagnose,
-            target, repeat, and measure the score movement.
-          </p>
-        </div>
-        <div className="critical-card-grid">
-          {technologyCards.map((card) => (
-            <article className="critical-card" key={card.title}>
-              <div className="critical-card-mark" />
-              <h3>{card.title}</h3>
-              <p>{card.body}</p>
-            </article>
-          ))}
-        </div>
+      <section className="wq-system">
+        {advantages.map((item, index) => (
+          <article className={index === 0 ? "wq-system-card is-active" : "wq-system-card"} key={item.title}>
+            {index === 0 ? <div className="wq-dot-form" aria-hidden="true" /> : null}
+            <p>{item.number}</p>
+            <h3>{item.title}</h3>
+            <span>{item.body}</span>
+          </article>
+        ))}
       </section>
 
-      <section className="critical-section">
-        <span className="critical-label">Highlights</span>
-        <div className="critical-highlight-grid">
-          {highlights.map((item) => (
-            <div className="critical-highlight" key={item}>
-              <span />
-              <p>{item}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="critical-section" id="pricing">
-        <span className="critical-label">Pricing</span>
-        <div className="critical-section-head">
+      <section className="wq-pricing" id="pricing">
+        <div className="wq-pricing-head">
+          <p className="wq-eyebrow">Pricing</p>
           <h2>Choose your SAT route.</h2>
-          <p>Start free, upgrade when the weak areas are clear, or move into personal correction.</p>
         </div>
-        <div className="critical-pricing-grid">
+        <div className="wq-price-grid">
           {plans.map((plan) => (
-            <Link className="critical-price-card" href={plan.href} key={plan.name}>
-              <span>{plan.name}</span>
-              <strong>{plan.price}</strong>
-              <p>{plan.body}</p>
-              <em>Open route</em>
+            <Link className="wq-price-card" href={plan.href} key={plan.name}>
+              <div className="wq-card-form" aria-hidden="true" />
+              <div className="wq-plan-top">
+                <p>
+                  <span>{plan.kicker}</span>
+                  <span>{plan.number}</span>
+                </p>
+                <h3>{plan.name}</h3>
+                <strong>{plan.price}</strong>
+                <span>{plan.body}</span>
+              </div>
+              <em>
+                Open route
+                <span>+</span>
+              </em>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="critical-contact" id="contact">
-        <span className="critical-label">Contact</span>
+      <section className="wq-contact" id="contact">
+        <p className="wq-section-label">Talk to SATTEST</p>
         <h2>
           Ready to build
           <br />

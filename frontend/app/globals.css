@@ -21,6 +21,486 @@ button, input {
   font: inherit;
 }
 
+.wq-home {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #111111;
+  color: #dadada;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.wq-home * {
+  box-sizing: border-box;
+}
+
+.wq-particle-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #111111;
+  pointer-events: none;
+}
+
+.wq-particle-field span {
+  position: absolute;
+  left: calc(((var(--i) * 41) % 100) * 1%);
+  top: calc(((var(--i) * 67) % 100) * 1%);
+  width: calc(2px + ((var(--i) % 6) * 0.7px));
+  height: calc(2px + ((var(--i) % 6) * 0.7px));
+  border-radius: 999px;
+  background: #dadada;
+  opacity: calc(0.08 + ((var(--i) % 8) * 0.035));
+  transform: translate3d(0, 0, 0);
+  animation: wq-star-drift calc(8s + (var(--i) % 8) * 0.7s) ease-in-out infinite;
+  animation-delay: calc((var(--i) % 12) * -0.45s);
+}
+
+@keyframes wq-star-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(10px, -8px, 0) scale(1.35);
+  }
+}
+
+.wq-header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 8;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 28px 40px;
+  pointer-events: none;
+}
+
+.wq-brand,
+.wq-header nav a {
+  color: #dadada;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  text-transform: uppercase;
+  pointer-events: auto;
+}
+
+.wq-brand {
+  display: grid;
+  gap: 1px;
+}
+
+.wq-brand strong {
+  font-weight: 800;
+}
+
+.wq-header nav {
+  display: flex;
+  gap: clamp(18px, 4vw, 54px);
+}
+
+.wq-hero,
+.wq-statement,
+.wq-system,
+.wq-pricing,
+.wq-contact {
+  position: relative;
+  z-index: 1;
+}
+
+.wq-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
+  align-items: end;
+  gap: 42px;
+  min-height: 100vh;
+  padding: 18vh 40px 58px;
+}
+
+.wq-hero-copy {
+  display: grid;
+  justify-items: start;
+  gap: 28px;
+}
+
+.wq-eyebrow,
+.wq-section-label,
+.wq-system-card p {
+  margin: 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wq-hero h1 {
+  margin: 0;
+  max-width: 820px;
+  color: #dadada;
+  font-size: clamp(48px, 8.2vw, 122px);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.88;
+}
+
+.wq-hero h1 span {
+  display: block;
+}
+
+.wq-hero-text {
+  max-width: 430px;
+  margin: 0 0 12px;
+  color: #dadada;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: clamp(13px, 1.15vw, 15px);
+  line-height: 1.55;
+  text-transform: uppercase;
+}
+
+.wq-pill-button,
+.wq-price-card em {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 0.03em;
+  padding: 0 18px 0 22px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: transform 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.wq-pill-button:hover,
+.wq-price-card:hover em {
+  transform: translateY(-2px);
+}
+
+.wq-pill-button.is-dark {
+  color: #111111;
+}
+
+.wq-statement {
+  display: grid;
+  align-content: center;
+  gap: 72px;
+  min-height: 100vh;
+  background: #d9d9d9;
+  color: #111111;
+  padding: 132px 40px 112px;
+}
+
+.wq-statement-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 500px);
+  gap: 56px;
+}
+
+.wq-statement h2 {
+  margin: 0;
+  color: #111111;
+  font-size: clamp(44px, 6.5vw, 96px);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.96;
+}
+
+.wq-statement-grid div {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 28px;
+}
+
+.wq-statement-grid div p {
+  margin: 0;
+  font-size: clamp(20px, 2.2vw, 34px);
+  line-height: 1.08;
+}
+
+.wq-system {
+  display: grid;
+  grid-template-columns: 1.3fr repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  background: #d9d9d9;
+  color: #111111;
+  padding: 0 40px 112px;
+}
+
+.wq-system-card {
+  display: grid;
+  align-content: end;
+  min-height: 520px;
+  border-radius: 0 0 30px 30px;
+  background: #efefef;
+  color: #111111;
+  padding: 24px;
+}
+
+.wq-system-card.is-active {
+  position: relative;
+  overflow: hidden;
+  background: #111111;
+  color: #dadada;
+}
+
+.wq-dot-form {
+  position: absolute;
+  inset: 36px 30px auto;
+  height: 280px;
+  background-image: radial-gradient(circle, rgba(241, 241, 241, 0.9) 1.8px, transparent 2px);
+  background-position: center;
+  background-size: 13px 13px;
+  mask-image: radial-gradient(ellipse at 50% 54%, #000 0 42%, transparent 69%);
+  opacity: 0.82;
+  transform: perspective(700px) rotateX(58deg) rotateZ(-4deg);
+}
+
+.wq-system-card h3 {
+  margin: 14px 0 18px;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.wq-system-card span {
+  margin: 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.wq-pricing {
+  background: #111111;
+  color: #dadada;
+  padding: 124px 40px 120px;
+}
+
+.wq-pricing-head {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: start;
+  gap: 28px;
+  margin-bottom: 54px;
+}
+
+.wq-pricing-head h2 {
+  max-width: 780px;
+  margin: 0;
+  color: #dadada;
+  font-size: clamp(48px, 7vw, 96px);
+  font-weight: 500;
+  line-height: 0.96;
+}
+
+.wq-price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  perspective: 1200px;
+}
+
+.wq-price-card {
+  position: relative;
+  display: grid;
+  min-height: 680px;
+  align-content: space-between;
+  overflow: hidden;
+  border: 1px solid rgba(218, 218, 218, 0.22);
+  border-radius: 30px;
+  background: rgba(17, 17, 17, 0.88);
+  color: #dadada;
+  padding: 24px;
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.wq-price-card:nth-child(2) {
+  background: #d9d9d9;
+  color: #111111;
+}
+
+.wq-price-card:hover {
+  border-color: rgba(241, 241, 241, 0.68);
+  transform: translateY(-6px) rotateX(1deg);
+}
+
+.wq-card-form {
+  position: absolute;
+  inset: 26px 20px auto;
+  height: 240px;
+  background-image: radial-gradient(circle, currentColor 1.4px, transparent 2px);
+  background-size: 12px 12px;
+  mask-image: radial-gradient(ellipse at center, #000 0 43%, transparent 70%);
+  opacity: 0.4;
+  transform: perspective(700px) rotateX(58deg) rotateZ(-5deg);
+}
+
+.wq-plan-top {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 22px;
+  padding-top: 290px;
+}
+
+.wq-plan-top p {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.wq-plan-top h3 {
+  margin: 0;
+  color: currentColor;
+  font-size: clamp(30px, 3.1vw, 46px);
+  font-weight: 500;
+  line-height: 0.98;
+}
+
+.wq-plan-top strong {
+  font-size: clamp(36px, 4vw, 60px);
+  font-weight: 850;
+  line-height: 0.96;
+}
+
+.wq-plan-top > span {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.wq-price-card em {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.wq-contact {
+  display: grid;
+  min-height: 72vh;
+  align-content: center;
+  gap: 28px;
+  background: #d9d9d9;
+  color: #111111;
+  padding: 120px 40px;
+}
+
+.wq-contact h2 {
+  max-width: 900px;
+  margin: 0;
+  color: #111111;
+  font-size: clamp(52px, 8vw, 122px);
+  font-weight: 500;
+  line-height: 0.9;
+}
+
+.wq-contact a {
+  width: max-content;
+  color: #111111;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: clamp(18px, 3vw, 34px);
+  text-transform: uppercase;
+}
+
+@media (max-width: 1180px) {
+  .wq-hero,
+  .wq-statement-grid,
+  .wq-pricing-head {
+    grid-template-columns: 1fr;
+  }
+
+  .wq-system,
+  .wq-price-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wq-system-card,
+  .wq-price-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .wq-header {
+    position: absolute;
+    flex-direction: column;
+    padding: 24px 18px;
+  }
+
+  .wq-header nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .wq-header nav a {
+    font-size: 11px;
+  }
+
+  .wq-hero,
+  .wq-statement,
+  .wq-system,
+  .wq-pricing,
+  .wq-contact {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .wq-hero {
+    min-height: 100svh;
+    padding-top: 180px;
+  }
+
+  .wq-hero-text {
+    max-width: none;
+  }
+
+  .wq-statement,
+  .wq-pricing,
+  .wq-contact {
+    padding-top: 86px;
+    padding-bottom: 86px;
+  }
+
+  .wq-system {
+    padding-bottom: 86px;
+  }
+
+  .wq-system-card,
+  .wq-price-card {
+    border-radius: 24px;
+  }
+
+  .wq-plan-top {
+    padding-top: 230px;
+  }
+
+  .wq-card-form {
+    height: 190px;
+  }
+}
+
 .critical-home {
   position: relative;
   min-height: 100vh;
