@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
+import { SiteTranslator } from "@/components/SiteTranslator";
 import "./globals.css";
 
 const siteUrl = "https://www.sattest.uz";
@@ -72,7 +73,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <SiteTranslator />
+      </body>
     </html>
   );
 }

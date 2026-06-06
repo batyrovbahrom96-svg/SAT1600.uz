@@ -14,6 +14,9 @@ const languageEvent = "sattest:language-change";
 export function getInitialLanguage(): Language {
   if (typeof window === "undefined") return "en";
 
+  const requested = new URLSearchParams(window.location.search).get("lang");
+  if (requested === "ru" || requested === "uz" || requested === "en") return requested;
+
   try {
     const saved = window.localStorage?.getItem(storageKey);
     if (saved === "ru" || saved === "uz" || saved === "en") return saved;
