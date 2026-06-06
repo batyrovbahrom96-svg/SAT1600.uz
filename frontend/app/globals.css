@@ -2457,6 +2457,7 @@ button, input {
 
 .founder-trust-section__photo {
   display: block;
+  box-sizing: border-box;
   width: 100%;
   aspect-ratio: 3 / 4;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -4706,22 +4707,23 @@ html[lang="uz"] .founder-trust-section__highlights strong {
 
 html[lang="ru"] .founder-trust-section,
 html[lang="uz"] .founder-trust-section {
-  grid-template-columns: 1fr;
-  align-items: start;
-  gap: clamp(34px, 4vw, 56px);
+  grid-template-columns: minmax(320px, min(34vw, 560px)) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(34px, 4.6vw, 72px);
   overflow: hidden;
 }
 
 html[lang="ru"] .founder-trust-section__media,
 html[lang="uz"] .founder-trust-section__media {
-  width: min(920px, 100%);
-  max-width: 100%;
+  width: 100%;
+  max-width: 560px;
 }
 
 html[lang="ru"] .founder-trust-section__photo,
 html[lang="uz"] .founder-trust-section__photo {
-  aspect-ratio: 16 / 10;
-  max-height: 620px;
+  aspect-ratio: 3 / 4;
+  max-height: none;
+  object-position: center top;
 }
 
 html[lang="ru"] .founder-trust-section__score,
@@ -4743,31 +4745,31 @@ html[lang="uz"] .founder-trust-section__highlights span {
 
 html[lang="ru"] .founder-trust-section__score strong,
 html[lang="uz"] .founder-trust-section__score strong {
-  font-size: clamp(48px, 7vw, 104px);
+  font-size: clamp(42px, 4.7vw, 82px);
 }
 
 html[lang="ru"] .founder-trust-section__copy,
 html[lang="uz"] .founder-trust-section__copy {
-  max-width: 1180px;
+  max-width: 100%;
 }
 
 html[lang="ru"] .founder-trust-section h2,
 html[lang="uz"] .founder-trust-section h2 {
-  max-width: 1040px;
-  font-size: clamp(42px, 5vw, 78px);
-  line-height: 1.06;
+  max-width: 900px;
+  font-size: clamp(36px, 3.2vw, 64px);
+  line-height: 1.08;
 }
 
 html[lang="ru"] .founder-trust-section__copy > p:not(.founder-trust-section__eyebrow),
 html[lang="uz"] .founder-trust-section__copy > p:not(.founder-trust-section__eyebrow) {
-  max-width: 1040px;
-  font-size: clamp(18px, 1.35vw, 24px);
-  line-height: 1.62;
+  max-width: 920px;
+  font-size: clamp(17px, 1.08vw, 21px);
+  line-height: 1.58;
 }
 
 html[lang="ru"] .founder-trust-section__highlights,
 html[lang="uz"] .founder-trust-section__highlights {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 html[lang="ru"] .founder-trust-section__highlights div,
@@ -4777,7 +4779,7 @@ html[lang="uz"] .founder-trust-section__highlights div {
 
 html[lang="ru"] .founder-trust-section__proof,
 html[lang="uz"] .founder-trust-section__proof {
-  grid-template-columns: repeat(2, minmax(220px, 280px)) minmax(320px, 1fr);
+  grid-template-columns: repeat(2, minmax(180px, 240px));
 }
 
 html[lang="ru"] .founder-trust-section__certificate span,
@@ -4790,6 +4792,7 @@ html[lang="uz"] .founder-trust-section__certificate span {
 
 html[lang="ru"] .founder-trust-section__proof > div,
 html[lang="uz"] .founder-trust-section__proof > div {
+  grid-column: 1 / -1;
   min-width: 0;
 }
 
@@ -4800,13 +4803,18 @@ html[lang="uz"] .founder-trust-section__proof strong {
 }
 
 @media (max-width: 1320px) {
-  .founder-trust-section {
+  .founder-trust-section,
+  html[lang="ru"] .founder-trust-section,
+  html[lang="uz"] .founder-trust-section {
     grid-template-columns: 1fr;
     gap: 42px;
     min-height: auto;
+    align-items: start;
   }
 
-  .founder-trust-section__media {
+  .founder-trust-section__media,
+  html[lang="ru"] .founder-trust-section__media,
+  html[lang="uz"] .founder-trust-section__media {
     max-width: min(680px, 100%);
   }
 
