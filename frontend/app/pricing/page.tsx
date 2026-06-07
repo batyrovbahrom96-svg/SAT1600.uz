@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { ArrowRight, Check, Sparkles, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { useLanguage, type Language } from "@/lib/i18n";
@@ -282,88 +283,101 @@ type SelectedPlan = {
   title: string;
 };
 
+type Benefit = {
+  checked: boolean;
+  text: string;
+};
+
+function BenefitRow({ checked, text }: Benefit) {
+  return (
+    <li className="flex items-start gap-3">
+      <span
+        className={[
+          "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border",
+          checked
+            ? "border-white/18 bg-white text-black"
+            : "border-white/10 bg-white/[0.045] text-white/42"
+        ].join(" ")}
+      >
+        {checked ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={2.5} />}
+      </span>
+      <span className={checked ? "text-white/72" : "text-white/38"}>{text}</span>
+    </li>
+  );
+}
+
 function PriceCard({
   action,
-  accent,
+  benefits,
   description,
-  features,
   label,
   price,
+  spotlight,
   title
 }: {
   action: PlanAction;
-  accent: "light" | "dark";
+  benefits: Benefit[];
   description: string;
-  features: string[];
   label: string;
   price: string;
+  spotlight?: boolean;
   title: string;
 }) {
-  const isLight = accent === "light";
-
   return (
-    <article
-      className={[
-        "group relative flex min-h-[620px] flex-col overflow-hidden border p-5 transition-all duration-300",
-        isLight
-          ? "border-white bg-white text-black shadow-[0_30px_80px_rgba(255,255,255,0.08)]"
-          : "border-white/12 bg-white/[0.035] text-white hover:border-white/30"
-      ].join(" ")}
+    <motion.article
+      className="relative h-full"
+      initial={{ filter: "blur(8px)", opacity: 0.65, y: 18 }}
+      whileInView={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.55, ease: "easeOut", delay: spotlight ? 0.12 : 0 }}
     >
       <div
         className={[
-          "relative overflow-hidden border p-6",
-          isLight ? "border-black/10 bg-black text-white" : "border-white/12 bg-white/[0.04]"
+          "relative flex min-h-[610px] flex-col overflow-hidden rounded-[8px] border p-6 shadow-[0_34px_110px_rgba(0,0,0,0.38)]",
+          spotlight
+            ? "border-white/24 bg-gradient-to-br from-zinc-950/80 via-zinc-900/86 to-zinc-800/70"
+            : "border-white/12 bg-gradient-to-br from-zinc-950/50 via-zinc-900/60 to-zinc-950/86"
         ].join(" ")}
       >
-        <div
-          className={[
-            "absolute inset-0 opacity-80",
-            isLight
-              ? "bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.24),transparent_32%),linear-gradient(135deg,#050505,#202020)]"
-              : "bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.14),transparent_28%),linear-gradient(135deg,#191919,#101112)]"
-          ].join(" ")}
-        />
-        <div className="relative">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-white/58">{label}</p>
-            <Sparkles size={20} />
-          </div>
-          <h2 className="mt-5 text-3xl font-light leading-tight md:text-4xl">{title}</h2>
-          <p className="mt-5 text-4xl font-black tracking-tight md:text-5xl">{price}</p>
-          <p className="mt-4 max-w-xl text-base font-light leading-7 text-white/66">{description}</p>
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-28 -top-28 h-72 w-72 rounded-full bg-white/[0.10] blur-3xl" />
+          <div className="absolute bottom-[-9rem] left-[-8rem] h-72 w-72 rounded-full bg-white/[0.045] blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.08),transparent_32%,rgba(255,255,255,0.035)_72%,transparent)]" />
         </div>
+
+        <div className="relative flex flex-col items-center border-b border-white/10 pb-7 text-center">
+          <span className="mb-6 inline-flex min-h-9 items-center rounded-full border border-white/10 bg-white/[0.045] px-4 text-[10px] font-black uppercase tracking-[0.28em] text-white/58">
+            {label}
+          </span>
+          <h2 className="text-2xl font-medium text-white md:text-3xl">{title}</h2>
+          <span className="mt-5 bg-gradient-to-br from-white via-white to-zinc-500 bg-clip-text text-4xl font-semibold tracking-tight text-transparent md:text-5xl">
+            {price}
+          </span>
+          <p className="mt-5 max-w-md text-sm font-light leading-6 text-white/56 md:text-base md:leading-7">
+            {description}
+          </p>
+        </div>
+
+        <ul className="relative grid gap-4 py-9 text-sm leading-6">
+          {benefits.map((benefit) => (
+            <BenefitRow key={`${benefit.checked}-${benefit.text}`} {...benefit} />
+          ))}
+        </ul>
+
+        <a
+          className={[
+            "relative mt-auto flex h-[52px] min-h-[52px] items-center justify-center gap-3 rounded-[6px] border px-5 text-[11px] font-black uppercase tracking-[0.18em] transition-colors",
+            spotlight
+              ? "border-white bg-white text-black hover:bg-transparent hover:text-white"
+              : "border-white/14 bg-white/[0.045] text-white/76 hover:border-white/36 hover:bg-white/[0.075] hover:text-white"
+          ].join(" ")}
+          href={action.href}
+        >
+          {action.text}
+          <ArrowRight size={17} />
+        </a>
       </div>
-
-      <ul className="mt-7 grid gap-4">
-        {features.map((feature) => (
-          <li className="flex gap-3 text-base leading-7" key={feature}>
-            <span
-              className={[
-                "mt-1 flex h-6 w-6 shrink-0 items-center justify-center border",
-                isLight ? "border-black/15 bg-black text-white" : "border-white/15 bg-white/5 text-white"
-              ].join(" ")}
-            >
-              <Check size={14} />
-            </span>
-            <span className={isLight ? "text-black/68" : "text-white/68"}>{feature}</span>
-          </li>
-        ))}
-      </ul>
-
-      <a
-        className={[
-          "mt-auto flex h-16 items-center justify-between border px-6 text-xs font-black uppercase tracking-[0.24em] transition-colors",
-          isLight
-            ? "border-black bg-black text-white hover:bg-transparent hover:text-black"
-            : "border-white bg-white text-black hover:bg-transparent hover:text-white"
-        ].join(" ")}
-        href={action.href}
-      >
-        {action.text}
-        <ArrowRight size={20} />
-      </a>
-    </article>
+    </motion.article>
   );
 }
 
@@ -390,6 +404,12 @@ export default function PricingPage() {
     window.history.replaceState(null, "", "/pricing");
   }
 
+  const freeBenefits: Benefit[] = [
+    ...copy.plans.free.features.map((feature) => ({ checked: true, text: feature })),
+    ...copy.plans.pro.features.slice(1, 4).map((feature) => ({ checked: false, text: feature }))
+  ];
+  const proBenefits: Benefit[] = copy.plans.pro.features.map((feature) => ({ checked: true, text: feature }));
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const plan = params.get("plan");
@@ -403,16 +423,16 @@ export default function PricingPage() {
     <main className="min-h-screen bg-[#101112] text-white">
       <LuxuryNavbar />
 
-      <section className="relative overflow-hidden border-b border-white/10 px-5 py-14 md:px-8 lg:py-18">
-        <div className="pointer-events-none absolute inset-0 opacity-70">
-          <div className="absolute -left-40 top-0 h-[520px] w-[520px] rounded-full border border-white/[0.045]" />
+      <section className="relative overflow-hidden border-b border-white/10 px-5 py-14 md:px-8 lg:py-20">
+        <div className="pointer-events-none absolute inset-0 opacity-80">
+          <div className="absolute left-[12%] top-[-16rem] h-[520px] w-[520px] rounded-full bg-white/[0.075] blur-3xl" />
           <div className="absolute right-[-16rem] top-[-12rem] h-[620px] w-[620px] rounded-full border border-white/[0.06]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_10%,rgba(255,255,255,0.10),transparent_32%),linear-gradient(90deg,rgba(0,0,0,0.92),rgba(16,17,18,0.92))]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_6%,rgba(255,255,255,0.12),transparent_32%),linear-gradient(90deg,rgba(0,0,0,0.94),rgba(16,17,18,0.88))]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl">
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.hero.eyebrow}</p>
-          <h1 className="mt-6 max-w-5xl text-5xl font-light leading-none md:text-7xl">
+          <h1 className="mt-6 max-w-5xl bg-gradient-to-br from-white via-white to-zinc-500 bg-clip-text text-5xl font-light leading-none text-transparent md:text-7xl">
             {copy.hero.title}
           </h1>
           <p className="mt-7 max-w-3xl text-lg font-light leading-8 text-white/52">
@@ -440,9 +460,8 @@ export default function PricingPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <PriceCard
             action={{ href: "/mock-test", text: copy.plans.free.action }}
-            accent="dark"
+            benefits={freeBenefits}
             description={copy.plans.free.description}
-            features={copy.plans.free.features}
             label={copy.plans.free.label}
             price={copy.plans.free.price}
             title={copy.plans.free.title}
@@ -453,11 +472,11 @@ export default function PricingPage() {
               href: "/pricing?plan=pro",
               text: copy.plans.pro.action
             }}
-            accent="light"
+            benefits={proBenefits}
             description={copy.plans.pro.description}
-            features={copy.plans.pro.features}
             label={copy.plans.pro.label}
             price={copy.plans.pro.price}
+            spotlight
             title={copy.plans.pro.title}
           />
         </div>
