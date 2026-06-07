@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
+import { DevOverlayCleaner } from "@/components/DevOverlayCleaner";
 import { SiteTranslator } from "@/components/SiteTranslator";
 import "./globals.css";
 
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <body>
         {children}
         <SiteTranslator />
+        <DevOverlayCleaner />
       </body>
     </html>
   );

@@ -2,6 +2,9 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { ArrowRight, BrainCircuit, ChartNoAxesCombined, CheckCircle2, Cpu, LockKeyhole, ShieldCheck, Sparkles, Target } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { SplineScene } from "@/components/SplineScene";
+
+const robotSceneUrl = "https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode";
 
 const proofCards = [
   {
@@ -108,6 +111,19 @@ export default function AboutUsPage() {
             <span>Trap Pattern</span>
             <span>Daily Plan</span>
           </div>
+        </div>
+      </section>
+
+      <section className="about-robot-section" aria-labelledby="about-robot-title">
+        <div className="about-robot-section__copy">
+          <p className="about-kicker">Interactive AI layer</p>
+          <h2 id="about-robot-title">A smarter study companion for every diagnostic route.</h2>
+          <p>
+            The 3D assistant represents how SATTEST.UZ reads a mock test, detects weak skills, and turns the next study step into a clear action instead of another guess.
+          </p>
+        </div>
+        <div className="about-robot-section__stage" aria-label="Interactive 3D study assistant">
+          <SplineScene scene={robotSceneUrl} className="about-robot-section__scene" />
         </div>
       </section>
 
