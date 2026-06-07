@@ -931,6 +931,18 @@ button, input {
   line-height: 1.55;
 }
 
+html[lang="ru"] .about-robot-section__copy h2 {
+  max-width: 680px;
+  font-size: clamp(42px, 4.8vw, 76px);
+  line-height: 1.04;
+}
+
+html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
+  max-width: 640px;
+  font-size: clamp(18px, 1.8vw, 24px);
+  line-height: 1.58;
+}
+
 .about-robot-section__stage {
   position: relative;
   min-height: 560px;
