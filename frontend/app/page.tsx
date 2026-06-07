@@ -66,6 +66,144 @@ const partnerLogos = [
   { logo: "/assets/partners/Richmond%20School.png", name: "Richmond School" }
 ];
 
+const studentResultCopy: Record<
+  Language,
+  Record<string, { evidence: string; improvement: string; method: string; testLabel: string; note: string }>
+> = {
+  en: {
+    "Muslima Xalikova": {
+      improvement: "Reached 1330 SAT in 3 months",
+      method: "Diagnostic plan + targeted SAT practice",
+      evidence: "Video + SAT score report",
+      testLabel: "SAT test",
+      note: "Result proof is shared for credibility. Parent comments will be added after written permission."
+    },
+    "David Sarkisov": {
+      improvement: "Scored 1200 SAT",
+      method: "SAT preparation + score report review",
+      evidence: "Video + SAT score report",
+      testLabel: "SAT test",
+      note: "Result proof is shared for credibility. Parent comments will be added after written permission."
+    },
+    "Said Usmanov": {
+      improvement: "Scored 1200 SAT",
+      method: "SAT preparation + score report review",
+      evidence: "Video + SAT score report",
+      testLabel: "SAT test",
+      note: "Result proof is shared for credibility. Parent comments will be added after written permission."
+    },
+    "Jasmina Abdihamidova": {
+      improvement: "Improved from 1000 to 1200",
+      method: "SATTEST.UZ practice route + mock review",
+      evidence: "Video + SAT score report",
+      testLabel: "SAT test",
+      note: "Result proof is shared for credibility. Parent comments will be added after written permission."
+    },
+    "Ulugbek Abdurahmonov": {
+      improvement: "Improved from 900 to 1100 at age 16",
+      method: "Diagnostic review + targeted weak-topic drills",
+      evidence: "Video + SAT score report",
+      testLabel: "SAT test",
+      note: "Result proof is shared for credibility. Parent comments will be added after written permission."
+    },
+    "Ismail Sobinov": {
+      improvement: "Scored 1200 SAT",
+      method: "Diagnostic analytics + targeted SAT practice",
+      evidence: "Video + SAT score report",
+      testLabel: "SAT test",
+      note: "Result proof is shared for credibility. Parent comments will be added after written permission."
+    }
+  },
+  ru: {
+    "Muslima Xalikova": {
+      improvement: "Достигла 1330 SAT за 3 месяца",
+      method: "Диагностический план + целевая SAT-практика",
+      evidence: "Видео + отчет SAT",
+      testLabel: "Дата SAT",
+      note: "Доказательства результатов показаны для доверия. Комментарии родителей добавляются только после письменного разрешения."
+    },
+    "David Sarkisov": {
+      improvement: "Получил 1200 SAT",
+      method: "SAT-подготовка + разбор отчета о баллах",
+      evidence: "Видео + отчет SAT",
+      testLabel: "Дата SAT",
+      note: "Доказательства результатов показаны для доверия. Комментарии родителей добавляются только после письменного разрешения."
+    },
+    "Said Usmanov": {
+      improvement: "Получил 1200 SAT",
+      method: "SAT-подготовка + разбор отчета о баллах",
+      evidence: "Видео + отчет SAT",
+      testLabel: "Дата SAT",
+      note: "Доказательства результатов показаны для доверия. Комментарии родителей добавляются только после письменного разрешения."
+    },
+    "Jasmina Abdihamidova": {
+      improvement: "Выросла с 1000 до 1200",
+      method: "Маршрут SATTEST.UZ + разбор пробного теста",
+      evidence: "Видео + отчет SAT",
+      testLabel: "Дата SAT",
+      note: "Доказательства результатов показаны для доверия. Комментарии родителей добавляются только после письменного разрешения."
+    },
+    "Ulugbek Abdurahmonov": {
+      improvement: "Вырос с 900 до 1100 в 16 лет",
+      method: "Разбор диагностики + целевые упражнения по слабым темам",
+      evidence: "Видео + отчет SAT",
+      testLabel: "Дата SAT",
+      note: "Доказательства результатов показаны для доверия. Комментарии родителей добавляются только после письменного разрешения."
+    },
+    "Ismail Sobinov": {
+      improvement: "Получил 1200 SAT",
+      method: "Диагностическая аналитика + целевая SAT-практика",
+      evidence: "Видео + отчет SAT",
+      testLabel: "Дата SAT",
+      note: "Доказательства результатов показаны для доверия. Комментарии родителей добавляются только после письменного разрешения."
+    }
+  },
+  uz: {
+    "Muslima Xalikova": {
+      improvement: "3 oyda 1330 SAT natijaga yetdi",
+      method: "Diagnostik reja + targeted SAT practice",
+      evidence: "Video + SAT hisobot",
+      testLabel: "SAT sanasi",
+      note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
+    },
+    "David Sarkisov": {
+      improvement: "1200 SAT natija oldi",
+      method: "SAT tayyorgarlik + score report review",
+      evidence: "Video + SAT hisobot",
+      testLabel: "SAT sanasi",
+      note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
+    },
+    "Said Usmanov": {
+      improvement: "1200 SAT natija oldi",
+      method: "SAT tayyorgarlik + score report review",
+      evidence: "Video + SAT hisobot",
+      testLabel: "SAT sanasi",
+      note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
+    },
+    "Jasmina Abdihamidova": {
+      improvement: "1000 dan 1200 gacha o'sdi",
+      method: "SATTEST.UZ practice route + mock review",
+      evidence: "Video + SAT hisobot",
+      testLabel: "SAT sanasi",
+      note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
+    },
+    "Ulugbek Abdurahmonov": {
+      improvement: "16 yoshida 900 dan 1100 gacha o'sdi",
+      method: "Diagnostika review + zaif mavzu drills",
+      evidence: "Video + SAT hisobot",
+      testLabel: "SAT sanasi",
+      note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
+    },
+    "Ismail Sobinov": {
+      improvement: "1200 SAT natija oldi",
+      method: "Diagnostik analytics + targeted SAT practice",
+      evidence: "Video + SAT hisobot",
+      testLabel: "SAT sanasi",
+      note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
+    }
+  }
+};
+
 const homepageFaqs = [
   {
     question: "When do I get access?",
@@ -473,6 +611,10 @@ export default function Home() {
   const { language } = useLanguage();
   const copy = homeCopy[language];
   const slides = copy.slides;
+  const getStudentResultCopy = useCallback(
+    (result: StudentResult) => studentResultCopy[language][result.name] ?? studentResultCopy.en[result.name],
+    [language]
+  );
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
   const [currentVideo, setCurrentVideo] = useState<(typeof videoSources)[number]>("1-2");
@@ -884,34 +1026,38 @@ export default function Home() {
               }}
               ref={resultsCardsRef}
             >
-              {studentResults.map((result) => (
-                <button
-                  className="results-card"
-                  key={result.name}
-                  onClick={() => setActiveResultVideo(result)}
-                  type="button"
-                >
-                  <video
-                    className="results-card__video"
-                    src={result.video}
-                    muted
-                    loop
-                    playsInline
-                    autoPlay
-                    preload="metadata"
-                  />
-                  <span className="results-card__shade" aria-hidden="true" />
-                  <span className="results-card__play" aria-hidden="true">
-                    <Play size={16} fill="currentColor" />
-                  </span>
-                  <span className="results-card__meta">
-                    <strong>{result.name}</strong>
-                    <span>{result.score}</span>
-                    <span>{result.improvement}</span>
-                    <em>{result.evidence}</em>
-                  </span>
-                </button>
-              ))}
+              {studentResults.map((result) => {
+                const resultCopy = getStudentResultCopy(result);
+
+                return (
+                  <button
+                    className="results-card"
+                    key={result.name}
+                    onClick={() => setActiveResultVideo(result)}
+                    type="button"
+                  >
+                    <video
+                      className="results-card__video"
+                      src={result.video}
+                      muted
+                      loop
+                      playsInline
+                      autoPlay
+                      preload="metadata"
+                    />
+                    <span className="results-card__shade" aria-hidden="true" />
+                    <span className="results-card__play" aria-hidden="true">
+                      <Play size={16} fill="currentColor" />
+                    </span>
+                    <span className="results-card__meta" data-sattest-no-translate="true">
+                      <strong>{result.name}</strong>
+                      <span>{result.score}</span>
+                      <span>{resultCopy.improvement}</span>
+                      <em>{resultCopy.evidence}</em>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="results-wall__controls" aria-label="Student result videos">
@@ -1389,15 +1535,25 @@ export default function Home() {
                 </div>
               ) : null}
             </div>
-            <div className="results-modal__caption">
-              <strong>{activeResultVideo.name}</strong>
-              <span>{activeResultVideo.score}</span>
-              <span>{activeResultVideo.improvement}</span>
-              <span>{activeResultVideo.method}</span>
-              <span>
-                {activeResultVideo.testDate ? `SAT test: ${activeResultVideo.testDate}` : activeResultVideo.evidence}
-              </span>
-              <small>Result proof is shared for credibility. Parent comments will be added after written permission.</small>
+            <div className="results-modal__caption" data-sattest-no-translate="true">
+              {(() => {
+                const resultCopy = getStudentResultCopy(activeResultVideo);
+
+                return (
+                  <>
+                    <strong>{activeResultVideo.name}</strong>
+                    <span>{activeResultVideo.score}</span>
+                    <span>{resultCopy.improvement}</span>
+                    <span>{resultCopy.method}</span>
+                    <span>
+                      {activeResultVideo.testDate
+                        ? `${resultCopy.testLabel}: ${activeResultVideo.testDate}`
+                        : resultCopy.evidence}
+                    </span>
+                    <small>{resultCopy.note}</small>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>

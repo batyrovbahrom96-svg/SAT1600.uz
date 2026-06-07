@@ -843,6 +843,7 @@ const uz: TranslationMap = {
 const dictionaries: Record<Exclude<Language, "en">, TranslationMap> = { ru, uz };
 const originalText = new WeakMap<Text, string>();
 const originalAttributes = new WeakMap<Element, Record<string, string>>();
+const noTranslateSelector = "[data-sattest-no-translate='true']";
 let activeTranslatorLanguage: Language = "en";
 
 function withWhitespace(source: string, translated: string) {
@@ -885,6 +886,8 @@ function dynamicTranslate(value: string, dictionary: TranslationMap) {
 }
 
 function translateElementAttributes(element: Element, dictionary: TranslationMap | null) {
+  if (element.closest(noTranslateSelector)) return;
+
   const attrs = ["aria-label", "title", "placeholder", "alt"];
   const saved = originalAttributes.get(element) ?? {};
 
@@ -907,6 +910,7 @@ function translateNode(root: ParentNode, language: Language) {
     acceptNode(node) {
       const parent = node.parentElement;
       if (!parent) return NodeFilter.FILTER_REJECT;
+      if (parent.closest(noTranslateSelector)) return NodeFilter.FILTER_REJECT;
       if (["SCRIPT", "STYLE", "TEXTAREA", "INPUT", "CODE", "PRE"].includes(parent.tagName)) {
         return NodeFilter.FILTER_REJECT;
       }

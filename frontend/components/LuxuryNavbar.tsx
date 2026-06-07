@@ -55,6 +55,14 @@ export function LuxuryNavbar() {
     }
   };
 
+  const changeLanguage = (next: Language) => {
+    setLanguage(next);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", next);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  };
+
   useEffect(() => {
     let active = true;
     const refreshAuth = () => {
@@ -133,7 +141,7 @@ export function LuxuryNavbar() {
                   language === item.code ? "bg-white text-black" : "text-white/50 hover:text-white"
                 ].join(" ")}
                 key={item.code}
-                onClick={() => setLanguage(item.code)}
+                onClick={() => changeLanguage(item.code)}
                 type="button"
               >
                 {item.label}

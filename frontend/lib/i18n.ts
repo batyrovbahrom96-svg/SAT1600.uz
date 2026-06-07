@@ -47,21 +47,26 @@ export function useLanguage() {
   const [language, setLanguage] = useState<Language>(() => getInitialLanguage());
 
   useEffect(() => {
-    setLanguage(getInitialLanguage());
+    const syncLanguage = () => setLanguage(getInitialLanguage());
+    syncLanguage();
 
     const onLanguageChange = (event: Event) => {
       const next = (event as CustomEvent<Language>).detail;
       if (next === "en" || next === "ru" || next === "uz") setLanguage(next);
     };
 
-    const onStorage = () => setLanguage(getInitialLanguage());
+    const onStorage = () => syncLanguage();
+    const syncTimer = window.setInterval(syncLanguage, 500);
 
     window.addEventListener(languageEvent, onLanguageChange);
     window.addEventListener("storage", onStorage);
+    window.addEventListener("popstate", syncLanguage);
 
     return () => {
+      window.clearInterval(syncTimer);
       window.removeEventListener(languageEvent, onLanguageChange);
       window.removeEventListener("storage", onStorage);
+      window.removeEventListener("popstate", syncLanguage);
     };
   }, []);
 
