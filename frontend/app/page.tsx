@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Play, Volume2, VolumeX, X } from "lucide-react";
-import { HomeThreeScene } from "@/components/HomeThreeScene";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { useLanguage, type Language } from "@/lib/i18n";
 import { studentResults, type StudentResult } from "@/lib/student-results";
@@ -796,7 +795,6 @@ export default function Home() {
       </section>
 
       <div className="nex-hero-stage">
-        <HomeThreeScene />
         <div className="nex-backgrounds" aria-hidden="true">
           {videoSources.map((source) => (
             <video
