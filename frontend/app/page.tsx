@@ -59,10 +59,6 @@ const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
 const skipHomeIntroEvent = "sattest:skip-home-intro";
 const partnerLogos = [
-  { logo: "/assets/partners/khan-academy6250.jpg", name: "Khan Academy" },
-  { logo: "/assets/partners/college-board-vector-logo.png", name: "College Board" },
-  { logo: "/assets/partners/SAT.png", name: "SAT Exam" },
-  { logo: "/assets/partners/british%20council.png", name: "British Council" },
   { logo: "/assets/partners/mister%20doniyor.webp", name: "Mr. Doniyor School" },
   { logo: "/assets/partners/result-logo.jpg", name: "Result Learning Center" },
   { logo: "/assets/partners/Thompson.jpg", name: "Thompson Learning Center" },
@@ -151,7 +147,7 @@ const homeCopy: Record<
 > = {
   en: {
     slides,
-    partnerLabel: "Our Trusted Partners",
+    partnerLabel: "Trusted Learning Centers",
     results: {
       eyebrow: "Results Proof",
       title: "Verified SAT growth with student videos and score reports.",
@@ -233,7 +229,7 @@ const homeCopy: Record<
         cta: "Смотреть цены"
       }
     ],
-    partnerLabel: "Наши надежные партнеры",
+    partnerLabel: "Надежные учебные центры",
     results: {
       eyebrow: "Доказательство результата",
       title: "Подтвержденный рост SAT: видео учеников и отчеты с баллами.",
@@ -348,7 +344,7 @@ const homeCopy: Record<
         cta: "Narxlarni ko'rish"
       }
     ],
-    partnerLabel: "Ishonchli hamkorlarimiz",
+    partnerLabel: "Ishonchli o'quv markazlari",
     results: {
       eyebrow: "Natija isboti",
       title: "O'quvchi videolari va score reportlar bilan tasdiqlangan SAT o'sishi.",

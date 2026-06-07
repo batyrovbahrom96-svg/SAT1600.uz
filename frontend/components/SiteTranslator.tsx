@@ -326,7 +326,8 @@ const ru: TranslationMap = {
   "Ready to continue? Choose Pro, pay by Click, Payme, Paynet, card, or transfer, then activate through Telegram.": "Готовы продолжить? Выберите Pro, оплатите через Click, Payme, Paynet, карту или перевод, затем активируйте через Telegram.",
   "Choose Pro": "Выбрать Pro",
 
-  "Our Trusted Partners": "Наши надежные партнеры",
+  "Our Trusted Partners": "Надежные учебные центры",
+  "Trusted Learning Centers": "Надежные учебные центры",
   "Diagnostic first. Clear plan next.": "Сначала диагностика. Затем ясный план.",
   "Your SAT Growth Plan": "Ваш план роста SAT",
   "Your SAT": "Ваш SAT",
@@ -685,7 +686,8 @@ const uz: TranslationMap = {
   "Ready to continue? Choose Pro, pay by Click, Payme, Paynet, card, or transfer, then activate through Telegram.": "Davom etishga tayyormisiz? Pro'ni tanlang, Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang, keyin Telegram orqali faollashtiring.",
   "Choose Pro": "Pro tanlash",
 
-  "Our Trusted Partners": "Ishonchli hamkorlarimiz",
+  "Our Trusted Partners": "Ishonchli o'quv markazlari",
+  "Trusted Learning Centers": "Ishonchli o'quv markazlari",
   "Diagnostic first. Clear plan next.": "Avval diagnostika. Keyin aniq reja.",
   "Your SAT Growth Plan": "SAT o'sish rejangiz",
   "Your SAT": "SAT",
