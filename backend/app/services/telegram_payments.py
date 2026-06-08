@@ -26,6 +26,51 @@ PLAN_PRICES = {
 
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
+PAYMENT_WARNING_TEXT = (
+    "Warning: Fake receipt leads to account ban. If the payment is not found in Paynet/payment records, Pro access can be revoked immediately.\n\n"
+    "Предупреждение: поддельный чек приводит к блокировке аккаунта. Если платеж не найден в Paynet/платежных записях, Pro-доступ может быть немедленно отозван.\n\n"
+    "Ogohlantirish: soxta chek akkaunt bloklanishiga olib keladi. Agar to'lov Paynet/to'lov yozuvlarida topilmasa, Pro kirish darhol bekor qilinishi mumkin."
+)
+
+START_MESSAGE = (
+    "EN: To activate SATTEST.UZ access, send your payment screenshot or PDF with this caption:\n"
+    "your-email@example.com pro\n\n"
+    "You can pay by Click, Payme, Paynet, bank card, or transfer. After you send the receipt with your registered email, the bot activates Pro automatically.\n\n"
+    "RU: Чтобы активировать доступ SATTEST.UZ, отправьте скриншот или PDF-чек с подписью:\n"
+    "your-email@example.com pro\n\n"
+    "Оплатить можно через Click, Payme, Paynet, банковскую карту или перевод. После отправки чека с email, указанным при регистрации, бот автоматически активирует Pro.\n\n"
+    "UZ: SATTEST.UZ kirishini faollashtirish uchun to'lov skrinshoti yoki PDF chekni quyidagi izoh bilan yuboring:\n"
+    "your-email@example.com pro\n\n"
+    "To'lovni Click, Payme, Paynet, bank kartasi yoki o'tkazma orqali qilishingiz mumkin. Ro'yxatdan o'tgan emailingiz bilan chek yuborilgach, bot Pro kirishni avtomatik faollashtiradi.\n\n"
+    f"{PAYMENT_WARNING_TEXT}"
+)
+
+RECEIPT_REQUEST_MESSAGE = (
+    "EN: Please send the payment screenshot or PDF with your registered email and plan in the caption.\n"
+    "Example: your-email@example.com pro\n\n"
+    "RU: Отправьте скриншот или PDF-чек с email, указанным при регистрации, и названием тарифа в подписи.\n"
+    "Пример: your-email@example.com pro\n\n"
+    "UZ: To'lov skrinshoti yoki PDF chekni ro'yxatdan o'tgan emailingiz va tarif nomi bilan yuboring.\n"
+    "Namuna: your-email@example.com pro\n\n"
+    f"{PAYMENT_WARNING_TEXT}"
+)
+
+RECEIPT_ACTIVE_MESSAGE = (
+    "EN: Receipt received. Your SATTEST.UZ Pro access is active for 30 days.\n"
+    "Open https://www.sattest.uz/login and continue your practice.\n\n"
+    "RU: Чек получен. Ваш доступ SATTEST.UZ Pro активен на 30 дней.\n"
+    "Откройте https://www.sattest.uz/login и продолжайте практику.\n\n"
+    "UZ: Chek qabul qilindi. SATTEST.UZ Pro kirishingiz 30 kunga faollashtirildi.\n"
+    "https://www.sattest.uz/login sahifasini oching va practice davom ettiring.\n\n"
+    f"{PAYMENT_WARNING_TEXT}"
+)
+
+EMAIL_MISSING_MESSAGE = (
+    "EN: I received the receipt, but I cannot find the account email. Please resend it with this caption: your-email@example.com pro\n\n"
+    "RU: Чек получен, но я не вижу email аккаунта. Пожалуйста, отправьте чек заново с подписью: your-email@example.com pro\n\n"
+    "UZ: Chek qabul qilindi, lekin akkaunt emaili topilmadi. Iltimos, chekni shu izoh bilan qayta yuboring: your-email@example.com pro"
+)
+
 
 def handle_telegram_update(update: dict, db: Session | None) -> dict:
     if callback_query := update.get("callback_query"):
@@ -45,33 +90,18 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     text = str(message.get("text") or message.get("caption") or "").strip()
 
     if text.startswith("/start"):
-        _send_message(
-            chat_id,
-            "Assalomu alaykum. To activate SATTEST.UZ access, send your payment screenshot or PDF with this caption:\n\n"
-            "your-email@example.com pro\n\n"
-            "You can pay by Click, Payme, Paynet, bank card, or transfer. After you send the receipt with your registered email, the bot activates Pro automatically.\n\n"
-            "Important: Fake receipt leads to account ban. Receipts are checked against Paynet/payment records and can lead to immediate Pro revocation.",
-        )
+        _send_message(chat_id, START_MESSAGE)
         return {"ok": True}
 
     has_receipt = bool(message.get("photo") or message.get("document"))
     if not has_receipt:
-        _send_message(
-            chat_id,
-            "Please send the payment screenshot or PDF with your registered email and plan in the caption.\n\n"
-            "Example: your-email@example.com pro\n\n"
-            "Warning: Fake receipt leads to account ban. Pro access can also be revoked immediately.",
-        )
+        _send_message(chat_id, RECEIPT_REQUEST_MESSAGE)
         return {"ok": True}
 
     email = _extract_email(text)
     plan = _extract_plan(text)
     if not email:
-        _send_message(
-            chat_id,
-            "I received the receipt, but I cannot find the account email.\n\n"
-            "Please resend the screenshot with this caption: your-email@example.com pro",
-        )
+        _send_message(chat_id, EMAIL_MISSING_MESSAGE)
         return {"ok": True}
 
     if db is None:
@@ -111,12 +141,7 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     db.refresh(subscription)
 
     if auto_activate:
-        _send_message(
-            chat_id,
-            "Receipt received. Your SATTEST.UZ Pro access is active for 30 days.\n\n"
-            "Open https://www.sattest.uz/login and continue your practice.\n\n"
-            "Fake receipt leads to account ban. If the payment is not found in Paynet/payment records, Pro access can be revoked immediately.",
-        )
+        _send_message(chat_id, RECEIPT_ACTIVE_MESSAGE)
         _notify_admin_for_auto_activation(subscription, user, message)
         return {"ok": True, "subscription_id": str(subscription.id), "status": "active"}
 
