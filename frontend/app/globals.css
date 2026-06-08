@@ -31,59 +31,47 @@ html {
   overflow: hidden;
   pointer-events: none;
   background:
-    radial-gradient(circle at 12% 16%, rgba(215, 204, 149, 0.08), transparent 30%),
-    radial-gradient(circle at 82% 12%, rgba(143, 241, 198, 0.06), transparent 28%),
-    linear-gradient(115deg, #050606 0%, #080909 42%, #111314 100%);
+    radial-gradient(circle at 18% 18%, rgba(215, 204, 149, 0.16), transparent 24%),
+    radial-gradient(circle at 76% 22%, rgba(143, 241, 198, 0.12), transparent 28%),
+    radial-gradient(circle at 50% 70%, rgba(255, 255, 255, 0.06), transparent 34%),
+    linear-gradient(115deg, #030404 0%, #080909 45%, #111314 100%);
 }
 
 .site-ethereal-bg__shadow,
-.site-ethereal-bg__mesh,
-.site-ethereal-bg__grain {
+.site-ethereal-bg__noise {
   position: absolute;
-  inset: 0;
 }
 
 .site-ethereal-bg__shadow {
-  inset: -12%;
-  opacity: 0.48;
+  opacity: 0.96;
+}
+
+.site-ethereal-bg__filter {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.site-ethereal-bg__mask {
+  width: 100%;
+  height: 100%;
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.12), transparent 11%),
-    radial-gradient(ellipse at 46% 50%, rgba(255, 255, 255, 0.08), transparent 16%),
-    conic-gradient(from 112deg at 52% 50%, transparent 0deg, rgba(255, 255, 255, 0.09) 42deg, transparent 82deg, rgba(215, 204, 149, 0.08) 138deg, transparent 190deg, rgba(143, 241, 198, 0.06) 260deg, transparent 360deg);
-  filter: blur(34px);
-  mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, #000 34%, transparent 62%);
-  transform: rotate(-12deg) scale(1.18);
-  animation: site-ethereal-drift 18s ease-in-out infinite alternate;
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(215, 204, 149, 0.62) 34%, rgba(143, 241, 198, 0.42) 68%, rgba(255, 255, 255, 0.78)),
+    #9a9a9a;
+  mask-image: url("https://framerusercontent.com/images/ceBGguIpUU8luwByxuQz79t7To.png");
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: cover;
+  opacity: 0.72;
 }
 
-.site-ethereal-bg__mesh {
-  opacity: 0.24;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.09), transparent 33%);
-  background-size: 86px 86px, 86px 86px, 100% 100%;
-  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
-}
-
-.site-ethereal-bg__grain {
-  opacity: 0.16;
-  background-image:
-    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
-    radial-gradient(circle at 72% 42%, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px),
-    radial-gradient(circle at 38% 82%, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px);
-  background-size: 19px 23px, 31px 37px, 43px 47px;
+.site-ethereal-bg__noise {
+  inset: 0;
+  opacity: 0.2;
+  background-image: url("https://framerusercontent.com/images/g0QcWrxr87K0ufOxIUFBakwYA8.png");
+  background-repeat: repeat;
+  background-size: 340px;
   mix-blend-mode: screen;
-}
-
-@keyframes site-ethereal-drift {
-  from {
-    transform: rotate(-12deg) scale(1.18) translate3d(-2%, -1%, 0);
-  }
-
-  to {
-    transform: rotate(-6deg) scale(1.24) translate3d(2%, 1%, 0);
-  }
 }
 
 button, input {

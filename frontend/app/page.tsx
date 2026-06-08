@@ -44,15 +44,6 @@ const slides = [
 ];
 
 const transitionMs = 1250;
-const videoSources = ["1-2", "1-3", "2-3", "3-1", "3-2"] as const;
-const transitionVideoByRoute: Record<string, (typeof videoSources)[number]> = {
-  "0-1": "1-2",
-  "0-2": "1-3",
-  "1-0": "1-2",
-  "1-2": "2-3",
-  "2-0": "3-1",
-  "2-1": "3-2"
-};
 
 const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
@@ -989,7 +980,6 @@ export default function Home() {
   );
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [currentVideo, setCurrentVideo] = useState<(typeof videoSources)[number]>("1-2");
   const [loadingFrame, setLoadingFrame] = useState({
     previous: loadingSequence[0],
     current: loadingSequence[0],
@@ -1008,7 +998,6 @@ export default function Home() {
   const introVideoRef = useRef<HTMLVideoElement | null>(null);
   const platformVideoRef = useRef<HTMLVideoElement | null>(null);
   const resultsCardsRef = useRef<HTMLDivElement | null>(null);
-  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
     activeRef.current = active;
@@ -1111,23 +1100,6 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [isLoading]);
 
-  useEffect(() => {
-    const activeVideo = videoRefs.current[currentVideo];
-
-    if (activeVideo) {
-      activeVideo.muted = true;
-      activeVideo.currentTime = 0;
-      activeVideo.play().catch(() => undefined);
-    }
-
-    const retryId = window.setTimeout(() => {
-      const video = videoRefs.current[currentVideo];
-      video?.play().catch(() => undefined);
-    }, 120);
-
-    return () => window.clearTimeout(retryId);
-  }, [active, currentVideo]);
-
   const goTo = useCallback((targetIndex: number) => {
     const total = slides.length;
     const normalized = (targetIndex + total) % total;
@@ -1142,7 +1114,6 @@ export default function Home() {
       normalized > current || (current === total - 1 && normalized === 0) ? 1 : -1;
 
     setDirection(nextDirection);
-    setCurrentVideo(transitionVideoByRoute[`${current}-${normalized}`] ?? "1-2");
     setActive(normalized);
 
     window.setTimeout(() => {
@@ -1309,29 +1280,6 @@ export default function Home() {
       </section>
 
       <div className="nex-hero-stage">
-        <div className="nex-backgrounds" aria-hidden="true">
-          {videoSources.map((source) => (
-            <video
-              className={`nex-background-video ${currentVideo === source ? "is-current" : ""}`}
-              key={source}
-              ref={(node) => {
-                videoRefs.current[source] = node;
-              }}
-              src={`/assets/video/${source}.mp4`}
-              autoPlay={source === currentVideo}
-              muted
-              loop
-              playsInline
-              preload="auto"
-              onLoadedData={(event) => {
-                if (source === currentVideo) {
-                  event.currentTarget.play().catch(() => undefined);
-                }
-              }}
-            />
-          ))}
-        </div>
-
         <div className="nex-screen-stack">
           {slides.map((slide, index) => (
             <section
@@ -1629,16 +1577,6 @@ export default function Home() {
       </section>
 
       <section className="platform-ad-section" aria-labelledby="platform-ad-title">
-        <video
-          className="platform-ad-section__backgroundVideo"
-          src="/assets/video/platform-rolling-bg.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-        />
         <div className="platform-ad-section__copy">
           <p className="platform-ad-section__eyebrow">Why SATTEST.UZ works</p>
           <h2 id="platform-ad-title">A diagnostic SAT platform that turns mistakes into a plan.</h2>
