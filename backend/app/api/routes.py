@@ -421,6 +421,51 @@ def create_sat_graph_set(db: Session = Depends(get_db), _: User = Depends(requir
     return {"graphs": [{"id": asset.id, "type": asset.graph_type, "path": asset.path, "metadata": asset.metadata_json} for asset in assets]}
 
 
+@router.get("/admin/subscriptions")
+def admin_subscriptions(db: Session = Depends(get_db), _: User = Depends(require_admin)) -> list[dict]:
+    rows = (
+        db.execute(
+            select(Subscription, User)
+            .join(User, Subscription.user_id == User.id)
+            .order_by(Subscription.created_at.desc())
+            .limit(100)
+        )
+        .all()
+    )
+    return [
+        {
+            "id": subscription.id,
+            "student_name": user.full_name,
+            "email": user.email,
+            "plan": subscription.plan,
+            "status": subscription.status,
+            "provider": subscription.provider,
+            "provider_customer_id": subscription.provider_customer_id,
+            "price_amount": float(subscription.price_amount or 0),
+            "currency": subscription.currency,
+            "current_period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+            "created_at": subscription.created_at.isoformat(),
+        }
+        for subscription, user in rows
+    ]
+
+
+@router.post("/admin/subscriptions/{subscription_id}/revoke")
+def revoke_subscription(subscription_id: UUID, db: Session = Depends(get_db), _: User = Depends(require_admin)) -> dict:
+    subscription = db.get(Subscription, subscription_id)
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    subscription.status = "revoked"
+    subscription.current_period_end = datetime.utcnow()
+    db.commit()
+    db.refresh(subscription)
+    return {
+        "id": subscription.id,
+        "status": subscription.status,
+        "current_period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+    }
+
+
 @router.get("/admin/questions")
 def admin_questions(db: Session = Depends(get_db), _: User = Depends(require_admin)) -> list[dict]:
     questions = db.execute(select(Question).order_by(Question.created_at.desc()).limit(100)).scalars().all()

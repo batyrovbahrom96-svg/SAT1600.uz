@@ -49,7 +49,8 @@ def _handle_message(message: dict, db: Session | None) -> dict:
             chat_id,
             "Assalomu alaykum. To activate SATTEST.UZ access, send your payment screenshot or PDF with this caption:\n\n"
             "your-email@example.com pro\n\n"
-            "You can pay by Click, Payme, Paynet, bank card, or transfer. After you send the receipt with your registered email, the bot activates Pro automatically.",
+            "You can pay by Click, Payme, Paynet, bank card, or transfer. After you send the receipt with your registered email, the bot activates Pro automatically.\n\n"
+            "Important: Fake receipt leads to account ban. Receipts are checked against Paynet/payment records and can lead to immediate Pro revocation.",
         )
         return {"ok": True}
 
@@ -58,7 +59,8 @@ def _handle_message(message: dict, db: Session | None) -> dict:
         _send_message(
             chat_id,
             "Please send the payment screenshot or PDF with your registered email and plan in the caption.\n\n"
-            "Example: your-email@example.com pro",
+            "Example: your-email@example.com pro\n\n"
+            "Warning: Fake receipt leads to account ban. Pro access can also be revoked immediately.",
         )
         return {"ok": True}
 
@@ -112,7 +114,8 @@ def _handle_message(message: dict, db: Session | None) -> dict:
         _send_message(
             chat_id,
             "Receipt received. Your SATTEST.UZ Pro access is active for 30 days.\n\n"
-            "Open https://www.sattest.uz/login and continue your practice.",
+            "Open https://www.sattest.uz/login and continue your practice.\n\n"
+            "Fake receipt leads to account ban. If the payment is not found in Paynet/payment records, Pro access can be revoked immediately.",
         )
         _notify_admin_for_auto_activation(subscription, user, message)
         return {"ok": True, "subscription_id": str(subscription.id), "status": "active"}
@@ -133,7 +136,7 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
 
     settings = get_settings()
     if settings.telegram_admin_chat_id and admin_chat_id != str(settings.telegram_admin_chat_id):
-        _answer_callback(callback_id, "Only Founder can approve payments.")
+        _answer_callback(callback_id, "Only Founder can manage payment access.")
         return {"ok": True, "ignored": True}
 
     action, _, raw_subscription_id = data.partition(":")
@@ -141,7 +144,7 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
         _answer_callback(callback_id, "Database is not connected, approve manually.")
         return {"ok": True, "manual": True}
 
-    if action not in {"approve", "deny"}:
+    if action not in {"approve", "deny", "revoke"}:
         _answer_callback(callback_id, "Unknown action.")
         return {"ok": True, "ignored": True}
 
@@ -172,6 +175,20 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
             )
         _edit_admin_message(callback_query, f"APPROVED\n\n{_subscription_summary(subscription, user)}")
         return {"ok": True, "status": "active"}
+
+    if action == "revoke":
+        subscription.status = "revoked"
+        subscription.current_period_end = datetime.utcnow()
+        db.commit()
+        _answer_callback(callback_id, "Pro access revoked.")
+        if student_chat_id:
+            _send_message(
+                student_chat_id,
+                "SATTEST.UZ Pro access was revoked because the payment could not be verified in payment records.\n\n"
+                "If this is a mistake, contact @FounderSATTESTUZ with the correct payment proof.",
+            )
+        _edit_admin_message(callback_query, f"REVOKED - PAYMENT NOT VERIFIED\n\n{_subscription_summary(subscription, user)}")
+        return {"ok": True, "status": "revoked"}
 
     subscription.status = "denied"
     db.commit()
@@ -232,11 +249,19 @@ def _notify_admin_for_auto_activation(subscription: Subscription, user: User, me
         "SATTEST.UZ Pro was auto-activated from a Telegram receipt.\n\n"
         f"{_subscription_summary(subscription, user)}\n"
         f"Telegram sender: {sender_line}\n\n"
-        "No Founder approval was required. The copied receipt is attached above for records."
+        "No Founder approval was required. The copied receipt is attached above for records.\n\n"
+        "Fraud control: if this payment is not visible in Paynet/payment records, press Revoke Pro."
     )
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {"text": "Revoke Pro - payment not found", "callback_data": f"revoke:{subscription.id}"},
+            ]
+        ]
+    }
 
     _copy_message(settings.telegram_admin_chat_id, message["chat"]["id"], message["message_id"])
-    _send_message(settings.telegram_admin_chat_id, text)
+    _send_message(settings.telegram_admin_chat_id, text, reply_markup=keyboard)
 
 
 def _notify_admin_for_manual_approval(email: str, plan: str, message: dict) -> None:
