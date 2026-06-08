@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
 import { DevOverlayCleaner } from "@/components/DevOverlayCleaner";
+import { EtherealSiteBackground } from "@/components/EtherealSiteBackground";
 import { SiteTranslator } from "@/components/SiteTranslator";
 import "./globals.css";
 
@@ -75,7 +76,8 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="en">
       <body>
-        {children}
+        <EtherealSiteBackground />
+        <div className="site-content-shell">{children}</div>
         <SiteTranslator />
         <DevOverlayCleaner />
       </body>

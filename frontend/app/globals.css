@@ -3,18 +3,87 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-  background: #ffffff;
+  color-scheme: dark;
+  background: #080909;
 }
 
 body {
   margin: 0;
-  color: #172033;
-  background: #ffffff;
+  color: #f7f7f3;
+  background: #080909;
 }
 
 html {
+  background: #080909;
   scroll-behavior: smooth;
+}
+
+.site-content-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.site-ethereal-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 16%, rgba(215, 204, 149, 0.08), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(143, 241, 198, 0.06), transparent 28%),
+    linear-gradient(115deg, #050606 0%, #080909 42%, #111314 100%);
+}
+
+.site-ethereal-bg__shadow,
+.site-ethereal-bg__mesh,
+.site-ethereal-bg__grain {
+  position: absolute;
+  inset: 0;
+}
+
+.site-ethereal-bg__shadow {
+  inset: -12%;
+  opacity: 0.48;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.12), transparent 11%),
+    radial-gradient(ellipse at 46% 50%, rgba(255, 255, 255, 0.08), transparent 16%),
+    conic-gradient(from 112deg at 52% 50%, transparent 0deg, rgba(255, 255, 255, 0.09) 42deg, transparent 82deg, rgba(215, 204, 149, 0.08) 138deg, transparent 190deg, rgba(143, 241, 198, 0.06) 260deg, transparent 360deg);
+  filter: blur(34px);
+  mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, #000 34%, transparent 62%);
+  transform: rotate(-12deg) scale(1.18);
+  animation: site-ethereal-drift 18s ease-in-out infinite alternate;
+}
+
+.site-ethereal-bg__mesh {
+  opacity: 0.24;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.09), transparent 33%);
+  background-size: 86px 86px, 86px 86px, 100% 100%;
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+}
+
+.site-ethereal-bg__grain {
+  opacity: 0.16;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
+    radial-gradient(circle at 72% 42%, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px),
+    radial-gradient(circle at 38% 82%, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px);
+  background-size: 19px 23px, 31px 37px, 43px 47px;
+  mix-blend-mode: screen;
+}
+
+@keyframes site-ethereal-drift {
+  from {
+    transform: rotate(-12deg) scale(1.18) translate3d(-2%, -1%, 0);
+  }
+
+  to {
+    transform: rotate(-6deg) scale(1.24) translate3d(2%, 1%, 0);
+  }
 }
 
 button, input {
@@ -525,8 +594,8 @@ button, input {
   overflow-x: hidden;
   color: #fff;
   background:
-    radial-gradient(circle at 26% 24%, rgba(255, 255, 255, 0.06), transparent 28%),
-    linear-gradient(90deg, #101112 0%, #151617 48%, #202123 100%);
+    radial-gradient(circle at 26% 24%, rgba(255, 255, 255, 0.055), transparent 28%),
+    linear-gradient(115deg, rgba(5, 6, 6, 0.94) 0%, rgba(8, 9, 9, 0.9) 48%, rgba(17, 19, 20, 0.92) 100%);
   font-family: suisseintl, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   isolation: isolate;
 }
@@ -5007,9 +5076,9 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
    depth, and responsive behavior without changing the proof-first structure. */
 .nex-home {
   background:
-    radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.075), transparent 24%),
-    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.045), transparent 28%),
-    linear-gradient(100deg, #080909 0%, #101112 46%, #171819 100%);
+    radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.07), transparent 24%),
+    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.04), transparent 28%),
+    linear-gradient(115deg, rgba(5, 6, 6, 0.94) 0%, rgba(8, 9, 9, 0.9) 46%, rgba(17, 19, 20, 0.92) 100%);
 }
 
 .nex-hero-stage {
