@@ -239,6 +239,99 @@ const homepageFaqs = [
   }
 ];
 
+const topScoreProofs = [
+  {
+    image: "/assets/results/doniyor-botirov-1590-sat.jpg",
+    name: "Doniyor Botirov",
+    score: "1590 SAT",
+    readingWriting: "790",
+    math: "800",
+    kind: "Founder proof",
+    accent: "#d7cc95"
+  },
+  {
+    image: "/assets/results/top-sat/rakhmonov-shokhrukh-1580-sat.png",
+    name: "Rakhmonov Shokhrukh",
+    score: "1580 SAT",
+    readingWriting: "780",
+    math: "800",
+    kind: "Student proof",
+    accent: "#8ff1c6"
+  },
+  {
+    image: "/assets/results/top-sat/saidov-bekhruz-1550-sat.jpg",
+    name: "Saidov Bekhruz",
+    score: "1550 SAT",
+    readingWriting: "760",
+    math: "790",
+    kind: "Student proof",
+    accent: "#99d7ff"
+  },
+  {
+    image: "/assets/results/top-sat/nurmatov-dilshod-1550-sat.png",
+    name: "Nurmatov Dilshod",
+    score: "1550 SAT",
+    readingWriting: "770",
+    math: "780",
+    kind: "Student proof",
+    accent: "#b7c5ff"
+  },
+  {
+    image: "/assets/results/bakhrom-botirov-1540-sat.jpg",
+    name: "Bakhrom Botirov",
+    score: "1540 SAT",
+    readingWriting: "760",
+    math: "780",
+    kind: "Founder proof",
+    accent: "#f0b6b6"
+  },
+  {
+    image: "/assets/results/top-sat/karimov-aziz-1540-sat.png",
+    name: "Karimov Aziz",
+    score: "1540 SAT",
+    readingWriting: "760",
+    math: "780",
+    kind: "Student proof",
+    accent: "#c4b5fd"
+  },
+  {
+    image: "/assets/results/top-sat/abdullayev-jasur-1540-sat.png",
+    name: "Abdullayev Jasur",
+    score: "1540 SAT",
+    readingWriting: "750",
+    math: "790",
+    kind: "Student proof",
+    accent: "#8ff1c6"
+  },
+  {
+    image: "/assets/results/top-sat/yusupov-islom-1500-sat.png",
+    name: "Yusupov Islom",
+    score: "1500 SAT",
+    readingWriting: "720",
+    math: "780",
+    kind: "Student proof",
+    accent: "#d7cc95"
+  },
+  {
+    image: "/assets/results/top-sat/tursunov-farrukh-1500-sat.png",
+    name: "Tursunov Farrukh",
+    score: "1500 SAT",
+    readingWriting: "720",
+    math: "780",
+    kind: "Student proof",
+    accent: "#99d7ff"
+  },
+  {
+    image: "/assets/results/top-sat/khasanov-mirjalol-1500-sat.png",
+    name: "Khasanov Mirjalol",
+    score: "1500 SAT",
+    readingWriting: "740",
+    math: "760",
+    kind: "Student proof",
+    accent: "#b7c5ff"
+  }
+];
+
 const testimonialStudents = [
   {
     image: "/assets/results/muslima-xalikova-1330-sat.png",
@@ -275,11 +368,18 @@ const testimonialStudents = [
     name: "Zafar Bazarov",
     score: "1150 SAT",
     accent: "#99d7ff"
-  }
+  },
+  ...topScoreProofs.map((proof) => ({
+    image: proof.image,
+    name: proof.name,
+    score: proof.score,
+    accent: proof.accent
+  }))
 ];
 
 type HomeSlide = (typeof slides)[number];
 type TestimonialStudent = (typeof testimonialStudents)[number];
+type TopScoreProof = (typeof topScoreProofs)[number];
 
 const homeCopy: Record<
   Language,
@@ -304,6 +404,19 @@ const homeCopy: Record<
       body: string;
       verified: string;
       items: Array<{ quote: string; role: string }>;
+    };
+    topScores: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      highestLabel: string;
+      founderLabel: string;
+      scoreLabel: string;
+      rwLabel: string;
+      mathLabel: string;
+      proofLabel: string;
+      reportsLine: string;
+      cta: string;
     };
     parent: {
       eyebrow: string;
@@ -376,6 +489,20 @@ const homeCopy: Record<
           role: "Mistake review"
         }
       ]
+    },
+    topScores: {
+      eyebrow: "Top SAT score proof",
+      title: "1590 founder proof. 1580 student proof. Multiple 1500+ score reports.",
+      body:
+        "This is the strongest selling signal for SATTEST.UZ: the founders have elite SAT scores, and students are now producing 1500+ verified score reports.",
+      highestLabel: "Highest proof",
+      founderLabel: "Founder standard",
+      scoreLabel: "Total score",
+      rwLabel: "Reading/Writing",
+      mathLabel: "Math",
+      proofLabel: "Official score report",
+      reportsLine: "8 student reports",
+      cta: "Start free diagnostic"
     },
     parent: {
       eyebrow: "For parents",
@@ -490,6 +617,20 @@ const homeCopy: Record<
           role: "Разбор ошибок"
         }
       ]
+    },
+    topScores: {
+      eyebrow: "Доказательства топ SAT-баллов",
+      title: "1590 у основателя. 1580 у ученика. Несколько отчетов 1500+.",
+      body:
+        "Это главный сигнал доверия SATTEST.UZ: основатели имеют элитные SAT-баллы, а ученики уже показывают подтвержденные результаты 1500+.",
+      highestLabel: "Высший результат",
+      founderLabel: "Стандарт основателей",
+      scoreLabel: "Общий балл",
+      rwLabel: "Reading/Writing",
+      mathLabel: "Math",
+      proofLabel: "Официальный отчет",
+      reportsLine: "8 отчетов учеников",
+      cta: "Начать диагностику"
     },
     parent: {
       eyebrow: "Для родителей",
@@ -638,6 +779,20 @@ const homeCopy: Record<
         }
       ]
     },
+    topScores: {
+      eyebrow: "Eng yuqori SAT natija isbotlari",
+      title: "Founder 1590. O'quvchi 1580. Bir nechta 1500+ score reportlar.",
+      body:
+        "Bu SATTEST.UZ uchun eng kuchli selling proof: founderlar elite SAT ballarga ega, o'quvchilar esa tasdiqlangan 1500+ natijalar ko'rsatmoqda.",
+      highestLabel: "Eng yuqori isbot",
+      founderLabel: "Founder standarti",
+      scoreLabel: "Umumiy ball",
+      rwLabel: "Reading/Writing",
+      mathLabel: "Math",
+      proofLabel: "Rasmiy score report",
+      reportsLine: "8 ta o'quvchi hisoboti",
+      cta: "Diagnostikani boshlash"
+    },
     parent: {
       eyebrow: "Ota-onalar uchun",
       title: "Siz faqat darsga qatnashishni emas, real progressni ko'rasiz.",
@@ -761,9 +916,11 @@ function TestimonialCard({
   role: string;
   verified: string;
 }) {
+  const isScoreReport = student.image.includes("/top-sat/") || student.image.includes("botirov-");
+
   return (
     <article
-      className="student-testimonials-section__card"
+      className={`student-testimonials-section__card${isScoreReport ? " has-score-report" : ""}`}
       style={{ "--accent": student.accent } as CSSProperties & Record<"--accent", string>}
     >
       <div className="student-testimonials-section__student">
@@ -777,6 +934,46 @@ function TestimonialCard({
       <div className="student-testimonials-section__meta">
         <span>{role}</span>
         <em>{verified}</em>
+      </div>
+    </article>
+  );
+}
+
+function TopScoreProofCard({
+  proof,
+  copy
+}: {
+  proof: TopScoreProof;
+  copy: {
+    scoreLabel: string;
+    rwLabel: string;
+    mathLabel: string;
+    proofLabel: string;
+  };
+}) {
+  return (
+    <article
+      className="top-score-proof-section__card"
+      style={{ "--accent": proof.accent } as CSSProperties & Record<"--accent", string>}
+    >
+      <div className="top-score-proof-section__certificate">
+        <img src={proof.image} alt={`${proof.name} ${proof.score} SAT score report`} />
+      </div>
+      <div className="top-score-proof-section__cardCopy">
+        <span>{proof.kind}</span>
+        <h3>{proof.name}</h3>
+        <strong>{proof.score}</strong>
+        <div>
+          <p>
+            <em>{copy.rwLabel}</em>
+            <b>{proof.readingWriting}</b>
+          </p>
+          <p>
+            <em>{copy.mathLabel}</em>
+            <b>{proof.math}</b>
+          </p>
+        </div>
+        <small>{copy.proofLabel}</small>
       </div>
     </article>
   );
@@ -1282,6 +1479,51 @@ export default function Home() {
           <div className="nex-footer-note">Digital SAT practice engine</div>
         </nav>
       </div>
+
+      <section className="top-score-proof-section" aria-labelledby="top-score-proof-title">
+        <div className="top-score-proof-section__copy">
+          <p className="top-score-proof-section__eyebrow">{copy.topScores.eyebrow}</p>
+          <h2 id="top-score-proof-title">{copy.topScores.title}</h2>
+          <span>{copy.topScores.body}</span>
+          <Link className="top-score-proof-section__cta" href="/mock-test">
+            {copy.topScores.cta}
+            <ArrowRight size={18} />
+          </Link>
+        </div>
+
+        <div className="top-score-proof-section__stats" aria-label="SAT score proof highlights">
+          <div>
+            <span>{copy.topScores.highestLabel}</span>
+            <strong>1590</strong>
+            <p>Doniyor Botirov</p>
+          </div>
+          <div>
+            <span>{copy.topScores.founderLabel}</span>
+            <strong>1540 / 1590</strong>
+            <p>Bakhrom + Doniyor</p>
+          </div>
+          <div>
+            <span>{copy.topScores.scoreLabel}</span>
+            <strong>1500+</strong>
+            <p>{copy.topScores.reportsLine}</p>
+          </div>
+        </div>
+
+        <div className="top-score-proof-section__rail" aria-label="Top SAT certificates">
+          {topScoreProofs.map((proof) => (
+            <TopScoreProofCard
+              key={proof.name}
+              proof={proof}
+              copy={{
+                mathLabel: copy.topScores.mathLabel,
+                proofLabel: copy.topScores.proofLabel,
+                rwLabel: copy.topScores.rwLabel,
+                scoreLabel: copy.topScores.scoreLabel
+              }}
+            />
+          ))}
+        </div>
+      </section>
 
       <section className="student-testimonials-section" aria-labelledby="student-testimonials-title">
         <div className="student-testimonials-section__intro">
