@@ -5667,3 +5667,53 @@ html[lang="uz"] .founder-trust-section__proof strong {
     font-size: clamp(42px, 15vw, 72px);
   }
 }
+
+/* Global ethereal background visibility pass.
+   Keep content intact, but stop route-level wrappers from covering the shared texture. */
+.site-content-shell > main,
+.site-content-shell main[class*="bg-[#101112]"],
+.site-content-shell main[class*="bg-[#0b0b0b]"],
+.site-content-shell main[class*="bg-[#f6f6f4]"],
+.site-content-shell main[class*="bg-white"] {
+  background: transparent !important;
+}
+
+.site-content-shell main[class*="text-[#202124]"] {
+  color: #f7f7f3 !important;
+}
+
+.nex-home,
+.nex-hero-stage,
+.partner-marquee {
+  background: transparent !important;
+}
+
+.nex-backgrounds {
+  opacity: 0.24;
+  mix-blend-mode: screen;
+}
+
+.nex-background-video {
+  filter: grayscale(1) contrast(1.15) brightness(0.72);
+}
+
+.founder-trust-section,
+.platform-ad-section,
+.diagnostic-preview-section,
+.study-growth-section,
+.parent-journey-section,
+.homepage-faq-section,
+.student-testimonials-section,
+.top-score-proof-section {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.045), transparent 28%),
+    rgba(8, 9, 9, 0.58) !important;
+}
+
+.partner-marquee,
+.results-wall,
+.top-score-proof-section__stats,
+.top-score-proof-section__card,
+.student-testimonials-section__card {
+  backdrop-filter: blur(10px);
+}
