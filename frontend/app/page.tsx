@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Play, Volume2, VolumeX, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { useLanguage, type Language } from "@/lib/i18n";
@@ -239,7 +239,47 @@ const homepageFaqs = [
   }
 ];
 
+const testimonialStudents = [
+  {
+    image: "/assets/results/muslima-xalikova-1330-sat.png",
+    name: "Muslima Xalikova",
+    score: "1330 SAT",
+    accent: "#8ff1c6"
+  },
+  {
+    image: "/assets/results/jasmina-abdihamidova-1200-sat.jpg",
+    name: "Jasmina Abdihamidova",
+    score: "1200 SAT",
+    accent: "#d7cc95"
+  },
+  {
+    image: "/assets/results/ulugbek-abdurahmonov-1100-sat.jpg",
+    name: "Ulugbek Abdurahmonov",
+    score: "1100 SAT",
+    accent: "#b7c5ff"
+  },
+  {
+    image: "/assets/results/said-usmanov-1200-sat.jpg",
+    name: "Said Usmanov",
+    score: "1200 SAT",
+    accent: "#f0b6b6"
+  },
+  {
+    image: "/assets/results/ismail-sobinov-1200-sat.jpg",
+    name: "Ismail Sobinov",
+    score: "1200 SAT",
+    accent: "#c4b5fd"
+  },
+  {
+    image: "/assets/results/zafar-bazarov-1150-sat.jpg",
+    name: "Zafar Bazarov",
+    score: "1150 SAT",
+    accent: "#99d7ff"
+  }
+];
+
 type HomeSlide = (typeof slides)[number];
+type TestimonialStudent = (typeof testimonialStudents)[number];
 
 const homeCopy: Record<
   Language,
@@ -257,6 +297,13 @@ const homeCopy: Record<
       close: string;
       prev: string;
       next: string;
+    };
+    testimonials: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      verified: string;
+      items: Array<{ quote: string; role: string }>;
     };
     parent: {
       eyebrow: string;
@@ -297,6 +344,38 @@ const homeCopy: Record<
       close: "Close student results",
       prev: "Previous student video",
       next: "Next student video"
+    },
+    testimonials: {
+      eyebrow: "Student feedback",
+      title: "What students say after the diagnostic becomes a real study route.",
+      body: "A moving wall of student confidence, score growth, and daily practice habits built around SATTEST.UZ reports.",
+      verified: "Verified score route",
+      items: [
+        {
+          quote: "The report showed exactly where I was losing points. I stopped guessing and started fixing one weak topic at a time.",
+          role: "Reading/Writing growth"
+        },
+        {
+          quote: "The daily tasks made SAT practice feel organized. I could see what to do today instead of opening random questions.",
+          role: "Daily practice routine"
+        },
+        {
+          quote: "After every mock test, the weak areas became clear. Math and grammar practice finally felt targeted.",
+          role: "Diagnostic analytics"
+        },
+        {
+          quote: "My parents could see my progress, so preparation became more serious and consistent at home.",
+          role: "Parent progress visibility"
+        },
+        {
+          quote: "SATTEST helped me connect score reports with real practice. The plan was simple: review, drill, repeat.",
+          role: "Score improvement plan"
+        },
+        {
+          quote: "The platform made my mistakes visible. That was the first time I understood what was holding my score down.",
+          role: "Mistake review"
+        }
+      ]
     },
     parent: {
       eyebrow: "For parents",
@@ -379,6 +458,38 @@ const homeCopy: Record<
       close: "Закрыть результаты учеников",
       prev: "Предыдущее видео ученика",
       next: "Следующее видео ученика"
+    },
+    testimonials: {
+      eyebrow: "Отзывы учеников",
+      title: "Что говорят ученики, когда диагностика превращается в реальный маршрут подготовки.",
+      body: "Движущаяся лента отзывов о росте уверенности, баллов и привычки заниматься по отчетам SATTEST.UZ.",
+      verified: "Проверенный маршрут",
+      items: [
+        {
+          quote: "Отчет показал, где именно я теряю баллы. Я перестала гадать и начала исправлять одну слабую тему за другой.",
+          role: "Рост Reading/Writing"
+        },
+        {
+          quote: "Ежедневные задания сделали подготовку понятной. Я видел, что делать сегодня, а не решал случайные вопросы.",
+          role: "Ежедневная практика"
+        },
+        {
+          quote: "После каждого mock test слабые места становились ясными. Математика и грамматика стали точечной работой.",
+          role: "Диагностическая аналитика"
+        },
+        {
+          quote: "Родители видели мой прогресс, поэтому подготовка дома стала серьезнее и стабильнее.",
+          role: "Прогресс для родителей"
+        },
+        {
+          quote: "SATTEST связал score report с настоящей практикой. План простой: разобрать, потренировать, повторить.",
+          role: "План роста балла"
+        },
+        {
+          quote: "Платформа сделала мои ошибки видимыми. Тогда я впервые понял, что именно держит мой балл ниже.",
+          role: "Разбор ошибок"
+        }
+      ]
     },
     parent: {
       eyebrow: "Для родителей",
@@ -495,6 +606,38 @@ const homeCopy: Record<
       prev: "Oldingi o'quvchi videosi",
       next: "Keyingi o'quvchi videosi"
     },
+    testimonials: {
+      eyebrow: "O'quvchilar fikri",
+      title: "Diagnostika real tayyorgarlik yo'nalishiga aylanganda o'quvchilar nima deydi.",
+      body: "SATTEST.UZ hisobotlari orqali ishonch, ball o'sishi va kundalik practice odatini ko'rsatadigan harakatdagi feedback devori.",
+      verified: "Tekshirilgan score route",
+      items: [
+        {
+          quote: "Hisobot qayerda ball yo'qotayotganimni aniq ko'rsatdi. Taxmin qilishni to'xtatib, zaif mavzularni bittalab tuzata boshladim.",
+          role: "Reading/Writing o'sishi"
+        },
+        {
+          quote: "Kundalik vazifalar tayyorgarlikni tartibli qildi. Endi random savol emas, bugun nima qilishni bilaman.",
+          role: "Kundalik practice"
+        },
+        {
+          quote: "Har bir mock testdan keyin zaif joylar aniq ko'rindi. Math va grammar mashqlari targeted bo'ldi.",
+          role: "Diagnostik analytics"
+        },
+        {
+          quote: "Ota-onam progressimni ko'ra oldi, shuning uchun uyda tayyorgarlik jiddiyroq va barqarorroq bo'ldi.",
+          role: "Ota-ona nazorati"
+        },
+        {
+          quote: "SATTEST score reportni real practice bilan bog'ladi. Reja oddiy: review, drill, repeat.",
+          role: "Ball o'sish rejasi"
+        },
+        {
+          quote: "Platforma xatolarimni ko'rinadigan qildi. Birinchi marta ballimni nima ushlab turganini tushundim.",
+          role: "Xatolar tahlili"
+        }
+      ]
+    },
     parent: {
       eyebrow: "Ota-onalar uchun",
       title: "Siz faqat darsga qatnashishni emas, real progressni ko'rasiz.",
@@ -605,6 +748,38 @@ function getLoaderDigits(value: number) {
     .padStart(3, " ")
     .split("")
     .map((digit) => (digit === " " ? "\u00a0" : digit));
+}
+
+function TestimonialCard({
+  student,
+  quote,
+  role,
+  verified
+}: {
+  student: TestimonialStudent;
+  quote: string;
+  role: string;
+  verified: string;
+}) {
+  return (
+    <article
+      className="student-testimonials-section__card"
+      style={{ "--accent": student.accent } as CSSProperties & Record<"--accent", string>}
+    >
+      <div className="student-testimonials-section__student">
+        <img src={student.image} alt={`${student.name} SAT result student`} />
+        <div>
+          <strong>{student.name}</strong>
+          <span>{student.score}</span>
+        </div>
+      </div>
+      <p>{quote}</p>
+      <div className="student-testimonials-section__meta">
+        <span>{role}</span>
+        <em>{verified}</em>
+      </div>
+    </article>
+  );
 }
 
 export default function Home() {
@@ -1107,6 +1282,36 @@ export default function Home() {
           <div className="nex-footer-note">Digital SAT practice engine</div>
         </nav>
       </div>
+
+      <section className="student-testimonials-section" aria-labelledby="student-testimonials-title">
+        <div className="student-testimonials-section__intro">
+          <p>{copy.testimonials.eyebrow}</p>
+          <h2 id="student-testimonials-title">{copy.testimonials.title}</h2>
+          <span>{copy.testimonials.body}</span>
+        </div>
+
+        <div className="student-testimonials-section__stage" aria-label="Moving student feedback">
+          {[0, 1].map((rowIndex) => (
+            <div
+              className={`student-testimonials-section__track ${rowIndex === 1 ? "is-reverse" : ""}`}
+              key={rowIndex}
+            >
+              {[...testimonialStudents, ...testimonialStudents].map((student, index) => {
+                const feedback = copy.testimonials.items[index % copy.testimonials.items.length];
+                return (
+                  <TestimonialCard
+                    key={`${rowIndex}-${student.name}-${index}`}
+                    student={student}
+                    quote={feedback.quote}
+                    role={feedback.role}
+                    verified={copy.testimonials.verified}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="founder-trust-section" aria-labelledby="founder-trust-title">
         <div className="founder-trust-section__media">
