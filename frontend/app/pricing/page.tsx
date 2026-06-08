@@ -17,6 +17,22 @@ const prices = {
   pro: "200 000 UZS"
 } as const;
 
+function getPlanFromUrl(): "pro" | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("plan") === "pro" ? "pro" : null;
+}
+
+function updatePricingUrl(plan: "pro" | null) {
+  const params = new URLSearchParams(window.location.search);
+  if (plan) {
+    params.set("plan", plan);
+  } else {
+    params.delete("plan");
+  }
+  const query = params.toString();
+  window.history.replaceState(null, "", `/pricing${query ? `?${query}` : ""}`);
+}
+
 const pricingCopy: Record<
   Language,
   {
@@ -76,8 +92,8 @@ const pricingCopy: Record<
       paymentLabel: "For parents",
       paymentTitle: "Short payment note",
       paymentBody:
-        "Payment can be made through Click, Payme, Paynet, card, or transfer. Send the receipt to the Telegram bot with the email used during registration. After confirmation, access opens for 30 days.",
-      steps: ["Choose plan", "Pay any method", "Send receipt to bot", "Founder approves", "Start practice"],
+        "Payment can be made through Click, Payme, Paynet, card, or transfer. Send the receipt to the Telegram bot with the email used during registration. The bot activates Pro automatically for 30 days.",
+      steps: ["Choose plan", "Pay any method", "Send receipt to bot", "Bot activates Pro", "Start practice"],
       stepLabel: "Step"
     },
     plans: {
@@ -123,16 +139,16 @@ const pricingCopy: Record<
       ready: "Ready",
       payTitle: "Pay by any method",
       payBody:
-        "Pay by Click, Payme, Paynet, card, or transfer. Then send your receipt to the SATTEST.UZ bot for Founder approval.",
+        "Pay by Click, Payme, Paynet, card, or transfer. Then send your receipt to the SATTEST.UZ bot and Pro opens automatically.",
       qrAlt: "Paynet payment QR code",
       instructions: [
         "Use this Paynet QR or pay by Click, Payme, card, or transfer.",
         "Complete payment for SATTEST Pro.",
         "Open the bot and send receipt with caption: your-email@example.com pro.",
-        `Founder ${telegramDisplayName} approves access for 30 days.`
+        "The bot activates Pro for 30 days immediately after receiving the receipt."
       ],
       receiptCta: "Send receipt to bot",
-      note: "The bot forwards your receipt to Founder for manual approval and activates your subscription after confirmation."
+      note: `The bot still notifies ${telegramDisplayName} for records while Pro opens automatically.`
     }
   },
   ru: {
@@ -143,8 +159,8 @@ const pricingCopy: Record<
       paymentLabel: "Для родителей",
       paymentTitle: "Кратко об оплате",
       paymentBody:
-        "Оплату можно сделать через Click, Payme, Paynet, карту или перевод. Отправьте чек в Telegram-бот вместе с email, указанным при регистрации. После подтверждения доступ откроется на 30 дней.",
-      steps: ["Выбрать план", "Оплатить удобным способом", "Отправить чек в бот", "Основатель подтверждает", "Начать практику"],
+        "Оплату можно сделать через Click, Payme, Paynet, карту или перевод. Отправьте чек в Telegram-бот вместе с email, указанным при регистрации. Бот автоматически откроет Pro на 30 дней.",
+      steps: ["Выбрать план", "Оплатить удобным способом", "Отправить чек в бот", "Бот открывает Pro", "Начать практику"],
       stepLabel: "Шаг"
     },
     plans: {
@@ -189,16 +205,16 @@ const pricingCopy: Record<
       status: "Статус",
       ready: "Готов",
       payTitle: "Оплата любым способом",
-      payBody: "Оплатите через Click, Payme, Paynet, карту или перевод. Затем отправьте чек в бот SATTEST.UZ для подтверждения основателем.",
+      payBody: "Оплатите через Click, Payme, Paynet, карту или перевод. Затем отправьте чек в бот SATTEST.UZ, и Pro откроется автоматически.",
       qrAlt: "QR-код оплаты Paynet",
       instructions: [
         "Используйте этот Paynet QR или оплатите через Click, Payme, карту либо перевод.",
         "Оплатите тариф SATTEST Pro.",
         "Откройте бот и отправьте чек с подписью: your-email@example.com pro.",
-        `Основатель ${telegramDisplayName} подтверждает доступ на 30 дней.`
+        "Бот сразу активирует Pro на 30 дней после получения чека."
       ],
       receiptCta: "Отправить чек в бот",
-      note: "Бот передает ваш чек основателю для ручной проверки и активирует подписку после подтверждения."
+      note: `Бот уведомит ${telegramDisplayName} для учета, а Pro откроется автоматически.`
     }
   },
   uz: {
@@ -209,8 +225,8 @@ const pricingCopy: Record<
       paymentLabel: "Ota-onalar uchun",
       paymentTitle: "Qisqa to'lov izohi",
       paymentBody:
-        "To'lov Click, Payme, Paynet, karta yoki o'tkazma orqali qilinadi. Chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring. Tasdiqlangandan keyin kirish 30 kunga ochiladi.",
-      steps: ["Rejani tanlash", "Istalgan usulda to'lash", "Chekni botga yuborish", "Founder tasdiqlaydi", "Practice boshlash"],
+        "To'lov Click, Payme, Paynet, karta yoki o'tkazma orqali qilinadi. Chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring. Bot Pro kirishni 30 kunga avtomatik ochadi.",
+      steps: ["Rejani tanlash", "Istalgan usulda to'lash", "Chekni botga yuborish", "Bot Pro ochadi", "Practice boshlash"],
       stepLabel: "Qadam"
     },
     plans: {
@@ -255,16 +271,16 @@ const pricingCopy: Record<
       status: "Holat",
       ready: "Tayyor",
       payTitle: "Istalgan usulda to'lash",
-      payBody: "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Keyin chekni Founder tasdig'i uchun SATTEST.UZ botga yuboring.",
+      payBody: "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Keyin chekni SATTEST.UZ botga yuboring, Pro avtomatik ochiladi.",
       qrAlt: "Paynet to'lov QR kodi",
       instructions: [
         "Ushbu Paynet QR'dan foydalaning yoki Click, Payme, karta yoxud o'tkazma orqali to'lang.",
         "SATTEST Pro uchun to'lovni yakunlang.",
         "Botni oching va chekni quyidagi izoh bilan yuboring: your-email@example.com pro.",
-        `Founder ${telegramDisplayName} kirishni 30 kunga tasdiqlaydi.`
+        "Bot chekni olgandan keyin Pro kirishni 30 kunga darhol faollashtiradi."
       ],
       receiptCta: "Chekni botga yuborish",
-      note: "Bot chekingizni qo'lda tekshirish uchun Founder'ga yuboradi va tasdiqdan keyin obunani faollashtiradi."
+      note: `Bot ${telegramDisplayName} ga hisob uchun xabar beradi, Pro esa avtomatik ochiladi.`
     }
   }
 };
@@ -272,6 +288,7 @@ const pricingCopy: Record<
 type PlanAction =
   {
     href: string;
+    onClick?: () => void;
     text: string;
   };
 
@@ -372,6 +389,11 @@ function PriceCard({
               : "border-white/14 bg-white/[0.045] text-white/76 hover:border-white/36 hover:bg-white/[0.075] hover:text-white"
           ].join(" ")}
           href={action.href}
+          onClick={(event) => {
+            if (!action.onClick) return;
+            event.preventDefault();
+            action.onClick();
+          }}
         >
           {action.text}
           <ArrowRight size={17} />
@@ -384,7 +406,7 @@ function PriceCard({
 export default function PricingPage() {
   const { language } = useLanguage();
   const copy = pricingCopy[language];
-  const [selectedPlanKey, setSelectedPlanKey] = useState<"pro" | null>(null);
+  const [selectedPlanKey, setSelectedPlanKey] = useState<"pro" | null>(() => getPlanFromUrl());
   const selectedPlan: SelectedPlan | null = selectedPlanKey
     ? {
         description: copy.plans.pro.description,
@@ -401,7 +423,12 @@ export default function PricingPage() {
 
   function closePlanPanel() {
     setSelectedPlanKey(null);
-    window.history.replaceState(null, "", "/pricing");
+    updatePricingUrl(null);
+  }
+
+  function openProPanel() {
+    setSelectedPlanKey("pro");
+    updatePricingUrl("pro");
   }
 
   const freeBenefits: Benefit[] = [
@@ -409,14 +436,10 @@ export default function PricingPage() {
     ...copy.plans.pro.features.slice(1, 4).map((feature) => ({ checked: false, text: feature }))
   ];
   const proBenefits: Benefit[] = copy.plans.pro.features.map((feature) => ({ checked: true, text: feature }));
+  const proHref = `/pricing?lang=${language}&plan=pro`;
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const plan = params.get("plan");
-
-    if (plan === "pro") {
-      setSelectedPlanKey("pro");
-    }
+    setSelectedPlanKey(getPlanFromUrl());
   }, []);
 
   return (
@@ -469,7 +492,8 @@ export default function PricingPage() {
 
           <PriceCard
             action={{
-              href: "/pricing?plan=pro",
+              href: proHref,
+              onClick: openProPanel,
               text: copy.plans.pro.action
             }}
             benefits={proBenefits}
@@ -489,7 +513,14 @@ export default function PricingPage() {
                 {copy.funnel.title}
               </h2>
             </div>
-            <Link className="flex h-16 min-w-[270px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro">
+            <Link
+              className="flex h-16 min-w-[270px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white"
+              href={proHref}
+              onClick={(event) => {
+                event.preventDefault();
+                openProPanel();
+              }}
+            >
               {copy.funnel.cta}
               <ArrowRight size={20} />
             </Link>

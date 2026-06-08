@@ -49,7 +49,7 @@ def _handle_message(message: dict, db: Session | None) -> dict:
             chat_id,
             "Assalomu alaykum. To activate SATTEST.UZ access, send your payment screenshot or PDF with this caption:\n\n"
             "your-email@example.com pro\n\n"
-            "You can pay by Click, Payme, Paynet, bank card, or transfer. Founder will verify your receipt and activate access.",
+            "You can pay by Click, Payme, Paynet, bank card, or transfer. After you send the receipt with your registered email, the bot activates Pro automatically.",
         )
         return {"ok": True}
 
@@ -77,8 +77,8 @@ def _handle_message(message: dict, db: Session | None) -> dict:
         if chat_id != str(settings.telegram_admin_chat_id):
             _send_message(
                 chat_id,
-                "Receipt received. SATTEST.UZ Founder has been notified.\n\n"
-                "Your Pro access will be activated shortly after payment confirmation. Please keep this chat open.",
+                "Receipt received, but the bot cannot activate Pro automatically because the website database is not connected right now.\n\n"
+                "SATTEST.UZ Founder has been notified.",
             )
         _notify_admin_for_manual_approval(email, plan, message)
         return {"ok": True, "mode": "manual_no_database"}
@@ -92,12 +92,15 @@ def _handle_message(message: dict, db: Session | None) -> dict:
         )
         return {"ok": True}
 
+    settings = get_settings()
+    auto_activate = settings.telegram_auto_activate_receipts
     subscription = Subscription(
         user_id=user.id,
         plan=plan,
-        status="pending",
-        provider="telegram_manual",
+        status="active" if auto_activate else "pending",
+        provider="telegram_receipt_auto" if auto_activate else "telegram_manual",
         provider_customer_id=chat_id,
+        current_period_end=datetime.utcnow() + timedelta(days=30) if auto_activate else None,
         price_amount=PLAN_PRICES[plan],
         currency="UZS",
     )
@@ -105,13 +108,22 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     db.commit()
     db.refresh(subscription)
 
+    if auto_activate:
+        _send_message(
+            chat_id,
+            "Receipt received. Your SATTEST.UZ Pro access is active for 30 days.\n\n"
+            "Open https://www.sattest.uz/login and continue your practice.",
+        )
+        _notify_admin_for_auto_activation(subscription, user, message)
+        return {"ok": True, "subscription_id": str(subscription.id), "status": "active"}
+
     _send_message(
         chat_id,
         "Receipt received. Founder will verify it and activate your access after approval.\n\n"
         "Please keep this chat open for confirmation.",
     )
     _notify_admin_for_approval(subscription, user, message)
-    return {"ok": True, "subscription_id": str(subscription.id)}
+    return {"ok": True, "subscription_id": str(subscription.id), "status": "pending"}
 
 
 def _handle_callback(callback_query: dict, db: Session | None) -> dict:
@@ -202,6 +214,29 @@ def _notify_admin_for_approval(subscription: Subscription, user: User, message: 
 
     _copy_message(settings.telegram_admin_chat_id, message["chat"]["id"], message["message_id"])
     _send_message(settings.telegram_admin_chat_id, text, reply_markup=keyboard)
+
+
+def _notify_admin_for_auto_activation(subscription: Subscription, user: User, message: dict) -> None:
+    settings = get_settings()
+    if not settings.telegram_admin_chat_id:
+        return
+
+    from_user = message.get("from", {})
+    sender = " ".join(part for part in [from_user.get("first_name"), from_user.get("last_name")] if part)
+    username = from_user.get("username")
+    sender_line = sender or "Unknown Telegram user"
+    if username:
+        sender_line += f" (@{username})"
+
+    text = (
+        "SATTEST.UZ Pro was auto-activated from a Telegram receipt.\n\n"
+        f"{_subscription_summary(subscription, user)}\n"
+        f"Telegram sender: {sender_line}\n\n"
+        "No Founder approval was required. The copied receipt is attached above for records."
+    )
+
+    _copy_message(settings.telegram_admin_chat_id, message["chat"]["id"], message["message_id"])
+    _send_message(settings.telegram_admin_chat_id, text)
 
 
 def _notify_admin_for_manual_approval(email: str, plan: str, message: dict) -> None:
