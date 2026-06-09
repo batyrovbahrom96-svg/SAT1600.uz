@@ -105,9 +105,9 @@ export function LuxuryNavbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#101112]/90 backdrop-blur-xl">
-      <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 md:grid-cols-[1fr_auto_1fr] md:px-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4 md:grid-cols-[1fr_auto_1fr] md:px-8">
         <Link
-          className="flex h-12 w-[210px] items-center border border-white/10 bg-black/30 px-4 shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition-colors hover:border-white/30"
+          className="flex h-10 w-[132px] min-w-0 items-center border border-white/10 bg-black/30 px-3 shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition-colors hover:border-white/30 sm:h-12 sm:w-[210px] sm:px-4"
           href="/?skipIntro=1"
           onClick={(event) => {
             if (window.location.pathname === "/") {
@@ -132,12 +132,12 @@ export function LuxuryNavbar() {
           ))}
         </nav>
 
-        <div className="flex items-center justify-end gap-2">
-          <div className="flex items-center border border-white/10 bg-black/20 p-1" aria-label="Language selector">
+        <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
+          <div className="flex shrink-0 items-center border border-white/10 bg-black/20 p-0.5 sm:p-1" aria-label="Language selector">
             {languages.map((item) => (
               <button
                 className={[
-                  "h-9 px-2 text-[9px] font-black uppercase tracking-[0.12em] transition-colors sm:text-[10px]",
+                  "h-8 px-1.5 text-[8px] font-black uppercase tracking-[0.08em] transition-colors sm:h-9 sm:px-2 sm:text-[10px] sm:tracking-[0.12em]",
                   language === item.code ? "bg-white text-black" : "text-white/50 hover:text-white"
                 ].join(" ")}
                 key={item.code}
@@ -153,7 +153,7 @@ export function LuxuryNavbar() {
               <Link className="hidden h-11 max-w-[240px] items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/dashboard">
                 <span className="truncate">{studentName}</span>
               </Link>
-              <button className="flex h-11 min-w-[112px] items-center justify-center whitespace-nowrap border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/70 transition-colors hover:border-white/35 hover:text-white" onClick={logout} type="button">
+              <button className="flex h-9 min-w-[64px] items-center justify-center whitespace-nowrap border border-white/12 bg-white/[0.035] px-2 text-[8px] font-black uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-white/35 hover:text-white sm:h-11 sm:min-w-[112px] sm:px-4 sm:text-[10px] sm:tracking-[0.22em]" onClick={logout} type="button">
                 {actionCopy.logout[language]}
               </button>
             </>
@@ -162,7 +162,7 @@ export function LuxuryNavbar() {
               <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/pricing">
                 {actionCopy.pricing[language]}
               </Link>
-              <Link className="h-11 border border-white/12 bg-white/[0.035] px-4 text-[10px] font-black uppercase tracking-[0.22em] leading-[44px] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/login">
+              <Link className="h-9 whitespace-nowrap border border-white/12 bg-white/[0.035] px-2 text-[8px] font-black uppercase tracking-[0.1em] leading-[36px] text-white/70 transition-colors hover:border-white/35 hover:text-white sm:h-11 sm:px-4 sm:text-[10px] sm:tracking-[0.22em] sm:leading-[44px]" href="/login">
                 {actionCopy.login[language]}
               </Link>
             </>
