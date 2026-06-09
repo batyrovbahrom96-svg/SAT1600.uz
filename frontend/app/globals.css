@@ -1410,7 +1410,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   opacity: 1;
   visibility: inherit;
   transition:
-    opacity 1.2s cubic-bezier(0.43, 0, 0.06, 1),
+    opacity 0.5s cubic-bezier(0.43, 0, 0.06, 1),
     visibility 0s;
   will-change: opacity;
 }
@@ -1436,7 +1436,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.2), transparent 22%),
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.07), transparent 40%);
   opacity: 0;
-  animation: satLoaderBrandHalo 5.6s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderBrandHalo 1.8s cubic-bezier(0.43, 0, 0.06, 1) both;
   pointer-events: none;
 }
 
@@ -1459,7 +1459,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     );
   opacity: 0;
   transform: translate3d(-72%, -54%, 0) rotate(0.001deg);
-  animation: satLoaderBrandSweep 5.6s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderBrandSweep 1.8s cubic-bezier(0.43, 0, 0.06, 1) both;
   mix-blend-mode: screen;
 }
 
@@ -1468,8 +1468,8 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   pointer-events: none;
   visibility: hidden;
   transition:
-    opacity 1.2s cubic-bezier(0.43, 0, 0.06, 1),
-    visibility 0s linear 1.2s;
+    opacity 0.5s cubic-bezier(0.43, 0, 0.06, 1),
+    visibility 0s linear 0.5s;
 }
 
 .sat-count-loader__window {
@@ -1507,10 +1507,10 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   background: #1a1b1c;
   transform: scale(1);
   filter: brightness(1);
-  animation: satLoaderIntroIn 0.7s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderIntroIn 0.45s cubic-bezier(0.43, 0, 0.06, 1) both;
   transition:
-    transform 1.5s cubic-bezier(0.43, 0, 0.06, 1),
-    filter 1.2s cubic-bezier(0.43, 0, 0.06, 1);
+    transform 0.55s cubic-bezier(0.43, 0, 0.06, 1),
+    filter 0.5s cubic-bezier(0.43, 0, 0.06, 1);
 }
 
 .sat-count-loader__brand {
@@ -1525,7 +1525,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     contrast(1.18)
     drop-shadow(0 0 0 rgba(255, 255, 255, 0));
   transform: scale(0.78) rotateX(8deg);
-  animation: satLoaderBrandReveal 5.6s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderBrandReveal 1.8s cubic-bezier(0.43, 0, 0.06, 1) both;
   will-change: opacity, transform, filter;
 }
 
@@ -1561,11 +1561,11 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
 }
 
 .sat-count-loader__number--previous:not(.is-hidden) .sat-count-loader__digit {
-  animation: satLoaderDigitOut 1.7s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderDigitOut 0.48s cubic-bezier(0.43, 0, 0.06, 1) both;
 }
 
 .sat-count-loader__number--current:not(.is-idle) .sat-count-loader__digit {
-  animation: satLoaderDigitIn 1.7s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderDigitIn 0.48s cubic-bezier(0.43, 0, 0.06, 1) both;
 }
 
 .sat-count-loader__number--previous .sat-count-loader__digit:nth-child(1),
@@ -1768,6 +1768,41 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
 .nex-home.is-ready .nex-slide-nav,
 .nex-home.is-ready .nex-home-login {
   animation-delay: 0.16s;
+}
+
+@media (max-width: 767px) {
+  .sat-count-loader {
+    background: rgba(16, 17, 18, 0.88);
+    backdrop-filter: blur(10px);
+  }
+
+  .sat-count-loader::before,
+  .sat-count-loader--brand::after {
+    opacity: 0.18;
+  }
+
+  .sat-count-loader__window {
+    height: 48px;
+    font-size: 15px;
+    line-height: 48px;
+  }
+
+  .sat-count-loader__brand {
+    width: min(58vw, 220px);
+  }
+
+  .nex-home.is-ready .nex-header,
+  .nex-home.is-ready .nex-screen-stack,
+  .nex-home.is-ready .nex-slide-nav,
+  .nex-home.is-ready .nex-home-login {
+    animation-duration: 0.62s;
+  }
+
+  .nex-home.is-ready .nex-screen-stack,
+  .nex-home.is-ready .nex-slide-nav,
+  .nex-home.is-ready .nex-home-login {
+    animation-delay: 0s;
+  }
 }
 
 @keyframes satHomeReveal {

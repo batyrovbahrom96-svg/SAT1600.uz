@@ -874,6 +874,15 @@ function shouldSkipHomeIntro() {
   return shouldSkip;
 }
 
+function shouldUseFastHomeIntro() {
+  if (typeof window === "undefined") return false;
+
+  return (
+    window.matchMedia("(max-width: 767px)").matches ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 function getLoaderDigits(value: number) {
   return value
     .toString()
@@ -1024,7 +1033,7 @@ export default function Home() {
 
     window.setTimeout(() => {
       setIsLoading(false);
-    }, 1250);
+    }, 520);
   }, []);
 
   useEffect(() => {
@@ -1032,24 +1041,38 @@ export default function Home() {
       return undefined;
     }
 
+    if (shouldUseFastHomeIntro()) {
+      const timers = [
+        window.setTimeout(() => {
+          setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
+        }, 180),
+        window.setTimeout(() => setLoadingStage("brand"), 320),
+        window.setTimeout(() => finishLoading(), 820)
+      ];
+
+      return () => {
+        timers.forEach((timer) => window.clearTimeout(timer));
+      };
+    }
+
     const timers = [
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[1], step: frame.step + 1 }));
-      }, 1800),
+      }, 520),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[2], step: frame.step + 1 }));
-      }, 3600),
+      }, 1040),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
-      }, 5400),
-      window.setTimeout(() => setLoadingStage("brand"), 7600),
-      window.setTimeout(() => setLoadingStage("intro"), 13200)
+      }, 1560),
+      window.setTimeout(() => setLoadingStage("brand"), 2100),
+      window.setTimeout(() => setLoadingStage("intro"), 3800)
     ];
 
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
     };
-  }, [isLoading]);
+  }, [finishLoading, isLoading]);
 
   useEffect(() => {
     if (loadingStage !== "intro") {
@@ -1061,7 +1084,7 @@ export default function Home() {
 
     const fallbackTimer = window.setTimeout(() => {
       finishLoading();
-    }, 6200);
+    }, 2600);
 
     return () => window.clearTimeout(fallbackTimer);
   }, [finishLoading, loadingStage]);
