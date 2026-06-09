@@ -41,7 +41,7 @@ export function LuxuryNavbar() {
     pricing: {
       en: "Pricing & Paynet",
       ru: "Цены и Paynet",
-      uz: "Narx va Paynet"
+      uz: "Narx va To'lov"
     },
     login: {
       en: "Login",
@@ -157,7 +157,7 @@ export function LuxuryNavbar() {
           )}
         </div>
 
-        <nav className="order-last flex w-full min-w-0 items-center gap-1 overflow-x-auto border border-white/10 bg-black/20 px-2 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="order-last flex w-full min-w-0 items-center justify-start gap-1 overflow-x-auto border border-white/10 bg-black/20 px-2 py-1 [scrollbar-width:none] sm:justify-center [&::-webkit-scrollbar]:hidden">
           {navItems.map((item) => (
             <Link
               className="shrink-0 whitespace-nowrap px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-white/48 transition-colors hover:text-white sm:px-4 sm:text-[10px] sm:tracking-[0.2em]"
