@@ -1053,11 +1053,11 @@ function MistakeCard({ index, question }: { index: number; question: ResultQuest
           <span className="border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-black text-white/65">
             {sectionName(question.section)} M{question.module || "-"}
           </span>
-          <span className="border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-black text-white/65">
+          <span className="border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-black text-white/65" data-sattest-no-translate="true">
             {question.topic}
           </span>
           {question.trap_type ? (
-            <span className="border border-red-300/20 bg-red-950/20 px-2 py-1 text-xs font-black text-red-200">
+            <span className="border border-red-300/20 bg-red-950/20 px-2 py-1 text-xs font-black text-red-200" data-sattest-no-translate="true">
               Trap: {cleanLabel(question.trap_type)}
             </span>
           ) : null}
@@ -1067,16 +1067,22 @@ function MistakeCard({ index, question }: { index: number; question: ResultQuest
         </div>
       </div>
 
-      <p className="mt-5 font-light leading-7 text-white/78">{question.prompt}</p>
+      <p className="mt-5 font-light leading-7 text-white/78" data-sattest-no-translate="true">
+        {question.prompt}
+      </p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <div className="border border-red-300/20 bg-red-950/20 p-3">
           <div className="text-xs font-black uppercase tracking-[0.18em] text-red-200/70">Your answer</div>
-          <div className="mt-2 font-black text-red-100">{question.selected_answer || "Blank"}</div>
+          <div className="mt-2 font-black text-red-100" data-sattest-no-translate="true">
+            {question.selected_answer || "Blank"}
+          </div>
         </div>
         <div className="border border-emerald-300/20 bg-emerald-950/20 p-3">
           <div className="text-xs font-black uppercase tracking-[0.18em] text-emerald-200/70">Correct answer</div>
-          <div className="mt-2 font-black text-emerald-100">{question.correct_answer}</div>
+          <div className="mt-2 font-black text-emerald-100" data-sattest-no-translate="true">
+            {question.correct_answer}
+          </div>
         </div>
       </div>
 
@@ -1092,7 +1098,9 @@ function MistakeCard({ index, question }: { index: number; question: ResultQuest
           {explanation.map((item) => (
             <div className="border border-white/10 bg-white/[0.03] p-4" key={item.title}>
               <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/38">{item.title}</div>
-              <p className="mt-2 text-sm font-light leading-6 text-white/62">{item.body}</p>
+              <p className="mt-2 text-sm font-light leading-6 text-white/62" data-sattest-no-translate="true">
+                {item.body}
+              </p>
             </div>
           ))}
         </div>

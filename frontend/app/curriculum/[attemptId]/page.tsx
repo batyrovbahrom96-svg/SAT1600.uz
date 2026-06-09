@@ -446,12 +446,14 @@ function PracticeOverlay({
               <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/38">
                 Question {activeQuestion + 1} of {lesson.questions.length}
               </p>
-              <span className="border border-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/40">
+              <span className="border border-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/40" data-sattest-no-translate="true">
                 {question.skill}
               </span>
             </div>
-            <p className="mt-6 whitespace-pre-line text-xl font-light leading-9 text-white">{question.prompt}</p>
-            <div className="mt-6 grid gap-3">
+            <p className="mt-6 whitespace-pre-line text-xl font-light leading-9 text-white" data-sattest-no-translate="true">
+              {question.prompt}
+            </p>
+            <div className="mt-6 grid gap-3" data-sattest-no-translate="true">
               {question.choices.map((choice) => {
                 const isSelected = selectedAnswer === choice.label;
                 const isCorrect = isConfirmed && choice.label === question.answer;
@@ -488,7 +490,9 @@ function PracticeOverlay({
                 <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/40">
                   {selectedAnswer === question.answer ? "Correct" : `Correct answer: ${question.answer}`}
                 </p>
-                <p className="mt-3 text-base font-light leading-7 text-white/70">{question.explanation}</p>
+                <p className="mt-3 text-base font-light leading-7 text-white/70" data-sattest-no-translate="true">
+                  {question.explanation}
+                </p>
               </div>
             ) : null}
 

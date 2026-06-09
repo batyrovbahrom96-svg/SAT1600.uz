@@ -300,7 +300,9 @@ function MiniDiagnostic({
               {(missedTopics.length ? missedTopics : ["Higher-difficulty timing"]).slice(0, 3).map((topic, index) => (
                 <div className="border border-red-200/15 bg-red-400/10 p-3" key={`${topic}-${index}`}>
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-red-100/55">Priority weakness</p>
-                  <p className="mt-2 text-sm font-semibold text-red-50">{topic}</p>
+                  <p className="mt-2 text-sm font-semibold text-red-50" data-sattest-no-translate="true">
+                    {topic}
+                  </p>
                 </div>
               ))}
             </div>
@@ -332,17 +334,19 @@ function MiniDiagnostic({
           <section className="border border-white/10 bg-white/[0.035] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
             <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38">
+                <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38" data-sattest-no-translate="true">
                   {currentQuestion.section} · Question {currentIndex + 1} of {miniDiagnosticQuestions.length}
                 </p>
-                <h2 className="mt-3 text-3xl font-light text-white">{currentQuestion.topic}</h2>
+                <h2 className="mt-3 text-3xl font-light text-white" data-sattest-no-translate="true">
+                  {currentQuestion.topic}
+                </h2>
               </div>
               <div className="border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/58">
                 {answeredCount}/{miniDiagnosticQuestions.length} answered
               </div>
             </div>
 
-            <p className="mt-8 max-w-4xl text-2xl font-light leading-snug text-white md:text-3xl">
+            <p className="mt-8 max-w-4xl text-2xl font-light leading-snug text-white md:text-3xl" data-sattest-no-translate="true">
               {currentQuestion.prompt}
             </p>
 
@@ -363,6 +367,7 @@ function MiniDiagnostic({
                   <button
                     className={`flex min-h-14 items-center gap-4 border px-4 py-4 text-left text-base transition-colors ${optionClass}`}
                     disabled={hasAnswer}
+                    data-sattest-no-translate="true"
                     key={choice}
                     onClick={() => onAnswer(index)}
                     type="button"
@@ -381,7 +386,9 @@ function MiniDiagnostic({
                 <p className="text-sm font-semibold text-white">
                   {currentAnswer === currentQuestion.answerIndex ? "Correct." : "Trap found."}
                 </p>
-                <p className="mt-2 text-sm font-light leading-6 text-white/58">{currentQuestion.explanation}</p>
+                <p className="mt-2 text-sm font-light leading-6 text-white/58" data-sattest-no-translate="true">
+                  {currentQuestion.explanation}
+                </p>
               </div>
             ) : null}
 

@@ -168,22 +168,22 @@ const pricingCopy: Record<
         action: "Начать диагностику",
         description: "Для учеников, которые хотят понять свой реальный уровень SAT до выбора платного маршрута.",
         features: [
-          "1 бесплатный диагностический SAT mock test",
+          "1 бесплатный диагностический пробный SAT-тест",
           "Предварительный общий балл",
-          "Баллы Reading/Writing и Math",
+          "Баллы по чтению, письму и математике",
           "Ограниченный просмотр ошибок",
           "Переход на Pro после выявления слабых мест"
         ],
         label: "Бесплатный план",
         price: "0 UZS",
-        title: "Diagnostic Mock"
+        title: "Диагностический пробный тест"
       },
       pro: {
         action: "Оплатить и активировать",
         description: "Основной план для учеников, которым нужна целевая SAT-практика и видимый маршрут роста балла.",
         features: [
-          "Неограниченная практика SAT по Reading, Writing и Math",
-          "Полная аналитика после каждого mock test",
+          "Неограниченная SAT-практика по чтению, письму и математике",
+          "Полная аналитика после каждого пробного теста",
           "Работа по слабым темам и ошибкам",
           "Личный маршрут My 1400+",
           "Отслеживание роста результата"
@@ -221,12 +221,12 @@ const pricingCopy: Record<
     hero: {
       eyebrow: "SAT narxlari",
       title: "Jiddiy SAT o'sishi uchun tariflar va narxlar.",
-      body: "Practice, analytics va My 1400+ yo'nalishini ochishga tayyor bo'lsangiz, rejani tanlang. Ishonchingiz komil bo'lmasa, avval bepul diagnostikadan o'ting.",
+      body: "Mashqlar, tahlil va My 1400+ yo'nalishini ochishga tayyor bo'lsangiz, rejani tanlang. Ishonchingiz komil bo'lmasa, avval bepul diagnostikadan o'ting.",
       paymentLabel: "Ota-onalar uchun",
       paymentTitle: "Qisqa to'lov izohi",
       paymentBody:
         "To'lov Click, Payme, Paynet, karta yoki o'tkazma orqali qilinadi. Chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring. Bot Pro kirishni 30 kunga avtomatik ochadi.",
-      steps: ["Rejani tanlash", "Istalgan usulda to'lash", "Chekni botga yuborish", "Bot Pro ochadi", "Practice boshlash"],
+      steps: ["Rejani tanlash", "Istalgan usulda to'lash", "Chekni botga yuborish", "Bot Pro ochadi", "Mashqni boshlash"],
       stepLabel: "Qadam"
     },
     plans: {
@@ -234,24 +234,24 @@ const pricingCopy: Record<
         action: "Bepul diagnostika",
         description: "Pullik yo'nalishni tanlashdan oldin real SAT darajasini ko'rmoqchi bo'lgan o'quvchilar uchun.",
         features: [
-          "1 ta bepul diagnostik SAT mock test",
+          "1 ta bepul diagnostik SAT sinov testi",
           "Umumiy ball ko'rinishi",
-          "Reading/Writing va Math bo'lim ballari",
+          "O'qish, yozish va matematika bo'lim ballari",
           "Cheklangan xato ko'rinishi",
           "Zaif joylar aniq bo'lganda Pro'ga o'tish"
         ],
         label: "Bepul reja",
         price: "0 UZS",
-        title: "Diagnostic Mock"
+        title: "Diagnostik sinov testi"
       },
       pro: {
         action: "To'lash va faollashtirish",
-        description: "Maqsadli SAT practice va ko'rinadigan ball o'sish yo'nalishini xohlaydigan o'quvchilar uchun asosiy reja.",
+        description: "Maqsadli SAT mashqlari va ko'rinadigan ball o'sish yo'nalishini xohlaydigan o'quvchilar uchun asosiy reja.",
         features: [
-          "Reading, Writing va Math bo'yicha cheksiz SAT practice",
-          "Har bir mock testdan keyin to'liq diagnostik analytics",
+          "O'qish, yozish va matematika bo'yicha cheksiz SAT mashqlari",
+          "Har bir sinov testidan keyin to'liq diagnostik tahlil",
           "Mavzu bo'yicha xato va zaifliklarni tuzatish",
-          "Shaxsiy My 1400+ curriculum yo'nalishi",
+          "Shaxsiy My 1400+ o'quv yo'nalishi",
           "Ball o'sishini kuzatish"
         ],
         label: "Eng foydali",

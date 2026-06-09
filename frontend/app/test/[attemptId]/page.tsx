@@ -2035,6 +2035,7 @@ export default function TestPage() {
           <>
             <article
               className="relative bg-white px-10 py-9"
+              data-sattest-no-translate="true"
               onMouseMove={(event) => {
                 if (!lineReaderEnabled || !passagePanelRef.current) return;
                 const rect = passagePanelRef.current.getBoundingClientRect();
@@ -2191,11 +2192,14 @@ export default function TestPage() {
               </button>
             </div>
             <div className="mb-6 border-t border-dashed border-[#e5e7eb]" />
-            <h1 className={`${isStudentResponse ? "mb-8 text-left" : "question-text text-center"} text-[20px] font-semibold leading-[1.45] text-slate-950`}>
+            <h1
+              className={`${isStudentResponse ? "mb-8 text-left" : "question-text text-center"} text-[20px] font-semibold leading-[1.45] text-slate-950`}
+              data-sattest-no-translate="true"
+            >
               <span className="whitespace-pre-line">{question.prompt}</span>
             </h1>
 
-            <div className="answers">
+            <div className="answers" data-sattest-no-translate="true">
               {question.format === "multiple_choice" ? orderedChoices.map((choice, choiceIndex) => (
                 <div
                   key={choice.label}

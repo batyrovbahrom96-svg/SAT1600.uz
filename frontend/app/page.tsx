@@ -152,42 +152,42 @@ const studentResultCopy: Record<
   uz: {
     "Muslima Xalikova": {
       improvement: "3 oyda 1330 SAT natijaga yetdi",
-      method: "Diagnostik reja + targeted SAT practice",
+      method: "Diagnostik reja + maqsadli SAT mashqlari",
       evidence: "Video + SAT hisobot",
       testLabel: "SAT sanasi",
       note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
     },
     "David Sarkisov": {
       improvement: "1200 SAT natija oldi",
-      method: "SAT tayyorgarlik + score report review",
+      method: "SAT tayyorgarlik + ball hisobotini tahlil qilish",
       evidence: "Video + SAT hisobot",
       testLabel: "SAT sanasi",
       note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
     },
     "Said Usmanov": {
       improvement: "1200 SAT natija oldi",
-      method: "SAT tayyorgarlik + score report review",
+      method: "SAT tayyorgarlik + ball hisobotini tahlil qilish",
       evidence: "Video + SAT hisobot",
       testLabel: "SAT sanasi",
       note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
     },
     "Jasmina Abdihamidova": {
       improvement: "1000 dan 1200 gacha o'sdi",
-      method: "SATTEST.UZ practice route + mock review",
+      method: "SATTEST.UZ mashq yo'nalishi + sinov testini tahlil qilish",
       evidence: "Video + SAT hisobot",
       testLabel: "SAT sanasi",
       note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
     },
     "Ulugbek Abdurahmonov": {
       improvement: "16 yoshida 900 dan 1100 gacha o'sdi",
-      method: "Diagnostika review + zaif mavzu drills",
+      method: "Diagnostika tahlili + zaif mavzu mashqlari",
       evidence: "Video + SAT hisobot",
       testLabel: "SAT sanasi",
       note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
     },
     "Ismail Sobinov": {
       improvement: "1200 SAT natija oldi",
-      method: "Diagnostik analytics + targeted SAT practice",
+      method: "Diagnostik tahlil + maqsadli SAT mashqlari",
       evidence: "Video + SAT hisobot",
       testLabel: "SAT sanasi",
       note: "Natija isbotlari ishonch uchun ko'rsatilgan. Ota-ona izohlari yozma ruxsatdan keyin qo'shiladi."
@@ -406,6 +406,8 @@ const homeCopy: Record<
       rwLabel: string;
       mathLabel: string;
       proofLabel: string;
+      founderProofLabel: string;
+      studentProofLabel: string;
       reportsLine: string;
       cta: string;
     };
@@ -492,6 +494,8 @@ const homeCopy: Record<
       rwLabel: "Reading/Writing",
       mathLabel: "Math",
       proofLabel: "Official score report",
+      founderProofLabel: "Founder proof",
+      studentProofLabel: "Student proof",
       reportsLine: "8 student reports",
       cta: "Start free diagnostic"
     },
@@ -585,14 +589,14 @@ const homeCopy: Record<
       items: [
         {
           quote: "Отчет показал, где именно я теряю баллы. Я перестала гадать и начала исправлять одну слабую тему за другой.",
-          role: "Рост Reading/Writing"
+          role: "Рост по чтению и письму"
         },
         {
           quote: "Ежедневные задания сделали подготовку понятной. Я видел, что делать сегодня, а не решал случайные вопросы.",
           role: "Ежедневная практика"
         },
         {
-          quote: "После каждого mock test слабые места становились ясными. Математика и грамматика стали точечной работой.",
+          quote: "После каждого пробного теста слабые места становились ясными. Математика и грамматика стали точечной работой.",
           role: "Диагностическая аналитика"
         },
         {
@@ -600,7 +604,7 @@ const homeCopy: Record<
           role: "Прогресс для родителей"
         },
         {
-          quote: "SATTEST связал score report с настоящей практикой. План простой: разобрать, потренировать, повторить.",
+          quote: "SATTEST связал отчет о баллах с настоящей практикой. План простой: разобрать, потренировать, повторить.",
           role: "План роста балла"
         },
         {
@@ -617,9 +621,11 @@ const homeCopy: Record<
       highestLabel: "Высший результат",
       founderLabel: "Стандарт основателей",
       scoreLabel: "Общий балл",
-      rwLabel: "Reading/Writing",
-      mathLabel: "Math",
+      rwLabel: "Чтение и письмо",
+      mathLabel: "Математика",
       proofLabel: "Официальный отчет",
+      founderProofLabel: "Доказательство основателя",
+      studentProofLabel: "Доказательство ученика",
       reportsLine: "8 отчетов учеников",
       cta: "Начать диагностику"
     },
@@ -720,15 +726,15 @@ const homeCopy: Record<
         nav: "O'sish",
         eyebrow: "Barqaror ball o'sishi uchun tizim",
         title: ["30 kunlik", "o'sish"],
-        body: "Diagnostika xatolaridan tuzilgan kundalik Reading, Writing va Math ishlari.",
+        body: "Diagnostika xatolaridan tuzilgan kundalik o'qish, yozish va matematika ishlari.",
         cta: "Narxlarni ko'rish"
       }
     ],
     partnerLabel: "Ishonchli o'quv markazlari",
     results: {
       eyebrow: "Natija isboti",
-      title: "O'quvchi videolari va score reportlar bilan tasdiqlangan SAT o'sishi.",
-      body: "O'quvchi videosi va mavjud bo'lsa rasmiy SAT score reportni ko'rish uchun natijani bosing.",
+      title: "O'quvchi videolari va rasmiy ball hisobotlari bilan tasdiqlangan SAT o'sishi.",
+      body: "O'quvchi videosi va mavjud bo'lsa rasmiy SAT ball hisobotini ko'rish uchun natijani bosing.",
       parentLabel: "Ota-ona fikri",
       parentSource: "Muslimaning onasi - Telegram",
       parentGreeting: "Assalomu alaykum.",
@@ -741,27 +747,27 @@ const homeCopy: Record<
     testimonials: {
       eyebrow: "O'quvchilar fikri",
       title: "Diagnostika real tayyorgarlik yo'nalishiga aylanganda o'quvchilar nima deydi.",
-      body: "SATTEST.UZ hisobotlari orqali ishonch, ball o'sishi va kundalik practice odatini ko'rsatadigan harakatdagi feedback devori.",
-      verified: "Tekshirilgan score route",
+      body: "SATTEST.UZ hisobotlari orqali ishonch, ball o'sishi va kundalik mashq odatini ko'rsatadigan harakatdagi fikrlar devori.",
+      verified: "Tekshirilgan ball yo'nalishi",
       items: [
         {
           quote: "Hisobot qayerda ball yo'qotayotganimni aniq ko'rsatdi. Taxmin qilishni to'xtatib, zaif mavzularni bittalab tuzata boshladim.",
-          role: "Reading/Writing o'sishi"
+          role: "O'qish va yozish bo'yicha o'sish"
         },
         {
           quote: "Kundalik vazifalar tayyorgarlikni tartibli qildi. Endi random savol emas, bugun nima qilishni bilaman.",
-          role: "Kundalik practice"
+          role: "Kundalik mashq"
         },
         {
-          quote: "Har bir mock testdan keyin zaif joylar aniq ko'rindi. Math va grammar mashqlari targeted bo'ldi.",
-          role: "Diagnostik analytics"
+          quote: "Har bir sinov testidan keyin zaif joylar aniq ko'rindi. Matematika va grammatika mashqlari aniq maqsadga yo'naltirildi.",
+          role: "Diagnostik tahlil"
         },
         {
           quote: "Ota-onam progressimni ko'ra oldi, shuning uchun uyda tayyorgarlik jiddiyroq va barqarorroq bo'ldi.",
           role: "Ota-ona nazorati"
         },
         {
-          quote: "SATTEST score reportni real practice bilan bog'ladi. Reja oddiy: review, drill, repeat.",
+          quote: "SATTEST ball hisobotini real mashqlar bilan bog'ladi. Reja oddiy: tahlil qilish, mashq qilish, takrorlash.",
           role: "Ball o'sish rejasi"
         },
         {
@@ -772,15 +778,17 @@ const homeCopy: Record<
     },
     topScores: {
       eyebrow: "Eng yuqori SAT natija isbotlari",
-      title: "Founder 1590. O'quvchi 1580. Bir nechta 1500+ score reportlar.",
+      title: "Asoschida 1590. O'quvchida 1580. Bir nechta 1500+ rasmiy hisobotlar.",
       body:
-        "Bu SATTEST.UZ uchun eng kuchli selling proof: founderlar elite SAT ballarga ega, o'quvchilar esa tasdiqlangan 1500+ natijalar ko'rsatmoqda.",
+        "Bu SATTEST.UZ uchun eng kuchli ishonch dalili: asoschilar yuqori SAT natijalariga ega, o'quvchilar esa tasdiqlangan 1500+ natijalarni ko'rsatmoqda.",
       highestLabel: "Eng yuqori isbot",
-      founderLabel: "Founder standarti",
+      founderLabel: "Asoschilar standarti",
       scoreLabel: "Umumiy ball",
-      rwLabel: "Reading/Writing",
-      mathLabel: "Math",
-      proofLabel: "Rasmiy score report",
+      rwLabel: "O'qish va yozish",
+      mathLabel: "Matematika",
+      proofLabel: "Rasmiy ball hisoboti",
+      founderProofLabel: "Asoschi isboti",
+      studentProofLabel: "O'quvchi isboti",
       reportsLine: "8 ta o'quvchi hisoboti",
       cta: "Diagnostikani boshlash"
     },
@@ -793,24 +801,24 @@ const homeCopy: Record<
       summaryReportValue: "Har yakshanba",
       summaryReportBody: "Ota-onalar uchun haftalik hisobot",
       summaryFocusLabel: "Hozirgi fokus",
-      summaryFocusValue: "Murakkab matematika + transitions",
-      summaryFocusBody: "Hozirgi fokus: murakkab matematika va Reading/Writing transitions",
+      summaryFocusValue: "Murakkab matematika + o'tish bog'lovchilari",
+      summaryFocusBody: "Hozirgi fokus: murakkab matematika hamda o'qish va yozishdagi o'tish bog'lovchilari",
       cards: [
         {
           title: "Ota-onalar har hafta nima oladi",
-          body: "Mock test bali, bajarilgan mashqlar soni, zaif mavzular ro'yxati va keyingi 7 kunlik reja."
+          body: "Sinov testi bali, bajarilgan mashqlar soni, zaif mavzular ro'yxati va keyingi 7 kunlik reja."
         },
         {
           title: "Progress qanday kuzatiladi",
-          body: "Reading/Writing va Math ballari aniqlik, vaqt va takroriy xatolar bilan solishtiriladi."
+          body: "O'qish, yozish va matematika ballari aniqlik, vaqt va takroriy xatolar bilan solishtiriladi."
         },
         {
           title: "Zaif joylar qanday ko'rsatiladi",
-          body: "Ota-onalar transitions, evidence questions, algebra yoki advanced math kabi aniq zaif ko'nikmalarni ko'radi."
+          body: "Ota-onalar o'tish bog'lovchilari, dalilga asoslangan savollar, algebra yoki murakkab matematika kabi aniq zaif ko'nikmalarni ko'radi."
         },
         {
           title: "Ball o'sishini qachon kutish mumkin",
-          body: "Dastlabki o'zgarishlar 7-14 kunda ko'rinishi mumkin; katta o'sish uchun takroriy mock test sikllari kerak."
+          body: "Dastlabki o'zgarishlar 7-14 kunda ko'rinishi mumkin; katta o'sish uchun takroriy sinov testlari kerak."
         }
       ]
     },
@@ -833,11 +841,11 @@ const homeCopy: Record<
         },
         {
           question: "Pul qaytariladimi?",
-          answer: "Akkaunt faol ishlatilishidan oldin qaytarish alohida ko'rib chiqiladi. Mock test, hisobot yoki practice ishlatilgandan keyin to'lov odatda qaytarilmaydi."
+          answer: "Akkaunt faol ishlatilishidan oldin qaytarish alohida ko'rib chiqiladi. Sinov testi, hisobot yoki mashqlar ishlatilgandan keyin to'lov odatda qaytarilmaydi."
         },
         {
-          question: "Nechta mock test bor?",
-          answer: "Bepul reja diagnostik ko'rishni beradi. SATTEST Pro takroriy practice, analytics va My 1400+ yo'nalishi uchun qurilgan."
+          question: "Nechta sinov testi bor?",
+          answer: "Bepul reja diagnostik ko'rishni beradi. SATTEST Pro takroriy mashq, tahlil va My 1400+ yo'nalishi uchun qurilgan."
         },
         {
           question: "Bu rasmiy SAT saytimi?",
@@ -845,7 +853,7 @@ const homeCopy: Record<
         },
         {
           question: "O'qituvchi kerakmi?",
-          answer: "Mustaqil tayyorlanadigan o'quvchilar uchun Pro strukturali practice beradi. Shaxsiy tuzatish uchun Telegram orqali bog'lanish mumkin."
+          answer: "Mustaqil tayyorlanadigan o'quvchilar uchun Pro tartibli mashq beradi. Shaxsiy tuzatish uchun Telegram orqali bog'lanish mumkin."
         },
         {
           question: "To'lovdan keyin nima bo'ladi?",
@@ -853,7 +861,7 @@ const homeCopy: Record<
         },
         {
           question: "Ota-onalar progressni qanday kuzatadi?",
-          answer: "Ota-onalar mock test ballari, zaif mavzular, bajarilgan mashqlar va keyingi tuzatish rejasini ko'radi."
+          answer: "Ota-onalar sinov testi ballari, zaif mavzular, bajarilgan mashqlar va keyingi tuzatish rejasini ko'radi."
         }
       ]
     }
@@ -940,8 +948,12 @@ function TopScoreProofCard({
     rwLabel: string;
     mathLabel: string;
     proofLabel: string;
+    founderProofLabel: string;
+    studentProofLabel: string;
   };
 }) {
+  const kindLabel = proof.kind === "Founder proof" ? copy.founderProofLabel : copy.studentProofLabel;
+
   return (
     <article
       className="top-score-proof-section__card"
@@ -951,7 +963,7 @@ function TopScoreProofCard({
         <img src={proof.image} alt={`${proof.name} ${proof.score} SAT score report`} />
       </div>
       <div className="top-score-proof-section__cardCopy">
-        <span>{proof.kind}</span>
+        <span>{kindLabel}</span>
         <h3>{proof.name}</h3>
         <strong>{proof.score}</strong>
         <div>
@@ -1463,10 +1475,12 @@ export default function Home() {
               key={proof.name}
               proof={proof}
               copy={{
+                founderProofLabel: copy.topScores.founderProofLabel,
                 mathLabel: copy.topScores.mathLabel,
                 proofLabel: copy.topScores.proofLabel,
                 rwLabel: copy.topScores.rwLabel,
-                scoreLabel: copy.topScores.scoreLabel
+                scoreLabel: copy.topScores.scoreLabel,
+                studentProofLabel: copy.topScores.studentProofLabel
               }}
             />
           ))}
