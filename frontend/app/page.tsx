@@ -232,15 +232,6 @@ const homepageFaqs = [
 
 const topScoreProofs = [
   {
-    image: "/assets/results/doniyor-botirov-1590-sat.jpg",
-    name: "Doniyor Botirov",
-    score: "1590 SAT",
-    readingWriting: "790",
-    math: "800",
-    kind: "Founder proof",
-    accent: "#d7cc95"
-  },
-  {
     image: "/assets/results/top-sat/rakhmonov-shokhrukh-1580-sat.png",
     name: "Rakhmonov Shokhrukh",
     score: "1580 SAT",
@@ -266,15 +257,6 @@ const topScoreProofs = [
     math: "780",
     kind: "Student proof",
     accent: "#b7c5ff"
-  },
-  {
-    image: "/assets/results/bakhrom-botirov-1540-sat.jpg",
-    name: "Bakhrom Botirov",
-    score: "1540 SAT",
-    readingWriting: "760",
-    math: "780",
-    kind: "Founder proof",
-    accent: "#f0b6b6"
   },
   {
     image: "/assets/results/top-sat/karimov-aziz-1540-sat.png",
@@ -406,7 +388,6 @@ const homeCopy: Record<
       rwLabel: string;
       mathLabel: string;
       proofLabel: string;
-      founderProofLabel: string;
       studentProofLabel: string;
       reportsLine: string;
       cta: string;
@@ -485,16 +466,15 @@ const homeCopy: Record<
     },
     topScores: {
       eyebrow: "Top SAT score proof",
-      title: "1590 founder proof. 1580 student proof. Multiple 1500+ score reports.",
+      title: "1580 student proof. Multiple 1500+ student score reports.",
       body:
-        "This is the strongest selling signal for SATTEST.UZ: the founders have elite SAT scores, and students are now producing 1500+ verified score reports.",
+        "This is the strongest selling signal for SATTEST.UZ: real students are producing verified 1500+ SAT score reports.",
       highestLabel: "Highest proof",
-      founderLabel: "Founder standard",
+      founderLabel: "Student standard",
       scoreLabel: "Total score",
       rwLabel: "Reading/Writing",
       mathLabel: "Math",
       proofLabel: "Official score report",
-      founderProofLabel: "Founder proof",
       studentProofLabel: "Student proof",
       reportsLine: "8 student reports",
       cta: "Start free diagnostic"
@@ -615,16 +595,15 @@ const homeCopy: Record<
     },
     topScores: {
       eyebrow: "Доказательства топ SAT-баллов",
-      title: "1590 у основателя. 1580 у ученика. Несколько отчетов 1500+.",
+      title: "1580 у ученика. Несколько ученических отчетов 1500+.",
       body:
-        "Это главный сигнал доверия SATTEST.UZ: основатели имеют элитные SAT-баллы, а ученики уже показывают подтвержденные результаты 1500+.",
+        "Это главный сигнал доверия SATTEST.UZ: реальные ученики уже показывают подтвержденные результаты SAT 1500+.",
       highestLabel: "Высший результат",
-      founderLabel: "Стандарт основателей",
+      founderLabel: "Стандарт учеников",
       scoreLabel: "Общий балл",
       rwLabel: "Чтение и письмо",
       mathLabel: "Математика",
       proofLabel: "Официальный отчет",
-      founderProofLabel: "Доказательство основателя",
       studentProofLabel: "Доказательство ученика",
       reportsLine: "8 отчетов учеников",
       cta: "Начать диагностику"
@@ -778,16 +757,15 @@ const homeCopy: Record<
     },
     topScores: {
       eyebrow: "Eng yuqori SAT natija isbotlari",
-      title: "Asoschida 1590. O'quvchida 1580. Bir nechta 1500+ rasmiy hisobotlar.",
+      title: "O'quvchida 1580. Bir nechta 1500+ o'quvchi hisobotlari.",
       body:
-        "Bu SATTEST.UZ uchun eng kuchli ishonch dalili: asoschilar yuqori SAT natijalariga ega, o'quvchilar esa tasdiqlangan 1500+ natijalarni ko'rsatmoqda.",
+        "Bu SATTEST.UZ uchun eng kuchli ishonch dalili: real o'quvchilar tasdiqlangan 1500+ SAT natijalarini ko'rsatmoqda.",
       highestLabel: "Eng yuqori isbot",
-      founderLabel: "Asoschilar standarti",
+      founderLabel: "O'quvchilar standarti",
       scoreLabel: "Umumiy ball",
       rwLabel: "O'qish va yozish",
       mathLabel: "Matematika",
       proofLabel: "Rasmiy ball hisoboti",
-      founderProofLabel: "Asoschi isboti",
       studentProofLabel: "O'quvchi isboti",
       reportsLine: "8 ta o'quvchi hisoboti",
       cta: "Diagnostikani boshlash"
@@ -948,12 +926,9 @@ function TopScoreProofCard({
     rwLabel: string;
     mathLabel: string;
     proofLabel: string;
-    founderProofLabel: string;
     studentProofLabel: string;
   };
 }) {
-  const kindLabel = proof.kind === "Founder proof" ? copy.founderProofLabel : copy.studentProofLabel;
-
   return (
     <article
       className="top-score-proof-section__card"
@@ -963,7 +938,7 @@ function TopScoreProofCard({
         <img src={proof.image} alt={`${proof.name} ${proof.score} SAT score report`} />
       </div>
       <div className="top-score-proof-section__cardCopy">
-        <span>{kindLabel}</span>
+        <span>{copy.studentProofLabel}</span>
         <h3>{proof.name}</h3>
         <strong>{proof.score}</strong>
         <div>
@@ -1002,7 +977,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(() => !shouldSkipHomeIntro());
   const [showResultsWall, setShowResultsWall] = useState(false);
   const [activeResultVideo, setActiveResultVideo] = useState<StudentResult | null>(null);
-  const [activeFounderProof, setActiveFounderProof] = useState<"bakhrom" | "doniyor" | null>(null);
   const [isPlatformVideoMuted, setIsPlatformVideoMuted] = useState(true);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
@@ -1454,13 +1428,13 @@ export default function Home() {
         <div className="top-score-proof-section__stats" aria-label="SAT score proof highlights">
           <div>
             <span>{copy.topScores.highestLabel}</span>
-            <strong>1590</strong>
-            <p>Doniyor Botirov</p>
+            <strong>1580</strong>
+            <p>Rakhmonov Shokhrukh</p>
           </div>
           <div>
             <span>{copy.topScores.founderLabel}</span>
-            <strong>1540 / 1590</strong>
-            <p>Bakhrom + Doniyor</p>
+            <strong>1550+</strong>
+            <p>Saidov + Nurmatov</p>
           </div>
           <div>
             <span>{copy.topScores.scoreLabel}</span>
@@ -1475,7 +1449,6 @@ export default function Home() {
               key={proof.name}
               proof={proof}
               copy={{
-                founderProofLabel: copy.topScores.founderProofLabel,
                 mathLabel: copy.topScores.mathLabel,
                 proofLabel: copy.topScores.proofLabel,
                 rwLabel: copy.topScores.rwLabel,
@@ -1514,79 +1487,6 @@ export default function Home() {
               })}
             </div>
           ))}
-        </div>
-      </section>
-
-      <section className="founder-trust-section" aria-labelledby="founder-trust-title">
-        <div className="founder-trust-section__media">
-          <img
-            className="founder-trust-section__photo"
-            src="/assets/brand/botirov-brothers-richmond-school.jpg"
-            alt="Bakhrom Botirov and Doniyor Botirov at Richmond School"
-          />
-          <div className="founder-trust-section__score">
-            <span>Botirov Brothers SAT proof</span>
-            <strong>1540 / 1590</strong>
-            <p>Bakhrom Botirov 1540 · Doniyor Botirov 1590</p>
-          </div>
-        </div>
-
-        <div className="founder-trust-section__copy">
-          <p className="founder-trust-section__eyebrow">Founder trust</p>
-          <h2 id="founder-trust-title">SATTEST.UZ was initiated and crafted by the Botirov Brothers.</h2>
-          <p>
-            Particularly, Bakhrom Botirov is the founder and CEO of Richmond School, a CELTA and PGCEi
-            holder, a 1540 SAT scorer, and has been teaching since 2021. Doniyor Botirov is the founder
-            of Mr. Doniyor Learning Center and brings the same serious academic standard with a 1590 SAT result.
-          </p>
-
-          <div className="founder-trust-section__highlights">
-            <div>
-              <span>1540 SAT</span>
-              <strong>Bakhrom Botirov score proof</strong>
-            </div>
-            <div>
-              <span>1590 SAT</span>
-              <strong>Doniyor Botirov, founder of Mr. Doniyor Learning Center</strong>
-            </div>
-            <div>
-              <span>Since 2021</span>
-              <strong>Teaching experience</strong>
-            </div>
-            <div>
-              <span>CELTA + PGCEi</span>
-              <strong>International teacher qualifications</strong>
-            </div>
-          </div>
-
-          <div className="founder-trust-section__proof">
-            <button
-              className="founder-trust-section__certificate"
-              onClick={() => setActiveFounderProof("bakhrom")}
-              type="button"
-            >
-              <img src="/assets/results/bakhrom-botirov-1540-sat.jpg" alt="Bakhrom Botirov 1540 SAT score report" />
-              <span>Bakhrom 1540 SAT proof</span>
-            </button>
-            <button
-              className="founder-trust-section__certificate"
-              onClick={() => setActiveFounderProof("doniyor")}
-              type="button"
-            >
-              <img src="/assets/results/doniyor-botirov-1590-sat.jpg" alt="Doniyor Botirov 1590 SAT score report" />
-              <span>Doniyor 1590 SAT proof</span>
-            </button>
-            <div>
-              <strong>Why SATTEST.UZ exists</strong>
-              <p>
-                The platform was built so students do not waste months guessing what to study.
-                A diagnostic should show the exact weak skills, then turn them into daily repair work.
-              </p>
-              <Link href="https://t.me/FounderSATTESTUZ" target="_blank" rel="noreferrer">
-                Telegram: @FounderSATTESTUZ <ArrowRight size={16} />
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -1958,35 +1858,6 @@ export default function Home() {
         </div>
       ) : null}
 
-      {activeFounderProof ? (
-        <div
-          className="founder-proof-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-label={activeFounderProof === "bakhrom" ? "Bakhrom Botirov 1540 SAT score proof" : "Doniyor Botirov 1590 SAT score proof"}
-        >
-          <button
-            className="founder-proof-modal__backdrop"
-            onClick={() => setActiveFounderProof(null)}
-            type="button"
-            aria-label="Close founder SAT proof"
-          />
-          <div className="founder-proof-modal__dialog">
-            <button
-              className="founder-proof-modal__close"
-              onClick={() => setActiveFounderProof(null)}
-              type="button"
-              aria-label="Close founder SAT proof"
-            >
-              <X size={18} />
-            </button>
-            <img
-              src={activeFounderProof === "bakhrom" ? "/assets/results/bakhrom-botirov-1540-sat.jpg" : "/assets/results/doniyor-botirov-1590-sat.jpg"}
-              alt={activeFounderProof === "bakhrom" ? "Bakhrom Botirov 1540 SAT score report" : "Doniyor Botirov 1590 SAT score report"}
-            />
-          </div>
-        </div>
-      ) : null}
     </main>
   );
 }
