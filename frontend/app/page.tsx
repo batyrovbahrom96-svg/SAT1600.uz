@@ -977,6 +977,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(() => !shouldSkipHomeIntro());
   const [showResultsWall, setShowResultsWall] = useState(false);
   const [activeResultVideo, setActiveResultVideo] = useState<StudentResult | null>(null);
+  const [activeFounderProof, setActiveFounderProof] = useState<"bakhrom" | "doniyor" | null>(null);
   const [isPlatformVideoMuted, setIsPlatformVideoMuted] = useState(true);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
@@ -1460,6 +1461,80 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="founder-trust-section" aria-labelledby="founder-trust-title">
+        <div className="founder-trust-section__media">
+          <img
+            className="founder-trust-section__photo"
+            src="/assets/brand/botirov-brothers-richmond-school.jpg"
+            alt="Bakhrom Botirov and Doniyor Botirov, founders of SATTEST.UZ"
+          />
+          <div className="founder-trust-section__score">
+            <span>Founders of SATTEST.UZ</span>
+            <strong>1540 / 1590</strong>
+            <p>Bakhrom Botirov 1540 SAT · Doniyor Botirov 1590 SAT</p>
+          </div>
+        </div>
+
+        <div className="founder-trust-section__copy">
+          <p className="founder-trust-section__eyebrow">Founder proof</p>
+          <h2 id="founder-trust-title">SATTEST.UZ is founded by Bakhrom Botirov and Doniyor Botirov.</h2>
+          <p>
+            The platform is led by founders who have personally reached elite SAT results.
+            Bakhrom Botirov is the founder and CEO of Richmond School, a CELTA and PGCEi holder,
+            and a 1540 SAT scorer. Doniyor Botirov is the founder of Mr. Doniyor Learning Center
+            and brings a 1590 SAT result to the academic standard behind SATTEST.UZ.
+          </p>
+
+          <div className="founder-trust-section__highlights">
+            <div>
+              <span>Bakhrom Botirov</span>
+              <strong>Founder of SATTEST.UZ · 1540 SAT</strong>
+            </div>
+            <div>
+              <span>Doniyor Botirov</span>
+              <strong>Founder of SATTEST.UZ · 1590 SAT</strong>
+            </div>
+            <div>
+              <span>Richmond School</span>
+              <strong>Founder and CEO: Bakhrom Botirov</strong>
+            </div>
+            <div>
+              <span>Mr. Doniyor Learning Center</span>
+              <strong>Founder: Doniyor Botirov</strong>
+            </div>
+          </div>
+
+          <div className="founder-trust-section__proof">
+            <button
+              className="founder-trust-section__certificate"
+              onClick={() => setActiveFounderProof("bakhrom")}
+              type="button"
+            >
+              <img src="/assets/results/bakhrom-botirov-1540-sat.jpg" alt="Bakhrom Botirov 1540 SAT score report" />
+              <span>Bakhrom Botirov · 1540 SAT certificate</span>
+            </button>
+            <button
+              className="founder-trust-section__certificate"
+              onClick={() => setActiveFounderProof("doniyor")}
+              type="button"
+            >
+              <img src="/assets/results/doniyor-botirov-1590-sat.jpg" alt="Doniyor Botirov 1590 SAT score report" />
+              <span>Doniyor Botirov · 1590 SAT certificate</span>
+            </button>
+            <div>
+              <strong>Why this matters</strong>
+              <p>
+                SATTEST.UZ is not just a template website. It is built by SAT teachers and founders
+                whose own score reports show the standard they expect from the platform.
+              </p>
+              <Link href="https://t.me/FounderSATTESTUZ" target="_blank" rel="noreferrer">
+                Telegram: @FounderSATTESTUZ <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="student-testimonials-section" aria-labelledby="student-testimonials-title">
         <div className="student-testimonials-section__intro">
           <p>{copy.testimonials.eyebrow}</p>
@@ -1854,6 +1929,48 @@ export default function Home() {
                 );
               })()}
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {activeFounderProof ? (
+        <div
+          className="founder-proof-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label={
+            activeFounderProof === "bakhrom"
+              ? "Bakhrom Botirov 1540 SAT score proof"
+              : "Doniyor Botirov 1590 SAT score proof"
+          }
+        >
+          <button
+            className="founder-proof-modal__backdrop"
+            onClick={() => setActiveFounderProof(null)}
+            type="button"
+            aria-label="Close founder SAT proof"
+          />
+          <div className="founder-proof-modal__dialog">
+            <button
+              className="founder-proof-modal__close"
+              onClick={() => setActiveFounderProof(null)}
+              type="button"
+              aria-label="Close founder SAT proof"
+            >
+              <X size={18} />
+            </button>
+            <img
+              src={
+                activeFounderProof === "bakhrom"
+                  ? "/assets/results/bakhrom-botirov-1540-sat.jpg"
+                  : "/assets/results/doniyor-botirov-1590-sat.jpg"
+              }
+              alt={
+                activeFounderProof === "bakhrom"
+                  ? "Bakhrom Botirov 1540 SAT score report"
+                  : "Doniyor Botirov 1590 SAT score report"
+              }
+            />
           </div>
         </div>
       ) : null}
