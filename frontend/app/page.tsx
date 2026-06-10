@@ -1343,11 +1343,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <img
-              className="sat-count-loader__brand"
-              src="/assets/brand/sattest-wordmark.png"
-              alt="SATTEST.UZ"
-            />
+            <div className="sat-count-loader__brand" role="img" aria-label="SATTEST.UZ" />
           )}
         </div>
       ) : null}
