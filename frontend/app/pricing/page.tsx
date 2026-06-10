@@ -91,7 +91,7 @@ const pricingCopy: Record<
       paymentLabel: "For parents",
       paymentTitle: "Instant Pro access",
       paymentBody:
-        "Pay by Click, Payme, Paynet, card, or transfer. Send the receipt to the Telegram bot with your registered email, and the bot activates Pro instantly for 30 days.",
+        "Pay by Click, Payme, Paynet, card, or transfer. Send the receipt to the Telegram bot with your registered email. Pro access opens automatically via Telegram bot — usually within 60 seconds.",
       steps: ["Pay", "Bot activates instantly", "Start"],
       stepLabel: "Step"
     },
@@ -127,7 +127,7 @@ const pricingCopy: Record<
     },
     funnel: {
       eyebrow: "Main funnel",
-      title: "Pay by Click, Payme, Paynet, card, or transfer. The bot activates Pro instantly. Start practicing.",
+      title: "Pay by Click, Payme, Paynet, card, or transfer. Pro access opens automatically via Telegram bot — usually within 60 seconds.",
       cta: "Choose Pro"
     },
     modal: {
@@ -138,12 +138,12 @@ const pricingCopy: Record<
       ready: "Ready",
       payTitle: "Pay by any method",
       payBody:
-        "Pay by Click, Payme, Paynet, card, or transfer. Send the receipt to the SATTEST.UZ bot with your registered email and Pro opens instantly.",
+        "Pay by Click, Payme, Paynet, card, or transfer. Send the receipt to the SATTEST.UZ bot with your registered email. Pro access opens automatically via Telegram bot — usually within 60 seconds.",
       qrAlt: "Paynet payment QR code",
       instructions: [
         "Pay for SATTEST Pro by Paynet QR, Click, Payme, card, or transfer.",
         "Open the bot and send the receipt with caption: your-email@example.com pro.",
-        "The bot activates Pro instantly for 30 days. Start practice."
+        "Pro access opens automatically via Telegram bot — usually within 60 seconds. Start practice."
       ],
       receiptCta: "Send receipt to bot",
       note: "Fake receipts lead to account ban. Receipts are checked against payment records and Pro can be revoked."
@@ -157,7 +157,7 @@ const pricingCopy: Record<
       paymentLabel: "Для родителей",
       paymentTitle: "Мгновенный доступ Pro",
       paymentBody:
-        "Оплатите через Click, Payme, Paynet, карту или перевод. Отправьте чек в Telegram-бот вместе с email регистрации, и бот мгновенно активирует Pro на 30 дней.",
+        "Оплатите через Click, Payme, Paynet, карту или перевод. Отправьте чек в Telegram-бот вместе с email регистрации. Доступ Pro открывается автоматически через Telegram-бота — обычно в течение 60 секунд.",
       steps: ["Оплатить", "Бот мгновенно активирует", "Начать"],
       stepLabel: "Шаг"
     },
@@ -193,7 +193,7 @@ const pricingCopy: Record<
     },
     funnel: {
       eyebrow: "Основной путь",
-      title: "Оплатите через Click, Payme, Paynet, карту или перевод. Бот мгновенно активирует Pro. Начните практику.",
+      title: "Оплатите через Click, Payme, Paynet, карту или перевод. Доступ Pro открывается автоматически через Telegram-бота — обычно в течение 60 секунд.",
       cta: "Выбрать Pro"
     },
     modal: {
@@ -203,12 +203,12 @@ const pricingCopy: Record<
       status: "Статус",
       ready: "Готов",
       payTitle: "Оплата любым способом",
-      payBody: "Оплатите через Click, Payme, Paynet, карту или перевод. Отправьте чек в бот SATTEST.UZ вместе с email регистрации, и Pro откроется мгновенно.",
+      payBody: "Оплатите через Click, Payme, Paynet, карту или перевод. Отправьте чек в бот SATTEST.UZ вместе с email регистрации. Доступ Pro открывается автоматически через Telegram-бота — обычно в течение 60 секунд.",
       qrAlt: "QR-код оплаты Paynet",
       instructions: [
         "Оплатите SATTEST Pro через Paynet QR, Click, Payme, карту или перевод.",
         "Откройте бот и отправьте чек с подписью: your-email@example.com pro.",
-        "Бот мгновенно активирует Pro на 30 дней. Начните практику."
+        "Доступ Pro открывается автоматически через Telegram-бота — обычно в течение 60 секунд. Начните практику."
       ],
       receiptCta: "Отправить чек в бот",
       note: "Фальшивый чек приводит к бану аккаунта. Чеки сверяются с платежными записями, а Pro может быть отозван."
@@ -222,7 +222,7 @@ const pricingCopy: Record<
       paymentLabel: "Ota-onalar uchun",
       paymentTitle: "Pro darhol ochiladi",
       paymentBody:
-        "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring, bot Pro'ni 30 kunga darhol faollashtiradi.",
+        "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring. Pro kirish Telegram bot orqali avtomatik ochiladi — odatda 60 soniya ichida.",
       steps: ["To'lash", "Bot darhol faollashtiradi", "Boshlash"],
       stepLabel: "Qadam"
     },
@@ -258,7 +258,7 @@ const pricingCopy: Record<
     },
     funnel: {
       eyebrow: "Asosiy yo'l",
-      title: "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Bot Pro'ni darhol faollashtiradi. Mashqni boshlang.",
+      title: "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Pro kirish Telegram bot orqali avtomatik ochiladi — odatda 60 soniya ichida.",
       cta: "Pro tanlash"
     },
     modal: {
@@ -268,12 +268,12 @@ const pricingCopy: Record<
       status: "Holat",
       ready: "Tayyor",
       payTitle: "Istalgan usulda to'lash",
-      payBody: "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Chekni ro'yxatdan o'tgan email bilan SATTEST.UZ botga yuboring, Pro darhol ochiladi.",
+      payBody: "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Chekni ro'yxatdan o'tgan email bilan SATTEST.UZ botga yuboring. Pro kirish Telegram bot orqali avtomatik ochiladi — odatda 60 soniya ichida.",
       qrAlt: "Paynet to'lov QR kodi",
       instructions: [
         "SATTEST Pro uchun Paynet QR, Click, Payme, karta yoki o'tkazma orqali to'lang.",
         "Botni oching va chekni quyidagi izoh bilan yuboring: your-email@example.com pro.",
-        "Bot Pro'ni 30 kunga darhol faollashtiradi. Mashqni boshlang."
+        "Pro kirish Telegram bot orqali avtomatik ochiladi — odatda 60 soniya ichida. Mashqni boshlang."
       ],
       receiptCta: "Chekni botga yuborish",
       note: "Soxta chek akkaunt bloklanishiga olib keladi. Cheklar to'lov yozuvlari bilan solishtiriladi va Pro bekor qilinishi mumkin."

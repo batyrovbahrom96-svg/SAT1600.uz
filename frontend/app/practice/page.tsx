@@ -533,7 +533,7 @@ export default function PracticeAccessPage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-50/62">Full practice locked</p>
               </div>
               <p className="mt-3 max-w-2xl text-sm font-light leading-6 text-white/58">
-                After payment, the Telegram bot activates Pro instantly. Refresh to open the unlocked practice dashboard.
+                Pro access opens automatically via Telegram bot — usually within 60 seconds. Refresh to open the unlocked practice dashboard.
               </p>
             </div>
             <Link className="mt-5 flex h-13 min-w-[220px] items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white md:mt-0" href="/pricing?plan=pro">
