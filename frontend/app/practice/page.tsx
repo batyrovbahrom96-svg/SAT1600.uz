@@ -222,12 +222,48 @@ function ProgressTable({ table }: { table: (typeof progressTables)[number] }) {
   );
 }
 
+function PracticeHeroPreview() {
+  const question = sampleQuestions[0];
+
+  return (
+    <div className="border border-white/10 bg-white/[0.035] p-5">
+      <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
+        <BookOpenText size={22} />
+      </div>
+      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.34em] text-white/38">Live preview</p>
+      <h2 className="mt-3 text-2xl font-light text-white">{question.title}</h2>
+      <p className="mt-3 text-sm font-light leading-6 text-white/58">{question.prompt}</p>
+      <div className="mt-4 grid gap-2">
+        {question.options.slice(0, 2).map((option, index) => (
+          <div
+            className={[
+              "border px-3 py-3 text-sm leading-5",
+              index === question.correctIndex
+                ? "border-emerald-300/35 bg-emerald-300/10 text-white"
+                : "border-white/10 bg-black/20 text-white/48"
+            ].join(" ")}
+            key={option}
+          >
+            {option}
+          </div>
+        ))}
+      </div>
+      <Link
+        className="mt-5 flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
+        href="#sample-practice-preview"
+      >
+        Try sample questions <ArrowRight size={18} />
+      </Link>
+    </div>
+  );
+}
+
 function SamplePracticePreview({ isUnlocked = false }: { isUnlocked?: boolean }) {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const answeredCount = Object.keys(answers).length;
 
   return (
-    <section className="mt-10 border border-white/10 bg-white/[0.035] p-5 md:p-6">
+    <section id="sample-practice-preview" className="mt-10 scroll-mt-28 border border-white/10 bg-white/[0.035] p-5 md:p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Try 3 real samples</p>
@@ -485,21 +521,25 @@ export default function PracticeAccessPage() {
               </p>
             </div>
 
-            <div className="border border-emerald-300/25 bg-emerald-300/[0.06] p-5">
-              <div className="flex h-12 w-12 items-center justify-center border border-emerald-300/20 bg-black/20 text-emerald-100">
-                <LockKeyhole size={22} />
-              </div>
-              <h2 className="mt-5 text-2xl font-light text-white">Payment required</h2>
-              <p className="mt-3 text-sm font-light leading-6 text-white/58">
-                After payment, the Telegram bot activates Pro instantly. Refresh to open the unlocked practice dashboard.
-              </p>
-              <Link className="mt-5 flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro">
-                Unlock Pro <ArrowRight size={18} />
-              </Link>
-            </div>
+            <PracticeHeroPreview />
           </div>
 
           <SamplePracticePreview />
+
+          <div className="mt-5 border border-emerald-300/25 bg-emerald-300/[0.06] p-5 md:flex md:items-center md:justify-between md:gap-6">
+            <div>
+              <div className="flex items-center gap-3">
+                <LockKeyhole size={18} className="text-emerald-100" />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-50/62">Full practice locked</p>
+              </div>
+              <p className="mt-3 max-w-2xl text-sm font-light leading-6 text-white/58">
+                After payment, the Telegram bot activates Pro instantly. Refresh to open the unlocked practice dashboard.
+              </p>
+            </div>
+            <Link className="mt-5 flex h-13 min-w-[220px] items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white md:mt-0" href="/pricing?plan=pro">
+              Unlock Pro <ArrowRight size={18} />
+            </Link>
+          </div>
         </section>
       </main>
     );
@@ -521,23 +561,24 @@ export default function PracticeAccessPage() {
             </p>
           </div>
 
-          <div className="border border-white/10 bg-white/[0.035] p-5">
-            <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
-              <LockKeyhole size={22} />
-            </div>
-            <h2 className="mt-5 text-2xl font-light text-white">Save your real progress</h2>
-            <p className="mt-3 text-sm font-light leading-6 text-white/48">
+          <PracticeHeroPreview />
+        </div>
+
+        <SamplePracticePreview />
+
+        <div className="mt-5 grid gap-3 border border-white/10 bg-white/[0.035] p-5 md:grid-cols-[1fr_auto_auto] md:items-center">
+          <div>
+            <h2 className="text-2xl font-light text-white">Save your real progress</h2>
+            <p className="mt-2 text-sm font-light leading-6 text-white/48">
               This preview is public. Create an account when you are ready for saved drills, score history, and a personal weakness route.
             </p>
-            <div className="mt-5 grid gap-3">
-              <Link className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing">
-                Choose plan <ArrowRight size={18} />
-              </Link>
-              <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/mock-test">
-                Start free diagnostic <UserPlus size={18} />
-              </Link>
-            </div>
           </div>
+          <Link className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing">
+            Choose plan <ArrowRight size={18} />
+          </Link>
+          <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/mock-test">
+            Free diagnostic <UserPlus size={18} />
+          </Link>
         </div>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-3">
@@ -555,8 +596,6 @@ export default function PracticeAccessPage() {
             );
           })}
         </div>
-
-        <SamplePracticePreview />
 
         <section className="mt-14 border-t border-white/10 pt-10">
           <div className="max-w-4xl">
