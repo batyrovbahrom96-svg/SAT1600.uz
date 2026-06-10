@@ -198,7 +198,7 @@ const studentResultCopy: Record<
 const homepageFaqs = [
   {
     question: "When do I get access?",
-    answer: "After payment, send your receipt in Telegram. Your account is activated manually after the payment is checked."
+    answer: "Pay, send the receipt to the Telegram bot with your registered email, and Pro activates instantly for 30 days."
   },
   {
     question: "Can I cancel?",
@@ -222,7 +222,7 @@ const homepageFaqs = [
   },
   {
     question: "What happens after I pay?",
-    answer: "You scan the Paynet QR or pay by Click, Payme, card, or transfer. Then send the receipt to the Telegram bot with the same email used during registration."
+    answer: "You pay by Paynet QR, Click, Payme, card, or transfer. The Telegram bot receives your receipt and opens Pro instantly."
   },
   {
     question: "How do parents track progress?",
@@ -524,10 +524,10 @@ const homeCopy: Record<
     faq: {
       eyebrow: "Pricing FAQ",
       title: "Clear answers before a parent pays.",
-      body: "The payment process is simple for now: pay by QR, send the receipt, and get access after confirmation. These are the questions students and parents usually ask first.",
+      body: "The payment process is simple: pay, send the receipt to the bot, and start after instant activation. These are the questions students and parents usually ask first.",
       paymentLabel: "Payment instruction",
       paymentBody:
-        "After payment, send the receipt to the Telegram bot with the email used during registration. Pro access opens after confirmation.",
+        "Pay by QR, Click, Payme, card, or transfer. Send the receipt to the Telegram bot with the email used during registration, and Pro opens instantly.",
       cta: "Choose plan",
       items: homepageFaqs
     },
@@ -665,15 +665,15 @@ const homeCopy: Record<
     faq: {
       eyebrow: "Вопросы по оплате",
       title: "Понятные ответы до оплаты.",
-      body: "Процесс оплаты простой: оплатите по QR или другим способом, отправьте чек и получите доступ после подтверждения.",
+      body: "Процесс оплаты простой: оплатите, отправьте чек в бот и начните после мгновенной активации.",
       paymentLabel: "Инструкция по оплате",
       paymentBody:
-        "После оплаты отправьте чек в Telegram-бот вместе с email, указанным при регистрации. После подтверждения откроется доступ Pro.",
+        "Оплатите по QR, через Click, Payme, карту или перевод. Отправьте чек в Telegram-бот вместе с email регистрации, и Pro откроется мгновенно.",
       cta: "Выбрать план",
       items: [
         {
           question: "Когда я получу доступ?",
-          answer: "После оплаты отправьте чек в Telegram. Аккаунт активируется вручную после проверки платежа."
+          answer: "Оплатите, отправьте чек в Telegram-бот вместе с email регистрации, и Pro активируется мгновенно на 30 дней."
         },
         {
           question: "Можно ли отменить подписку?",
@@ -697,7 +697,7 @@ const homeCopy: Record<
         },
         {
           question: "Что происходит после оплаты?",
-          answer: "Вы оплачиваете через Paynet QR или другим способом, затем отправляете чек в Telegram-бот с email регистрации."
+          answer: "Вы оплачиваете через Paynet QR, Click, Payme, карту или перевод. Telegram-бот получает чек и мгновенно открывает Pro."
         },
         {
           question: "Как родители отслеживают прогресс?",
@@ -839,15 +839,15 @@ const homeCopy: Record<
     faq: {
       eyebrow: "To'lov bo'yicha savollar",
       title: "Ota-ona to'lov qilishidan oldin aniq javoblar.",
-      body: "To'lov jarayoni hozircha oddiy: QR orqali to'lang, chekni yuboring va tasdiqlangandan keyin kirish ochiladi.",
+      body: "To'lov jarayoni oddiy: to'lang, chekni botga yuboring va darhol faollashgandan keyin boshlang.",
       paymentLabel: "To'lov yo'riqnomasi",
       paymentBody:
-        "To'lovdan keyin chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring. Tasdiqlangandan keyin Pro kirish ochiladi.",
+        "QR, Click, Payme, karta yoki o'tkazma orqali to'lang. Chekni ro'yxatdan o'tgan email bilan Telegram botga yuboring, Pro darhol ochiladi.",
       cta: "Rejani tanlash",
       items: [
         {
           question: "Kirish qachon ochiladi?",
-          answer: "To'lovdan keyin chekni Telegramga yuboring. To'lov tekshirilgandan so'ng akkaunt qo'lda faollashtiriladi."
+          answer: "To'lang, chekni ro'yxatdan o'tgan email bilan Telegram botga yuboring, Pro 30 kunga darhol faollashadi."
         },
         {
           question: "Bekor qilsam bo'ladimi?",
@@ -871,7 +871,7 @@ const homeCopy: Record<
         },
         {
           question: "To'lovdan keyin nima bo'ladi?",
-          answer: "Paynet QR yoki boshqa usul orqali to'laysiz, keyin chekni ro'yxatdan o'tgan email bilan Telegram botga yuborasiz."
+          answer: "Paynet QR, Click, Payme, karta yoki o'tkazma orqali to'laysiz. Telegram bot chekni oladi va Pro'ni darhol ochadi."
         },
         {
           question: "Ota-onalar progressni qanday kuzatadi?",

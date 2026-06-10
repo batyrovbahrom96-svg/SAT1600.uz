@@ -491,7 +491,7 @@ export default function PracticeAccessPage() {
               </div>
               <h2 className="mt-5 text-2xl font-light text-white">Payment required</h2>
               <p className="mt-3 text-sm font-light leading-6 text-white/58">
-                After payment approval, this page switches to the unlocked practice dashboard automatically on refresh.
+                After payment, the Telegram bot activates Pro instantly. Refresh to open the unlocked practice dashboard.
               </p>
               <Link className="mt-5 flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro">
                 Unlock Pro <ArrowRight size={18} />

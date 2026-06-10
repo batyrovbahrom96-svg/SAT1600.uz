@@ -7,7 +7,6 @@ import { ArrowRight, Check, Sparkles, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { useLanguage, type Language } from "@/lib/i18n";
 
-const telegramDisplayName = "@FounderSATTESTUZ";
 const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
 const paynetQrPayload =
   "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
@@ -90,10 +89,10 @@ const pricingCopy: Record<
       title: "Tariffs and prices for serious SAT improvement.",
       body: "Choose a plan when you are ready to unlock practice, analytics, and My 1400+. If you are unsure, take the free diagnostic first.",
       paymentLabel: "For parents",
-      paymentTitle: "Short payment note",
+      paymentTitle: "Instant Pro access",
       paymentBody:
-        "Payment can be made through Click, Payme, Paynet, card, or transfer. Send the receipt to the Telegram bot with the email used during registration. The bot activates Pro automatically for 30 days.",
-      steps: ["Choose plan", "Pay any method", "Send receipt to bot", "Bot activates Pro", "Start practice"],
+        "Pay by Click, Payme, Paynet, card, or transfer. Send the receipt to the Telegram bot with your registered email, and the bot activates Pro instantly for 30 days.",
+      steps: ["Pay", "Bot activates instantly", "Start"],
       stepLabel: "Step"
     },
     plans: {
@@ -128,7 +127,7 @@ const pricingCopy: Record<
     },
     funnel: {
       eyebrow: "Main funnel",
-      title: "Ready to continue? Choose Pro, pay by Click, Payme, Paynet, card, or transfer, then activate through Telegram.",
+      title: "Pay by Click, Payme, Paynet, card, or transfer. The bot activates Pro instantly. Start practicing.",
       cta: "Choose Pro"
     },
     modal: {
@@ -139,16 +138,15 @@ const pricingCopy: Record<
       ready: "Ready",
       payTitle: "Pay by any method",
       payBody:
-        "Pay by Click, Payme, Paynet, card, or transfer. Then send your receipt to the SATTEST.UZ bot and Pro opens automatically.",
+        "Pay by Click, Payme, Paynet, card, or transfer. Send the receipt to the SATTEST.UZ bot with your registered email and Pro opens instantly.",
       qrAlt: "Paynet payment QR code",
       instructions: [
-        "Use this Paynet QR or pay by Click, Payme, card, or transfer.",
-        "Complete payment for SATTEST Pro.",
-        "Open the bot and send receipt with caption: your-email@example.com pro.",
-        "The bot activates Pro for 30 days immediately after receiving the receipt."
+        "Pay for SATTEST Pro by Paynet QR, Click, Payme, card, or transfer.",
+        "Open the bot and send the receipt with caption: your-email@example.com pro.",
+        "The bot activates Pro instantly for 30 days. Start practice."
       ],
       receiptCta: "Send receipt to bot",
-      note: `The bot still notifies ${telegramDisplayName} for records while Pro opens automatically.`
+      note: "Fake receipts lead to account ban. Receipts are checked against payment records and Pro can be revoked."
     }
   },
   ru: {
@@ -157,10 +155,10 @@ const pricingCopy: Record<
       title: "Тарифы для серьезного роста результата SAT.",
       body: "Выберите план, когда будете готовы открыть практику, аналитику и маршрут My 1400+. Если сомневаетесь, сначала пройдите бесплатную диагностику.",
       paymentLabel: "Для родителей",
-      paymentTitle: "Кратко об оплате",
+      paymentTitle: "Мгновенный доступ Pro",
       paymentBody:
-        "Оплату можно сделать через Click, Payme, Paynet, карту или перевод. Отправьте чек в Telegram-бот вместе с email, указанным при регистрации. Бот автоматически откроет Pro на 30 дней.",
-      steps: ["Выбрать план", "Оплатить удобным способом", "Отправить чек в бот", "Бот открывает Pro", "Начать практику"],
+        "Оплатите через Click, Payme, Paynet, карту или перевод. Отправьте чек в Telegram-бот вместе с email регистрации, и бот мгновенно активирует Pro на 30 дней.",
+      steps: ["Оплатить", "Бот мгновенно активирует", "Начать"],
       stepLabel: "Шаг"
     },
     plans: {
@@ -195,7 +193,7 @@ const pricingCopy: Record<
     },
     funnel: {
       eyebrow: "Основной путь",
-      title: "Готовы продолжить? Выберите Pro, оплатите через Click, Payme, Paynet, карту или перевод, затем активируйте доступ через Telegram.",
+      title: "Оплатите через Click, Payme, Paynet, карту или перевод. Бот мгновенно активирует Pro. Начните практику.",
       cta: "Выбрать Pro"
     },
     modal: {
@@ -205,16 +203,15 @@ const pricingCopy: Record<
       status: "Статус",
       ready: "Готов",
       payTitle: "Оплата любым способом",
-      payBody: "Оплатите через Click, Payme, Paynet, карту или перевод. Затем отправьте чек в бот SATTEST.UZ, и Pro откроется автоматически.",
+      payBody: "Оплатите через Click, Payme, Paynet, карту или перевод. Отправьте чек в бот SATTEST.UZ вместе с email регистрации, и Pro откроется мгновенно.",
       qrAlt: "QR-код оплаты Paynet",
       instructions: [
-        "Используйте этот Paynet QR или оплатите через Click, Payme, карту либо перевод.",
-        "Оплатите тариф SATTEST Pro.",
+        "Оплатите SATTEST Pro через Paynet QR, Click, Payme, карту или перевод.",
         "Откройте бот и отправьте чек с подписью: your-email@example.com pro.",
-        "Бот сразу активирует Pro на 30 дней после получения чека."
+        "Бот мгновенно активирует Pro на 30 дней. Начните практику."
       ],
       receiptCta: "Отправить чек в бот",
-      note: `Бот уведомит ${telegramDisplayName} для учета, а Pro откроется автоматически.`
+      note: "Фальшивый чек приводит к бану аккаунта. Чеки сверяются с платежными записями, а Pro может быть отозван."
     }
   },
   uz: {
@@ -223,10 +220,10 @@ const pricingCopy: Record<
       title: "Jiddiy SAT o'sishi uchun tariflar va narxlar.",
       body: "Mashqlar, tahlil va My 1400+ yo'nalishini ochishga tayyor bo'lsangiz, rejani tanlang. Ishonchingiz komil bo'lmasa, avval bepul diagnostikadan o'ting.",
       paymentLabel: "Ota-onalar uchun",
-      paymentTitle: "Qisqa to'lov izohi",
+      paymentTitle: "Pro darhol ochiladi",
       paymentBody:
-        "To'lov Click, Payme, Paynet, karta yoki o'tkazma orqali qilinadi. Chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring. Bot Pro kirishni 30 kunga avtomatik ochadi.",
-      steps: ["Rejani tanlash", "Istalgan usulda to'lash", "Chekni botga yuborish", "Bot Pro ochadi", "Mashqni boshlash"],
+        "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Chekni Telegram botga ro'yxatdan o'tgan email bilan yuboring, bot Pro'ni 30 kunga darhol faollashtiradi.",
+      steps: ["To'lash", "Bot darhol faollashtiradi", "Boshlash"],
       stepLabel: "Qadam"
     },
     plans: {
@@ -261,7 +258,7 @@ const pricingCopy: Record<
     },
     funnel: {
       eyebrow: "Asosiy yo'l",
-      title: "Davom etishga tayyormisiz? Pro'ni tanlang, Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang, keyin Telegram orqali faollashtiring.",
+      title: "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Bot Pro'ni darhol faollashtiradi. Mashqni boshlang.",
       cta: "Pro tanlash"
     },
     modal: {
@@ -271,16 +268,15 @@ const pricingCopy: Record<
       status: "Holat",
       ready: "Tayyor",
       payTitle: "Istalgan usulda to'lash",
-      payBody: "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Keyin chekni SATTEST.UZ botga yuboring, Pro avtomatik ochiladi.",
+      payBody: "Click, Payme, Paynet, karta yoki o'tkazma orqali to'lang. Chekni ro'yxatdan o'tgan email bilan SATTEST.UZ botga yuboring, Pro darhol ochiladi.",
       qrAlt: "Paynet to'lov QR kodi",
       instructions: [
-        "Ushbu Paynet QR'dan foydalaning yoki Click, Payme, karta yoxud o'tkazma orqali to'lang.",
-        "SATTEST Pro uchun to'lovni yakunlang.",
+        "SATTEST Pro uchun Paynet QR, Click, Payme, karta yoki o'tkazma orqali to'lang.",
         "Botni oching va chekni quyidagi izoh bilan yuboring: your-email@example.com pro.",
-        "Bot chekni olgandan keyin Pro kirishni 30 kunga darhol faollashtiradi."
+        "Bot Pro'ni 30 kunga darhol faollashtiradi. Mashqni boshlang."
       ],
       receiptCta: "Chekni botga yuborish",
-      note: `Bot ${telegramDisplayName} ga hisob uchun xabar beradi, Pro esa avtomatik ochiladi.`
+      note: "Soxta chek akkaunt bloklanishiga olib keladi. Cheklar to'lov yozuvlari bilan solishtiriladi va Pro bekor qilinishi mumkin."
     }
   }
 };
@@ -468,7 +464,7 @@ export default function PricingPage() {
               <p className="mt-2 text-sm font-light leading-6 text-white/58">{copy.hero.paymentBody}</p>
             </div>
           </div>
-          <div className="mt-8 grid gap-2 sm:grid-cols-5">
+          <div className="mt-8 grid gap-2 sm:grid-cols-3">
             {copy.hero.steps.map((step, index) => (
               <div className="border border-white/10 bg-black/25 p-3" key={step}>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{copy.hero.stepLabel} {index + 1}</p>
