@@ -1440,7 +1440,6 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   pointer-events: none;
 }
 
-.sat-count-loader--intro::before,
 .sat-count-loader.is-exiting::before {
   opacity: 0;
 }
@@ -1498,21 +1497,6 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   );
 }
 
-.sat-count-loader__intro {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  background: #1a1b1c;
-  transform: scale(1);
-  filter: brightness(1);
-  animation: satLoaderIntroIn 0.45s cubic-bezier(0.43, 0, 0.06, 1) both;
-  transition:
-    transform 0.55s cubic-bezier(0.43, 0, 0.06, 1),
-    filter 0.5s cubic-bezier(0.43, 0, 0.06, 1);
-}
-
 .sat-count-loader__brand {
   position: relative;
   z-index: 1;
@@ -1529,9 +1513,12 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   will-change: opacity, transform, filter;
 }
 
-.sat-count-loader.is-exiting .sat-count-loader__intro {
+.sat-count-loader.is-exiting .sat-count-loader__brand {
   transform: scale(1.025);
-  filter: brightness(0.78);
+  filter:
+    brightness(0.78)
+    contrast(1.12)
+    drop-shadow(0 0 18px rgba(255, 255, 255, 0.18));
 }
 
 .sat-count-loader__number {
@@ -1789,10 +1776,6 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   .sat-count-loader__brand {
     width: min(58vw, 220px);
     animation-duration: 3.4s;
-  }
-
-  .sat-count-loader__intro {
-    animation-duration: 0.75s;
   }
 
   .sat-count-loader__number--previous:not(.is-hidden) .sat-count-loader__digit,

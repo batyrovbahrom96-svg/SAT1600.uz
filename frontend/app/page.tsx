@@ -1045,7 +1045,7 @@ export default function Home() {
     current: loadingSequence[0],
     step: 0
   });
-  const [loadingStage, setLoadingStage] = useState<"numbers" | "brand" | "intro">("numbers");
+  const [loadingStage, setLoadingStage] = useState<"numbers" | "brand">("numbers");
   const [isLoaderExiting, setIsLoaderExiting] = useState(false);
   const [isLoading, setIsLoading] = useState(() => !shouldSkipHomeIntro());
   const [showResultsWall, setShowResultsWall] = useState(false);
@@ -1057,7 +1057,6 @@ export default function Home() {
   const activeRef = useRef(active);
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
-  const introVideoRef = useRef<HTMLVideoElement | null>(null);
   const platformVideoRef = useRef<HTMLVideoElement | null>(null);
   const platformVideoWrapRef = useRef<HTMLDivElement | null>(null);
   const resultsCardsRef = useRef<HTMLDivElement | null>(null);
@@ -1138,28 +1137,13 @@ export default function Home() {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
       }, compactIntro ? 2700 : 4500),
       window.setTimeout(() => setLoadingStage("brand"), compactIntro ? 3600 : 6000),
-      window.setTimeout(() => setLoadingStage("intro"), compactIntro ? 7200 : 10800)
+      window.setTimeout(() => finishLoading(), compactIntro ? 7200 : 10800)
     ];
 
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
     };
   }, [finishLoading, isLoading]);
-
-  useEffect(() => {
-    if (loadingStage !== "intro") {
-      return undefined;
-    }
-
-    const video = introVideoRef.current;
-    video?.play().catch(() => undefined);
-
-    const fallbackTimer = window.setTimeout(() => {
-      finishLoading();
-    }, shouldUseFastHomeIntro() ? 2800 : 4500);
-
-    return () => window.clearTimeout(fallbackTimer);
-  }, [finishLoading, loadingStage]);
 
   useEffect(() => {
     const previousOverflowX = document.body.style.overflowX;
@@ -1358,22 +1342,11 @@ export default function Home() {
                 ))}
               </div>
             </div>
-          ) : loadingStage === "brand" ? (
+          ) : (
             <img
               className="sat-count-loader__brand"
               src="/assets/brand/sattest-intro-logo.png"
               alt="SATTEST.UZ"
-            />
-          ) : (
-            <video
-              className="sat-count-loader__intro"
-              ref={introVideoRef}
-              src="/assets/video/intro.mp4"
-              autoPlay
-              muted
-              playsInline
-              preload="metadata"
-              onEnded={finishLoading}
             />
           )}
         </div>
