@@ -1138,7 +1138,7 @@ export default function Home() {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
       }, compactIntro ? 2700 : 4500),
       window.setTimeout(() => setLoadingStage("brand"), compactIntro ? 3600 : 6000),
-      window.setTimeout(() => setLoadingStage("intro"), compactIntro ? 5300 : 8500)
+      window.setTimeout(() => setLoadingStage("intro"), compactIntro ? 7200 : 10800)
     ];
 
     return () => {

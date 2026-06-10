@@ -1436,7 +1436,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.2), transparent 22%),
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.07), transparent 40%);
   opacity: 0;
-  animation: satLoaderBrandHalo 1.8s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderBrandHalo 4.3s cubic-bezier(0.43, 0, 0.06, 1) both;
   pointer-events: none;
 }
 
@@ -1459,7 +1459,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     );
   opacity: 0;
   transform: translate3d(-72%, -54%, 0) rotate(0.001deg);
-  animation: satLoaderBrandSweep 1.8s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderBrandSweep 4.3s cubic-bezier(0.43, 0, 0.06, 1) both;
   mix-blend-mode: screen;
 }
 
@@ -1516,7 +1516,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
 .sat-count-loader__brand {
   position: relative;
   z-index: 1;
-  width: min(64vw, 520px);
+  width: min(68vw, 580px);
   max-height: 72vh;
   object-fit: contain;
   opacity: 0;
@@ -1525,7 +1525,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     contrast(1.18)
     drop-shadow(0 0 0 rgba(255, 255, 255, 0));
   transform: scale(0.78) rotateX(8deg);
-  animation: satLoaderBrandReveal 1.8s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderBrandReveal 4.3s cubic-bezier(0.43, 0, 0.06, 1) both;
   will-change: opacity, transform, filter;
 }
 
@@ -1652,7 +1652,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     transform: scale(0.78) rotateX(8deg);
   }
 
-  14% {
+  10% {
     opacity: 0.62;
     filter:
       blur(5px)
@@ -1662,8 +1662,8 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     transform: scale(0.93) rotateX(3deg);
   }
 
-  28%,
-  78% {
+  22%,
+  84% {
     opacity: 1;
     filter:
       blur(0)
@@ -1675,7 +1675,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     transform: scale(1) rotateX(0deg);
   }
 
-  52% {
+  56% {
     opacity: 1;
     filter:
       blur(0)
@@ -1684,7 +1684,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
       drop-shadow(0 0 42px rgba(255, 255, 255, 0.46))
       drop-shadow(0 0 88px rgba(255, 255, 255, 0.18))
       drop-shadow(0 30px 58px rgba(0, 0, 0, 0.82));
-    transform: scale(1.018) rotateX(0deg);
+    transform: scale(1.026) rotateX(0deg);
   }
 
   100% {
@@ -1694,7 +1694,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
       brightness(0.42)
       contrast(1.18)
       drop-shadow(0 0 0 rgba(255, 255, 255, 0));
-    transform: scale(1.09) rotateX(0deg);
+    transform: scale(1.06) rotateX(0deg);
   }
 }
 
@@ -1704,8 +1704,8 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     transform: scale(0.82);
   }
 
-  24%,
-  78% {
+  20%,
+  86% {
     opacity: 1;
     transform: scale(1);
   }
@@ -1718,21 +1718,21 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
 
 @keyframes satLoaderBrandSweep {
   0%,
-  18% {
+  16% {
     opacity: 0;
     transform: translate3d(-72%, -54%, 0);
   }
 
-  34% {
+  30% {
     opacity: 0.95;
   }
 
-  62% {
+  70% {
     opacity: 0.75;
     transform: translate3d(72%, 54%, 0);
   }
 
-  78%,
+  88%,
   100% {
     opacity: 0;
     transform: translate3d(92%, 70%, 0);
@@ -1788,7 +1788,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
 
   .sat-count-loader__brand {
     width: min(58vw, 220px);
-    animation-duration: 1.8s;
+    animation-duration: 3.4s;
   }
 
   .sat-count-loader__intro {
