@@ -898,7 +898,6 @@ function shouldSkipHomeIntro() {
   if (typeof window === "undefined") return false;
   const params = new URLSearchParams(window.location.search);
   const shouldSkipFromUrl = params.get("skipIntro") === "1";
-  const shouldSkipForDevice = shouldUsePerformanceMode();
   let shouldSkipFromStorage = false;
 
   try {
@@ -907,7 +906,7 @@ function shouldSkipHomeIntro() {
     shouldSkipFromStorage = false;
   }
 
-  const shouldSkip = shouldSkipFromUrl || shouldSkipFromStorage || shouldSkipForDevice;
+  const shouldSkip = shouldSkipFromUrl || shouldSkipFromStorage;
   if (shouldSkip) {
     try {
       window.sessionStorage.removeItem(skipHomeIntroKey);
@@ -938,8 +937,14 @@ function shouldUsePerformanceMode() {
 
 function shouldUseFastHomeIntro() {
   if (typeof window === "undefined") return false;
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
 
-  return shouldUsePerformanceMode();
+  return (
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+    Boolean(connection?.saveData) ||
+    connection?.effectiveType === "2g" ||
+    connection?.effectiveType === "slow-2g"
+  );
 }
 
 function getLoaderDigits(value: number) {
@@ -1121,18 +1126,19 @@ export default function Home() {
       };
     }
 
+    const compactIntro = shouldUsePerformanceMode();
     const timers = [
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[1], step: frame.step + 1 }));
-      }, 520),
+      }, compactIntro ? 180 : 520),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[2], step: frame.step + 1 }));
-      }, 1040),
+      }, compactIntro ? 360 : 1040),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
-      }, 1560),
-      window.setTimeout(() => setLoadingStage("brand"), 2100),
-      window.setTimeout(() => setLoadingStage("intro"), 3800)
+      }, compactIntro ? 540 : 1560),
+      window.setTimeout(() => setLoadingStage("brand"), compactIntro ? 760 : 2100),
+      window.setTimeout(() => setLoadingStage("intro"), compactIntro ? 1180 : 3800)
     ];
 
     return () => {
@@ -1150,7 +1156,7 @@ export default function Home() {
 
     const fallbackTimer = window.setTimeout(() => {
       finishLoading();
-    }, 2600);
+    }, shouldUsePerformanceMode() ? 1500 : 2600);
 
     return () => window.clearTimeout(fallbackTimer);
   }, [finishLoading, loadingStage]);
@@ -1366,7 +1372,7 @@ export default function Home() {
               autoPlay
               muted
               playsInline
-              preload="auto"
+              preload="metadata"
               onEnded={finishLoading}
             />
           )}
@@ -1385,12 +1391,12 @@ export default function Home() {
         </div>
       </section>
 
-        <div className="nex-hero-stage">
-          <div className="nex-screen-stack">
-          {slides.map((slide, index) => active === index ? (
+      <div className="nex-hero-stage">
+        <div className="nex-screen-stack">
+          {slides.map((slide, index) => (
             <section
-              className="nex-screen is-current"
-              aria-hidden={false}
+              className={`nex-screen ${active === index ? "is-current" : ""}`}
+              aria-hidden={active !== index}
               key={slide.id}
             >
               <div className="nex-copy">
@@ -1415,7 +1421,7 @@ export default function Home() {
                 <span>03</span>
               </div>
             </section>
-          ) : null)}
+          ))}
         </div>
 
         <div className="nex-home-login">
@@ -1462,12 +1468,15 @@ export default function Home() {
                     onClick={() => setActiveResultVideo(result)}
                     type="button"
                   >
-                    <img
+                    <video
                       className="results-card__video"
-                      src={result.certificate ?? "/assets/brand/sattest-intro-logo.png"}
-                      alt={`${result.name} SAT result preview`}
-                      loading="lazy"
-                      decoding="async"
+                      src={showResultsWall ? result.video : undefined}
+                      poster={result.certificate ?? "/assets/brand/sattest-intro-logo.png"}
+                      muted
+                      loop
+                      playsInline
+                      autoPlay={showResultsWall && !isPerformanceMode}
+                      preload={showResultsWall ? "metadata" : "none"}
                     />
                     <span className="results-card__shade" aria-hidden="true" />
                     <span className="results-card__play" aria-hidden="true">

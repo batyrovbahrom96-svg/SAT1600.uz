@@ -6031,10 +6031,6 @@ html[lang="uz"] .founder-trust-section__proof strong {
   .nex-title-line span,
   .nex-description,
   .nex-cta,
-  .results-wall,
-  .partner-marquee__track,
-  .student-testimonials-section__track,
-  .student-testimonials-section__track.is-reverse,
   .platform-ad-section__videoGlow,
   .nex-figure,
   .nex-figure-core,
@@ -6067,10 +6063,5 @@ html[lang="uz"] .founder-trust-section__proof strong {
 
   .platform-ad-section__videoGlow {
     display: none;
-  }
-
-  .student-testimonials-section__track,
-  .student-testimonials-section__track.is-reverse {
-    transform: none !important;
   }
 }
