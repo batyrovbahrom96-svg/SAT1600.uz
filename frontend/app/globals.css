@@ -4352,6 +4352,160 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   line-height: 1.65;
 }
 
+.site-contact-footer {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(180px, 0.35fr) minmax(280px, 0.75fr) minmax(340px, 0.9fr);
+  gap: clamp(24px, 4vw, 70px);
+  align-items: start;
+  padding: clamp(54px, 8vw, 92px) 7.15vw clamp(82px, 10vw, 118px);
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at 82% 28%, rgba(184, 216, 198, 0.13), transparent 28%),
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.055), transparent 24%),
+    rgba(8, 9, 9, 0.66);
+}
+
+.site-contact-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 112px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 112px);
+  opacity: 0.12;
+}
+
+.site-contact-footer__brand,
+.site-contact-footer__copy,
+.site-contact-footer__actions,
+.site-contact-footer__bottom {
+  position: relative;
+  z-index: 2;
+}
+
+.site-contact-footer__brand img {
+  width: min(190px, 62vw);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.24));
+}
+
+.site-contact-footer__brand p {
+  margin-top: 26px;
+  color: rgba(214, 199, 140, 0.82);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.42em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.site-contact-footer__copy h2 {
+  max-width: 620px;
+  color: #fff;
+  font-size: clamp(38px, 4.4vw, 76px);
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 1.03;
+}
+
+.site-contact-footer__copy p {
+  max-width: 560px;
+  margin-top: 24px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: clamp(16px, 1.25vw, 22px);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.site-contact-footer__actions {
+  display: grid;
+  gap: 14px;
+}
+
+.site-contact-footer__card {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.052);
+  backdrop-filter: blur(16px);
+  transition:
+    border-color 0.28s ease,
+    background 0.28s ease,
+    transform 0.28s ease;
+}
+
+.site-contact-footer__card:hover {
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.085);
+  transform: translateY(-2px);
+}
+
+.site-contact-footer__icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgba(214, 199, 140, 0.32);
+  color: #0c0d0d;
+  background: #d6c78c;
+}
+
+.site-contact-footer__card strong,
+.site-contact-footer__card small,
+.site-contact-footer__card em {
+  display: block;
+}
+
+.site-contact-footer__card strong {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.32em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.site-contact-footer__card small {
+  margin-top: 7px;
+  overflow-wrap: anywhere;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.site-contact-footer__card em {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.site-contact-footer__bottom {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.44);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
 .nex-slide-nav {
   position: absolute;
   left: 7.15vw;
@@ -4959,6 +5113,42 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
     min-height: auto;
   }
 
+  .site-contact-footer {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 58px 7vw 96px;
+  }
+
+  .site-contact-footer__brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  .site-contact-footer__brand img {
+    width: min(168px, 48vw);
+  }
+
+  .site-contact-footer__brand p {
+    margin-top: 0;
+    text-align: right;
+  }
+
+  .site-contact-footer__copy h2 {
+    font-size: clamp(38px, 10vw, 62px);
+  }
+
+  .site-contact-footer__actions {
+    gap: 12px;
+  }
+
+  .site-contact-footer__bottom {
+    display: grid;
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+
 }
 
 @media (max-width: 560px) {
@@ -4970,6 +5160,48 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
 
   .nex-title {
     font-size: 44px;
+  }
+
+  .site-contact-footer {
+    padding-inline: 18px;
+  }
+
+  .site-contact-footer__brand {
+    display: grid;
+    justify-content: start;
+  }
+
+  .site-contact-footer__brand p {
+    text-align: left;
+  }
+
+  .site-contact-footer__copy p {
+    font-size: 16px;
+  }
+
+  .site-contact-footer__card {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 13px;
+    padding: 18px;
+  }
+
+  .site-contact-footer__icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .site-contact-footer__card strong {
+    font-size: 10px;
+    letter-spacing: 0.26em;
+  }
+
+  .site-contact-footer__card small {
+    font-size: 15px;
+  }
+
+  .site-contact-footer__bottom {
+    font-size: 10px;
+    letter-spacing: 0.06em;
   }
 
   .nex-kicker {
@@ -5727,7 +5959,8 @@ html[lang="uz"] .founder-trust-section__proof strong {
 .parent-journey-section,
 .homepage-faq-section,
 .student-testimonials-section,
-.top-score-proof-section {
+.top-score-proof-section,
+.site-contact-footer {
   background:
     radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.045), transparent 28%),
     rgba(8, 9, 9, 0.58) !important;
@@ -5756,7 +5989,8 @@ html[lang="uz"] .founder-trust-section__proof strong {
 .parent-journey-section,
 .homepage-faq-section,
 .student-testimonials-section,
-.top-score-proof-section {
+.top-score-proof-section,
+.site-contact-footer {
   background:
     radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.08), transparent 26%),
     radial-gradient(circle at 84% 20%, rgba(255, 255, 255, 0.055), transparent 24%),

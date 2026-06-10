@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Play, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Mail, Play, Send, Volume2, VolumeX, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { useLanguage, type Language } from "@/lib/i18n";
 import { studentResults, type StudentResult } from "@/lib/student-results";
@@ -414,6 +414,16 @@ const homeCopy: Record<
       cta: string;
       items: Array<{ question: string; answer: string }>;
     };
+    contact: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      telegramLabel: string;
+      telegramBody: string;
+      emailLabel: string;
+      emailBody: string;
+      legal: string;
+    };
   }
 > = {
   en: {
@@ -518,6 +528,16 @@ const homeCopy: Record<
         "After payment, send the receipt to the Telegram bot with the email used during registration. Pro access opens after confirmation.",
       cta: "Choose plan",
       items: homepageFaqs
+    },
+    contact: {
+      eyebrow: "Contacts",
+      title: "Need help choosing the right SAT route?",
+      body: "Message us before payment, after registration, or when you need help understanding the next study step.",
+      telegramLabel: "Telegram",
+      telegramBody: "Fastest contact for payment, access, and parent questions.",
+      emailLabel: "Email",
+      emailBody: "Use email for longer questions, documents, or formal requests.",
+      legal: "SATTEST.UZ is an independent SAT preparation platform and is not endorsed by College Board."
     }
   },
   ru: {
@@ -680,6 +700,16 @@ const homeCopy: Record<
           answer: "Родители видят баллы пробных тестов, слабые темы, выполненную практику и план следующего исправления."
         }
       ]
+    },
+    contact: {
+      eyebrow: "Контакты",
+      title: "Нужна помощь с выбором SAT-маршрута?",
+      body: "Напишите нам до оплаты, после регистрации или если нужна помощь с пониманием следующего шага подготовки.",
+      telegramLabel: "Telegram",
+      telegramBody: "Самый быстрый канал для оплаты, доступа и вопросов родителей.",
+      emailLabel: "Email",
+      emailBody: "Используйте email для длинных вопросов, документов или официальных запросов.",
+      legal: "SATTEST.UZ — независимая платформа подготовки к SAT и не одобрена College Board."
     }
   },
   uz: {
@@ -842,6 +872,16 @@ const homeCopy: Record<
           answer: "Ota-onalar sinov testi ballari, zaif mavzular, bajarilgan mashqlar va keyingi tuzatish rejasini ko'radi."
         }
       ]
+    },
+    contact: {
+      eyebrow: "Aloqa",
+      title: "To'g'ri SAT yo'nalishini tanlashda yordam kerakmi?",
+      body: "To'lovdan oldin, ro'yxatdan o'tgandan keyin yoki keyingi tayyorgarlik qadamini tushunish uchun bizga yozing.",
+      telegramLabel: "Telegram",
+      telegramBody: "To'lov, kirish va ota-onalar savollari uchun eng tez aloqa.",
+      emailLabel: "Email",
+      emailBody: "Uzun savollar, hujjatlar yoki rasmiy murojaatlar uchun emaildan foydalaning.",
+      legal: "SATTEST.UZ mustaqil SAT tayyorgarlik platformasi va College Board tomonidan tasdiqlanmagan."
     }
   }
 };
@@ -1885,6 +1925,52 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <footer className="site-contact-footer" aria-labelledby="site-contact-footer-title">
+        <div className="site-contact-footer__brand">
+          <img src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" />
+          <p>{copy.contact.eyebrow}</p>
+        </div>
+
+        <div className="site-contact-footer__copy">
+          <h2 id="site-contact-footer-title">{copy.contact.title}</h2>
+          <p>{copy.contact.body}</p>
+        </div>
+
+        <div className="site-contact-footer__actions" aria-label="SATTEST.UZ contacts">
+          <Link
+            className="site-contact-footer__card"
+            href="https://t.me/FounderSATTESTUZ"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span className="site-contact-footer__icon">
+              <Send size={22} />
+            </span>
+            <span>
+              <strong>{copy.contact.telegramLabel}</strong>
+              <small>@FounderSATTESTUZ</small>
+              <em>{copy.contact.telegramBody}</em>
+            </span>
+          </Link>
+
+          <Link className="site-contact-footer__card" href="mailto:foundersattestuz@gmail.com">
+            <span className="site-contact-footer__icon">
+              <Mail size={22} />
+            </span>
+            <span>
+              <strong>{copy.contact.emailLabel}</strong>
+              <small>foundersattestuz@gmail.com</small>
+              <em>{copy.contact.emailBody}</em>
+            </span>
+          </Link>
+        </div>
+
+        <div className="site-contact-footer__bottom">
+          <span>© 2026 SATTEST.UZ</span>
+          <span>{copy.contact.legal}</span>
+        </div>
+      </footer>
 
       {activeResultVideo ? (
         <div
