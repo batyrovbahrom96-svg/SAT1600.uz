@@ -1345,7 +1345,7 @@ export default function Home() {
           ) : (
             <img
               className="sat-count-loader__brand"
-              src="/assets/brand/sattest-intro-logo.png"
+              src="/assets/brand/sattest-wordmark.png"
               alt="SATTEST.UZ"
             />
           )}

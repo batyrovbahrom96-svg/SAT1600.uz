@@ -1500,21 +1500,26 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
 .sat-count-loader__brand {
   position: relative;
   z-index: 1;
-  width: min(68vw, 580px);
-  max-height: 72vh;
+  display: block;
+  width: min(72vw, 620px);
+  height: auto;
+  max-height: 36vh;
+  aspect-ratio: 620 / 113;
+  background: transparent;
   object-fit: contain;
   opacity: 0;
   filter:
-    brightness(0.28)
-    contrast(1.18)
+    brightness(0.42)
+    contrast(1.08)
     drop-shadow(0 0 0 rgba(255, 255, 255, 0));
-  transform: scale(0.78) rotateX(8deg);
+  transform: translateZ(0) scale(0.86) rotateX(6deg);
   animation: satLoaderBrandReveal 4.3s cubic-bezier(0.43, 0, 0.06, 1) both;
+  backface-visibility: hidden;
   will-change: opacity, transform, filter;
 }
 
 .sat-count-loader.is-exiting .sat-count-loader__brand {
-  transform: scale(1.025);
+  transform: translateZ(0) scale(1.025);
   filter:
     brightness(0.78)
     contrast(1.12)
@@ -1636,7 +1641,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
       brightness(0.12)
       contrast(1.24)
       drop-shadow(0 0 0 rgba(255, 255, 255, 0));
-    transform: scale(0.78) rotateX(8deg);
+    transform: translateZ(0) scale(0.86) rotateX(6deg);
   }
 
   10% {
@@ -1646,7 +1651,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
       brightness(0.92)
       contrast(1.18)
       drop-shadow(0 0 24px rgba(255, 255, 255, 0.26));
-    transform: scale(0.93) rotateX(3deg);
+    transform: translateZ(0) scale(0.94) rotateX(2deg);
   }
 
   22%,
@@ -1659,7 +1664,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
       drop-shadow(0 0 32px rgba(255, 255, 255, 0.34))
       drop-shadow(0 0 72px rgba(255, 255, 255, 0.12))
       drop-shadow(0 30px 58px rgba(0, 0, 0, 0.82));
-    transform: scale(1) rotateX(0deg);
+    transform: translateZ(0) scale(1) rotateX(0deg);
   }
 
   56% {
@@ -1671,7 +1676,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
       drop-shadow(0 0 42px rgba(255, 255, 255, 0.46))
       drop-shadow(0 0 88px rgba(255, 255, 255, 0.18))
       drop-shadow(0 30px 58px rgba(0, 0, 0, 0.82));
-    transform: scale(1.026) rotateX(0deg);
+    transform: translateZ(0) scale(1.035) rotateX(0deg);
   }
 
   100% {
@@ -1681,7 +1686,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
       brightness(0.42)
       contrast(1.18)
       drop-shadow(0 0 0 rgba(255, 255, 255, 0));
-    transform: scale(1.06) rotateX(0deg);
+    transform: translateZ(0) scale(1.045) rotateX(0deg);
   }
 }
 
@@ -1774,7 +1779,8 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   }
 
   .sat-count-loader__brand {
-    width: min(58vw, 220px);
+    width: min(76vw, 330px);
+    max-height: 18vh;
     animation-duration: 3.4s;
   }
 
