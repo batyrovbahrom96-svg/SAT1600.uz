@@ -43,7 +43,7 @@ const slides = [
   }
 ];
 
-const transitionMs = 1250;
+const transitionMs = 850;
 
 const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
@@ -898,6 +898,7 @@ function shouldSkipHomeIntro() {
   if (typeof window === "undefined") return false;
   const params = new URLSearchParams(window.location.search);
   const shouldSkipFromUrl = params.get("skipIntro") === "1";
+  const shouldSkipForDevice = shouldUsePerformanceMode();
   let shouldSkipFromStorage = false;
 
   try {
@@ -906,7 +907,7 @@ function shouldSkipHomeIntro() {
     shouldSkipFromStorage = false;
   }
 
-  const shouldSkip = shouldSkipFromUrl || shouldSkipFromStorage;
+  const shouldSkip = shouldSkipFromUrl || shouldSkipFromStorage || shouldSkipForDevice;
   if (shouldSkip) {
     try {
       window.sessionStorage.removeItem(skipHomeIntroKey);
@@ -922,13 +923,23 @@ function shouldSkipHomeIntro() {
   return shouldSkip;
 }
 
-function shouldUseFastHomeIntro() {
+function shouldUsePerformanceMode() {
   if (typeof window === "undefined") return false;
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
 
   return (
     window.matchMedia("(max-width: 767px)").matches ||
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+    Boolean(connection?.saveData) ||
+    connection?.effectiveType === "2g" ||
+    connection?.effectiveType === "slow-2g"
   );
+}
+
+function shouldUseFastHomeIntro() {
+  if (typeof window === "undefined") return false;
+
+  return shouldUsePerformanceMode();
 }
 
 function getLoaderDigits(value: number) {
@@ -1036,16 +1047,23 @@ export default function Home() {
   const [activeResultVideo, setActiveResultVideo] = useState<StudentResult | null>(null);
   const [activeFounderProof, setActiveFounderProof] = useState<"bakhrom" | "doniyor" | null>(null);
   const [isPlatformVideoMuted, setIsPlatformVideoMuted] = useState(true);
+  const [shouldLoadPlatformVideo, setShouldLoadPlatformVideo] = useState(false);
+  const [isPerformanceMode, setIsPerformanceMode] = useState(false);
   const activeRef = useRef(active);
   const lockRef = useRef(false);
   const touchStartRef = useRef({ y: 0, time: 0 });
   const introVideoRef = useRef<HTMLVideoElement | null>(null);
   const platformVideoRef = useRef<HTMLVideoElement | null>(null);
+  const platformVideoWrapRef = useRef<HTMLDivElement | null>(null);
   const resultsCardsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  useEffect(() => {
+    setIsPerformanceMode(shouldUsePerformanceMode());
+  }, []);
 
   const skipIntroNow = useCallback(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1153,10 +1171,10 @@ export default function Home() {
 
     const timer = window.setTimeout(() => {
       setShowResultsWall(true);
-    }, 1100);
+    }, isPerformanceMode ? 2600 : 1100);
 
     return () => window.clearTimeout(timer);
-  }, [isLoading]);
+  }, [isLoading, isPerformanceMode]);
 
   const goTo = useCallback((targetIndex: number) => {
     const total = slides.length;
@@ -1182,6 +1200,7 @@ export default function Home() {
   const goNext = useCallback(() => goTo(activeRef.current + 1), [goTo]);
   const goPrev = useCallback(() => goTo(activeRef.current - 1), [goTo]);
   const togglePlatformVideoSound = useCallback(() => {
+    setShouldLoadPlatformVideo(true);
     const nextMuted = !isPlatformVideoMuted;
     const video = platformVideoRef.current;
     if (video) {
@@ -1191,6 +1210,31 @@ export default function Home() {
     }
     setIsPlatformVideoMuted(nextMuted);
   }, [isPlatformVideoMuted]);
+
+  useEffect(() => {
+    const target = platformVideoWrapRef.current;
+    if (!target) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldLoadPlatformVideo(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "450px 0px" }
+    );
+
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const video = platformVideoRef.current;
+    if (!video || !shouldLoadPlatformVideo || (isPerformanceMode && isPlatformVideoMuted)) return;
+    video.play().catch(() => undefined);
+  }, [isPerformanceMode, isPlatformVideoMuted, shouldLoadPlatformVideo]);
 
   const scrollResults = useCallback((direction: -1 | 1) => {
     const container = resultsCardsRef.current;
@@ -1204,6 +1248,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (isPerformanceMode) {
+      return undefined;
+    }
+
     const onWheel = (event: WheelEvent) => {
       if (Math.abs(event.deltaY) < 8) {
         return;
@@ -1261,7 +1309,7 @@ export default function Home() {
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [goNext, goPrev]);
+  }, [goNext, goPrev, isPerformanceMode]);
 
   return (
     <main
@@ -1331,18 +1379,18 @@ export default function Home() {
         <div className="partner-marquee__track" aria-hidden="true">
           {[...partnerLogos, ...partnerLogos, ...partnerLogos, ...partnerLogos].map((partner, index) => (
             <span className="partner-marquee__item" key={`${partner.name}-${index}`}>
-              <img className="partner-marquee__logo" src={partner.logo} alt={partner.name} />
+              <img className="partner-marquee__logo" src={partner.logo} alt={partner.name} loading="lazy" decoding="async" />
             </span>
           ))}
         </div>
       </section>
 
-      <div className="nex-hero-stage">
-        <div className="nex-screen-stack">
-          {slides.map((slide, index) => (
+        <div className="nex-hero-stage">
+          <div className="nex-screen-stack">
+          {slides.map((slide, index) => active === index ? (
             <section
-              className={`nex-screen ${active === index ? "is-current" : ""}`}
-              aria-hidden={active !== index}
+              className="nex-screen is-current"
+              aria-hidden={false}
               key={slide.id}
             >
               <div className="nex-copy">
@@ -1367,7 +1415,7 @@ export default function Home() {
                 <span>03</span>
               </div>
             </section>
-          ))}
+          ) : null)}
         </div>
 
         <div className="nex-home-login">
@@ -1414,14 +1462,12 @@ export default function Home() {
                     onClick={() => setActiveResultVideo(result)}
                     type="button"
                   >
-                    <video
+                    <img
                       className="results-card__video"
-                      src={result.video}
-                      muted
-                      loop
-                      playsInline
-                      autoPlay
-                      preload="metadata"
+                      src={result.certificate ?? "/assets/brand/sattest-intro-logo.png"}
+                      alt={`${result.name} SAT result preview`}
+                      loading="lazy"
+                      decoding="async"
                     />
                     <span className="results-card__shade" aria-hidden="true" />
                     <span className="results-card__play" aria-hidden="true">
@@ -1664,16 +1710,16 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="platform-ad-section__videoWrap">
+        <div className="platform-ad-section__videoWrap" ref={platformVideoWrapRef}>
           <video
             className="platform-ad-section__video"
             ref={platformVideoRef}
-            src="/assets/video/sattest-platform-ad.mp4"
-            autoPlay
+            src={shouldLoadPlatformVideo ? "/assets/video/sattest-platform-ad.mp4" : undefined}
+            autoPlay={shouldLoadPlatformVideo && !isPerformanceMode}
             muted={isPlatformVideoMuted}
             loop
             playsInline
-            preload="auto"
+            preload={shouldLoadPlatformVideo ? "metadata" : "none"}
           />
           <button
             className="platform-ad-section__sound"
