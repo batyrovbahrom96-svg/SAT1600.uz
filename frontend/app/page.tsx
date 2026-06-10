@@ -1130,15 +1130,15 @@ export default function Home() {
     const timers = [
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[1], step: frame.step + 1 }));
-      }, compactIntro ? 360 : 520),
+      }, compactIntro ? 900 : 950),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[2], step: frame.step + 1 }));
-      }, compactIntro ? 720 : 1040),
+      }, compactIntro ? 1800 : 1900),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
-      }, compactIntro ? 1080 : 1560),
-      window.setTimeout(() => setLoadingStage("brand"), compactIntro ? 1460 : 2100),
-      window.setTimeout(() => setLoadingStage("intro"), compactIntro ? 2450 : 3800)
+      }, compactIntro ? 2700 : 2850),
+      window.setTimeout(() => setLoadingStage("brand"), compactIntro ? 3600 : 3850),
+      window.setTimeout(() => setLoadingStage("intro"), compactIntro ? 5300 : 6200)
     ];
 
     return () => {
@@ -1156,7 +1156,7 @@ export default function Home() {
 
     const fallbackTimer = window.setTimeout(() => {
       finishLoading();
-    }, shouldUsePerformanceMode() ? 1900 : 2600);
+    }, shouldUsePerformanceMode() ? 2800 : 3900);
 
     return () => window.clearTimeout(fallbackTimer);
   }, [finishLoading, loadingStage]);
