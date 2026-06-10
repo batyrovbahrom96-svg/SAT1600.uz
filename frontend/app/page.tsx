@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Mail, Play, Send, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Mail, Phone, Play, Send, Volume2, VolumeX, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { useLanguage, type Language } from "@/lib/i18n";
 import { studentResults, type StudentResult } from "@/lib/student-results";
@@ -422,6 +422,8 @@ const homeCopy: Record<
       telegramBody: string;
       emailLabel: string;
       emailBody: string;
+      phoneLabel: string;
+      phoneBody: string;
       legal: string;
     };
   }
@@ -537,6 +539,8 @@ const homeCopy: Record<
       telegramBody: "Fastest contact for payment, access, and parent questions.",
       emailLabel: "Email",
       emailBody: "Use email for longer questions, documents, or formal requests.",
+      phoneLabel: "Phone",
+      phoneBody: "Personal help for urgent questions and any problem you need to solve.",
       legal: "SATTEST.UZ is an independent SAT preparation platform and is not endorsed by College Board."
     }
   },
@@ -709,6 +713,8 @@ const homeCopy: Record<
       telegramBody: "Самый быстрый канал для оплаты, доступа и вопросов родителей.",
       emailLabel: "Email",
       emailBody: "Используйте email для длинных вопросов, документов или официальных запросов.",
+      phoneLabel: "Телефон",
+      phoneBody: "Личная помощь по срочным вопросам и любой проблеме, которую нужно решить.",
       legal: "SATTEST.UZ — независимая платформа подготовки к SAT и не одобрена College Board."
     }
   },
@@ -881,6 +887,8 @@ const homeCopy: Record<
       telegramBody: "To'lov, kirish va ota-onalar savollari uchun eng tez aloqa.",
       emailLabel: "Email",
       emailBody: "Uzun savollar, hujjatlar yoki rasmiy murojaatlar uchun emaildan foydalaning.",
+      phoneLabel: "Telefon",
+      phoneBody: "Shoshilinch savollar va har qanday muammoni hal qilish uchun shaxsiy yordam.",
       legal: "SATTEST.UZ mustaqil SAT tayyorgarlik platformasi va College Board tomonidan tasdiqlanmagan."
     }
   }
@@ -1954,14 +1962,25 @@ export default function Home() {
             </span>
           </Link>
 
-          <Link className="site-contact-footer__card" href="mailto:foundersattestuz@gmail.com">
+          <Link className="site-contact-footer__card" href="mailto:sattest1@inbox.ru">
             <span className="site-contact-footer__icon">
               <Mail size={22} />
             </span>
             <span>
               <strong>{copy.contact.emailLabel}</strong>
-              <small>foundersattestuz@gmail.com</small>
+              <small>sattest1@inbox.ru</small>
               <em>{copy.contact.emailBody}</em>
+            </span>
+          </Link>
+
+          <Link className="site-contact-footer__card" href="tel:+998902754412">
+            <span className="site-contact-footer__icon">
+              <Phone size={22} />
+            </span>
+            <span>
+              <strong>{copy.contact.phoneLabel}</strong>
+              <small>+998 90 275 44 12</small>
+              <em>{copy.contact.phoneBody}</em>
             </span>
           </Link>
         </div>
