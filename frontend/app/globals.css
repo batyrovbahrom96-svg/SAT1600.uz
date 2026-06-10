@@ -1561,11 +1561,11 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
 }
 
 .sat-count-loader__number--previous:not(.is-hidden) .sat-count-loader__digit {
-  animation: satLoaderDigitOut 0.72s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderDigitOut 0.9s cubic-bezier(0.43, 0, 0.06, 1) both;
 }
 
 .sat-count-loader__number--current:not(.is-idle) .sat-count-loader__digit {
-  animation: satLoaderDigitIn 0.72s cubic-bezier(0.43, 0, 0.06, 1) both;
+  animation: satLoaderDigitIn 0.9s cubic-bezier(0.43, 0, 0.06, 1) both;
 }
 
 .sat-count-loader__number--previous .sat-count-loader__digit:nth-child(1),
@@ -1788,16 +1788,16 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
 
   .sat-count-loader__brand {
     width: min(58vw, 220px);
-    animation-duration: 1.35s;
+    animation-duration: 1.8s;
   }
 
   .sat-count-loader__intro {
-    animation-duration: 0.55s;
+    animation-duration: 0.75s;
   }
 
   .sat-count-loader__number--previous:not(.is-hidden) .sat-count-loader__digit,
   .sat-count-loader__number--current:not(.is-idle) .sat-count-loader__digit {
-    animation-duration: 0.72s;
+    animation-duration: 0.9s;
   }
 
   .nex-home.is-ready .nex-header,

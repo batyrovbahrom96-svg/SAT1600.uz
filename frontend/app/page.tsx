@@ -1126,19 +1126,19 @@ export default function Home() {
       };
     }
 
-    const compactIntro = shouldUsePerformanceMode();
+    const compactIntro = shouldUseFastHomeIntro();
     const timers = [
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[1], step: frame.step + 1 }));
-      }, compactIntro ? 900 : 950),
+      }, compactIntro ? 900 : 1500),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[2], step: frame.step + 1 }));
-      }, compactIntro ? 1800 : 1900),
+      }, compactIntro ? 1800 : 3000),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
-      }, compactIntro ? 2700 : 2850),
-      window.setTimeout(() => setLoadingStage("brand"), compactIntro ? 3600 : 3850),
-      window.setTimeout(() => setLoadingStage("intro"), compactIntro ? 5300 : 6200)
+      }, compactIntro ? 2700 : 4500),
+      window.setTimeout(() => setLoadingStage("brand"), compactIntro ? 3600 : 6000),
+      window.setTimeout(() => setLoadingStage("intro"), compactIntro ? 5300 : 8500)
     ];
 
     return () => {
@@ -1156,7 +1156,7 @@ export default function Home() {
 
     const fallbackTimer = window.setTimeout(() => {
       finishLoading();
-    }, shouldUsePerformanceMode() ? 2800 : 3900);
+    }, shouldUseFastHomeIntro() ? 2800 : 4500);
 
     return () => window.clearTimeout(fallbackTimer);
   }, [finishLoading, loadingStage]);
