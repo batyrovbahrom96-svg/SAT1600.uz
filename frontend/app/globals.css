@@ -6706,3 +6706,37 @@ html[lang="uz"] .founder-trust-section__proof strong {
     display: none;
   }
 }
+
+.diagnostic-instructions-page {
+  color: #f7f7f3 !important;
+}
+
+.diagnostic-instructions-card {
+  background: #ffffff !important;
+  color: #202124 !important;
+}
+
+.diagnostic-instructions-card .diagnostic-instructions-title {
+  color: #202124 !important;
+}
+
+.diagnostic-instructions-card .diagnostic-instructions-copy {
+  color: #4b4c4f !important;
+}
+
+.diagnostic-instructions-card .diagnostic-instructions-lock {
+  color: #202124 !important;
+}
+
+.diagnostic-instructions-card .diagnostic-instructions-back {
+  color: #050505 !important;
+}
+
+.diagnostic-instructions-card .diagnostic-instructions-back:hover {
+  color: #ffffff !important;
+}
+
+.diagnostic-instructions-card .diagnostic-instructions-continue {
+  background: #050505 !important;
+  color: #ffffff !important;
+}

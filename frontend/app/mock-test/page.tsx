@@ -420,11 +420,11 @@ function ScoreMetric({ label, value }: { label: string; value: number }) {
 
 function DiagnosticInstructions({ onBack, onContinue }: { onBack: () => void; onContinue: () => void }) {
   return (
-    <main className="min-h-screen bg-[#f6f6f4] px-5 py-10 text-[#202124]">
+    <main className="diagnostic-instructions-page min-h-screen bg-[#f6f6f4] px-5 py-10">
       <section className="mx-auto max-w-4xl">
         <h1 className="text-center text-5xl font-light leading-none md:text-6xl">SAT Diagnostic Mock Test</h1>
 
-        <div className="mt-10 rounded-2xl bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] md:p-12">
+        <div className="diagnostic-instructions-card mt-10 rounded-2xl bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] md:p-12">
           <div className="grid gap-9">
             <InstructionBlock
               title="Timing"
@@ -439,12 +439,12 @@ function DiagnosticInstructions({ onBack, onContinue }: { onBack: () => void; on
               text="Your report becomes the starting point for My 1400+: daily study hours, priority skills, and practice tasks based on your own mistakes."
             />
             <div className="flex gap-5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#eeeeec] text-[#202124]">
+              <div className="diagnostic-instructions-lock flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#eeeeec]">
                 <LockKeyhole size={22} />
               </div>
               <div>
-                <h2 className="text-3xl font-bold">Test mode</h2>
-                <p className="mt-3 max-w-2xl text-xl leading-8 text-[#202124]/82">
+                <h2 className="diagnostic-instructions-title text-3xl font-bold">Test mode</h2>
+                <p className="diagnostic-instructions-copy mt-3 max-w-2xl text-xl leading-8">
                   Do not refresh the page or close the browser during the test. If the test is interrupted, you may need to start again.
                 </p>
               </div>
@@ -453,14 +453,14 @@ function DiagnosticInstructions({ onBack, onContinue }: { onBack: () => void; on
 
           <div className="mt-10 grid gap-3 sm:grid-cols-[1fr_2fr]">
             <button
-              className="h-14 border border-black/20 bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-black hover:text-white"
+              className="diagnostic-instructions-back h-14 border border-black/20 bg-white px-6 text-xs font-black uppercase tracking-[0.22em] transition-colors hover:bg-black hover:text-white"
               onClick={onBack}
               type="button"
             >
               Back
             </button>
             <button
-              className="flex h-14 items-center justify-between bg-black px-6 text-xs font-black uppercase tracking-[0.22em] text-white transition-colors hover:bg-black/82"
+              className="diagnostic-instructions-continue flex h-14 items-center justify-between bg-black px-6 text-xs font-black uppercase tracking-[0.22em] transition-colors hover:bg-black/82"
               onClick={onContinue}
               type="button"
             >
@@ -476,35 +476,64 @@ function DiagnosticInstructions({ onBack, onContinue }: { onBack: () => void; on
 function InstructionBlock({ title, text }: { title: string; text: string }) {
   return (
     <div>
-      <h2 className="text-3xl font-bold">{title}</h2>
-      <p className="mt-3 max-w-2xl text-xl leading-8 text-[#202124]/82">{text}</p>
+      <h2 className="diagnostic-instructions-title text-3xl font-bold">{title}</h2>
+      <p className="diagnostic-instructions-copy mt-3 max-w-2xl text-xl leading-8">{text}</p>
     </div>
   );
 }
 
 function PreparingDiagnosticScreen() {
   return (
-    <main className="min-h-screen bg-[#f6f6f4] px-5 py-10 text-[#202124]">
-      <section className="mx-auto max-w-5xl">
-        <h1 className="text-5xl font-light leading-none md:text-6xl">We're preparing your SAT diagnostic mock test</h1>
+    <main className="min-h-screen overflow-hidden bg-[#080908] px-5 py-10 text-white">
+      <section className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl flex-col justify-center">
+        <p className="text-xs font-black uppercase tracking-[0.42em] text-[#c8bd88]">Secure diagnostic launch</p>
+        <h1 className="mt-6 max-w-5xl text-5xl font-light leading-[0.95] md:text-7xl">
+          We're preparing your SAT diagnostic mock test
+        </h1>
 
-        <div className="mt-16 overflow-hidden rounded-2xl bg-white shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-          <div className="relative flex min-h-[480px] flex-col items-center justify-center px-8 py-12 text-center">
-            <div className="absolute left-0 top-24 h-20 w-56 rounded-r-full bg-[#bfeffa]" />
-            <div className="absolute left-28 top-36 h-24 w-72 rounded-full bg-[#d9f6fb]" />
-            <div className="relative h-56 w-40">
-              <div className="absolute left-4 right-4 top-0 h-8 border-4 border-[#555] bg-[#9d9d9d]" />
-              <div className="absolute left-6 right-6 top-7 h-44 rounded-b-[70px] rounded-t-[70px] border-4 border-[#666] bg-[#c9f4ff]/70" />
-              <div className="absolute left-9 right-9 top-12 h-16 rounded-b-[52px] bg-[#ff6846]" />
-              <div className="absolute left-9 right-9 bottom-11 h-14 rounded-t-[52px] bg-[#ff6846]" />
-              <div className="absolute left-1/2 top-[104px] h-4 w-4 -translate-x-1/2 rounded-full bg-[#ff6846]" />
-              <div className="absolute left-1/2 top-[132px] h-3 w-3 -translate-x-1/2 rounded-full bg-[#ff6846]" />
-              <div className="absolute left-1/2 top-[158px] h-2 w-2 -translate-x-1/2 rounded-full bg-[#ff6846]" />
-              <div className="absolute bottom-0 left-4 right-4 h-8 border-4 border-[#555] bg-[#9d9d9d]" />
+        <div className="mt-12 overflow-hidden rounded-[28px] border border-white/12 bg-[#111211]/92 shadow-[0_34px_100px_rgba(0,0,0,0.45)]">
+          <div className="grid min-h-[430px] gap-8 p-7 md:grid-cols-[1.1fr_0.9fr] md:p-10">
+            <div className="flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-6">
+                  <span className="font-serif text-2xl uppercase tracking-[0.28em] text-white">SATTEST.UZ</span>
+                  <span className="rounded-full border border-[#c8bd88]/45 px-4 py-2 text-[10px] font-black uppercase tracking-[0.28em] text-[#c8bd88]">
+                    Loading
+                  </span>
+                </div>
+
+                <div className="mt-10">
+                  <h2 className="max-w-2xl text-3xl font-semibold leading-tight md:text-5xl">Building your test environment</h2>
+                  <p className="mt-6 max-w-2xl text-xl leading-8 text-white/68">
+                    This may take up to a minute. Please do not refresh this page or close the browser.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-10">
+                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-full w-2/3 animate-pulse rounded-full bg-[#c8bd88]" />
+                </div>
+                <div className="mt-6 grid gap-3 text-sm font-bold uppercase tracking-[0.18em] text-white/72 sm:grid-cols-3">
+                  <div className="border border-white/10 p-4">Loading modules</div>
+                  <div className="border border-white/10 p-4">Checking timer</div>
+                  <div className="border border-white/10 p-4">Preparing report</div>
+                </div>
+              </div>
             </div>
-            <p className="mt-12 max-w-3xl text-3xl leading-tight text-[#202124]">
-              This may take up to a minute. Please do not refresh this page or close the browser.
-            </p>
+
+            <div className="flex items-center justify-center border border-white/10 bg-black/22 p-6">
+              <div className="relative flex aspect-square w-full max-w-[290px] items-center justify-center">
+                <div className="absolute inset-0 border border-[#c8bd88]/35" />
+                <div className="absolute inset-7 border border-white/12" />
+                <div className="text-center">
+                  <div className="text-7xl font-light">SAT</div>
+                  <div className="mt-5 text-xs font-black uppercase tracking-[0.38em] text-[#c8bd88]">Diagnostic</div>
+                  <div className="mx-auto mt-6 h-px w-28 bg-white/24" />
+                  <div className="mt-6 text-sm font-bold uppercase tracking-[0.28em] text-white/54">Please wait</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
