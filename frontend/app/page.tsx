@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Mail, Phone, Play, Send, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Mail, Phone, Play, Send, Volume2, VolumeX, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { useLanguage, type Language } from "@/lib/i18n";
 import { studentResults, type StudentResult } from "@/lib/student-results";
@@ -42,8 +42,6 @@ const slides = [
     stat: "03"
   }
 ];
-
-const transitionMs = 850;
 
 const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
@@ -359,6 +357,14 @@ const homeCopy: Record<
   {
     slides: HomeSlide[];
     partnerLabel: string;
+    heroProof: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      cta: string;
+      secondaryCta: string;
+      stats: Array<{ label: string; value: string; body: string }>;
+    };
     results: {
       eyebrow: string;
       title: string;
@@ -431,6 +437,18 @@ const homeCopy: Record<
   en: {
     slides,
     partnerLabel: "Trusted Learning Centers",
+    heroProof: {
+      eyebrow: "Verified SAT score proof",
+      title: "8 students. 1500+. Verified score reports.",
+      body: "Start with proof, then take the diagnostic that turns weak skills into a clear SAT growth plan.",
+      cta: "Start free diagnostic",
+      secondaryCta: "See score reports",
+      stats: [
+        { label: "Students", value: "8", body: "verified high-score reports" },
+        { label: "Score level", value: "1500+", body: "student results shown with reports" },
+        { label: "Top proof", value: "1580", body: "highest verified student SAT" }
+      ]
+    },
     results: {
       eyebrow: "Results Proof",
       title: "Verified SAT growth with student videos and score reports.",
@@ -572,6 +590,18 @@ const homeCopy: Record<
       }
     ],
     partnerLabel: "Надежные учебные центры",
+    heroProof: {
+      eyebrow: "Подтвержденные результаты SAT",
+      title: "8 учеников. 1500+. Проверенные отчеты о баллах.",
+      body: "Сначала доказательства, затем диагностика, которая превращает слабые навыки в понятный план роста SAT.",
+      cta: "Начать бесплатную диагностику",
+      secondaryCta: "Смотреть отчеты",
+      stats: [
+        { label: "Ученики", value: "8", body: "проверенных отчетов с высокими баллами" },
+        { label: "Уровень", value: "1500+", body: "результаты учеников с отчетами" },
+        { label: "Лучший результат", value: "1580", body: "самый высокий подтвержденный SAT ученика" }
+      ]
+    },
     results: {
       eyebrow: "Доказательство результата",
       title: "Подтвержденный рост SAT: видео учеников и отчеты с баллами.",
@@ -746,6 +776,18 @@ const homeCopy: Record<
       }
     ],
     partnerLabel: "Ishonchli o'quv markazlari",
+    heroProof: {
+      eyebrow: "Tasdiqlangan SAT natijalari",
+      title: "8 o'quvchi. 1500+. Tasdiqlangan score reportlar.",
+      body: "Avval isbot, keyin zaif ko'nikmalarni aniq SAT o'sish rejasiga aylantiradigan diagnostika.",
+      cta: "Bepul diagnostikani boshlash",
+      secondaryCta: "Hisobotlarni ko'rish",
+      stats: [
+        { label: "O'quvchilar", value: "8", body: "yuqori balli tasdiqlangan hisobotlar" },
+        { label: "Ball darajasi", value: "1500+", body: "hisobotlar bilan ko'rsatilgan o'quvchi natijalari" },
+        { label: "Eng yuqori isbot", value: "1580", body: "tasdiqlangan eng yuqori o'quvchi SAT bali" }
+      ]
+    },
     results: {
       eyebrow: "Natija isboti",
       title: "O'quvchi videolari va rasmiy ball hisobotlari bilan tasdiqlangan SAT o'sishi.",
@@ -1033,13 +1075,10 @@ function TopScoreProofCard({
 export default function Home() {
   const { language } = useLanguage();
   const copy = homeCopy[language];
-  const slides = copy.slides;
   const getStudentResultCopy = useCallback(
     (result: StudentResult) => studentResultCopy[language][result.name] ?? studentResultCopy.en[result.name],
     [language]
   );
-  const [active, setActive] = useState(0);
-  const [direction, setDirection] = useState(1);
   const [loadingFrame, setLoadingFrame] = useState({
     previous: loadingSequence[0],
     current: loadingSequence[0],
@@ -1054,16 +1093,9 @@ export default function Home() {
   const [isPlatformVideoMuted, setIsPlatformVideoMuted] = useState(true);
   const [shouldLoadPlatformVideo, setShouldLoadPlatformVideo] = useState(false);
   const [isPerformanceMode, setIsPerformanceMode] = useState(false);
-  const activeRef = useRef(active);
-  const lockRef = useRef(false);
-  const touchStartRef = useRef({ y: 0, time: 0 });
   const platformVideoRef = useRef<HTMLVideoElement | null>(null);
   const platformVideoWrapRef = useRef<HTMLDivElement | null>(null);
   const resultsCardsRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    activeRef.current = active;
-  }, [active]);
 
   useEffect(() => {
     setIsPerformanceMode(shouldUsePerformanceMode());
@@ -1166,29 +1198,6 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [isLoading, isPerformanceMode]);
 
-  const goTo = useCallback((targetIndex: number) => {
-    const total = slides.length;
-    const normalized = (targetIndex + total) % total;
-
-    if (isLoading || normalized === activeRef.current || lockRef.current) {
-      return;
-    }
-
-    lockRef.current = true;
-    const current = activeRef.current;
-    const nextDirection =
-      normalized > current || (current === total - 1 && normalized === 0) ? 1 : -1;
-
-    setDirection(nextDirection);
-    setActive(normalized);
-
-    window.setTimeout(() => {
-      lockRef.current = false;
-    }, transitionMs);
-  }, [isLoading]);
-
-  const goNext = useCallback(() => goTo(activeRef.current + 1), [goTo]);
-  const goPrev = useCallback(() => goTo(activeRef.current - 1), [goTo]);
   const togglePlatformVideoSound = useCallback(() => {
     setShouldLoadPlatformVideo(true);
     const nextMuted = !isPlatformVideoMuted;
@@ -1237,74 +1246,9 @@ export default function Home() {
     container.scrollTo({ left: nextLeft, behavior: "smooth" });
   }, []);
 
-  useEffect(() => {
-    if (isPerformanceMode) {
-      return undefined;
-    }
-
-    const onWheel = (event: WheelEvent) => {
-      if (Math.abs(event.deltaY) < 8) {
-        return;
-      }
-      const canScrollToPlatformAd = activeRef.current === slides.length - 1 && event.deltaY > 0;
-      const isPastHero = window.scrollY > 24;
-      if (canScrollToPlatformAd || isPastHero) {
-        return;
-      }
-      event.preventDefault();
-      event.deltaY > 0 ? goNext() : goPrev();
-    };
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowDown" || event.key === "PageDown") {
-        if (activeRef.current === slides.length - 1) {
-          return;
-        }
-        event.preventDefault();
-        goNext();
-      }
-      if (event.key === "ArrowUp" || event.key === "PageUp") {
-        event.preventDefault();
-        goPrev();
-      }
-    };
-
-    const onTouchStart = (event: TouchEvent) => {
-      const touch = event.changedTouches[0];
-      touchStartRef.current = { y: touch.pageY, time: event.timeStamp };
-    };
-
-    const onTouchEnd = (event: TouchEvent) => {
-      const touch = event.changedTouches[0];
-      const distance = touch.pageY - touchStartRef.current.y;
-      const elapsed = Math.max(event.timeStamp - touchStartRef.current.time, 1);
-      const velocity = distance / elapsed;
-
-      if (Math.abs(distance) > 54 || Math.abs(velocity) > 0.35) {
-        if (activeRef.current === slides.length - 1 && distance < 0) {
-          return;
-        }
-        distance < 0 ? goNext() : goPrev();
-      }
-    };
-
-    window.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
-
-    return () => {
-      window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchend", onTouchEnd);
-    };
-  }, [goNext, goPrev, isPerformanceMode]);
-
   return (
     <main
       className={`nex-home ${isLoading && !isLoaderExiting ? "is-loading" : "is-ready"}`}
-      data-direction={direction}
     >
       {isLoading ? (
         <div
@@ -1361,36 +1305,57 @@ export default function Home() {
       </section>
 
       <div className="nex-hero-stage">
-        <div className="nex-screen-stack">
-          {slides.map((slide, index) => (
-            <section
-              className={`nex-screen ${active === index ? "is-current" : ""}`}
-              aria-hidden={active !== index}
-              key={slide.id}
-            >
-              <div className="nex-copy">
-                <p className="nex-kicker">{slide.eyebrow}</p>
-                <h1 className="nex-title">
-                  {slide.title.map((word) => (
-                    <span className="nex-title-line" key={word}>
-                      <span>{word}</span>
-                    </span>
-                  ))}
-                </h1>
-                <Link className="nex-cta" href={slide.href}>
-                  <span>{slide.cta}</span>
-                  <ArrowRight size={18} />
-                </Link>
-                <p className="nex-description">{slide.body}</p>
-              </div>
+        <div className="hero-proof-intro">
+          <div className="hero-proof-intro__copy">
+            <p className="nex-kicker">{copy.heroProof.eyebrow}</p>
+            <h1>{copy.heroProof.title}</h1>
+            <p>{copy.heroProof.body}</p>
+            <div className="hero-proof-intro__actions">
+              <Link className="nex-cta" href="/mock-test">
+                <span>{copy.heroProof.cta}</span>
+                <ArrowRight size={18} />
+              </Link>
+              <a className="hero-proof-intro__secondary" href="#top-score-proof-title">
+                {copy.heroProof.secondaryCta}
+              </a>
+            </div>
+            <div className="hero-proof-intro__stats" aria-label="Verified SAT score proof">
+              {copy.heroProof.stats.map((stat) => (
+                <div key={stat.label}>
+                  <span>{stat.label}</span>
+                  <strong>{stat.value}</strong>
+                  <p>{stat.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-              <div className="nex-index" aria-label={`Slide ${slide.stat} of 03`}>
-                <span>{slide.stat}</span>
-                <span>/</span>
-                <span>03</span>
-              </div>
-            </section>
-          ))}
+          <div className="hero-proof-intro__reports" aria-label="Verified student SAT score reports">
+            {topScoreProofs.slice(0, 3).map((proof) => (
+              <article
+                className="hero-proof-card"
+                key={proof.name}
+                style={{ "--accent": proof.accent } as CSSProperties & Record<"--accent", string>}
+              >
+                <div className="hero-proof-card__image">
+                  <img src={proof.image} alt={`${proof.name} ${proof.score} SAT score report`} />
+                </div>
+                <div className="hero-proof-card__copy">
+                  <span>{copy.topScores.studentProofLabel}</span>
+                  <h2>{proof.name}</h2>
+                  <strong>{proof.score}</strong>
+                  <p>
+                    <em>{copy.topScores.rwLabel}</em>
+                    <b>{proof.readingWriting}</b>
+                  </p>
+                  <p>
+                    <em>{copy.topScores.mathLabel}</em>
+                    <b>{proof.math}</b>
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
 
         <div className="nex-home-login">
@@ -1482,32 +1447,6 @@ export default function Home() {
           </button>
         </section>
 
-        <nav className="nex-slide-nav" aria-label="Homepage slides">
-          <div className="nex-circ-buttons">
-            <button className="nex-circ-button" onClick={goPrev} aria-label="Previous slide" type="button">
-              <ChevronUp size={18} />
-            </button>
-            <button className="nex-circ-button" onClick={goNext} aria-label="Next slide" type="button">
-              <ChevronDown size={18} />
-            </button>
-          </div>
-
-          <div className="nex-slide-tabs">
-            {slides.map((slide, index) => (
-              <button
-                className={active === index ? "is-current" : ""}
-                key={slide.id}
-                onClick={() => goTo(index)}
-                type="button"
-              >
-                <span>{slide.nav}</span>
-                <span>{slide.nav}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="nex-footer-note">Digital SAT practice engine</div>
-        </nav>
       </div>
 
       <section className="top-score-proof-section" aria-labelledby="top-score-proof-title">
@@ -1554,6 +1493,21 @@ export default function Home() {
             />
           ))}
         </div>
+      </section>
+
+      <section className="homepage-route-section" aria-label="SATTEST.UZ study route">
+        {copy.slides.map((slide) => (
+          <article className="homepage-route-section__card" key={slide.id}>
+            <span>{slide.stat}</span>
+            <p>{slide.eyebrow}</p>
+            <h2>{slide.title.join(" ")}</h2>
+            <em>{slide.body}</em>
+            <Link href={slide.href}>
+              {slide.cta}
+              <ArrowRight size={15} />
+            </Link>
+          </article>
+        ))}
       </section>
 
       <section className="founder-trust-section" aria-labelledby="founder-trust-title">
