@@ -504,8 +504,8 @@ const homeCopy: Record<
       summaryFocusBody: "Current focus: advanced Math and transitions in Reading/Writing",
       cards: [
         {
-          title: "What parents receive each week",
-          body: "Mock test score, completed task count, weak-topic list, and the plan for the next 7 days."
+          title: "Your child's score, tracked week by week, with a clear reason for every change.",
+          body: "Parents see whether the score is moving up, what caused the change, and what must be fixed next."
         },
         {
           title: "How progress is tracked",
@@ -645,8 +645,8 @@ const homeCopy: Record<
       summaryFocusBody: "Текущий фокус: сложная математика и переходы в чтении и письме",
       cards: [
         {
-          title: "Что родители получают каждую неделю",
-          body: "Балл за пробный тест, количество выполненных заданий, список слабых тем и план на следующие 7 дней."
+          title: "Балл вашего ребенка отслеживается каждую неделю, с понятной причиной каждого изменения.",
+          body: "Родители видят, растет ли результат, что повлияло на изменение и что нужно исправить дальше."
         },
         {
           title: "Как отслеживается прогресс",
@@ -819,8 +819,8 @@ const homeCopy: Record<
       summaryFocusBody: "Hozirgi fokus: murakkab matematika hamda o'qish va yozishdagi o'tish bog'lovchilari",
       cards: [
         {
-          title: "Ota-onalar har hafta nima oladi",
-          body: "Sinov testi bali, bajarilgan mashqlar soni, zaif mavzular ro'yxati va keyingi 7 kunlik reja."
+          title: "Farzandingiz bali har hafta kuzatiladi va har bir o'zgarish sababi aniq ko'rsatiladi.",
+          body: "Ota-onalar ball o'syaptimi, o'zgarishga nima sabab bo'lganini va keyin nimani tuzatish kerakligini ko'radi."
         },
         {
           title: "Progress qanday kuzatiladi",
