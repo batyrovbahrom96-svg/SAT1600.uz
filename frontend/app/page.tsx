@@ -377,6 +377,14 @@ const homeCopy: Record<
       prev: string;
       next: string;
     };
+    videoProof: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      cta: string;
+      prev: string;
+      next: string;
+    };
     testimonials: {
       eyebrow: string;
       title: string;
@@ -459,6 +467,15 @@ const homeCopy: Record<
       parentBody:
         "Thank you. Your contribution to these results is truly important. May Allah support you, and may all your students achieve high scores that make their parents proud. Amen.",
       close: "Close student results",
+      prev: "Previous student video",
+      next: "Next student video"
+    },
+    videoProof: {
+      eyebrow: "Student growth videos",
+      title: "Use these videos as proof of the SATTEST.UZ process, not as the first headline.",
+      body:
+        "The 1500+ score reports stay first. These videos belong right after them: they show real students, parent trust, and how diagnostics turn into steady score growth.",
+      cta: "Open video proof",
       prev: "Previous student video",
       next: "Next student video"
     },
@@ -612,6 +629,15 @@ const homeCopy: Record<
       parentBody:
         "Спасибо. В этих результатах есть и ваш большой вклад. Пусть Аллах поддерживает вас, а ваши ученики получают высокие баллы и радуют своих родителей. Амин.",
       close: "Закрыть результаты учеников",
+      prev: "Предыдущее видео ученика",
+      next: "Следующее видео ученика"
+    },
+    videoProof: {
+      eyebrow: "Видео роста учеников",
+      title: "Используйте эти видео как доказательство процесса SATTEST.UZ, а не как первый главный экран.",
+      body:
+        "Отчеты 1500+ остаются первыми. Эти видео идут сразу после них: они показывают реальных учеников, доверие родителей и то, как диагностика превращается в стабильный рост балла.",
+      cta: "Открыть видео-доказательство",
       prev: "Предыдущее видео ученика",
       next: "Следующее видео ученика"
     },
@@ -798,6 +824,15 @@ const homeCopy: Record<
       parentBody:
         "Rahmat, bu natijalarda sizning hissangiz ham katta. Allohim sizni qo'llab-quvvatlasin. O'quvchilaringiz yuqori ballari bilan ota-onasini xursand qilsin. Amin.",
       close: "O'quvchi natijalarini yopish",
+      prev: "Oldingi o'quvchi videosi",
+      next: "Keyingi o'quvchi videosi"
+    },
+    videoProof: {
+      eyebrow: "O'quvchilar o'sish videolari",
+      title: "Bu videolarni birinchi ekran emas, SATTEST.UZ jarayoni isboti sifatida ko'rsating.",
+      body:
+        "1500+ score reportlar birinchi bo'lib qoladi. Bu videolar esa undan keyin turadi: ular real o'quvchilarni, ota-ona ishonchini va diagnostika qanday qilib barqaror ball o'sishiga aylanishini ko'rsatadi.",
+      cta: "Video isbotni ochish",
       prev: "Oldingi o'quvchi videosi",
       next: "Keyingi o'quvchi videosi"
     },
@@ -1087,7 +1122,6 @@ export default function Home() {
   const [loadingStage, setLoadingStage] = useState<"numbers" | "brand">("numbers");
   const [isLoaderExiting, setIsLoaderExiting] = useState(false);
   const [isLoading, setIsLoading] = useState(() => !shouldSkipHomeIntro());
-  const [showResultsWall, setShowResultsWall] = useState(false);
   const [activeResultVideo, setActiveResultVideo] = useState<StudentResult | null>(null);
   const [activeFounderProof, setActiveFounderProof] = useState<"bakhrom" | "doniyor" | null>(null);
   const [isPlatformVideoMuted, setIsPlatformVideoMuted] = useState(true);
@@ -1186,18 +1220,6 @@ export default function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    if (isLoading) {
-      return undefined;
-    }
-
-    const timer = window.setTimeout(() => {
-      setShowResultsWall(true);
-    }, isPerformanceMode ? 2600 : 1100);
-
-    return () => window.clearTimeout(timer);
-  }, [isLoading, isPerformanceMode]);
-
   const togglePlatformVideoSound = useCallback(() => {
     setShouldLoadPlatformVideo(true);
     const nextMuted = !isPlatformVideoMuted;
@@ -1238,8 +1260,8 @@ export default function Home() {
   const scrollResults = useCallback((direction: -1 | 1) => {
     const container = resultsCardsRef.current;
     if (!container) return;
-    const firstCard = container.querySelector<HTMLElement>(".results-card");
-    const distance = firstCard ? firstCard.offsetWidth + 14 : 240;
+    const firstCard = container.querySelector<HTMLElement>(".student-video-proof-card");
+    const distance = firstCard ? firstCard.offsetWidth + 18 : 280;
     const maxLeft = container.scrollWidth - container.clientWidth;
     const target = container.scrollLeft + direction * distance;
     const nextLeft = Math.min(maxLeft, Math.max(0, target));
@@ -1363,90 +1385,6 @@ export default function Home() {
           <Link href="/login">Student Login</Link>
         </div>
 
-        <section
-          className={`results-wall ${showResultsWall ? "is-visible" : ""}`}
-          aria-label="Student SAT results"
-        >
-          <div className="results-wall__copy">
-            <p>{copy.results.eyebrow}</p>
-            <h2>{copy.results.title}</h2>
-            <span>{copy.results.body}</span>
-            <div className="parent-feedback" aria-label="Verified parent feedback">
-              <p>{copy.results.parentLabel}</p>
-              <div className="parent-feedback__bubble">
-                <span>{copy.results.parentSource}</span>
-                <strong>{copy.results.parentGreeting}</strong>
-                <em>{copy.results.parentBody}</em>
-              </div>
-            </div>
-          </div>
-
-          <div className="results-wall__carousel">
-            <div
-              className="results-wall__cards"
-              onWheel={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-                event.currentTarget.scrollLeft += delta;
-              }}
-              ref={resultsCardsRef}
-            >
-              {studentResults.map((result) => {
-                const resultCopy = getStudentResultCopy(result);
-
-                return (
-                  <button
-                    className="results-card"
-                    key={result.name}
-                    onClick={() => setActiveResultVideo(result)}
-                    type="button"
-                  >
-                    <video
-                      className="results-card__video"
-                      src={showResultsWall ? result.video : undefined}
-                      poster={result.certificate ?? "/assets/brand/sattest-intro-logo.png"}
-                      muted
-                      loop
-                      playsInline
-                      autoPlay={showResultsWall && !isPerformanceMode}
-                      preload={showResultsWall ? "metadata" : "none"}
-                    />
-                    <span className="results-card__shade" aria-hidden="true" />
-                    <span className="results-card__play" aria-hidden="true">
-                      <Play size={16} fill="currentColor" />
-                    </span>
-                    <span className="results-card__meta" data-sattest-no-translate="true">
-                      <strong>{result.name}</strong>
-                      <span>{result.score}</span>
-                      <span>{resultCopy.improvement}</span>
-                      <em>{resultCopy.evidence}</em>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="results-wall__controls" aria-label="Student result videos">
-              <button aria-label={copy.results.prev} onClick={() => scrollResults(-1)} type="button">
-                <ChevronLeft size={18} />
-              </button>
-              <button aria-label={copy.results.next} onClick={() => scrollResults(1)} type="button">
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
-
-          <button
-            className="results-wall__close"
-            onClick={() => setShowResultsWall(false)}
-            type="button"
-            aria-label={copy.results.close}
-          >
-            <X size={16} />
-          </button>
-        </section>
-
       </div>
 
       <section className="top-score-proof-section" aria-labelledby="top-score-proof-title">
@@ -1492,6 +1430,74 @@ export default function Home() {
               }}
             />
           ))}
+        </div>
+      </section>
+
+      <section className="student-video-proof-section" aria-labelledby="student-video-proof-title">
+        <div className="student-video-proof-section__copy">
+          <p>{copy.videoProof.eyebrow}</p>
+          <h2 id="student-video-proof-title">{copy.videoProof.title}</h2>
+          <span>{copy.videoProof.body}</span>
+        </div>
+
+        <div
+          className="student-video-proof-section__rail"
+          onWheel={(event) => {
+            const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+            event.currentTarget.scrollLeft += delta;
+          }}
+          ref={resultsCardsRef}
+        >
+          {studentResults.map((result) => {
+            const resultCopy = getStudentResultCopy(result);
+
+            return (
+              <button
+                className="student-video-proof-card"
+                key={result.name}
+                onClick={() => setActiveResultVideo(result)}
+                type="button"
+              >
+                <video
+                  className="student-video-proof-card__video"
+                  src={isPerformanceMode ? undefined : result.video}
+                  poster={result.certificate ?? "/assets/brand/sattest-intro-logo.png"}
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                />
+                <span className="student-video-proof-card__shade" aria-hidden="true" />
+                <span className="student-video-proof-card__play" aria-hidden="true">
+                  <Play size={16} fill="currentColor" />
+                </span>
+                <span className="student-video-proof-card__meta" data-sattest-no-translate="true">
+                  <strong>{result.name}</strong>
+                  <span>{result.score}</span>
+                  <span>{resultCopy.improvement}</span>
+                  <em>{copy.videoProof.cta}</em>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="student-video-proof-section__controls" aria-label="Student result videos">
+          <button aria-label={copy.videoProof.prev} onClick={() => scrollResults(-1)} type="button">
+            <ChevronLeft size={18} />
+          </button>
+          <button aria-label={copy.videoProof.next} onClick={() => scrollResults(1)} type="button">
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
+        <div className="student-video-proof-section__parent" aria-label="Verified parent feedback">
+          <p>{copy.results.parentLabel}</p>
+          <div className="parent-feedback__bubble">
+            <span>{copy.results.parentSource}</span>
+            <strong>{copy.results.parentGreeting}</strong>
+            <em>{copy.results.parentBody}</em>
+          </div>
         </div>
       </section>
 

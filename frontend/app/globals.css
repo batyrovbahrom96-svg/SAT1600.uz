@@ -3063,6 +3063,294 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   font-weight: 800;
 }
 
+.student-video-proof-section {
+  position: relative;
+  z-index: 4;
+  overflow: hidden;
+  padding: clamp(68px, 9vw, 126px) 0 clamp(76px, 10vw, 136px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at 78% 12%, rgba(143, 241, 198, 0.1), transparent 30%),
+    radial-gradient(circle at 18% 88%, rgba(215, 204, 149, 0.11), transparent 28%),
+    linear-gradient(180deg, #070808 0%, #0b0c0b 52%, #060606 100%);
+}
+
+.student-video-proof-section::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 86px 86px;
+  content: "";
+  opacity: 0.32;
+}
+
+.student-video-proof-section__copy,
+.student-video-proof-section__rail,
+.student-video-proof-section__controls,
+.student-video-proof-section__parent {
+  position: relative;
+  z-index: 1;
+}
+
+.student-video-proof-section__copy {
+  display: grid;
+  max-width: 1180px;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.56fr);
+  gap: clamp(18px, 4vw, 54px);
+  align-items: end;
+  padding: 0 clamp(20px, 5vw, 76px);
+  margin: 0 auto 34px;
+}
+
+.student-video-proof-section__copy p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #d7cc95;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.46em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.student-video-proof-section__copy h2 {
+  max-width: 960px;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(42px, 6.6vw, 104px);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.98;
+}
+
+.student-video-proof-section__copy > span {
+  display: block;
+  max-width: 520px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: clamp(17px, 1.35vw, 22px);
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.student-video-proof-section__rail {
+  display: grid;
+  grid-auto-columns: minmax(290px, 380px);
+  grid-auto-flow: column;
+  gap: 18px;
+  overflow-x: auto;
+  padding: 6px clamp(20px, 5vw, 76px) 22px;
+  scroll-padding-inline: clamp(20px, 5vw, 76px);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.student-video-proof-card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  min-height: 520px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0;
+  background: #111;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.38);
+  color: inherit;
+  cursor: pointer;
+  scroll-snap-align: start;
+  text-align: left;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.student-video-proof-card:hover {
+  border-color: rgba(215, 204, 149, 0.52);
+  transform: translateY(-4px);
+}
+
+.student-video-proof-card__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #161616;
+  object-fit: cover;
+}
+
+.student-video-proof-card__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.42) 48%, rgba(0, 0, 0, 0.86)),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.28), transparent 55%);
+}
+
+.student-video-proof-card__play {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  backdrop-filter: blur(10px);
+}
+
+.student-video-proof-card__meta {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  left: 24px;
+  display: grid;
+  gap: 10px;
+  color: #fff;
+}
+
+.student-video-proof-card__meta strong {
+  font-size: clamp(26px, 2.3vw, 36px);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.student-video-proof-card__meta span {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.student-video-proof-card__meta em {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  color: #d7cc95;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.student-video-proof-section__controls {
+  display: flex;
+  max-width: 1180px;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 0 clamp(20px, 5vw, 76px);
+  margin: 0 auto 24px;
+}
+
+.student-video-proof-section__controls button {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: #050505;
+  cursor: pointer;
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.student-video-proof-section__controls button:hover {
+  background: #d7cc95;
+  transform: translateY(-2px);
+}
+
+.student-video-proof-section__parent {
+  max-width: 1180px;
+  padding: 0 clamp(20px, 5vw, 76px);
+  margin: 0 auto;
+}
+
+.student-video-proof-section__parent > p {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+}
+
+.student-video-proof-section__parent .parent-feedback__bubble {
+  max-width: 520px;
+}
+
+@media (max-width: 900px) {
+  .student-video-proof-section__copy {
+    grid-template-columns: 1fr;
+  }
+
+  .student-video-proof-section__copy h2 {
+    font-size: clamp(38px, 12vw, 72px);
+    line-height: 1;
+  }
+
+  .student-video-proof-section__copy > span {
+    max-width: 680px;
+  }
+}
+
+@media (max-width: 640px) {
+  .student-video-proof-section {
+    padding-top: 58px;
+  }
+
+  .student-video-proof-section__copy {
+    margin-bottom: 24px;
+  }
+
+  .student-video-proof-section__copy p {
+    font-size: 11px;
+    letter-spacing: 0.32em;
+  }
+
+  .student-video-proof-section__rail {
+    grid-auto-columns: minmax(254px, 78vw);
+    gap: 14px;
+  }
+
+  .student-video-proof-card {
+    min-height: 430px;
+  }
+
+  .student-video-proof-card__play {
+    width: 54px;
+    height: 54px;
+  }
+
+  .student-video-proof-card__meta {
+    right: 18px;
+    bottom: 18px;
+    left: 18px;
+  }
+
+  .student-video-proof-card__meta span {
+    font-size: 13px;
+  }
+
+  .student-video-proof-section__controls {
+    justify-content: flex-start;
+  }
+
+  .student-video-proof-section__parent .parent-feedback__bubble {
+    max-width: none;
+  }
+}
+
 .homepage-route-section {
   position: relative;
   z-index: 4;
