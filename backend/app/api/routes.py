@@ -30,7 +30,7 @@ from app.services.sat_engine import (
     save_answer,
     start_attempt,
 )
-from app.services.telegram_payments import handle_telegram_update
+from app.services.telegram_payments import handle_telegram_update, process_subscription_maintenance
 
 router = APIRouter(prefix="/api")
 verification_codes: dict[str, dict[str, datetime | str]] = {}
@@ -203,6 +203,16 @@ def telegram_status() -> dict:
         "admin_chat_id_configured": bool(settings.telegram_admin_chat_id),
         "database_configured": bool(settings.database_url),
     }
+
+
+@router.post("/telegram/daily-report")
+def telegram_daily_report(request: Request, db: Session = Depends(get_db)) -> dict:
+    settings = get_settings()
+    if settings.telegram_webhook_secret:
+        secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+        if secret != settings.telegram_webhook_secret:
+            raise HTTPException(status_code=403, detail="Invalid Telegram report secret")
+    return process_subscription_maintenance(db, send_daily_report=True)
 
 
 def _send_verification_email(email: str, code: str) -> bool:
@@ -441,9 +451,15 @@ def admin_subscriptions(db: Session = Depends(get_db), _: User = Depends(require
             "status": subscription.status,
             "provider": subscription.provider,
             "provider_customer_id": subscription.provider_customer_id,
+            "payer_full_name": subscription.payer_full_name,
+            "payer_phone": subscription.payer_phone,
             "price_amount": float(subscription.price_amount or 0),
             "currency": subscription.currency,
+            "current_period_start": subscription.current_period_start.isoformat() if subscription.current_period_start else None,
             "current_period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+            "renewal_reminders_sent": subscription.renewal_reminders_sent,
+            "last_renewal_reminder_at": subscription.last_renewal_reminder_at.isoformat() if subscription.last_renewal_reminder_at else None,
+            "canceled_at": subscription.canceled_at.isoformat() if subscription.canceled_at else None,
             "created_at": subscription.created_at.isoformat(),
         }
         for subscription, user in rows
@@ -455,8 +471,10 @@ def revoke_subscription(subscription_id: UUID, db: Session = Depends(get_db), _:
     subscription = db.get(Subscription, subscription_id)
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
+    now = datetime.utcnow()
     subscription.status = "revoked"
-    subscription.current_period_end = datetime.utcnow()
+    subscription.current_period_end = now
+    subscription.canceled_at = now
     db.commit()
     db.refresh(subscription)
     return {

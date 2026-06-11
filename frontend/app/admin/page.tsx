@@ -48,9 +48,15 @@ type AdminSubscription = {
   status: string;
   provider: string | null;
   provider_customer_id: string | null;
+  payer_full_name: string | null;
+  payer_phone: string | null;
   price_amount: number;
   currency: string;
+  current_period_start: string | null;
   current_period_end: string | null;
+  renewal_reminders_sent: number;
+  last_renewal_reminder_at: string | null;
+  canceled_at: string | null;
   created_at: string;
 };
 
@@ -148,24 +154,31 @@ export default function AdminPage() {
           </div>
 
           <div className="mt-4 overflow-auto rounded-lg border border-slate-200">
-            <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+            <table className="w-full min-w-[1200px] border-collapse text-left text-sm">
               <thead className="bg-slate-50">
                 <tr className="border-b border-slate-200">
                   <th className="p-3">Student</th>
                   <th className="p-3">Email</th>
+                  <th className="p-3">Phone</th>
                   <th className="p-3">Plan</th>
                   <th className="p-3">Amount</th>
                   <th className="p-3">Provider</th>
                   <th className="p-3">Status</th>
-                  <th className="p-3">Created</th>
+                  <th className="p-3">Start</th>
+                  <th className="p-3">End</th>
+                  <th className="p-3">Reminders</th>
                   <th className="p-3">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {subscriptions.length ? subscriptions.map((subscription) => (
                   <tr key={subscription.id} className="border-b border-slate-100">
-                    <td className="p-3 font-bold text-ink">{subscription.student_name}</td>
+                    <td className="p-3">
+                      <div className="font-bold text-ink">{subscription.student_name}</div>
+                      {subscription.payer_full_name ? <div className="text-xs text-slate-500">Payer: {subscription.payer_full_name}</div> : null}
+                    </td>
                     <td className="p-3 text-slate-600">{subscription.email}</td>
+                    <td className="p-3 text-slate-600">{subscription.payer_phone || "n/a"}</td>
                     <td className="p-3 font-bold uppercase">{subscription.plan}</td>
                     <td className="p-3">{subscription.price_amount.toLocaleString()} {subscription.currency}</td>
                     <td className="p-3 text-slate-600">{subscription.provider || "n/a"}</td>
@@ -174,7 +187,9 @@ export default function AdminPage() {
                         {subscription.status}
                       </span>
                     </td>
-                    <td className="p-3 text-slate-600">{new Date(subscription.created_at).toLocaleString()}</td>
+                    <td className="p-3 text-slate-600">{subscription.current_period_start ? new Date(subscription.current_period_start).toLocaleString() : "n/a"}</td>
+                    <td className="p-3 text-slate-600">{subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleString() : "n/a"}</td>
+                    <td className="p-3 text-slate-600">{subscription.renewal_reminders_sent}/3</td>
                     <td className="p-3">
                       <button
                         className="flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
@@ -188,7 +203,7 @@ export default function AdminPage() {
                   </tr>
                 )) : (
                   <tr>
-                    <td className="p-4 text-slate-500" colSpan={8}>No payment receipts yet.</td>
+                    <td className="p-4 text-slate-500" colSpan={11}>No payment receipts yet.</td>
                   </tr>
                 )}
               </tbody>

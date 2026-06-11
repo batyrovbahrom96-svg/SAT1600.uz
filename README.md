@@ -217,6 +217,17 @@ Operational notes:
 - Railway filesystem is ephemeral; graph images are fine for MVP but should move to object storage when traffic grows.
 - In-memory rate limiting is per Railway instance. Use Redis later if scaling to multiple instances.
 
+Telegram payment bot operations:
+
+- Receipt caption must include full name, phone number, registered email, and plan.
+- The bot activates Pro immediately for 30 days after a valid receipt caption reaches the live database.
+- The bot stores subscription start/end dates and sends the student the exact dates after activation.
+- Founder can type `/pro_report` in the bot to receive the current Pro-user report.
+- Configure a daily scheduler to `POST https://api.sattest.uz/api/telegram/daily-report` with header `X-Telegram-Bot-Api-Secret-Token: <TELEGRAM_WEBHOOK_SECRET>`.
+- The daily report endpoint sends the Founder active Pro count, same-day activations, expiring subscriptions, and expired/revoked count.
+- The same daily endpoint sends renewal reminders during the final 3 days, then marks expired subscriptions inactive after the end date.
+- Manual fraud cancellation remains Founder-only through the Telegram revoke button or the admin dashboard after checking Paynet/payment records.
+
 ## Production Validation Checklist
 
 Frontend:

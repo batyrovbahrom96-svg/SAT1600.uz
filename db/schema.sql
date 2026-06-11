@@ -180,11 +180,20 @@ CREATE TABLE subscriptions (
   status VARCHAR(40) NOT NULL DEFAULT 'inactive',
   provider VARCHAR(80),
   provider_customer_id VARCHAR(255),
+  payer_full_name VARCHAR(255),
+  payer_phone VARCHAR(40),
+  current_period_start TIMESTAMP,
   current_period_end TIMESTAMP,
+  renewal_reminders_sent INTEGER NOT NULL DEFAULT 0,
+  last_renewal_reminder_at TIMESTAMP,
+  canceled_at TIMESTAMP,
   price_amount NUMERIC(10, 2),
   currency VARCHAR(8) NOT NULL DEFAULT 'UZS',
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX ix_subscriptions_status_period ON subscriptions(status, current_period_end);
+CREATE INDEX ix_subscriptions_provider_customer ON subscriptions(provider_customer_id);
 
 CREATE INDEX ix_questions_sat_routing ON questions(test_id, section, module, adaptive_level, difficulty);
 CREATE INDEX ix_questions_source ON questions(source);
