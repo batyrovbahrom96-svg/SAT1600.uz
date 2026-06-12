@@ -473,7 +473,7 @@ const homeCopy: Record<
     },
     videoProof: {
       eyebrow: "Student growth videos",
-      title: "Use these videos as proof of the SATTEST.UZ process, not as the first headline.",
+      title: "Real student videos with verified SAT score proof.",
       body:
         "The 1500+ score reports stay first. These videos belong right after them: they show real students, parent trust, and how diagnostics turn into steady score growth.",
       cta: "Open video proof",
@@ -637,7 +637,7 @@ const homeCopy: Record<
     },
     videoProof: {
       eyebrow: "Видео роста учеников",
-      title: "Используйте эти видео как доказательство процесса SATTEST.UZ, а не как первый главный экран.",
+      title: "Видео реальных учеников с подтвержденными SAT-результатами.",
       body:
         "Отчеты 1500+ остаются первыми. Эти видео идут сразу после них: они показывают реальных учеников, доверие родителей и то, как диагностика превращается в стабильный рост балла.",
       cta: "Открыть видео-доказательство",
@@ -834,7 +834,7 @@ const homeCopy: Record<
     },
     videoProof: {
       eyebrow: "O'quvchilar o'sish videolari",
-      title: "Bu videolarni birinchi ekran emas, SATTEST.UZ jarayoni isboti sifatida ko'rsating.",
+      title: "Real o'quvchilar videolari va tasdiqlangan SAT natijalari.",
       body:
         "1500+ score reportlar birinchi bo'lib qoladi. Bu videolar esa undan keyin turadi: ular real o'quvchilarni, ota-ona ishonchini va diagnostika qanday qilib barqaror ball o'sishiga aylanishini ko'rsatadi.",
       cta: "Video isbotni ochish",
