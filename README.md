@@ -219,7 +219,7 @@ Operational notes:
 
 Telegram payment bot operations:
 
-- Receipt caption must include full name, phone number, registered email, and plan.
+- Receipt caption can be plain: full name, phone number, and registered email. Plan defaults to Pro automatically.
 - The bot activates Pro immediately for 30 days after a valid receipt caption reaches the live database.
 - The bot stores subscription start/end dates and sends the student the exact dates after activation.
 - Founder can type `/pro_report` in the bot to receive the current Pro-user report.

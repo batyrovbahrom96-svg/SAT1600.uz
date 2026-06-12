@@ -30,6 +30,10 @@ PHONE_RE = re.compile(r"(?:\+?998|998)?[\s\-.]?\d{2}[\s\-.]?\d{3}[\s\-.]?\d{2}[\
 NAME_LINE_RE = re.compile(r"(?im)^\s*(?:full\s*name|name|fio|фио|имя|ism|to'liq\s*ism|toliq\s*ism)\s*[:\-]\s*(.+?)\s*$")
 PHONE_LINE_RE = re.compile(r"(?im)^\s*(?:phone|telephone|tel|телефон|nomer|raqam)\s*[:\-]\s*(.+?)\s*$")
 EMAIL_LINE_RE = re.compile(r"(?im)^\s*(?:email|e-mail|почта)\s*[:\-]\s*([\w.+-]+@[\w-]+(?:\.[\w-]+)+)\s*$")
+CAPTION_LABEL_RE = re.compile(
+    r"(?i)^\s*(?:full\s*name|name|fio|фио|имя|ism|to'liq\s*ism|toliq\s*ism|phone|telephone|tel|телефон|nomer|raqam|email|e-mail|почта|plan|tariff|tarif|тариф|reja)\s*[:\-]\s*"
+)
+PLAN_LINE_RE = re.compile(r"(?im)^\s*(?:plan|tariff|tarif|тариф|reja)\s*[:\-]\s*(.+?)\s*$")
 TASHKENT_TZ = ZoneInfo("Asia/Tashkent")
 
 PAYMENT_WARNING_TEXT = (
@@ -39,44 +43,41 @@ PAYMENT_WARNING_TEXT = (
 )
 
 START_MESSAGE = (
-    "EN: To activate SATTEST.UZ Pro, send your payment screenshot or PDF with this caption:\n"
-    "Full name: Your full name\n"
-    "Phone: +998901234567\n"
-    "Email: your-email@example.com\n"
-    "Plan: pro\n\n"
-    "You can pay by Click, Payme, Paynet, bank card, or transfer. After you send the receipt with your registered email, the bot activates Pro automatically.\n\n"
-    "RU: Чтобы активировать SATTEST.UZ Pro, отправьте скриншот или PDF-чек с подписью:\n"
-    "ФИО: Ваше полное имя\n"
-    "Телефон: +998901234567\n"
-    "Email: your-email@example.com\n"
-    "Тариф: pro\n\n"
-    "Оплатить можно через Click, Payme, Paynet, банковскую карту или перевод. После отправки чека с email, указанным при регистрации, бот автоматически активирует Pro.\n\n"
-    "UZ: SATTEST.UZ Pro kirishini faollashtirish uchun to'lov skrinshoti yoki PDF chekni quyidagi izoh bilan yuboring:\n"
-    "To'liq ism: Ism familiyangiz\n"
-    "Telefon: +998901234567\n"
-    "Email: your-email@example.com\n"
-    "Tarif: pro\n\n"
-    "To'lovni Click, Payme, Paynet, bank kartasi yoki o'tkazma orqali qilishingiz mumkin. Ro'yxatdan o'tgan emailingiz bilan chek yuborilgach, bot Pro kirishni avtomatik faollashtiradi.\n\n"
+    "EN: To activate SATTEST.UZ Pro, send your payment screenshot or PDF. In the caption, write only these 3 lines:\n"
+    "Your full name\n"
+    "+998901234567\n"
+    "your-email@example.com\n\n"
+    "No labels are needed. The bot treats every valid receipt as Pro and activates access automatically.\n\n"
+    "RU: Чтобы активировать SATTEST.UZ Pro, отправьте скриншот или PDF-чек. В подписи напишите только 3 строки:\n"
+    "Ваше полное имя\n"
+    "+998901234567\n"
+    "your-email@example.com\n\n"
+    "Без слов ФИО, телефон, тариф. Бот считает каждый правильный чек тарифом Pro и активирует доступ автоматически.\n\n"
+    "UZ: SATTEST.UZ Pro kirishini faollashtirish uchun to'lov skrinshoti yoki PDF chek yuboring. Izohga faqat 3 qator yozing:\n"
+    "Ism familiyangiz\n"
+    "+998901234567\n"
+    "your-email@example.com\n\n"
+    "Full name, Phone, Plan kabi so'zlar kerak emas. Bot har bir to'g'ri chekni Pro deb qabul qiladi va kirishni avtomatik faollashtiradi.\n\n"
     f"{PAYMENT_WARNING_TEXT}"
 )
 
 RECEIPT_REQUEST_MESSAGE = (
-    "EN: Please send the payment screenshot or PDF with full name, phone number, registered email, and plan in the caption.\n"
-    "Example:\nFull name: Your full name\nPhone: +998901234567\nEmail: your-email@example.com\nPlan: pro\n\n"
-    "RU: Отправьте скриншот или PDF-чек с ФИО, телефоном, email регистрации и тарифом в подписи.\n"
-    "Пример:\nФИО: Ваше полное имя\nТелефон: +998901234567\nEmail: your-email@example.com\nТариф: pro\n\n"
-    "UZ: To'lov skrinshoti yoki PDF chekni to'liq ism, telefon raqam, ro'yxatdan o'tgan email va tarif bilan yuboring.\n"
-    "Namuna:\nTo'liq ism: Ism familiyangiz\nTelefon: +998901234567\nEmail: your-email@example.com\nTarif: pro\n\n"
+    "EN: Please send the payment screenshot or PDF. Caption format: full name, phone number, email. No labels, no plan.\n"
+    "Example:\nYour full name\n+998901234567\nyour-email@example.com\n\n"
+    "RU: Отправьте скриншот или PDF-чек. Формат подписи: полное имя, телефон, email. Без подписей и без тарифа.\n"
+    "Пример:\nВаше полное имя\n+998901234567\nyour-email@example.com\n\n"
+    "UZ: To'lov skrinshoti yoki PDF chekni yuboring. Izoh formati: ism familiya, telefon, email. Yorliqsiz va tarifsiz.\n"
+    "Namuna:\nIsm familiyangiz\n+998901234567\nyour-email@example.com\n\n"
     f"{PAYMENT_WARNING_TEXT}"
 )
 
 EMAIL_MISSING_MESSAGE = (
-    "EN: I received the receipt, but full name, phone number, or account email is missing. Please resend the receipt with this exact caption:\n"
-    "Full name: Your full name\nPhone: +998901234567\nEmail: your-email@example.com\nPlan: pro\n\n"
-    "RU: Чек получен, но не хватает ФИО, телефона или email аккаунта. Отправьте чек заново с такой подписью:\n"
-    "ФИО: Ваше полное имя\nТелефон: +998901234567\nEmail: your-email@example.com\nТариф: pro\n\n"
-    "UZ: Chek qabul qilindi, lekin to'liq ism, telefon yoki akkaunt emaili yetishmayapti. Chekni shu izoh bilan qayta yuboring:\n"
-    "To'liq ism: Ism familiyangiz\nTelefon: +998901234567\nEmail: your-email@example.com\nTarif: pro"
+    "EN: I received the receipt, but I could not read the full name, phone number, and email. Please resend the receipt with only 3 lines:\n"
+    "Your full name\n+998901234567\nyour-email@example.com\n\n"
+    "RU: Чек получен, но я не смог прочитать полное имя, телефон и email. Отправьте чек заново только с 3 строками:\n"
+    "Ваше полное имя\n+998901234567\nyour-email@example.com\n\n"
+    "UZ: Chek qabul qilindi, lekin ism familiya, telefon va emailni aniqlay olmadim. Chekni faqat 3 qator bilan qayta yuboring:\n"
+    "Ism familiyangiz\n+998901234567\nyour-email@example.com"
 )
 
 RENEWAL_REMINDER_MESSAGE = (
@@ -545,12 +546,75 @@ def _extract_phone(text: str) -> str | None:
 
 def _extract_full_name(text: str) -> str | None:
     match = NAME_LINE_RE.search(text)
-    if not match:
+    if match:
+        name = match.group(1)
+    else:
+        name = _extract_plain_full_name(text)
+    if not name:
         return None
-    name = re.sub(r"\s+", " ", match.group(1)).strip()
+    name = re.sub(r"\s+", " ", name).strip(" :-–—,;")
     if len(name.split()) < 2 or len(name) > 120:
         return None
     return name
+
+
+def _extract_plain_full_name(text: str) -> str | None:
+    email = _extract_email(text)
+    phone = _extract_phone(text)
+    phone_digits = re.sub(r"\D", "", phone or "")
+
+    for raw_line in text.splitlines():
+        line = CAPTION_LABEL_RE.sub("", raw_line).strip()
+        if not line:
+            continue
+        if email and email.lower() in line.lower():
+            continue
+        if phone_digits and phone_digits in re.sub(r"\D", "", line):
+            continue
+        if _looks_like_plan_only(line):
+            continue
+        candidate = _remove_contact_tokens(line).strip(" :-–—,;")
+        if _looks_like_full_name(candidate):
+            return candidate
+
+    compact = _remove_contact_tokens(text)
+    compact_lines = []
+    for raw_line in compact.splitlines():
+        line = CAPTION_LABEL_RE.sub("", raw_line).strip(" :-–—,;")
+        if not line or _looks_like_plan_only(line):
+            continue
+        compact_lines.append(line)
+
+    if compact_lines:
+        candidate = " ".join(compact_lines)
+        if _looks_like_full_name(candidate):
+            return candidate
+
+    return None
+
+
+def _remove_contact_tokens(text: str) -> str:
+    text = EMAIL_RE.sub(" ", text)
+    text = PHONE_RE.sub(" ", text)
+    text = PLAN_LINE_RE.sub(" ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _looks_like_plan_only(text: str) -> bool:
+    cleaned = CAPTION_LABEL_RE.sub("", text).strip().lower()
+    cleaned = re.sub(r"[^a-zа-яё' ]+", "", cleaned)
+    return cleaned in PLAN_ALIASES or cleaned in {"pro", "про", "тариф pro", "tarif pro", "reja pro"}
+
+
+def _looks_like_full_name(text: str) -> bool:
+    if not text:
+        return False
+    if EMAIL_RE.search(text) or PHONE_RE.search(text):
+        return False
+    words = [word for word in re.split(r"\s+", text.strip()) if word]
+    if len(words) < 2 or len(text) > 120:
+        return False
+    return any(any(ch.isalpha() for ch in word) for word in words)
 
 
 def _extract_receipt_payload(text: str) -> dict:
@@ -563,6 +627,12 @@ def _extract_receipt_payload(text: str) -> dict:
 
 
 def _extract_plan(text: str) -> str:
+    line_match = PLAN_LINE_RE.search(text)
+    if line_match:
+        lowered = line_match.group(1).strip().lower()
+        for alias, plan in PLAN_ALIASES.items():
+            if alias in lowered:
+                return plan
     lowered = text.lower()
     for alias, plan in PLAN_ALIASES.items():
         if alias in lowered:
