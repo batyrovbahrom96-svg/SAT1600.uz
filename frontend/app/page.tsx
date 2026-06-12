@@ -1444,7 +1444,6 @@ export default function Home() {
         <div className="student-video-proof-section__copy">
           <p>{copy.videoProof.eyebrow}</p>
           <h2 id="student-video-proof-title">{copy.videoProof.title}</h2>
-          <span>{copy.videoProof.body}</span>
         </div>
 
         <div
