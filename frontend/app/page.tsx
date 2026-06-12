@@ -50,7 +50,6 @@ const partnerLogos = [
   { logo: "/assets/partners/mister%20doniyor.webp", name: "Mr. Doniyor School" },
   { logo: "/assets/partners/result-logo.jpg", name: "Result Learning Center" },
   { logo: "/assets/partners/Thompson.jpg", name: "Thompson Learning Center" },
-  { logo: "/assets/partners/Screenshot%202026-05-31%20at%2022.26.00.png", name: "AzaMath" },
   { logo: "/assets/partners/Cambridge%20Learning%20Center.jpg", name: "Cambridge Learning Center" },
   { logo: "/assets/partners/Richmond%20School.png", name: "Richmond School" }
 ];
