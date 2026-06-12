@@ -1327,7 +1327,7 @@ export default function Home() {
       </section>
 
       <div className="nex-hero-stage">
-        <div className="hero-proof-intro">
+        <div className="hero-proof-intro" data-sattest-no-translate="true">
           <div className="hero-proof-intro__copy">
             <p className="nex-kicker">{copy.heroProof.eyebrow}</p>
             <h1>{copy.heroProof.title}</h1>
@@ -1387,7 +1387,7 @@ export default function Home() {
 
       </div>
 
-      <section className="top-score-proof-section" aria-labelledby="top-score-proof-title">
+      <section className="top-score-proof-section" aria-labelledby="top-score-proof-title" data-sattest-no-translate="true">
         <div className="top-score-proof-section__copy">
           <p className="top-score-proof-section__eyebrow">{copy.topScores.eyebrow}</p>
           <h2 id="top-score-proof-title">{copy.topScores.title}</h2>
@@ -1433,7 +1433,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="student-video-proof-section" aria-labelledby="student-video-proof-title">
+      <section className="student-video-proof-section" aria-labelledby="student-video-proof-title" data-sattest-no-translate="true">
         <div className="student-video-proof-section__copy">
           <p>{copy.videoProof.eyebrow}</p>
           <h2 id="student-video-proof-title">{copy.videoProof.title}</h2>
@@ -1501,7 +1501,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="homepage-route-section" aria-label="SATTEST.UZ study route">
+      <section className="homepage-route-section" aria-label="SATTEST.UZ study route" data-sattest-no-translate="true">
         {copy.slides.map((slide) => (
           <article className="homepage-route-section__card" key={slide.id}>
             <span>{slide.stat}</span>
