@@ -433,6 +433,8 @@ const homeCopy: Record<
       body: string;
       telegramLabel: string;
       telegramBody: string;
+      channelLabel: string;
+      channelBody: string;
       emailLabel: string;
       emailBody: string;
       phoneLabel: string;
@@ -571,6 +573,8 @@ const homeCopy: Record<
       body: "Message us before payment, after registration, or when you need help understanding the next study step.",
       telegramLabel: "Telegram",
       telegramBody: "Fastest contact for payment, access, and parent questions.",
+      channelLabel: "News channel",
+      channelBody: "Updates, SAT materials, video lessons, and platform news.",
       emailLabel: "Email",
       emailBody: "Use email for longer questions, documents, or formal requests.",
       phoneLabel: "Phone",
@@ -766,6 +770,8 @@ const homeCopy: Record<
       body: "Напишите нам до оплаты, после регистрации или если нужна помощь с пониманием следующего шага подготовки.",
       telegramLabel: "Telegram",
       telegramBody: "Самый быстрый канал для оплаты, доступа и вопросов родителей.",
+      channelLabel: "Канал новостей",
+      channelBody: "Обновления, SAT-материалы, видеоуроки и новости платформы.",
       emailLabel: "Email",
       emailBody: "Используйте email для длинных вопросов, документов или официальных запросов.",
       phoneLabel: "Телефон",
@@ -961,6 +967,8 @@ const homeCopy: Record<
       body: "To'lovdan oldin, ro'yxatdan o'tgandan keyin yoki keyingi tayyorgarlik qadamini tushunish uchun bizga yozing.",
       telegramLabel: "Telegram",
       telegramBody: "To'lov, kirish va ota-onalar savollari uchun eng tez aloqa.",
+      channelLabel: "Yangiliklar kanali",
+      channelBody: "Yangiliklar, SAT materiallari, video darslar va platforma xabarlari.",
       emailLabel: "Email",
       emailBody: "Uzun savollar, hujjatlar yoki rasmiy murojaatlar uchun emaildan foydalaning.",
       phoneLabel: "Telefon",
@@ -1942,6 +1950,22 @@ export default function Home() {
               <strong>{copy.contact.telegramLabel}</strong>
               <small>@FounderSATTESTUZ</small>
               <em>{copy.contact.telegramBody}</em>
+            </span>
+          </Link>
+
+          <Link
+            className="site-contact-footer__card"
+            href="https://t.me/sattestuz"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span className="site-contact-footer__icon">
+              <Send size={22} />
+            </span>
+            <span>
+              <strong>{copy.contact.channelLabel}</strong>
+              <small>@sattestuz</small>
+              <em>{copy.contact.channelBody}</em>
             </span>
           </Link>
 
