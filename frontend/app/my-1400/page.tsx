@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BarChart3, BookOpen, CalendarDays, Check, CheckCircle2, Clock, FileText, LockKeyhole, Target, Users, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { api, getToken } from "@/lib/api";
+import { calculateDiagnosticResult, type DiagnosticResult } from "@/lib/free-diagnostic";
+import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-diagnostic-storage";
 
 type ScoreHistoryItem = { attempt_id: string; score: number; date: string };
 type AnalyticsHistory = { score_history: ScoreHistoryItem[]; attempts: number };
@@ -105,12 +107,19 @@ const routeSampleQuestions = [
 export default function My1400Page() {
   const router = useRouter();
   const [state, setState] = useState<"checking" | "login" | "diagnostic">("checking");
+  const [freeDiagnostic, setFreeDiagnostic] = useState<StoredFreeDiagnostic | null>(null);
+  const freeDiagnosticResult = useMemo<DiagnosticResult | null>(() => {
+    if (!freeDiagnostic) return null;
+    return calculateDiagnosticResult(freeDiagnostic.answers);
+  }, [freeDiagnostic]);
 
   useEffect(() => {
     if (!getToken()) {
       setState("login");
       return;
     }
+
+    setFreeDiagnostic(getFreeDiagnosticResult());
 
     api<AnalyticsHistory>("/api/analytics/me")
       .then((history) => {
@@ -140,7 +149,11 @@ export default function My1400Page() {
     return (
       <main className="min-h-screen bg-[#101112] text-white">
         <LuxuryNavbar />
-        <My1400PreviewDashboard diagnosticMode />
+        {freeDiagnostic && freeDiagnosticResult ? (
+          <My1400SavedDiagnostic diagnostic={freeDiagnostic} result={freeDiagnosticResult} />
+        ) : (
+          <My1400PreviewDashboard diagnosticMode />
+        )}
       </main>
     );
   }
@@ -153,6 +166,125 @@ export default function My1400Page() {
         <h1 className="mt-5 text-4xl font-light text-white md:text-5xl">Opening your personal curriculum</h1>
       </section>
     </main>
+  );
+}
+
+function My1400SavedDiagnostic({
+  diagnostic,
+  result
+}: {
+  diagnostic: StoredFreeDiagnostic;
+  result: DiagnosticResult;
+}) {
+  const weakAreas = result.weakAreas.slice(0, 3);
+  const expiry = new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(new Date(diagnostic.expiresAt));
+
+  return (
+    <section className="mx-auto max-w-[1320px] px-5 py-10 md:px-8 md:py-14">
+      <div className="grid gap-5 lg:grid-cols-[0.9fr_0.7fr] lg:items-start">
+        <div className="border border-[#c8bd88]/30 bg-[#c8bd88]/[0.07] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.35)] md:p-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#c8bd88]">Saved Free Diagnostic</p>
+          <h1 className="mt-5 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
+            Your My 1400+ route starts from ≈{result.estimatedTotal}.
+          </h1>
+          <p className="mt-6 max-w-3xl text-lg font-semibold leading-8 text-white/72">
+            This diagnostic is saved for 48 hours. Your weak areas are already inside My 1400+, so after Pro payment the next step is the full mock test and your 30-day plan.
+          </p>
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <SavedStat label="Estimated score" value={`≈${result.estimatedTotal}`} />
+            <SavedStat label="Reading/Writing" value={`≈${result.estimatedRw}`} />
+            <SavedStat label="Math" value={`≈${result.estimatedMath}`} />
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro&from=my-1400&payment=qr">
+              Open payment QR <ArrowRight size={18} />
+            </Link>
+            <Link className="flex items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/mock-test">
+              Retake diagnostic <ArrowRight size={18} />
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid gap-5">
+          <div className="border border-white/10 bg-white/[0.035] p-5 md:p-6">
+            <div className="flex items-center gap-3">
+              <Target size={19} className="text-[#c8bd88]" />
+              <h2 className="text-2xl font-light text-white">Weak areas saved</h2>
+            </div>
+            <div className="mt-5 grid gap-3">
+              {weakAreas.map((area) => (
+                <div className="border border-white/10 bg-black/20 p-4" data-sattest-no-translate="true" key={area}>
+                  <p className="text-lg font-semibold text-white">{area}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border border-white/10 bg-white/[0.035] p-5 md:p-6">
+            <div className="flex items-center gap-3">
+              <CalendarDays size={19} className="text-white/50" />
+              <h2 className="text-2xl font-light text-white">Saved until</h2>
+            </div>
+            <p className="mt-4 text-3xl font-light text-white">{expiry}</p>
+            <p className="mt-3 text-sm leading-6 text-white/52">
+              Refreshing this page will keep the result. After 48 hours, the free diagnostic result expires and the student should retake it.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
+        <div className="border border-white/10 bg-white/[0.035] p-5 md:p-6">
+          <div className="flex items-center gap-3">
+            <BarChart3 size={19} className="text-white/50" />
+            <h2 className="text-2xl font-light text-white">Topic accuracy from the diagnostic</h2>
+          </div>
+          <div className="mt-5 grid gap-4">
+            {result.topicAccuracy.map((topic) => (
+              <div key={topic.topic}>
+                <div className="flex items-center justify-between gap-4 text-sm">
+                  <span className="font-semibold text-white/78" data-sattest-no-translate="true">{topic.topic}</span>
+                  <span className="text-white/45">{topic.correct}/{topic.total} · {topic.accuracy}%</span>
+                </div>
+                <div className="mt-2 h-2 bg-white/10">
+                  <span className="block h-full bg-[#c8bd88]" style={{ width: `${topic.accuracy}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="border border-white/10 bg-white/[0.035] p-5 md:p-6">
+          <div className="flex items-center gap-3">
+            <LockKeyhole size={19} className="text-white/50" />
+            <h2 className="text-2xl font-light text-white">30-day route ready</h2>
+          </div>
+          <p className="mt-4 text-sm font-light leading-7 text-white/54">
+            Pro turns this saved diagnostic into the full 98-question mock test, accurate scoring, daily weak-skill tasks, mistake tracking, and a clear next retake date.
+          </p>
+          <div className="mt-5 grid gap-3">
+            {nextAssignments.slice(0, 4).map((assignment) => (
+              <div className="flex gap-3 border border-white/10 bg-black/20 p-3 text-sm leading-6 text-white/62" key={assignment}>
+                <Check className="mt-1 shrink-0 text-emerald-200/72" size={15} />
+                <span>{assignment}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SavedStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-white/10 bg-black/25 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/36">{label}</p>
+      <strong className="mt-3 block text-3xl font-light text-white">{value}</strong>
+    </div>
   );
 }
 

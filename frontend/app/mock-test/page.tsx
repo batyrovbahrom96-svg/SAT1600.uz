@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Mail, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { freeDiagnosticQuestions, type DiagnosticAnswers } from "@/lib/free-diagnostic";
+import { buildStoredFreeDiagnostic, FREE_DIAGNOSTIC_EMAIL_KEY, saveFreeDiagnosticResult } from "@/lib/free-diagnostic-storage";
 import { useLanguage } from "@/lib/i18n";
 
 const emailPromptCopy = {
@@ -104,14 +105,12 @@ export default function FreeDiagnosticPage() {
 
     if (typeof window !== "undefined") {
       const sessionId = `fd-${Date.now()}`;
-      const diagnosticPayload = JSON.stringify({
+      const diagnosticPayload = buildStoredFreeDiagnostic({
         sessionId,
         answers,
-        email: email || window.localStorage.getItem("sattest_free_diagnostic_email") || "",
-        completedAt: new Date().toISOString()
+        email: email || window.localStorage.getItem(FREE_DIAGNOSTIC_EMAIL_KEY) || ""
       });
-      window.sessionStorage.setItem("sattest_free_diagnostic", diagnosticPayload);
-      window.localStorage.setItem("sattest_free_diagnostic", diagnosticPayload);
+      saveFreeDiagnosticResult(diagnosticPayload);
     }
     router.push("/mock-test/results");
   }
@@ -120,7 +119,7 @@ export default function FreeDiagnosticPage() {
     event.preventDefault();
     const trimmed = email.trim();
     if (trimmed && typeof window !== "undefined") {
-      window.localStorage.setItem("sattest_free_diagnostic_email", trimmed);
+      window.localStorage.setItem(FREE_DIAGNOSTIC_EMAIL_KEY, trimmed);
     }
     setEmailPromptDone(true);
     setShowEmailPrompt(false);

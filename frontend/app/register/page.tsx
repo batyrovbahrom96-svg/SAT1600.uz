@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ApiError, api, saveAuth } from "@/lib/api";
+import { markFreeDiagnosticAttachedToAccount } from "@/lib/free-diagnostic-storage";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -43,6 +44,7 @@ export default function RegisterPage() {
         })
       });
       saveAuth(result.access_token, result.full_name);
+      markFreeDiagnosticAttachedToAccount();
       router.push(nextPath);
     } catch (err) {
       setError(getEmailBotError(err, "Registration failed"));

@@ -5,15 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BarChart3, BookOpenCheck, Lock, Target, XCircle } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { getToken } from "@/lib/api";
-import { calculateDiagnosticResult, freeDiagnosticQuestions, type DiagnosticAnswers, type DiagnosticResult } from "@/lib/free-diagnostic";
+import { calculateDiagnosticResult, freeDiagnosticQuestions, type DiagnosticResult } from "@/lib/free-diagnostic";
+import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-diagnostic-storage";
 import { useLanguage } from "@/lib/i18n";
-
-type StoredDiagnostic = {
-  sessionId: string;
-  answers: DiagnosticAnswers;
-  email?: string;
-  completedAt: string;
-};
 
 const resultCopy = {
   en: {
@@ -99,20 +93,12 @@ const resultCopy = {
 export default function FreeDiagnosticResultsPage() {
   const { language } = useLanguage();
   const copy = resultCopy[language];
-  const [stored, setStored] = useState<StoredDiagnostic | null>(null);
+  const [stored, setStored] = useState<StoredFreeDiagnostic | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = window.sessionStorage.getItem("sattest_free_diagnostic") ?? window.localStorage.getItem("sattest_free_diagnostic");
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw) as StoredDiagnostic;
-      window.sessionStorage.setItem("sattest_free_diagnostic", raw);
-      setStored(parsed);
-    } catch {
-      setStored(null);
-    }
+    setStored(getFreeDiagnosticResult());
   }, []);
 
   useEffect(() => {
