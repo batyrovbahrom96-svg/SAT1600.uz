@@ -140,7 +140,7 @@ export default function FreeDiagnosticResultsPage() {
 
   if (!result) {
     return (
-      <main className="min-h-screen bg-[#080908] text-white">
+      <main className="min-h-screen bg-[#080908] text-white" data-sattest-no-translate="true">
         <LuxuryNavbar />
         <section className="mx-auto flex min-h-[calc(100vh-81px)] max-w-4xl flex-col justify-center px-5 py-14 text-center md:px-8">
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#c8bd88]">Free Diagnostic</p>
@@ -158,7 +158,7 @@ export default function FreeDiagnosticResultsPage() {
   const weakAreasText = formatList(weakAreas, language);
 
   return (
-    <main className="min-h-screen bg-[#080908] text-white">
+    <main className="min-h-screen bg-[#080908] text-white" data-sattest-no-translate="true">
       <LuxuryNavbar />
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
