@@ -17,10 +17,12 @@ export async function notifyDiagnosticResult(payload: DiagnosticNotificationPayl
   const timestamp = new Date().toISOString();
 
   if (!secret) {
+    console.error("Diagnostic Telegram notification skipped: TELEGRAM_WEBHOOK_SECRET is missing in the frontend server environment.");
     return { ok: false, skipped: "TELEGRAM_WEBHOOK_SECRET missing" };
   }
 
   if (!Number.isFinite(estimatedScore) || estimatedScore < 400 || estimatedScore > 1600) {
+    console.error("Diagnostic Telegram notification skipped: invalid estimated score.", { estimatedScore });
     return { ok: false, skipped: "invalid_estimated_score" };
   }
 
@@ -40,8 +42,17 @@ export async function notifyDiagnosticResult(payload: DiagnosticNotificationPayl
   });
 
   if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    console.error("Diagnostic Telegram notification failed.", {
+      status: response.status,
+      body,
+    });
     return { ok: false, status: response.status };
   }
 
-  return response.json();
+  const body = await response.json();
+  if (!body?.ok) {
+    console.error("Diagnostic Telegram notification returned a non-ok response.", body);
+  }
+  return body;
 }
