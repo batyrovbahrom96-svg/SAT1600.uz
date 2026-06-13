@@ -8,6 +8,7 @@ import { getToken } from "@/lib/api";
 import { calculateDiagnosticResult, freeDiagnosticQuestions, type DiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-diagnostic-storage";
 import { useLanguage } from "@/lib/i18n";
+import { notifyDiagnosticResult } from "./actions";
 
 const resultCopy = {
   en: {
@@ -127,6 +128,31 @@ export default function FreeDiagnosticResultsPage() {
     if (!stored) return null;
     return calculateDiagnosticResult(stored.answers);
   }, [stored]);
+
+  useEffect(() => {
+    if (!result || !stored || typeof window === "undefined") return;
+
+    const notificationKey = `sattest_diagnostic_notified_${stored.sessionId}`;
+    if (window.localStorage.getItem(notificationKey) === "sent") return;
+
+    window.localStorage.setItem(notificationKey, "pending");
+    void notifyDiagnosticResult({
+      timestamp: stored.completedAt,
+      estimatedScore: result.estimatedTotal,
+      weakAreas: result.weakAreas.slice(0, 3),
+      language: language.toUpperCase() as "EN" | "RU" | "UZ",
+    })
+      .then((response) => {
+        if (response?.ok) {
+          window.localStorage.setItem(notificationKey, "sent");
+          return;
+        }
+        window.localStorage.removeItem(notificationKey);
+      })
+      .catch(() => {
+        window.localStorage.removeItem(notificationKey);
+      });
+  }, [language, result, stored]);
 
   const paymentUrl = useMemo(() => `/pricing?lang=${language}&plan=pro&from=free-diagnostic&payment=qr`, [language]);
   const unlockUrl = useMemo(() => {

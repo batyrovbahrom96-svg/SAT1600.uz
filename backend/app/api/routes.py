@@ -8,6 +8,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from collections import Counter, defaultdict
+from pydantic import BaseModel, Field
 
 from sqlalchemy import or_, select, text
 from sqlalchemy.orm import Session, selectinload
@@ -30,10 +31,17 @@ from app.services.sat_engine import (
     save_answer,
     start_attempt,
 )
-from app.services.telegram_payments import handle_telegram_update, process_subscription_maintenance
+from app.services.telegram_payments import handle_telegram_update, notify_admin_diagnostic_result, process_subscription_maintenance
 
 router = APIRouter(prefix="/api")
 verification_codes: dict[str, dict[str, datetime | str]] = {}
+
+
+class DiagnosticResultNotification(BaseModel):
+    timestamp: str
+    estimated_score: int = Field(ge=400, le=1600)
+    weak_areas: list[str] = Field(default_factory=list, max_length=5)
+    language: str = Field(pattern="^(EN|RU|UZ|en|ru|uz)$")
 
 
 @router.get("/health")
@@ -213,6 +221,22 @@ def telegram_daily_report(request: Request, db: Session = Depends(get_db)) -> di
         if secret != settings.telegram_webhook_secret:
             raise HTTPException(status_code=403, detail="Invalid Telegram report secret")
     return process_subscription_maintenance(db, send_daily_report=True)
+
+
+@router.post("/telegram/diagnostic-result")
+async def telegram_diagnostic_result(request: Request, payload: DiagnosticResultNotification) -> dict:
+    settings = get_settings()
+    if settings.telegram_webhook_secret:
+        secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+        if secret != settings.telegram_webhook_secret:
+            raise HTTPException(status_code=403, detail="Invalid Telegram diagnostic secret")
+
+    return notify_admin_diagnostic_result(
+        timestamp=payload.timestamp,
+        estimated_score=payload.estimated_score,
+        weak_areas=payload.weak_areas,
+        language=payload.language.upper(),
+    )
 
 
 def _send_verification_email(email: str, code: str) -> bool:

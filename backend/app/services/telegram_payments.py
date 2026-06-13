@@ -356,6 +356,30 @@ def _notify_admin_for_manual_approval(email: str, plan: str, message: dict) -> N
     _send_message(settings.telegram_admin_chat_id, text)
 
 
+def notify_admin_diagnostic_result(
+    *,
+    timestamp: str,
+    estimated_score: int,
+    weak_areas: list[str],
+    language: str,
+) -> dict:
+    settings = get_settings()
+    if not settings.telegram_admin_chat_id:
+        return {"ok": False, "skipped": "telegram_admin_chat_id_missing"}
+
+    cleaned_weak_areas = [area.strip() for area in weak_areas if area.strip()]
+    weak_area_line = ", ".join(cleaned_weak_areas) if cleaned_weak_areas else "No weak areas detected"
+    text = (
+        "SATTEST.UZ free diagnostic completed\n\n"
+        f"Timestamp: {timestamp}\n"
+        f"Estimated score: ≈{estimated_score}\n"
+        f"Weak areas: {weak_area_line}\n"
+        f"Language: {language.upper()}"
+    )
+    response = _send_message(settings.telegram_admin_chat_id, text)
+    return {"ok": bool(response.get("ok", True)), "telegram": response}
+
+
 def _subscription_summary(subscription: Subscription, user: User | None) -> str:
     email = user.email if user else "Unknown email"
     full_name = user.full_name if user else "Unknown user"
