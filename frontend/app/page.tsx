@@ -1398,7 +1398,6 @@ export default function Home() {
         <div className="top-score-proof-section__copy">
           <p className="top-score-proof-section__eyebrow">{copy.topScores.eyebrow}</p>
           <h2 id="top-score-proof-title">{copy.topScores.title}</h2>
-          <span>{copy.topScores.body}</span>
           <Link className="top-score-proof-section__cta" href="/mock-test">
             {copy.topScores.cta}
             <ArrowRight size={18} />
