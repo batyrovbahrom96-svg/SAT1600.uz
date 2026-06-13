@@ -38,17 +38,17 @@ export function CurriculumPrompt({
                 <GraduationCap size={30} />
               </div>
               <p className="mt-7 text-[10px] font-black uppercase tracking-[0.42em] text-white/38">
-                {isUnlocked ? "1400+ exercise route unlocked" : "1400+ exercise route ready"}
+                {isUnlocked ? "30-day plan unlocked" : "Locked 30-day plan ready"}
               </p>
               <h2 className="mt-5 max-w-3xl text-5xl font-light leading-none text-white md:text-7xl">
                 {isUnlocked
                   ? "Your weak topics are clear. Open your exercise route now."
-                  : "You now know why the score is stuck. The exact exercises are waiting."}
+                  : "Sizning 30 kunlik rejangiz tayyor. Pro: 200,000 so'm."}
               </h2>
               <p className="mt-6 max-w-2xl text-base font-light leading-8 text-white/55">
                 {isUnlocked
                   ? "Your subscription is active. Continue into the personal 1400+ route, supervised theory, daily exercises, and section work needed to repair those exact mistakes."
-                  : "The diagnostic exposed the leaks. Pro opens the locked drills, supervised theory, timed retake, and mistake notebook built from these exact missed patterns."}
+                  : "Your score and weak spots are clear right now. Unlock Pro to open the 30-day route built from these exact mistakes: daily tasks, explanations, retakes, and progress tracking."}
               </p>
             </div>
 
@@ -109,11 +109,17 @@ export function CurriculumPrompt({
                 <div className="border border-yellow-200/15 bg-yellow-200/[0.055] p-4">
                   <div className="flex items-center gap-3 text-yellow-100/70">
                     <CalendarDays size={18} />
-                    <span className="text-[10px] font-black uppercase tracking-[0.24em]">Next proof point</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.24em]">
+                      {isUnlocked ? "Next proof point" : "Payment bridge"}
+                    </span>
                   </div>
-                  <div className="mt-3 text-xl font-light text-white">Next mini mock scheduled</div>
+                  <div className="mt-3 text-xl font-light text-white">
+                    {isUnlocked ? "Next mini mock scheduled" : "Pro unlocks this plan instantly"}
+                  </div>
                   <div className="mt-2 text-sm font-light leading-6 text-white/52">
-                    {nextMockDate}. Unlock Pro to start the repair cycle and retake the weak section.
+                    {isUnlocked
+                      ? `${nextMockDate}. Continue the repair cycle and retake the weak section.`
+                      : "Pay 200,000 so'm, confirm through the Telegram bot, and start the plan while motivation is highest."}
                   </div>
                 </div>
               </div>
@@ -133,7 +139,7 @@ export function CurriculumPrompt({
               onClick={onOpen}
               type="button"
             >
-              {isUnlocked ? "Open exercise route" : "Unlock exercise route"} <ArrowRight size={18} />
+              {isUnlocked ? "Open exercise route" : "Pay 200,000 so'm and unlock"} <ArrowRight size={18} />
             </button>
           </div>
         </section>

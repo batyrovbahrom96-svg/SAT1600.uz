@@ -503,18 +503,24 @@ export default function ResultsPage() {
           <div className="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-center">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.36em] text-emerald-100/58">
-                {hasActiveSubscription ? "1400+ route active" : "1400+ route locked"}
+                {hasActiveSubscription ? "30-day plan active" : "Locked 30-day plan"}
               </p>
               <h2 className="mt-4 text-3xl font-light leading-tight text-white md:text-4xl">
                 {hasActiveSubscription
                   ? "You can see the problem. Now open the exercises that fix it."
-                  : "You found the leaks. Your repair work is already waiting."}
+                  : "Sizning 30 kunlik rejangiz tayyor. Pro: 200,000 so'm."}
               </h2>
               <p className="mt-4 max-w-3xl text-sm font-light leading-7 text-white/58">
                 {hasActiveSubscription
                   ? "Your approved subscription is active. Continue from this diagnostic into the daily route, supervised theory, retake dates, and progress tracking for these exact weaknesses."
-                  : "This diagnostic shows exactly why points are disappearing. The next step is not more guessing: unlock the drills, theory blocks, and retake cycle built from these exact misses."}
+                  : "Your diagnostic score and weak spots are clear. Unlock Pro to open the exact 30-day repair route built from these mistakes: daily tasks, explanations, retakes, and progress tracking."}
               </p>
+              {!hasActiveSubscription ? (
+                <div className="mt-5 inline-flex items-center gap-3 border border-yellow-200/25 bg-yellow-200/[0.08] px-4 py-3 text-sm font-black text-yellow-50">
+                  <Lock size={17} />
+                  <span>Pro opens instantly after payment bot confirmation.</span>
+                </div>
+              ) : null}
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 {(analytics.weaknesses.length ? analytics.weaknesses : ["Reading/Writing", "Math", "Timing"]).slice(0, 3).map((weakness) => (
                   <div className="border border-white/10 bg-black/20 p-3" key={weakness}>
@@ -543,14 +549,14 @@ export default function ResultsPage() {
               <p className="mt-4 text-sm leading-6 text-white/55">
                 {hasActiveSubscription
                   ? "Start the first set now and retake the weak section after completion."
-                  : "These are ready from your report. Pro opens the questions, explanations, and the next mini mock."}
+                  : "Your 30-day plan is ready now. Pay 200,000 so'm and open the route while the weak spots are fresh."}
               </p>
               <button
                 className="mt-5 flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-white"
-                onClick={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro")}
+                onClick={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro&from=diagnostic-result")}
                 type="button"
               >
-                {hasActiveSubscription ? "Open my route" : "Unlock with Pro"} <ArrowRight size={18} />
+                {hasActiveSubscription ? "Open my route" : "Pay 200,000 so'm and unlock"} <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -572,7 +578,7 @@ export default function ResultsPage() {
       {showCurriculumPanel ? (
         <CurriculumPrompt
           onClose={() => setShowCurriculumPanel(false)}
-          onOpen={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro")}
+          onOpen={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro&from=diagnostic-result")}
           score={reportResults.score_total}
           weaknesses={analytics.weaknesses}
           isUnlocked={hasActiveSubscription}
