@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BarChart3, BookOpenCheck, Lock, Target, XCircle } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { getToken } from "@/lib/api";
 import { calculateDiagnosticResult, freeDiagnosticQuestions, type DiagnosticAnswers, type DiagnosticResult } from "@/lib/free-diagnostic";
 import { useLanguage } from "@/lib/i18n";
 
@@ -99,6 +100,7 @@ export default function FreeDiagnosticResultsPage() {
   const { language } = useLanguage();
   const copy = resultCopy[language];
   const [stored, setStored] = useState<StoredDiagnostic | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -113,18 +115,33 @@ export default function FreeDiagnosticResultsPage() {
     }
   }, []);
 
+  useEffect(() => {
+    function syncAuth() {
+      setIsLoggedIn(Boolean(getToken()));
+    }
+    syncAuth();
+    window.addEventListener("sattest:auth-change", syncAuth);
+    window.addEventListener("storage", syncAuth);
+    return () => {
+      window.removeEventListener("sattest:auth-change", syncAuth);
+      window.removeEventListener("storage", syncAuth);
+    };
+  }, []);
+
   const result = useMemo<DiagnosticResult | null>(() => {
     if (!stored) return null;
     return calculateDiagnosticResult(stored.answers);
   }, [stored]);
 
-  const registerUrl = useMemo(() => {
+  const paymentUrl = useMemo(() => `/pricing?lang=${language}&plan=pro&from=free-diagnostic&payment=qr`, [language]);
+  const unlockUrl = useMemo(() => {
+    if (isLoggedIn) return paymentUrl;
     const params = new URLSearchParams();
     params.set("plan", "pro");
     params.set("from", "free-diagnostic");
     if (stored?.email) params.set("email", stored.email);
-    return `/register?${params.toString()}&next=${encodeURIComponent("/pricing?plan=pro&from=free-diagnostic")}`;
-  }, [stored?.email]);
+    return `/register?${params.toString()}&next=${encodeURIComponent(paymentUrl)}`;
+  }, [isLoggedIn, paymentUrl, stored?.email]);
 
   if (!result) {
     return (
@@ -262,7 +279,7 @@ export default function FreeDiagnosticResultsPage() {
                 <p className="text-3xl font-light">{copy.threeMonth}</p>
                 <p className="mt-2 text-sm text-white/52">{copy.threeMonthNote}</p>
               </div>
-              <Link className="flex h-14 items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href={registerUrl}>
+              <Link className="flex h-14 items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href={unlockUrl}>
                 {copy.cta} <ArrowRight size={18} />
               </Link>
             </div>
