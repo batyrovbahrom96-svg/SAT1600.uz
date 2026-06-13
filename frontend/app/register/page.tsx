@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ApiError, api, saveAuth } from "@/lib/api";
@@ -10,6 +10,14 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isSendingCode, setIsSendingCode] = useState(false);
+  const [prefillEmail, setPrefillEmail] = useState("");
+  const [nextPath, setNextPath] = useState("/pricing?plan=pro&from=registration");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setPrefillEmail(params.get("email") ?? "");
+    setNextPath(params.get("next") || "/pricing?plan=pro&from=registration");
+  }, []);
 
   function getEmailBotError(err: unknown, fallback: string) {
     if (err instanceof ApiError && err.status === 404) {
@@ -35,7 +43,7 @@ export default function RegisterPage() {
         })
       });
       saveAuth(result.access_token, result.full_name);
-      router.push("/mock-test");
+      router.push(nextPath);
     } catch (err) {
       setError(getEmailBotError(err, "Registration failed"));
     }
@@ -72,7 +80,7 @@ export default function RegisterPage() {
           <p className="text-xs font-black uppercase tracking-[0.34em] text-[#8f8f8f]">Begin preparation</p>
           <h1 className="mt-6 max-w-2xl text-5xl font-black leading-tight text-white md:text-7xl">Create your testing workspace.</h1>
           <p className="mt-7 max-w-xl text-lg font-semibold leading-8 text-[#a8a8a8]">
-            Start with a full mock test, then use the score report to identify weak topics, traps, and the next best practice set.
+            Create your account after the Free Diagnostic, then continue to payment and unlock the existing Full Mock Test with Pro.
           </p>
         </div>
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#666666]">Built for students who want measurable score growth.</p>
@@ -84,7 +92,7 @@ export default function RegisterPage() {
           <label className="mt-8 block text-xs font-black uppercase tracking-[0.2em] text-[#9f9f9f]">Full name</label>
           <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="full_name" required />
           <label className="mt-5 block text-xs font-black uppercase tracking-[0.2em] text-[#9f9f9f]">Email</label>
-          <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="email" type="email" required />
+          <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="email" type="email" defaultValue={prefillEmail} required />
           <button
             className="mt-3 w-full border border-white/15 bg-[#0b0b0b] px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-[#d8d8d8] transition-all duration-200 ease-in-out hover:border-white hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isSendingCode}

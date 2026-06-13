@@ -100,15 +100,15 @@ const pricingCopy: Record<
         action: "Start Free Diagnostic",
         description: "For students who want to see their real SAT level before choosing a paid route.",
         features: [
-          "1 free diagnostic SAT mock test",
-          "Overall score preview",
+          "25-question Free Diagnostic",
+          "Estimated score from 25 questions",
           "Reading/Writing and Math section scores",
           "Limited mistake preview",
           "Upgrade when the weak areas are clear"
         ],
         label: "Free plan",
         price: "0 UZS",
-        title: "Diagnostic Mock"
+        title: "Free Diagnostic"
       },
       pro: {
         action: "Pay and activate",
@@ -166,15 +166,15 @@ const pricingCopy: Record<
         action: "Начать диагностику",
         description: "Для учеников, которые хотят понять свой реальный уровень SAT до выбора платного маршрута.",
         features: [
-          "1 бесплатный диагностический пробный SAT-тест",
-          "Предварительный общий балл",
+          "Бесплатная диагностика из 25 вопросов",
+          "Оценочный балл по 25 вопросам",
           "Баллы по чтению, письму и математике",
           "Ограниченный просмотр ошибок",
           "Переход на Pro после выявления слабых мест"
         ],
         label: "Бесплатный план",
         price: "0 UZS",
-        title: "Диагностический пробный тест"
+        title: "Бесплатная диагностика"
       },
       pro: {
         action: "Оплатить и активировать",
@@ -231,15 +231,15 @@ const pricingCopy: Record<
         action: "Bepul diagnostika",
         description: "Pullik yo'nalishni tanlashdan oldin real SAT darajasini ko'rmoqchi bo'lgan o'quvchilar uchun.",
         features: [
-          "1 ta bepul diagnostik SAT sinov testi",
-          "Umumiy ball ko'rinishi",
+          "25 savollik bepul diagnostika",
+          "25 savoldan taxminiy ball",
           "O'qish, yozish va matematika bo'lim ballari",
           "Cheklangan xato ko'rinishi",
           "Zaif joylar aniq bo'lganda Pro'ga o'tish"
         ],
         label: "Bepul reja",
         price: "0 UZS",
-        title: "Diagnostik sinov testi"
+        title: "Bepul diagnostika"
       },
       pro: {
         action: "To'lash va faollashtirish",

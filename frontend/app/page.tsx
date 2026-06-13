@@ -207,7 +207,7 @@ const homepageFaqs = [
   },
   {
     question: "How many mock tests?",
-    answer: "The free plan includes one mini diagnostic preview and one saved diagnostic after registration. SATTEST Pro is built for repeated practice, diagnostic analytics, and the personal My 1400+ route."
+    answer: "The free plan includes one 25-question Free Diagnostic with an estimated score. SATTEST Pro opens the existing Full Mock Test, diagnostic analytics, and the personal My 1400+ route."
   },
   {
     question: "Is this official SAT?",
