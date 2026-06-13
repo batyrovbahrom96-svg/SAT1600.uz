@@ -12,31 +12,233 @@ import {
   PenLine,
   Star,
   UserPlus,
-  Zap
+  Zap,
+  type LucideIcon
 } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { getSubscriptionStatus, getToken } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n";
 
-const practiceSections = [
-  {
-    title: "SAT Reading",
-    description: "Practice command of evidence, inference, main idea, text structure, and words in context.",
-    icon: BookOpenText,
-    href: "/practice/reading"
+type Language = "en" | "ru" | "uz";
+
+const practiceSections = {
+  en: [
+    {
+      title: "SAT Reading",
+      description: "Practice command of evidence, inference, main idea, text structure, and words in context.",
+      icon: BookOpenText,
+      href: "/practice/reading"
+    },
+    {
+      title: "SAT Writing",
+      description: "Practice transitions, grammar, punctuation, rhetorical synthesis, and sentence boundaries.",
+      icon: PenLine,
+      href: "/practice/writing"
+    },
+    {
+      title: "SAT Math",
+      description: "Practice algebra, advanced math, problem solving, data analysis, geometry, and precision.",
+      icon: Calculator,
+      href: "/practice/math"
+    }
+  ],
+  ru: [
+    {
+      title: "SAT Reading",
+      description: "Тренируйте доказательства, выводы, главную мысль, структуру текста и слова в контексте.",
+      icon: BookOpenText,
+      href: "/practice/reading"
+    },
+    {
+      title: "SAT Writing",
+      description: "Тренируйте переходы, грамматику, пунктуацию, синтез заметок и границы предложений.",
+      icon: PenLine,
+      href: "/practice/writing"
+    },
+    {
+      title: "SAT Math",
+      description: "Тренируйте алгебру, advanced math, анализ данных, геометрию и точность.",
+      icon: Calculator,
+      href: "/practice/math"
+    }
+  ],
+  uz: [
+    {
+      title: "SAT Reading",
+      description: "Dalil bilan ishlash, xulosa chiqarish, asosiy g'oya, matn tuzilishi va kontekstdagi so'zlarni mashq qiling.",
+      icon: BookOpenText,
+      href: "/practice/reading"
+    },
+    {
+      title: "SAT Writing",
+      description: "Transition, grammatika, tinish belgilari, notalardan xulosa chiqarish va gap chegaralarini mashq qiling.",
+      icon: PenLine,
+      href: "/practice/writing"
+    },
+    {
+      title: "SAT Math",
+      description: "Algebra, advanced math, ma'lumot tahlili, geometriya va aniqlikni mashq qiling.",
+      icon: Calculator,
+      href: "/practice/math"
+    }
+  ]
+} satisfies Record<Language, { title: string; description: string; icon: LucideIcon; href: string }[]>;
+
+const practiceCopy = {
+  en: {
+    checking: "Checking your account",
+    practice: "Practice",
+    heroEyebrow: "Practice engine preview",
+    heroTitle: "Feel the targeted SAT practice before creating an account.",
+    heroBody: "See how Reading, Writing, and Math practice turns diagnostic mistakes into topic drills, unit tests, and visible mastery progress.",
+    livePreview: "Live preview",
+    trySamples: "Try sample questions",
+    sampleEyebrow: "Try 3 real samples",
+    sampleTitle: "Answer first. Then see why the trap worked.",
+    explained: "explained",
+    correct: "Correct",
+    trap: "Trap",
+    explanationUnlocked: "Explanation unlocked",
+    chooseAnswer: "Choose an answer to reveal the explanation.",
+    proActive: "Pro practice active",
+    proWall: "Pro wall",
+    fullOpen: "Your full targeted practice sets are open.",
+    lockedTitle: "27 targeted questions are waiting after these samples.",
+    unlockedSampleBody: "Continue into Reading, Writing, or Math practice. Your paid account can use the full drill sets, topic practice, and mastery map.",
+    lockedBody: "Pro unlocks the full drill, timed retake, mistake notebook, and the next weak-topic assignment.",
+    startFull: "Start full practice",
+    unlockPro: "Unlock Pro",
+    unlockedEyebrow: "Practice unlocked",
+    unlockedTitle: "Choose what you want to practice.",
+    unlockedBody: "Select a SAT practice area. The next step connects this choice to targeted drills and section practice.",
+    practiceSection: "Practice section",
+    startPractice: "Start practice",
+    selected: "Selected",
+    choose: "Choose",
+    progressEyebrow: "Progress in process",
+    masteryTitle: "Track mastery for both SAT subjects.",
+    masteryBody: "Every quiz, topic drill, and section test moves a unit from not started to mastered, so students can see exactly where improvement is happening.",
+    loggedTitle: "Your account is ready. Pro unlocks the full practice engine.",
+    loggedBody: "Try the sample questions below, then unlock Pro to use every Reading, Writing, and Math drill with progress tracking.",
+    fullLocked: "Full practice locked",
+    autoOpen: "Pro access opens automatically via Telegram bot — usually within 60 seconds. Refresh to open the unlocked practice dashboard.",
+    saveTitle: "Save your real progress",
+    saveBody: "This preview is public. Create an account when you are ready for saved drills, score history, and a personal weakness route.",
+    choosePlan: "Choose plan",
+    freeDiagnostic: "Free diagnostic",
+    sampleMap: "Sample mastery map",
+    mapTitle: "A student can see which units are mastered, familiar, attempted, or untouched.",
+    mapBody: "The real account version updates this map after every drill, quiz, and section test.",
+    courseMastery: "Course mastery",
+    inProcess: "in process",
+    courseChallenge: "Course challenge",
+    currentChallenge: "Current challenge score",
+    challengeBody: "Finish weak units, then retake the section challenge to move more skills into mastered status.",
+    masteryLegend: ["Mastered", "Proficient", "Familiar", "Attempted", "Not started", "Quiz", "Unit test"]
   },
-  {
-    title: "SAT Writing",
-    description: "Practice transitions, grammar, punctuation, rhetorical synthesis, and sentence boundaries.",
-    icon: PenLine,
-    href: "/practice/writing"
+  ru: {
+    checking: "Проверяем аккаунт",
+    practice: "Практика",
+    heroEyebrow: "Превью практики",
+    heroTitle: "Попробуйте целевую SAT-практику до создания аккаунта.",
+    heroBody: "Посмотрите, как ошибки из диагностики превращаются в тематические задания, unit tests и видимый прогресс.",
+    livePreview: "Живой пример",
+    trySamples: "Попробовать примеры",
+    sampleEyebrow: "Попробуйте 3 реальные задачи",
+    sampleTitle: "Сначала ответьте. Потом увидите, почему ловушка сработала.",
+    explained: "разобрано",
+    correct: "Верно",
+    trap: "Ловушка",
+    explanationUnlocked: "Разбор открыт",
+    chooseAnswer: "Выберите ответ, чтобы увидеть объяснение.",
+    proActive: "Pro-практика активна",
+    proWall: "Pro-доступ",
+    fullOpen: "Полные целевые наборы заданий открыты.",
+    lockedTitle: "После этих примеров ждут ещё 27 целевых вопросов.",
+    unlockedSampleBody: "Переходите к Reading, Writing или Math. Платный аккаунт открывает полные наборы, темы и карту прогресса.",
+    lockedBody: "Pro открывает полный drill, timed retake, журнал ошибок и следующее задание по слабой теме.",
+    startFull: "Начать полную практику",
+    unlockPro: "Открыть Pro",
+    unlockedEyebrow: "Практика открыта",
+    unlockedTitle: "Выберите, что хотите тренировать.",
+    unlockedBody: "Выберите раздел SAT. Следующий шаг подключит выбор к целевым заданиям и sectional practice.",
+    practiceSection: "Раздел практики",
+    startPractice: "Начать практику",
+    selected: "Выбрано",
+    choose: "Выбрать",
+    progressEyebrow: "Прогресс в работе",
+    masteryTitle: "Отслеживайте mastery по двум SAT-разделам.",
+    masteryBody: "Каждый quiz, topic drill и section test переводит unit от not started к mastered, чтобы ученик видел реальное улучшение.",
+    loggedTitle: "Аккаунт готов. Pro открывает полный practice engine.",
+    loggedBody: "Попробуйте примеры ниже, затем откройте Pro для всех Reading, Writing и Math заданий с отслеживанием прогресса.",
+    fullLocked: "Полная практика закрыта",
+    autoOpen: "Pro-доступ открывается автоматически через Telegram-бота — обычно в течение 60 секунд. Обновите страницу, чтобы открыть dashboard.",
+    saveTitle: "Сохраните реальный прогресс",
+    saveBody: "Это публичное превью. Создайте аккаунт, когда будете готовы сохранять задания, историю баллов и личный маршрут слабых тем.",
+    choosePlan: "Выбрать план",
+    freeDiagnostic: "Бесплатная диагностика",
+    sampleMap: "Пример карты mastery",
+    mapTitle: "Ученик видит, какие units освоены, знакомы, начаты или ещё не открыты.",
+    mapBody: "В аккаунте карта обновляется после каждого drill, quiz и section test.",
+    courseMastery: "Освоение курса",
+    inProcess: "в процессе",
+    courseChallenge: "Course challenge",
+    currentChallenge: "Текущий challenge score",
+    challengeBody: "Закройте слабые units, затем повторите section challenge, чтобы перевести навыки в mastered.",
+    masteryLegend: ["Освоено", "Уверенно", "Знакомо", "Начато", "Не начато", "Quiz", "Unit test"]
   },
-  {
-    title: "SAT Math",
-    description: "Practice algebra, advanced math, problem solving, data analysis, geometry, and precision.",
-    icon: Calculator,
-    href: "/practice/math"
+  uz: {
+    checking: "Akkauntingiz tekshirilmoqda",
+    practice: "Mashqlar",
+    heroEyebrow: "Mashqlar ko'rinishi",
+    heroTitle: "Akkaunt ochishdan oldin maqsadli SAT mashqlarini sinab ko'ring.",
+    heroBody: "Reading, Writing va Math mashqlari diagnostikadagi xatolarni mavzu drillari, unit testlar va ko'rinadigan progressga qanday aylantirishini ko'ring.",
+    livePreview: "Jonli ko'rinish",
+    trySamples: "Namuna savollarni sinash",
+    sampleEyebrow: "3 ta real namunani sinab ko'ring",
+    sampleTitle: "Avval javob bering. Keyin tuzoq nega ishlaganini ko'ring.",
+    explained: "izoh ochildi",
+    correct: "To'g'ri",
+    trap: "Tuzoq",
+    explanationUnlocked: "Izoh ochildi",
+    chooseAnswer: "Izohni ko'rish uchun javob tanlang.",
+    proActive: "Pro mashqlar faol",
+    proWall: "Pro devori",
+    fullOpen: "To'liq maqsadli mashqlar ochiq.",
+    lockedTitle: "Bu namunalardan keyin yana 27 ta maqsadli savol kutmoqda.",
+    unlockedSampleBody: "Reading, Writing yoki Math mashqlariga o'ting. Pullik akkaunt to'liq drillar, mavzu mashqlari va progress xaritasini ochadi.",
+    lockedBody: "Pro to'liq drill, vaqtli qayta topshirish, xato daftari va keyingi zaif mavzu vazifasini ochadi.",
+    startFull: "To'liq mashqni boshlash",
+    unlockPro: "Pro ochish",
+    unlockedEyebrow: "Mashqlar ochiq",
+    unlockedTitle: "Qaysi bo'limni mashq qilmoqchisiz?",
+    unlockedBody: "SAT mashq bo'limini tanlang. Keyingi qadam tanlovni maqsadli drillar va bo'lim mashqlariga bog'laydi.",
+    practiceSection: "Mashq bo'limi",
+    startPractice: "Mashqni boshlash",
+    selected: "Tanlandi",
+    choose: "Tanlash",
+    progressEyebrow: "Progress davom etmoqda",
+    masteryTitle: "Ikkala SAT bo'limi bo'yicha mastery'ni kuzating.",
+    masteryBody: "Har bir quiz, topic drill va section test unitni not started holatidan mastered holatigacha olib boradi, shunda o'quvchi qayerda o'sayotganini aniq ko'radi.",
+    loggedTitle: "Akkauntingiz tayyor. Pro to'liq practice engine'ni ochadi.",
+    loggedBody: "Quyidagi namuna savollarni sinab ko'ring, keyin Reading, Writing va Math drillarini progress kuzatuvi bilan ochish uchun Pro'ni yoqing.",
+    fullLocked: "To'liq mashqlar yopiq",
+    autoOpen: "Pro kirish Telegram bot orqali avtomatik ochiladi — odatda 60 soniya ichida. Ochilgan dashboardni ko'rish uchun sahifani yangilang.",
+    saveTitle: "Real progressingizni saqlang",
+    saveBody: "Bu preview ommaviy. Saqlangan drillar, ball tarixi va shaxsiy zaiflik yo'nalishi kerak bo'lganda akkaunt yarating.",
+    choosePlan: "Rejani tanlash",
+    freeDiagnostic: "Bepul diagnostika",
+    sampleMap: "Mastery xaritasi namunasi",
+    mapTitle: "O'quvchi qaysi unitlar o'zlashtirilgan, tanish, boshlangan yoki hali ochilmaganini ko'radi.",
+    mapBody: "Real akkaunt versiyasi har bir drill, quiz va section testdan keyin xaritani yangilaydi.",
+    courseMastery: "Kurs mastery",
+    inProcess: "jarayonda",
+    courseChallenge: "Kurs challenge",
+    currentChallenge: "Hozirgi challenge bali",
+    challengeBody: "Zaif unitlarni tugating, keyin section challenge'ni qayta topshirib ko'nikmalarni mastered holatiga olib chiqing.",
+    masteryLegend: ["O'zlashtirilgan", "Yaxshi", "Tanish", "Boshlangan", "Boshlanmagan", "Quiz", "Unit test"]
   }
-];
+};
 
 const sampleQuestions = [
   {
@@ -168,25 +370,25 @@ function MasteryMark({ status }: { status: MasteryStatus }) {
   );
 }
 
-function ProgressTable({ table }: { table: (typeof progressTables)[number] }) {
+function ProgressTable({ table, copy }: { table: (typeof progressTables)[number]; copy: (typeof practiceCopy)[Language] }) {
   return (
     <article className="border border-white/10 bg-white/[0.035] p-5">
       <div className="flex flex-col gap-5 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38">Course mastery</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38">{copy.courseMastery}</p>
           <h2 className="mt-3 text-3xl font-light text-white">{table.subject}</h2>
         </div>
         <div className="text-left sm:text-right">
           <p className="text-4xl font-light text-white">{table.mastery}%</p>
-          <p className="mt-1 text-xs font-light text-white/42">in process</p>
+          <p className="mt-1 text-xs font-light text-white/42">{copy.inProcess}</p>
         </div>
       </div>
 
       <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3">
-        {masteryLegend.map((item) => (
+        {masteryLegend.map((item, index) => (
           <div className="flex items-center gap-2 text-sm text-white/62" key={`${table.subject}-${item.status}`}>
             <MasteryMark status={item.status} />
-            <span>{item.label}</span>
+            <span>{copy.masteryLegend[index] ?? item.label}</span>
           </div>
         ))}
       </div>
@@ -210,11 +412,11 @@ function ProgressTable({ table }: { table: (typeof progressTables)[number] }) {
       <div className="mt-5 border-t border-white/10 pt-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/38">Course challenge</p>
-            <p className="mt-2 text-lg font-light text-white">Current challenge score: {table.challenge}%</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/38">{copy.courseChallenge}</p>
+            <p className="mt-2 text-lg font-light text-white">{copy.currentChallenge}: {table.challenge}%</p>
           </div>
           <p className="max-w-sm text-sm font-light leading-6 text-white/48">
-            Finish weak units, then retake the section challenge to move more skills into mastered status.
+            {copy.challengeBody}
           </p>
         </div>
       </div>
@@ -222,7 +424,7 @@ function ProgressTable({ table }: { table: (typeof progressTables)[number] }) {
   );
 }
 
-function PracticeHeroPreview() {
+function PracticeHeroPreview({ copy }: { copy: (typeof practiceCopy)[Language] }) {
   const question = sampleQuestions[0];
 
   return (
@@ -230,7 +432,7 @@ function PracticeHeroPreview() {
       <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
         <BookOpenText size={22} />
       </div>
-      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.34em] text-white/38">Live preview</p>
+      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.34em] text-white/38">{copy.livePreview}</p>
       <h2 className="mt-3 text-2xl font-light text-white">{question.title}</h2>
       <p className="mt-3 text-sm font-light leading-6 text-white/58">{question.prompt}</p>
       <div className="mt-4 grid gap-2">
@@ -252,13 +454,13 @@ function PracticeHeroPreview() {
         className="mt-5 flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
         href="#sample-practice-preview"
       >
-        Try sample questions <ArrowRight size={18} />
+        {copy.trySamples} <ArrowRight size={18} />
       </Link>
     </div>
   );
 }
 
-function SamplePracticePreview({ isUnlocked = false }: { isUnlocked?: boolean }) {
+function SamplePracticePreview({ isUnlocked = false, copy }: { isUnlocked?: boolean; copy: (typeof practiceCopy)[Language] }) {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const answeredCount = Object.keys(answers).length;
 
@@ -266,13 +468,13 @@ function SamplePracticePreview({ isUnlocked = false }: { isUnlocked?: boolean })
     <section id="sample-practice-preview" className="mt-10 scroll-mt-28 border border-white/10 bg-white/[0.035] p-5 md:p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Try 3 real samples</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.sampleEyebrow}</p>
           <h2 className="mt-4 max-w-3xl text-4xl font-light leading-tight text-white md:text-5xl">
-            Answer first. Then see why the trap worked.
+            {copy.sampleTitle}
           </h2>
         </div>
         <div className="border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/58">
-          {answeredCount}/3 explained
+          {answeredCount}/3 {copy.explained}
         </div>
       </div>
 
@@ -293,7 +495,7 @@ function SamplePracticePreview({ isUnlocked = false }: { isUnlocked?: boolean })
                   <span className={`border px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
                     isCorrect ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100" : "border-red-300/30 bg-red-300/10 text-red-100"
                   }`}>
-                    {isCorrect ? "Correct" : "Trap"}
+                    {isCorrect ? copy.correct : copy.trap}
                   </span>
                 ) : null}
               </div>
@@ -330,13 +532,13 @@ function SamplePracticePreview({ isUnlocked = false }: { isUnlocked?: boolean })
                   <div className="border border-white/10 bg-white/[0.04] p-3">
                     <div className="flex items-center gap-2 text-sm font-semibold text-white">
                       <CheckCircle2 size={16} className="text-emerald-200/80" />
-                      Explanation unlocked
+                      {copy.explanationUnlocked}
                     </div>
                     <p className="mt-2 text-sm leading-6 text-white/56">{question.explanation}</p>
                   </div>
                 ) : (
                   <div className="border border-dashed border-white/15 p-3 text-sm leading-6 text-white/40">
-                    Choose an answer to reveal the explanation.
+                    {copy.chooseAnswer}
                   </div>
                 )}
               </div>
@@ -354,22 +556,22 @@ function SamplePracticePreview({ isUnlocked = false }: { isUnlocked?: boolean })
               <LockKeyhole size={18} className="text-white/50" />
             )}
             <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/38">
-              {isUnlocked ? "Pro practice active" : "Pro wall"}
+              {isUnlocked ? copy.proActive : copy.proWall}
             </p>
           </div>
           <h3 className="mt-3 text-2xl font-light text-white">
             {isUnlocked
-              ? "Your full targeted practice sets are open."
-              : "27 targeted questions are waiting after these samples."}
+              ? copy.fullOpen
+              : copy.lockedTitle}
           </h3>
           <p className="mt-2 text-sm leading-6 text-white/48">
             {isUnlocked
-              ? "Continue into Reading, Writing, or Math practice. Your paid account can use the full drill sets, topic practice, and mastery map."
-              : "Pro unlocks the full drill, timed retake, mistake notebook, and the next weak-topic assignment."}
+              ? copy.unlockedSampleBody
+              : copy.lockedBody}
           </p>
         </div>
         <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href={isUnlocked ? "/practice/reading" : "/pricing?plan=pro"}>
-          {isUnlocked ? "Start full practice" : "Unlock Pro"} <ArrowRight size={18} />
+          {isUnlocked ? copy.startFull : copy.unlockPro} <ArrowRight size={18} />
         </Link>
       </div>
     </section>
@@ -377,6 +579,9 @@ function SamplePracticePreview({ isUnlocked = false }: { isUnlocked?: boolean })
 }
 
 export default function PracticeAccessPage() {
+  const { language } = useLanguage();
+  const copy = practiceCopy[language];
+  const sections = practiceSections[language];
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
@@ -401,8 +606,8 @@ export default function PracticeAccessPage() {
       <main className="min-h-screen bg-[#101112] text-white">
         <LuxuryNavbar />
         <section className="mx-auto flex min-h-[calc(100vh-81px)] max-w-4xl flex-col items-center justify-center px-5 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/38">Practice</p>
-          <h1 className="mt-5 text-4xl font-light text-white md:text-5xl">Checking your account</h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/38">{copy.practice}</p>
+          <h1 className="mt-5 text-4xl font-light text-white md:text-5xl">{copy.checking}</h1>
         </section>
       </main>
     );
@@ -415,17 +620,17 @@ export default function PracticeAccessPage() {
 
         <section className="mx-auto min-h-[calc(100vh-81px)] max-w-7xl px-5 py-14 md:px-8">
           <div className="border-b border-white/10 pb-10">
-            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Practice unlocked</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.unlockedEyebrow}</p>
             <h1 className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl">
-              Choose what you want to practice.
+              {copy.unlockedTitle}
             </h1>
             <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-              Select a SAT practice area. The next step will connect this choice to targeted drills and section practice.
+              {copy.unlockedBody}
             </p>
           </div>
 
           <div className="mt-8 grid gap-5 lg:grid-cols-3">
-            {practiceSections.map((section) => {
+            {sections.map((section) => {
               const Icon = section.icon;
               const isSelected = selectedSection === section.title;
               const cardClass = `block min-h-[260px] border p-6 text-left transition-colors ${
@@ -443,7 +648,7 @@ export default function PracticeAccessPage() {
                   <p className={`mt-8 text-[10px] font-black uppercase tracking-[0.32em] ${
                     isSelected ? "text-black/45" : "text-white/38"
                   }`}>
-                    Practice section
+                    {copy.practiceSection}
                   </p>
                   <h2 className="mt-3 text-3xl font-light">{section.title}</h2>
                   <p className={`mt-4 text-sm font-light leading-6 ${
@@ -454,7 +659,7 @@ export default function PracticeAccessPage() {
                   <div className={`mt-8 flex h-12 items-center justify-between border px-4 text-xs font-black uppercase tracking-[0.18em] ${
                     isSelected ? "border-black bg-black text-white" : "border-white/15 text-white/70"
                   }`}>
-                    {section.href ? "Start practice" : isSelected ? "Selected" : "Choose"} <ArrowRight size={17} />
+                    {section.href ? copy.startPractice : isSelected ? copy.selected : copy.choose} <ArrowRight size={17} />
                   </div>
                 </>
               );
@@ -480,22 +685,22 @@ export default function PracticeAccessPage() {
             })}
           </div>
 
-          <SamplePracticePreview isUnlocked />
+          <SamplePracticePreview isUnlocked copy={copy} />
 
           <section className="mt-14 border-t border-white/10 pt-10">
             <div className="max-w-4xl">
-              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Progress in process</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.progressEyebrow}</p>
               <h2 className="mt-5 text-4xl font-light leading-tight text-white md:text-5xl">
-                Track mastery for both SAT subjects.
+                {copy.masteryTitle}
               </h2>
               <p className="mt-5 max-w-2xl text-base font-light leading-7 text-white/48">
-                Every quiz, topic drill, and section test moves a unit from not started to mastered, so students can see exactly where improvement is happening.
+                {copy.masteryBody}
               </p>
             </div>
 
             <div className="mt-7 grid gap-6 xl:grid-cols-2">
               {progressTables.map((table) => (
-                <ProgressTable key={table.subject} table={table} />
+                <ProgressTable key={table.subject} table={table} copy={copy} />
               ))}
             </div>
           </section>
@@ -512,32 +717,32 @@ export default function PracticeAccessPage() {
         <section className="mx-auto min-h-[calc(100vh-81px)] max-w-7xl px-5 py-14 md:px-8">
           <div className="grid gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1fr_440px] lg:items-end">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Practice preview</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.heroEyebrow}</p>
               <h1 className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl">
-                Your account is ready. Pro unlocks the full practice engine.
+                {copy.loggedTitle}
               </h1>
               <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-                Try the sample questions below, then unlock Pro to use every Reading, Writing, and Math drill with progress tracking.
+                {copy.loggedBody}
               </p>
             </div>
 
-            <PracticeHeroPreview />
+            <PracticeHeroPreview copy={copy} />
           </div>
 
-          <SamplePracticePreview />
+          <SamplePracticePreview copy={copy} />
 
           <div className="mt-5 border border-emerald-300/25 bg-emerald-300/[0.06] p-5 md:flex md:items-center md:justify-between md:gap-6">
             <div>
               <div className="flex items-center gap-3">
                 <LockKeyhole size={18} className="text-emerald-100" />
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-50/62">Full practice locked</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-50/62">{copy.fullLocked}</p>
               </div>
               <p className="mt-3 max-w-2xl text-sm font-light leading-6 text-white/58">
-                Pro access opens automatically via Telegram bot — usually within 60 seconds. Refresh to open the unlocked practice dashboard.
+                {copy.autoOpen}
               </p>
             </div>
             <Link className="mt-5 flex h-13 min-w-[220px] items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white md:mt-0" href="/pricing?plan=pro">
-              Unlock Pro <ArrowRight size={18} />
+              {copy.unlockPro} <ArrowRight size={18} />
             </Link>
           </div>
         </section>
@@ -552,44 +757,44 @@ export default function PracticeAccessPage() {
       <section className="mx-auto min-h-[calc(100vh-81px)] max-w-7xl px-5 py-14 md:px-8">
         <div className="grid gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1fr_440px] lg:items-end">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Practice engine preview</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.heroEyebrow}</p>
             <h1 className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl">
-              Feel the targeted SAT practice before creating an account.
+              {copy.heroTitle}
             </h1>
             <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-              See how Reading, Writing, and Math practice turns diagnostic mistakes into topic drills, unit tests, and visible mastery progress.
+              {copy.heroBody}
             </p>
           </div>
 
-          <PracticeHeroPreview />
+          <PracticeHeroPreview copy={copy} />
         </div>
 
-        <SamplePracticePreview />
+        <SamplePracticePreview copy={copy} />
 
         <div className="mt-5 grid gap-3 border border-white/10 bg-white/[0.035] p-5 md:grid-cols-[1fr_auto_auto] md:items-center">
           <div>
-            <h2 className="text-2xl font-light text-white">Save your real progress</h2>
+            <h2 className="text-2xl font-light text-white">{copy.saveTitle}</h2>
             <p className="mt-2 text-sm font-light leading-6 text-white/48">
-              This preview is public. Create an account when you are ready for saved drills, score history, and a personal weakness route.
+              {copy.saveBody}
             </p>
           </div>
           <Link className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing">
-            Choose plan <ArrowRight size={18} />
+            {copy.choosePlan} <ArrowRight size={18} />
           </Link>
           <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/mock-test">
-            Free diagnostic <UserPlus size={18} />
+            {copy.freeDiagnostic} <UserPlus size={18} />
           </Link>
         </div>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-3">
-          {practiceSections.map((section) => {
+          {sections.map((section) => {
             const Icon = section.icon;
             return (
               <article className="min-h-[250px] border border-white/10 bg-white/[0.035] p-6 text-white" key={section.title}>
                 <div className="flex h-14 w-14 items-center justify-center border border-white/10 bg-black/25 text-white/70">
                   <Icon size={24} />
                 </div>
-                <p className="mt-8 text-[10px] font-black uppercase tracking-[0.32em] text-white/38">Practice section</p>
+                <p className="mt-8 text-[10px] font-black uppercase tracking-[0.32em] text-white/38">{copy.practiceSection}</p>
                 <h2 className="mt-3 text-3xl font-light">{section.title}</h2>
                 <p className="mt-4 text-sm font-light leading-6 text-white/48">{section.description}</p>
               </article>
@@ -599,18 +804,18 @@ export default function PracticeAccessPage() {
 
         <section className="mt-14 border-t border-white/10 pt-10">
           <div className="max-w-4xl">
-            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Sample mastery map</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.sampleMap}</p>
             <h2 className="mt-5 text-4xl font-light leading-tight text-white md:text-5xl">
-              A student can see which units are mastered, familiar, attempted, or untouched.
+              {copy.mapTitle}
             </h2>
             <p className="mt-5 max-w-2xl text-base font-light leading-7 text-white/48">
-              The real account version updates this map after every drill, quiz, and section test.
+              {copy.mapBody}
             </p>
           </div>
 
           <div className="mt-7 grid gap-6 xl:grid-cols-2">
             {progressTables.map((table) => (
-              <ProgressTable key={table.subject} table={table} />
+              <ProgressTable key={table.subject} table={table} copy={copy} />
             ))}
           </div>
         </section>
