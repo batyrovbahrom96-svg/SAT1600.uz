@@ -13,8 +13,11 @@ const resultCopy = {
   en: {
     eyebrow: "Estimated score from 25 questions",
     title: "Your estimated score:",
-    subtext: "This is an estimate from 25 questions. Take the full 98-question mock test in Pro for your accurate score.",
+    subtext: "This is an estimate from 25 questions. Section results are shown as ranges because a short diagnostic should not pretend to be exact. Take the full 98-question mock test in Pro for accurate section scores.",
     breakdown: "Section breakdown",
+    readingWritingRange: "Reading & Writing range",
+    mathRange: "Math range",
+    totalRange: "Estimated total range",
     topics: "Accuracy by topic",
     weakAreas: "Weak areas",
     traps: "Mistake patterns",
@@ -39,8 +42,11 @@ const resultCopy = {
   ru: {
     eyebrow: "Оценочный балл по 25 вопросам",
     title: "Ваш оценочный балл:",
-    subtext: "Это оценка по 25 вопросам. Для точного балла пройдите полный mock test из 98 вопросов в Pro.",
+    subtext: "Это оценка по 25 вопросам. Результаты по разделам показаны диапазоном, потому что короткая диагностика не должна притворяться точной. Для точных баллов по разделам пройдите полный mock test из 98 вопросов в Pro.",
     breakdown: "Разделы",
+    readingWritingRange: "Диапазон чтения и письма",
+    mathRange: "Диапазон математики",
+    totalRange: "Общий диапазон",
     topics: "Точность по темам",
     weakAreas: "Слабые места",
     traps: "Типы ошибок",
@@ -65,8 +71,11 @@ const resultCopy = {
   uz: {
     eyebrow: "25 savoldan taxminiy ball",
     title: "Taxminiy balingiz:",
-    subtext: "Bu 25 savol asosidagi taxmin. Aniq ball uchun Pro'dagi 98 savollik to'liq mock testni topshiring.",
+    subtext: "Bu 25 savol asosidagi taxmin. Bo'lim natijalari oraliq ko'rinishida beriladi, chunki qisqa diagnostika aniq ball deb ko'rsatmasligi kerak. Aniq bo'lim ballari uchun Pro'dagi 98 savollik to'liq mock testni topshiring.",
     breakdown: "Bo'limlar kesimi",
+    readingWritingRange: "Reading/Writing oralig'i",
+    mathRange: "Matematika oralig'i",
+    totalRange: "Umumiy taxmin oralig'i",
     topics: "Mavzular bo'yicha aniqlik",
     weakAreas: "Zaif joylar",
     traps: "Xato naqshlari",
@@ -162,11 +171,11 @@ export default function FreeDiagnosticResultsPage() {
           </div>
 
           <div className="grid border border-white/10 bg-white/[0.035]">
-            <ScoreTile label="Reading & Writing" value={`≈${result.estimatedRw}`} />
+            <ScoreTile label={copy.readingWritingRange} value={`${result.estimatedRwMin}-${result.estimatedRwMax}`} />
             <div className="border-t border-white/10" />
-            <ScoreTile label="Math" value={`≈${result.estimatedMath}`} />
+            <ScoreTile label={copy.mathRange} value={`${result.estimatedMathMin}-${result.estimatedMathMax}`} />
             <div className="border-t border-white/10" />
-            <ScoreTile label="Range" value={`${result.estimatedMin}-${result.estimatedMax}`} />
+            <ScoreTile label={copy.totalRange} value={`${result.estimatedMin}-${result.estimatedMax}`} />
           </div>
         </div>
 

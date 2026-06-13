@@ -59,7 +59,9 @@ const my1400Copy = {
       "This diagnostic is saved for 48 hours. Your weak areas are already inside My 1400+, so after Pro payment the next step is the full mock test and your 30-day plan.",
     estimatedScore: "Estimated score",
     readingWriting: "Reading/Writing",
+    readingWritingRange: "Reading/Writing range",
     math: "Math",
+    mathRange: "Math range",
     openPaymentQr: "Open payment QR",
     retakeDiagnostic: "Retake diagnostic",
     weakAreasSaved: "Weak areas saved",
@@ -148,7 +150,9 @@ const my1400Copy = {
       "Диагностика сохранена на 48 часов. Слабые темы уже внутри My 1400+, поэтому после оплаты Pro следующий шаг — полный mock test и ваш 30-дневный план.",
     estimatedScore: "Примерный балл",
     readingWriting: "Чтение/письмо",
+    readingWritingRange: "Диапазон чтения/письма",
     math: "Математика",
+    mathRange: "Диапазон математики",
     openPaymentQr: "Открыть QR оплаты",
     retakeDiagnostic: "Пересдать диагностику",
     weakAreasSaved: "Слабые темы сохранены",
@@ -237,7 +241,9 @@ const my1400Copy = {
       "Bu diagnostika 48 soat saqlanadi. Zaif mavzularingiz My 1400+ ichida tayyor, shuning uchun Pro to'lovidan keyingi qadam to'liq mock test va 30 kunlik rejangiz bo'ladi.",
     estimatedScore: "Taxminiy ball",
     readingWriting: "Reading/Writing",
+    readingWritingRange: "Reading/Writing oralig'i",
     math: "Matematika",
+    mathRange: "Matematika oralig'i",
     openPaymentQr: "To'lov QR kodini ochish",
     retakeDiagnostic: "Diagnostikani qayta topshirish",
     weakAreasSaved: "Zaif mavzular saqlandi",
@@ -322,7 +328,9 @@ const my1400Copy = {
   savedBody: string;
   estimatedScore: string;
   readingWriting: string;
+  readingWritingRange: string;
   math: string;
+  mathRange: string;
   openPaymentQr: string;
   retakeDiagnostic: string;
   weakAreasSaved: string;
@@ -529,8 +537,8 @@ function My1400SavedDiagnostic({
           </p>
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
             <SavedStat label={copy.estimatedScore} value={`≈${result.estimatedTotal}`} />
-            <SavedStat label={copy.readingWriting} value={`≈${result.estimatedRw}`} />
-            <SavedStat label={copy.math} value={`≈${result.estimatedMath}`} />
+            <SavedStat label={copy.readingWritingRange} value={`${result.estimatedRwMin}-${result.estimatedRwMax}`} />
+            <SavedStat label={copy.mathRange} value={`${result.estimatedMathMin}-${result.estimatedMathMax}`} />
           </div>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro&from=my-1400&payment=qr">

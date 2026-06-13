@@ -29,7 +29,11 @@ export type DiagnosticResult = {
   estimatedMin: number;
   estimatedMax: number;
   estimatedMath: number;
+  estimatedMathMin: number;
+  estimatedMathMax: number;
   estimatedRw: number;
+  estimatedRwMin: number;
+  estimatedRwMax: number;
   topicAccuracy: TopicAccuracy[];
   weakAreas: string[];
   trapTypes: string[];
@@ -44,6 +48,8 @@ const difficultyWeight: Record<DiagnosticDifficulty, number> = {
   medium: 1,
   hard: 1.25
 };
+
+const sectionRangeMargin = 60;
 
 export const freeDiagnosticQuestions: DiagnosticQuestion[] = [
   {
@@ -369,6 +375,13 @@ function sectionScore(sectionQuestions: DiagnosticQuestion[], answers: Diagnosti
   return Math.round((200 + ratio * 600) / 10) * 10;
 }
 
+function sectionScoreRange(score: number) {
+  return {
+    min: Math.max(200, Math.round((score - sectionRangeMargin) / 10) * 10),
+    max: Math.min(800, Math.round((score + sectionRangeMargin) / 10) * 10)
+  };
+}
+
 export function calculateDiagnosticResult(answers: DiagnosticAnswers): DiagnosticResult {
   const correct = freeDiagnosticQuestions.filter((question) => answers[question.id] === question.correctAnswer).length;
   const mathQuestions = freeDiagnosticQuestions.filter((question) => question.section === "math");
@@ -376,6 +389,8 @@ export function calculateDiagnosticResult(answers: DiagnosticAnswers): Diagnosti
   const estimatedMath = sectionScore(mathQuestions, answers);
   const estimatedRw = sectionScore(rwQuestions, answers);
   const estimatedTotal = estimatedMath + estimatedRw;
+  const estimatedMathRange = sectionScoreRange(estimatedMath);
+  const estimatedRwRange = sectionScoreRange(estimatedRw);
 
   const byTopic = new Map<string, { correct: number; total: number }>();
   const trapCounts = new Map<string, number>();
@@ -421,7 +436,11 @@ export function calculateDiagnosticResult(answers: DiagnosticAnswers): Diagnosti
     estimatedMin: Math.max(400, estimatedTotal - 30),
     estimatedMax: Math.min(1600, estimatedTotal + 30),
     estimatedMath,
+    estimatedMathMin: estimatedMathRange.min,
+    estimatedMathMax: estimatedMathRange.max,
     estimatedRw,
+    estimatedRwMin: estimatedRwRange.min,
+    estimatedRwMax: estimatedRwRange.max,
     topicAccuracy,
     weakAreas: weakAreas.length ? weakAreas : topicAccuracy.slice(0, 2).map((item) => item.topic),
     trapTypes,
