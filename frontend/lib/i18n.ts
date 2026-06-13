@@ -26,13 +26,6 @@ export function getInitialLanguage(): Language {
     return requested;
   }
 
-  try {
-    const saved = window.localStorage?.getItem(storageKey);
-    if (saved === "ru" || saved === "uz" || saved === "en") return saved;
-  } catch {
-    return "en";
-  }
-
   return "en";
 }
 
@@ -64,19 +57,14 @@ export function useLanguage() {
     };
 
     const onSharedLanguageChange = (next: Language) => setLanguageState(next);
-    const onStorage = () => syncLanguage();
-    const syncTimer = window.setInterval(syncLanguage, 500);
 
     languageSubscribers.add(onSharedLanguageChange);
     window.addEventListener(languageEvent, onLanguageChange);
-    window.addEventListener("storage", onStorage);
     window.addEventListener("popstate", syncLanguage);
 
     return () => {
-      window.clearInterval(syncTimer);
       languageSubscribers.delete(onSharedLanguageChange);
       window.removeEventListener(languageEvent, onLanguageChange);
-      window.removeEventListener("storage", onStorage);
       window.removeEventListener("popstate", syncLanguage);
     };
   }, []);

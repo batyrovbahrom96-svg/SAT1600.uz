@@ -63,6 +63,14 @@ export function LuxuryNavbar() {
     window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   };
 
+  const withLanguage = (href: string) => {
+    const [withoutHash, hash] = href.split("#");
+    const [pathname, query = ""] = withoutHash.split("?");
+    const params = new URLSearchParams(query);
+    params.set("lang", language);
+    return `${pathname}?${params.toString()}${hash ? `#${hash}` : ""}`;
+  };
+
   useEffect(() => {
     let active = true;
     const refreshAuth = () => {
@@ -108,11 +116,11 @@ export function LuxuryNavbar() {
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-2 gap-y-2 px-3 py-3 sm:gap-x-4 sm:px-5 sm:py-4 md:px-8">
         <Link
           className="flex h-10 w-[118px] shrink-0 items-center border border-white/10 bg-black/30 px-2.5 shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition-colors hover:border-white/30 sm:h-12 sm:w-[180px] sm:px-4 xl:w-[210px]"
-          href="/?skipIntro=1"
+          href={withLanguage("/?skipIntro=1")}
           onClick={(event) => {
             if (window.location.pathname === "/") {
               event.preventDefault();
-              window.history.replaceState(null, "", "/");
+              window.history.replaceState(null, "", withLanguage("/"));
               window.dispatchEvent(new Event(skipHomeIntroEvent));
             }
           }}
@@ -138,7 +146,7 @@ export function LuxuryNavbar() {
           </div>
           {studentName ? (
             <>
-              <Link className="hidden h-11 max-w-[190px] items-center border border-white bg-white px-4 text-[10px] font-black uppercase tracking-[0.14em] text-black transition-colors hover:bg-transparent hover:text-white lg:flex 2xl:max-w-[240px] 2xl:px-5 2xl:tracking-[0.16em]" href="/dashboard">
+              <Link className="hidden h-11 max-w-[190px] items-center border border-white bg-white px-4 text-[10px] font-black uppercase tracking-[0.14em] text-black transition-colors hover:bg-transparent hover:text-white lg:flex 2xl:max-w-[240px] 2xl:px-5 2xl:tracking-[0.16em]" href={withLanguage("/dashboard")}>
                 <span className="truncate">{studentName}</span>
               </Link>
               <button className="flex h-9 min-w-[64px] items-center justify-center whitespace-nowrap border border-white/12 bg-white/[0.035] px-2 text-[8px] font-black uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-white/35 hover:text-white sm:h-11 sm:min-w-[112px] sm:px-4 sm:text-[10px] sm:tracking-[0.22em]" onClick={logout} type="button">
@@ -147,10 +155,10 @@ export function LuxuryNavbar() {
             </>
           ) : (
             <>
-              <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href="/pricing">
+              <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href={withLanguage("/pricing")}>
                 {actionCopy.pricing[language]}
               </Link>
-              <Link className="h-9 whitespace-nowrap border border-white/12 bg-white/[0.035] px-2 text-[8px] font-black uppercase tracking-[0.1em] leading-[36px] text-white/70 transition-colors hover:border-white/35 hover:text-white sm:h-11 sm:px-4 sm:text-[10px] sm:tracking-[0.22em] sm:leading-[44px]" href="/login">
+              <Link className="h-9 whitespace-nowrap border border-white/12 bg-white/[0.035] px-2 text-[8px] font-black uppercase tracking-[0.1em] leading-[36px] text-white/70 transition-colors hover:border-white/35 hover:text-white sm:h-11 sm:px-4 sm:text-[10px] sm:tracking-[0.22em] sm:leading-[44px]" href={withLanguage("/login")}>
                 {actionCopy.login[language]}
               </Link>
             </>
@@ -161,7 +169,7 @@ export function LuxuryNavbar() {
           {navItems.map((item) => (
             <Link
               className="shrink-0 whitespace-nowrap px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-white/48 transition-colors hover:text-white sm:px-4 sm:text-[10px] sm:tracking-[0.2em]"
-              href={item.href}
+              href={withLanguage(item.href)}
               key={item.label}
             >
               {item.label}
