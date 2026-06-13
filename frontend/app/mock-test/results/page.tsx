@@ -27,8 +27,10 @@ const resultCopy = {
     youAnswered: "You answered",
     correctAnswer: "Correct answer",
     noMiss: "No missed question in this diagnostic. Pro still opens the full 98-question mock test and a complete 30-day route.",
+    locked: "Full Mock Test Ready",
     upsellTitle: "Your estimated score is",
     goal: "Your goal is 1400+.",
+    bridge: "Your 30-day plan is ready. Unlock the full route while your weak areas are fresh.",
     upsellBodyA: "Your weak areas are",
     upsellBodyB:
       "SATTEST Pro includes the full 98-question identical Digital SAT mock test (2h14m, accurate scoring), a personalized 30-day plan built from this diagnostic, unlimited targeted practice, and mistake tracking.",
@@ -51,8 +53,10 @@ const resultCopy = {
     youAnswered: "Ваш ответ",
     correctAnswer: "Правильный ответ",
     noMiss: "В этой диагностике нет ошибок. Pro всё равно открывает полный mock test из 98 вопросов и полный 30-дневный маршрут.",
+    locked: "Полный mock test готов",
     upsellTitle: "Ваш оценочный балл",
     goal: "Ваша цель — 1400+.",
+    bridge: "Ваш 30-дневный план готов. Откройте полный маршрут, пока слабые места ещё свежие.",
     upsellBodyA: "Ваши слабые места:",
     upsellBodyB:
       "SATTEST Pro включает полный Digital SAT mock test из 98 вопросов (2ч14м, точный балл), персональный 30-дневный план по этой диагностике, неограниченную целевую практику и отслеживание ошибок.",
@@ -75,8 +79,10 @@ const resultCopy = {
     youAnswered: "Sizning javobingiz",
     correctAnswer: "To'g'ri javob",
     noMiss: "Bu diagnostikada xato yo'q. Pro baribir 98 savollik to'liq mock test va 30 kunlik to'liq reja ochadi.",
+    locked: "To'liq mock test tayyor",
     upsellTitle: "Taxminiy balingiz",
     goal: "Maqsadingiz 1400+.",
+    bridge: "30 kunlik rejangiz tayyor. Zaif joylaringiz esingizda turgan paytda to'liq yo'nalishni oching.",
     upsellBodyA: "Zaif joylaringiz:",
     upsellBodyB:
       "SATTEST Pro ichida 98 savollik to'liq Digital SAT mock test (2 soat 14 daqiqa, aniq ball), shu diagnostika asosida shaxsiy 30 kunlik reja, cheksiz maqsadli mashqlar va xatolar kuzatuvi bor.",
@@ -96,10 +102,12 @@ export default function FreeDiagnosticResultsPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = window.sessionStorage.getItem("sattest_free_diagnostic");
+    const raw = window.sessionStorage.getItem("sattest_free_diagnostic") ?? window.localStorage.getItem("sattest_free_diagnostic");
     if (!raw) return;
     try {
-      setStored(JSON.parse(raw) as StoredDiagnostic);
+      const parsed = JSON.parse(raw) as StoredDiagnostic;
+      window.sessionStorage.setItem("sattest_free_diagnostic", raw);
+      setStored(parsed);
     } catch {
       setStored(null);
     }
@@ -135,6 +143,7 @@ export default function FreeDiagnosticResultsPage() {
 
   const workedExample = result.missedQuestions[0];
   const weakAreas = result.weakAreas.slice(0, 3);
+  const weakAreasText = formatList(weakAreas, language);
 
   return (
     <main className="min-h-screen bg-[#080908] text-white">
@@ -233,13 +242,16 @@ export default function FreeDiagnosticResultsPage() {
           <div className="grid gap-8 lg:grid-cols-[1fr_0.82fr] lg:items-end">
             <div>
               <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.34em] text-[#c8bd88]">
-                <Lock size={16} /> Locked full route
+                <Lock size={16} /> {copy.locked}
               </p>
               <h2 className="mt-5 text-4xl font-light leading-tight md:text-6xl">
                 {copy.upsellTitle} {result.estimatedTotal}. {copy.goal}
               </h2>
+              <p className="mt-5 max-w-3xl text-xl font-semibold leading-8 text-white">
+                {copy.bridge}
+              </p>
               <p className="mt-5 max-w-3xl text-lg leading-8 text-white/64">
-                {copy.upsellBodyA} <span className="font-semibold text-white" data-sattest-no-translate="true">{weakAreas.join(" and ")}</span>. {copy.upsellBodyB}
+                {copy.upsellBodyA} <span className="font-semibold text-white" data-sattest-no-translate="true">{weakAreasText}</span>. {copy.upsellBodyB}
               </p>
             </div>
             <div className="grid gap-3">
@@ -268,4 +280,11 @@ function ScoreTile({ label, value }: { label: string; value: string }) {
       <p className="mt-3 text-5xl font-light text-white">{value}</p>
     </div>
   );
+}
+
+function formatList(items: string[], language: "en" | "ru" | "uz") {
+  if (items.length <= 1) return items[0] ?? "";
+  const conjunction = language === "ru" ? "и" : language === "uz" ? "va" : "and";
+  if (items.length === 2) return `${items[0]} ${conjunction} ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")} ${conjunction} ${items[items.length - 1]}`;
 }

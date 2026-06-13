@@ -104,15 +104,14 @@ export default function FreeDiagnosticPage() {
 
     if (typeof window !== "undefined") {
       const sessionId = `fd-${Date.now()}`;
-      window.sessionStorage.setItem(
-        "sattest_free_diagnostic",
-        JSON.stringify({
-          sessionId,
-          answers,
-          email: email || window.localStorage.getItem("sattest_free_diagnostic_email") || "",
-          completedAt: new Date().toISOString()
-        })
-      );
+      const diagnosticPayload = JSON.stringify({
+        sessionId,
+        answers,
+        email: email || window.localStorage.getItem("sattest_free_diagnostic_email") || "",
+        completedAt: new Date().toISOString()
+      });
+      window.sessionStorage.setItem("sattest_free_diagnostic", diagnosticPayload);
+      window.localStorage.setItem("sattest_free_diagnostic", diagnosticPayload);
     }
     router.push("/mock-test/results");
   }
