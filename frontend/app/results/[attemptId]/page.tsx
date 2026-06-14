@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -33,6 +32,8 @@ import {
 } from "lucide-react";
 import { CurriculumPrompt } from "@/components/CurriculumPrompt";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { PremiumButton } from "@/components/PremiumButton";
+import { PremiumText } from "@/components/PremiumText";
 import { ApiError, api, getSubscriptionStatus } from "@/lib/api";
 
 type ResultQuestion = {
@@ -304,7 +305,7 @@ export default function ResultsPage() {
 
   if (!reportResults || !analytics) {
     return (
-      <main className="min-h-screen bg-[#101112] text-white">
+      <main className="sat-lux-page min-h-screen text-white">
         <LuxuryNavbar />
         <section className="mx-auto flex min-h-[70vh] max-w-4xl flex-col items-center justify-center px-5 text-center">
           <div className="flex h-16 w-16 items-center justify-center border border-white/10 bg-white/[0.035] text-white">
@@ -315,13 +316,14 @@ export default function ResultsPage() {
             {message || "We are preparing your score, mistakes, and next study plan."}
           </p>
           {message ? (
-            <button
-              className="mt-7 inline-flex h-12 items-center gap-3 border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
+            <PremiumButton
+              className="mt-7"
+              icon={<ArrowRight size={18} />}
               onClick={() => router.push("/dashboard")}
               type="button"
             >
-              Back to dashboard <ArrowRight size={18} />
-            </button>
+              Back to dashboard
+            </PremiumButton>
           ) : null}
         </section>
       </main>
@@ -329,32 +331,35 @@ export default function ResultsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#101112] text-white">
+    <main className="sat-lux-page min-h-screen text-white">
       <LuxuryNavbar />
       <section className="mx-auto max-w-7xl px-5 py-10 md:px-8 md:py-14">
         <div className="grid gap-8 border-b border-white/10 pb-10 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Post-test analytics</p>
-            <h1 className="mt-5 text-5xl font-light leading-none text-white md:text-7xl">Score report</h1>
+            <PremiumText as="h1" className="mt-5 text-5xl font-light leading-none text-white md:text-7xl" variant="hero">
+              Score report
+            </PremiumText>
             <p className="mt-6 max-w-3xl text-lg font-light leading-8 text-white/50">
               Your score, accuracy, weak topics, missed-question explanations, and the next study moves are all in one place.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button
-              className="inline-flex h-12 items-center gap-3 border border-white/15 bg-white/[0.035] px-5 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white"
+            <PremiumButton
+              icon={<Download size={18} />}
               onClick={() => window.print()}
               type="button"
+              variant="glass"
             >
-              <Download size={18} /> Print report
-            </button>
-            <button
-              className="inline-flex h-12 items-center gap-3 border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
+              Print report
+            </PremiumButton>
+            <PremiumButton
+              icon={<RefreshCcw size={18} />}
               onClick={() => router.push(attemptId === "demo" ? "/pricing" : "/dashboard")}
               type="button"
             >
-              <RefreshCcw size={18} /> {attemptId === "demo" ? "Choose plan" : "New test"}
-            </button>
+              {attemptId === "demo" ? "Choose plan" : "New test"}
+            </PremiumButton>
           </div>
         </div>
 
@@ -551,13 +556,14 @@ export default function ResultsPage() {
                   ? "Start the first set now and retake the weak section after completion."
                   : "Your 30-day plan is ready now. Pay 200,000 so'm and open the route while the weak spots are fresh."}
               </p>
-              <button
-                className="mt-5 flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-white"
+              <PremiumButton
+                className="mt-5 w-full"
+                icon={<ArrowRight size={18} />}
                 onClick={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro&from=diagnostic-result")}
                 type="button"
               >
-                {hasActiveSubscription ? "Open my route" : "Pay 200,000 so'm and unlock"} <ArrowRight size={18} />
-              </button>
+                {hasActiveSubscription ? "Open my route" : "Pay 200,000 so'm and unlock"}
+              </PremiumButton>
             </div>
           </div>
         </section>
@@ -608,7 +614,7 @@ function ResultsUnavailableNotice() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#101112] text-white">
+    <main className="sat-lux-page min-h-screen text-white">
       <LuxuryNavbar />
 
       <section className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl gap-8 px-5 py-14 md:px-8 lg:grid-cols-[1fr_470px] lg:items-center">
@@ -619,9 +625,9 @@ function ResultsUnavailableNotice() {
           <p className="mt-8 text-[10px] font-black uppercase tracking-[0.42em] text-white/42">
             Results unavailable
           </p>
-          <h1 className="mt-5 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
+          <PremiumText as="h1" className="mt-5 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl" variant="hero">
             Take the diagnostic first. Then your report appears here.
-          </h1>
+          </PremiumText>
           <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/55">
             This page is reserved for completed SAT mock tests. After the diagnostic, SATTEST.UZ will show your score, mistakes, weak topics, timing pressure, and the next practice route.
           </p>
@@ -635,12 +641,9 @@ function ResultsUnavailableNotice() {
             ))}
           </div>
 
-          <Link
-            className="mt-9 inline-flex h-14 items-center gap-4 border border-white bg-white px-7 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-            href="/mock-test"
-          >
-            Start free diagnostic <ArrowRight size={18} />
-          </Link>
+          <PremiumButton className="mt-9" href="/mock-test" icon={<ArrowRight size={18} />}>
+            Start free diagnostic
+          </PremiumButton>
         </div>
 
         <div className="border border-white/12 bg-white/[0.035] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.38)]">

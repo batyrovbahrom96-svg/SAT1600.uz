@@ -37,7 +37,9 @@ export function setStoredLanguage(language: Language) {
     // Keep the in-memory UI switch working even when storage is unavailable.
   }
   languageSubscribers.forEach((subscriber) => subscriber(language));
-  window.dispatchEvent(new CustomEvent(languageEvent, { detail: language }));
+  if (typeof window.CustomEvent === "function") {
+    window.dispatchEvent(new CustomEvent(languageEvent, { detail: language }));
+  }
 }
 
 export function useLanguage() {

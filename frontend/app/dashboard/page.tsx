@@ -60,7 +60,7 @@ export default function DashboardPage() {
   const latestScore = history?.score_history.at(-1)?.score;
   const latestAttemptId = requestedAttemptId || history?.score_history.at(-1)?.attempt_id;
   const hasDiagnostic = Boolean(latestScore && latestAttemptId);
-  const diagnosticTest = tests[0];
+  const satMockTest = tests.find((test) => test.is_premium) ?? tests[0];
   const diagnosticSummary = diagnosticResults ? buildDiagnosticSummary(diagnosticResults) : null;
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function DashboardPage() {
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/38">Student access</p>
           <h1 className="mt-5 text-4xl font-light text-white md:text-5xl">Checking your cabinet access</h1>
           <p className="mt-4 max-w-xl text-sm font-light leading-7 text-white/48">
-            Practice and personal track are available after registration and the diagnostic mock SAT test.
+            Practice and personal track are available after registration and your saved SAT mock test.
           </p>
         </section>
       </main>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
               Practice unlocks after your SAT mock test.
             </h1>
             <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-              Your personal SAT track, weak-skill analysis, daily hours, and study curriculum appear only after your diagnostic result is available.
+              Your personal SAT track, weak-skill analysis, daily hours, and study curriculum appear after your SAT mock result is saved.
             </p>
           </div>
 
@@ -166,18 +166,18 @@ export default function DashboardPage() {
               </div>
               <h2 className="mt-5 text-2xl font-light text-white">No diagnostic result yet</h2>
               <p className="mt-3 text-sm font-light leading-6 text-white/48">
-                Take the diagnostic mock SAT test first. After submission, this cabinet becomes your personal study track.
+                Take the SAT Mock Test first. After submission, this cabinet becomes your personal study track.
               </p>
             </div>
 
             <div className="mt-5 grid gap-3">
               <button
                 className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-                disabled={!diagnosticTest}
-                onClick={() => diagnosticTest && start(diagnosticTest.id)}
+                disabled={!satMockTest}
+                onClick={() => satMockTest && start(satMockTest.id)}
                 type="button"
               >
-                Start Diagnostic <ArrowRight size={18} />
+                Start SAT Mock Test <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -196,7 +196,7 @@ export default function DashboardPage() {
             <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Student cabinet</p>
             <h1 className="mt-5 text-5xl font-light leading-none text-white md:text-7xl">Personal SAT track</h1>
             <p className="mt-6 max-w-2xl text-lg font-light leading-8 text-white/50">
-              Start with the diagnostic mock test. After submission, this cabinet becomes your personal 1400+ roadmap with weaknesses, daily hours, and practice curriculum.
+              Start with the SAT Mock Test. After submission, this cabinet becomes your personal 1400+ roadmap with weaknesses, daily hours, and practice curriculum.
             </p>
           </div>
           <div className="grid grid-cols-2 border border-white/10 bg-white/[0.035]">
@@ -223,22 +223,22 @@ export default function DashboardPage() {
                 {hasDiagnostic ? "Diagnostic completed" : "Step 1"}
               </p>
               <h2 className="mt-4 max-w-3xl text-4xl font-light leading-tight text-white md:text-5xl">
-                {hasDiagnostic ? "Your diagnostic evaluation is inside this cabinet." : "Take your diagnostic mock test first."}
+                {hasDiagnostic ? "Your SAT mock evaluation is inside this cabinet." : "Take your SAT Mock Test first."}
               </h2>
               <p className="mt-5 max-w-2xl text-base font-light leading-7 text-white/50">
                 {hasDiagnostic
                   ? "Your latest SAT mock result is now connected to your personal track. Review the section evaluation, weaknesses, and priority topics before starting the next practice cycle."
-                  : "The diagnostic test unlocks your personal SAT track. Your score, weak skills, daily study hours, and 30-day 1400+ roadmap will appear here after the test."}
+                  : "The SAT Mock Test unlocks your personal SAT track. Your score, weak skills, daily study hours, and 30-day 1400+ roadmap will appear here after the test."}
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3">
-                {diagnosticTest ? (
-                  <button onClick={() => start(diagnosticTest.id)} className="flex h-12 items-center justify-center gap-3 border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white">
-                    {hasDiagnostic ? "Retake diagnostic" : "Start diagnostic"} <ArrowRight size={17} />
+                {satMockTest ? (
+                  <button onClick={() => start(satMockTest.id)} className="flex h-12 items-center justify-center gap-3 border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white">
+                    {hasDiagnostic ? "Retake SAT Mock Test" : "Start SAT Mock Test"} <ArrowRight size={17} />
                   </button>
                 ) : (
                   <div className="border border-white/10 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-white/45">
-                    Loading diagnostic
+                    Loading SAT Mock Test
                   </div>
                 )}
                 <button

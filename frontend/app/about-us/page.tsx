@@ -1,7 +1,8 @@
-import Link from "next/link";
 import type { CSSProperties } from "react";
 import { ArrowRight, BrainCircuit, ChartNoAxesCombined, CheckCircle2, Cpu, LockKeyhole, ShieldCheck, Sparkles, Target } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { PremiumButton } from "@/components/PremiumButton";
+import { PremiumText } from "@/components/PremiumText";
 import { SplineScene } from "@/components/SplineScene";
 
 const robotSceneUrl = "https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode";
@@ -74,21 +75,19 @@ export default function AboutUsPage() {
         </div>
         <div className="about-hero__content">
           <p className="about-kicker">About SATTEST.UZ</p>
-          <h1>
+          <PremiumText as="h1" variant="hero">
             An AI-powered SAT organization built to make progress visible.
-          </h1>
+          </PremiumText>
           <p>
             SATTEST.UZ is not a simple practice website. It is a diagnostic SAT platform that turns every mock test into a personal study route, score report, weakness map, and 1400+ preparation plan.
           </p>
           <div className="about-hero__actions">
-            <Link href="/mock-test">
+            <PremiumButton href="/mock-test" icon={<ArrowRight size={18} />}>
               Start Free Diagnostic
-              <ArrowRight size={18} />
-            </Link>
-            <Link href="/pricing">
+            </PremiumButton>
+            <PremiumButton href="/pricing" icon={<ArrowRight size={18} />} variant="glass">
               Choose Plan
-              <ArrowRight size={18} />
-            </Link>
+            </PremiumButton>
           </div>
         </div>
 
@@ -117,7 +116,7 @@ export default function AboutUsPage() {
       <section className="about-robot-section" aria-labelledby="about-robot-title">
         <div className="about-robot-section__copy">
           <p className="about-kicker">Interactive AI layer</p>
-          <h2 id="about-robot-title">A smarter study companion for every diagnostic route.</h2>
+          <PremiumText as="h2" id="about-robot-title" variant="platform">A smarter study companion for every diagnostic route.</PremiumText>
           <p>
             The 3D assistant represents how SATTEST.UZ reads a mock test, detects weak skills, and turns the next study step into a clear action instead of another guess.
           </p>
@@ -129,9 +128,9 @@ export default function AboutUsPage() {
 
       <section className="about-statement">
         <p>Our mission</p>
-        <h2>
+        <PremiumText as="h2" variant="diagnostic">
           To help ambitious students in Uzbekistan understand exactly why they lose SAT points and what to do next.
-        </h2>
+        </PremiumText>
       </section>
 
       <section className="about-proof-grid" aria-label="Why SATTEST.UZ is trustworthy">
@@ -152,7 +151,7 @@ export default function AboutUsPage() {
       <section className="about-split">
         <div>
           <p className="about-kicker">Not a shortcut. A system.</p>
-          <h2>Trust is created by showing the work.</h2>
+          <PremiumText as="h2" variant="proof">Trust is created by showing the work.</PremiumText>
           <p>
             Students do not need vague promises. They need a clear exam attempt, an honest report, a visible curriculum, and practice that is connected to their own mistakes.
           </p>
@@ -170,7 +169,7 @@ export default function AboutUsPage() {
       <section className="about-process">
         <div className="about-section-head">
           <p>How it works</p>
-          <h2>One diagnostic. One report. One personal route.</h2>
+          <PremiumText as="h2" variant="route">One diagnostic. One report. One personal route.</PremiumText>
         </div>
         <div className="about-process__grid">
           {processSteps.map((step) => (
@@ -198,13 +197,12 @@ export default function AboutUsPage() {
       <section className="about-final">
         <ShieldCheck size={34} />
         <p>Built for serious preparation</p>
-        <h2>
+        <PremiumText as="h2" variant="contact">
           SATTEST.UZ exists to make SAT preparation measurable, transparent, and worthy of student trust.
-        </h2>
-        <Link href="/register">
+        </PremiumText>
+        <PremiumButton href="/register" icon={<ArrowRight size={18} />}>
           Create Account
-          <ArrowRight size={18} />
-        </Link>
+        </PremiumButton>
       </section>
     </main>
   );

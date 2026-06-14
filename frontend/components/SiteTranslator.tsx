@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { languages, useLanguage, type Language } from "@/lib/i18n";
 
@@ -1051,18 +1052,20 @@ function translateElementAttributes(element: Element, dictionary: TranslationMap
 }
 
 function translateNode(root: ParentNode, language: Language) {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
   const dictionary = language === "en" ? null : dictionaries[language];
   document.documentElement.lang = language;
 
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+  const nodeFilter = window.NodeFilter;
+  const walker = document.createTreeWalker(root, nodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const parent = node.parentElement;
-      if (!parent) return NodeFilter.FILTER_REJECT;
-      if (parent.closest(noTranslateSelector)) return NodeFilter.FILTER_REJECT;
+      if (!parent) return nodeFilter.FILTER_REJECT;
+      if (parent.closest(noTranslateSelector)) return nodeFilter.FILTER_REJECT;
       if (["SCRIPT", "STYLE", "TEXTAREA", "INPUT", "CODE", "PRE"].includes(parent.tagName)) {
-        return NodeFilter.FILTER_REJECT;
+        return nodeFilter.FILTER_REJECT;
       }
-      return node.nodeValue?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      return node.nodeValue?.trim() ? nodeFilter.FILTER_ACCEPT : nodeFilter.FILTER_REJECT;
     }
   });
 
@@ -1075,19 +1078,17 @@ function translateNode(root: ParentNode, language: Language) {
     node.nodeValue = dictionary ? dynamicTranslate(original, dictionary) : original;
   });
 
-  if (root instanceof Element) translateElementAttributes(root, dictionary);
+  if (root instanceof window.Element) translateElementAttributes(root, dictionary);
   root.querySelectorAll?.("*").forEach((element) => translateElementAttributes(element, dictionary));
 }
 
-function languageHref(language: Language) {
-  if (typeof window === "undefined") return `?lang=${language}`;
-  const url = new URL(window.location.href);
-  url.searchParams.set("lang", language);
-  return `${url.pathname}${url.search}${url.hash}`;
+function languageHref(language: Language, pathname: string) {
+  return `${pathname}?lang=${language}`;
 }
 
 export function SiteTranslator() {
   const { language, setLanguage } = useLanguage();
+  const pathname = usePathname();
   const applyLanguage = (next: Language) => {
     activeTranslatorLanguage = next;
     setLanguage(next);
@@ -1102,9 +1103,16 @@ export function SiteTranslator() {
 
   useEffect(() => {
     activeTranslatorLanguage = language;
-    const apply = () => translateNode(document.body, activeTranslatorLanguage);
+    const apply = () => {
+      try {
+        translateNode(document.body, activeTranslatorLanguage);
+      } catch {
+        // Translation is progressive enhancement; never block page interactivity.
+      }
+    };
     apply();
 
+    if (typeof window.MutationObserver === "undefined") return;
     const observer = new MutationObserver(() => {
       window.requestAnimationFrame(apply);
     });
@@ -1141,7 +1149,7 @@ export function SiteTranslator() {
             language === item.code ? "bg-white text-black" : "text-white/55 hover:text-white"
           ].join(" ")}
           data-sattest-language={item.code}
-          href={languageHref(item.code)}
+          href={languageHref(item.code, pathname)}
           key={item.code}
           onClick={(event) => {
             event.preventDefault();

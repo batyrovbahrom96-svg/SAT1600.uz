@@ -3,6 +3,8 @@ import type { Viewport } from "next";
 import type { ReactNode } from "react";
 import { DevOverlayCleaner } from "@/components/DevOverlayCleaner";
 import { EtherealSiteBackground } from "@/components/EtherealSiteBackground";
+import { LuxuryShaderBackground } from "@/components/LuxuryShaderBackground";
+import { PageTransition } from "@/components/PageTransition";
 import { SiteTranslator } from "@/components/SiteTranslator";
 import "./globals.css";
 
@@ -76,8 +78,11 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="en">
       <body>
+        <LuxuryShaderBackground />
         <EtherealSiteBackground />
-        <div className="site-content-shell">{children}</div>
+        <div className="site-content-shell">
+          <PageTransition>{children}</PageTransition>
+        </div>
         <SiteTranslator />
         <DevOverlayCleaner />
       </body>

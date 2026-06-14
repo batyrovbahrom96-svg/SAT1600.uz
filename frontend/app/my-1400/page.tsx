@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BarChart3, BookOpen, CalendarDays, Check, CheckCircle2, Clock, FileText, LockKeyhole, Target, Users, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { api, getToken } from "@/lib/api";
+import { PremiumText } from "@/components/PremiumText";
+import { api, getSubscriptionStatus, getToken } from "@/lib/api";
 import { calculateDiagnosticResult, type DiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-diagnostic-storage";
 import { useLanguage } from "@/lib/i18n";
@@ -444,7 +445,7 @@ export default function My1400Page() {
   const router = useRouter();
   const { language } = useLanguage();
   const copy = my1400Copy[language];
-  const [state, setState] = useState<"checking" | "login" | "diagnostic">("checking");
+  const [state, setState] = useState<"checking" | "login" | "diagnostic" | "pro">("checking");
   const [freeDiagnostic, setFreeDiagnostic] = useState<StoredFreeDiagnostic | null>(null);
   const freeDiagnosticResult = useMemo<DiagnosticResult | null>(() => {
     if (!freeDiagnostic) return null;
@@ -459,13 +460,22 @@ export default function My1400Page() {
 
     setFreeDiagnostic(getFreeDiagnosticResult());
 
-    api<AnalyticsHistory>("/api/analytics/me")
-      .then((history) => {
+    Promise.all([
+      api<AnalyticsHistory>("/api/analytics/me").catch(() => ({ score_history: [], attempts: 0 })),
+      getSubscriptionStatus().catch(() => ({ has_active_subscription: false, subscription: null }))
+    ])
+      .then(([history, subscriptionStatus]) => {
         const latestAttemptId = history.score_history.at(-1)?.attempt_id;
         if (latestAttemptId) {
           router.replace(`/curriculum/${latestAttemptId}`);
           return;
         }
+
+        if (subscriptionStatus.has_active_subscription) {
+          setState("pro");
+          return;
+        }
+
         setState("diagnostic");
       })
       .catch((error) => {
@@ -476,7 +486,7 @@ export default function My1400Page() {
 
   if (state === "login") {
     return (
-      <main className="min-h-screen bg-[#101112] text-white">
+      <main className="sat-lux-page min-h-screen text-white">
         <LuxuryNavbar />
         <My1400PreviewDashboard copy={copy} showAuthActions />
       </main>
@@ -485,7 +495,7 @@ export default function My1400Page() {
 
   if (state === "diagnostic") {
     return (
-      <main className="min-h-screen bg-[#101112] text-white">
+      <main className="sat-lux-page min-h-screen text-white">
         <LuxuryNavbar />
         {freeDiagnostic && freeDiagnosticResult ? (
           <My1400SavedDiagnostic diagnostic={freeDiagnostic} result={freeDiagnosticResult} language={language} copy={copy} />
@@ -496,14 +506,151 @@ export default function My1400Page() {
     );
   }
 
+  if (state === "pro") {
+    return (
+      <main className="sat-lux-page min-h-screen text-white">
+        <LuxuryNavbar />
+        <My1400ProCurriculum copy={copy} />
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-[#101112] text-white">
+    <main className="sat-lux-page min-h-screen text-white">
       <LuxuryNavbar />
       <section className="mx-auto flex min-h-[calc(100vh-81px)] max-w-4xl flex-col items-center justify-center px-5 text-center">
         <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/38">My 1400+</p>
         <h1 className="mt-5 text-4xl font-light text-white md:text-5xl">{copy.opening}</h1>
       </section>
     </main>
+  );
+}
+
+function My1400ProCurriculum({ copy }: { copy: (typeof my1400Copy)[Language] }) {
+  return (
+    <section className="mx-auto max-w-[1320px] px-5 py-10 md:px-8 md:py-14">
+      <div className="grid gap-5 lg:grid-cols-[0.88fr_0.72fr] lg:items-start">
+        <div className="border border-emerald-300/25 bg-emerald-300/[0.055] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.35)] md:p-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-emerald-200/70">Pro active</p>
+          <PremiumText as="h1" className="mt-5 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl" variant="hero">
+            Personal SAT 1400+ Curriculum
+          </PremiumText>
+          <p className="mt-6 max-w-3xl text-lg font-light leading-8 text-white/62">
+            Your subscription is active. Start with today&apos;s 1400+ route now, then the full diagnostic will personalize the weak-topic order after your first saved mock result.
+          </p>
+          <div className="mt-7 grid gap-3 sm:grid-cols-4">
+            <SavedStat label="Target" value="1400+" />
+            <SavedStat label="Today" value="2h 20m" />
+            <SavedStat label="Cycle" value="30 days" />
+            <SavedStat label="Access" value="Open" />
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/practice">
+              Start today&apos;s practice <ArrowRight size={18} />
+            </Link>
+            <Link className="flex items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/sat-mock">
+              Start SAT Mock Test <ArrowRight size={18} />
+            </Link>
+          </div>
+        </div>
+
+        <div className="border border-white/10 bg-white/[0.035] p-5 md:p-6">
+          <div className="flex items-center gap-3">
+            <BookOpen size={19} className="text-emerald-200/70" />
+            <h2 className="text-2xl font-light text-white">Today&apos;s unlocked route</h2>
+          </div>
+          <div className="mt-5 grid gap-3">
+            {copy.sampleDayPlan.map(([label, task, time]) => (
+              <div className="grid gap-3 border border-white/10 bg-black/20 p-4 sm:grid-cols-[92px_1fr_72px] sm:items-center" key={label}>
+                <p className="text-[10px] font-black uppercase tracking-[0.26em] text-white/36">{label}</p>
+                <p className="text-sm leading-6 text-white/72">{task}</p>
+                <span className="text-sm font-semibold text-white/50 sm:text-right">{time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="border border-white/10 bg-white/[0.035] p-5 md:p-6">
+          <div className="flex items-center gap-3">
+            <BarChart3 size={19} className="text-white/50" />
+            <h2 className="text-2xl font-light text-white">Weak-topic priority map</h2>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-white/48">
+            This opens immediately for Pro. After your first full diagnostic, SATTEST.UZ replaces the starter order with your exact personal weak topics.
+          </p>
+          <div className="mt-5 grid gap-4">
+            {topicProgress.map(([topic, value, detail]) => (
+              <div key={topic}>
+                <div className="flex items-center justify-between gap-4 text-sm">
+                  <span className="font-semibold text-white/78">{topic}</span>
+                  <span className="text-white/45">{value}% priority</span>
+                </div>
+                <div className="mt-2 h-2 bg-white/10">
+                  <span className="block h-full bg-emerald-200/78" style={{ width: `${value}%` }} />
+                </div>
+                <p className="mt-2 text-xs leading-5 text-white/42">{detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-5">
+          <div className="border border-white/10 bg-white/[0.035] p-5 md:p-6">
+            <div className="flex items-center gap-3">
+              <FileText size={19} className="text-white/50" />
+              <h2 className="text-2xl font-light text-white">Next assignments</h2>
+            </div>
+            <div className="mt-5 grid gap-3">
+              {nextAssignments.map((assignment) => (
+                <div className="flex gap-3 border border-white/10 bg-black/20 p-3 text-sm leading-6 text-white/62" key={assignment}>
+                  <Check className="mt-1 shrink-0 text-emerald-200/72" size={15} />
+                  <span>{assignment}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border border-white/10 bg-white/[0.035] p-5 md:p-6">
+            <div className="flex items-center gap-3">
+              <CalendarDays size={19} className="text-white/50" />
+              <h2 className="text-2xl font-light text-white">Retake schedule</h2>
+            </div>
+            <p className="mt-4 text-3xl font-light text-white">Day 25</p>
+            <p className="mt-3 text-sm leading-6 text-white/52">
+              Complete the daily route and take the next full mock cycle. Your route updates after the score report.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 border border-white/10 bg-white/[0.035] p-5 md:p-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.36em] text-white/38">30-day curriculum</p>
+            <h2 className="mt-3 text-3xl font-light text-white md:text-4xl">Your monthly 1400+ route is open.</h2>
+          </div>
+          <p className="max-w-xl text-sm leading-6 text-white/48">
+            The starter route is useful immediately. The diagnostic result makes it personal by changing priority, timing, and task load.
+          </p>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {weeklyTargets.map((week) => (
+            <div className="border border-white/10 bg-black/20 p-4" key={week.week}>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/36">{week.week}</p>
+              <h3 className="mt-3 text-xl font-light text-white">{week.title}</h3>
+              <div className="mt-4 grid gap-2 text-sm text-white/54">
+                <span>{week.hours}</span>
+                <strong className="font-semibold text-white/82">{week.target}</strong>
+                <span className="leading-6">{week.work}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -529,9 +676,9 @@ function My1400SavedDiagnostic({
       <div className="grid gap-5 lg:grid-cols-[0.9fr_0.7fr] lg:items-start">
         <div className="border border-[#c8bd88]/30 bg-[#c8bd88]/[0.07] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.35)] md:p-8">
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#c8bd88]">{copy.savedEyebrow}</p>
-          <h1 className="mt-5 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
+          <PremiumText as="h1" className="mt-5 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl" variant="hero">
             {copy.savedTitle(result.estimatedTotal)}
-          </h1>
+          </PremiumText>
           <p className="mt-6 max-w-3xl text-lg font-semibold leading-8 text-white/72">
             {copy.savedBody}
           </p>
@@ -652,9 +799,9 @@ function My1400PreviewDashboard({
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">
             {diagnosticMode ? copy.diagnosticRequired : copy.previewEyebrow}
           </p>
-          <h1 className="mt-5 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
+          <PremiumText as="h1" className="mt-5 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl" variant="hero">
             {copy.previewTitle}
-          </h1>
+          </PremiumText>
           <p className="mt-6 max-w-3xl text-lg font-light leading-8 text-white/54">
             {copy.previewBody}
           </p>

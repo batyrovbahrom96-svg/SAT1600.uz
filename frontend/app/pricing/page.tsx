@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowRight, Check, Sparkles, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ArrowRight, Check, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { PremiumButton } from "@/components/PremiumButton";
+import { PremiumText } from "@/components/PremiumText";
 import { useLanguage, type Language } from "@/lib/i18n";
 
 const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
@@ -283,7 +284,7 @@ const pricingCopy: Record<
 
 type PlanAction =
   {
-    href: string;
+    href?: string;
     onClick?: () => void;
     text: string;
   };
@@ -337,13 +338,7 @@ function PriceCard({
   title: string;
 }) {
   return (
-    <motion.article
-      className="relative h-full"
-      initial={{ filter: "blur(8px)", opacity: 0.65, y: 18 }}
-      whileInView={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.55, ease: "easeOut", delay: spotlight ? 0.12 : 0 }}
-    >
+    <article className={["relative h-full pricing-card-reveal", spotlight ? "is-spotlight" : ""].join(" ")}>
       <div
         className={[
           "relative flex min-h-[610px] flex-col overflow-hidden rounded-[8px] border p-6 shadow-[0_34px_110px_rgba(0,0,0,0.38)]",
@@ -377,32 +372,28 @@ function PriceCard({
           ))}
         </ul>
 
-        <a
-          className={[
-            "relative mt-auto flex h-[52px] min-h-[52px] items-center justify-center gap-3 rounded-[6px] border px-5 text-[11px] font-black uppercase tracking-[0.18em] transition-colors",
-            spotlight
-              ? "border-white bg-white text-black hover:bg-transparent hover:text-white"
-              : "border-white/14 bg-white/[0.045] text-white/76 hover:border-white/36 hover:bg-white/[0.075] hover:text-white"
-          ].join(" ")}
+        <PremiumButton
+          className="mt-auto w-full"
           href={action.href}
+          icon={<ArrowRight size={17} />}
           onClick={(event) => {
             if (!action.onClick) return;
             event.preventDefault();
             action.onClick();
           }}
+          variant={spotlight ? "primary" : "glass"}
         >
           {action.text}
-          <ArrowRight size={17} />
-        </a>
+        </PremiumButton>
       </div>
-    </motion.article>
+    </article>
   );
 }
 
 export default function PricingPage() {
   const { language } = useLanguage();
   const copy = pricingCopy[language];
-  const [selectedPlanKey, setSelectedPlanKey] = useState<"pro" | null>(() => getPlanFromUrl());
+  const [selectedPlanKey, setSelectedPlanKey] = useState<"pro" | null>(null);
   const selectedPlan: SelectedPlan | null = selectedPlanKey
     ? {
         description: copy.plans.pro.description,
@@ -432,14 +423,16 @@ export default function PricingPage() {
     ...copy.plans.pro.features.slice(1, 4).map((feature) => ({ checked: false, text: feature }))
   ];
   const proBenefits: Benefit[] = copy.plans.pro.features.map((feature) => ({ checked: true, text: feature }));
-  const proHref = `/pricing?lang=${language}&plan=pro`;
-
+  const proPaymentHref = "#payment-panel";
   useEffect(() => {
     setSelectedPlanKey(getPlanFromUrl());
+    const syncPlanFromUrl = () => setSelectedPlanKey(getPlanFromUrl());
+    window.addEventListener("popstate", syncPlanFromUrl);
+    return () => window.removeEventListener("popstate", syncPlanFromUrl);
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#101112] text-white">
+    <main className="sat-lux-page min-h-screen text-white">
       <LuxuryNavbar />
 
       <section className="relative overflow-hidden border-b border-white/10 px-5 py-14 md:px-8 lg:py-20">
@@ -451,9 +444,13 @@ export default function PricingPage() {
 
         <div className="relative mx-auto max-w-7xl">
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.hero.eyebrow}</p>
-          <h1 className="mt-6 max-w-5xl bg-gradient-to-br from-white via-white to-zinc-500 bg-clip-text text-5xl font-light leading-none text-transparent md:text-7xl">
+          <PremiumText
+            as="h1"
+            className="mt-6 max-w-5xl bg-gradient-to-br from-white via-white to-zinc-500 bg-clip-text text-5xl font-light leading-none text-transparent md:text-7xl"
+            variant="hero"
+          >
             {copy.hero.title}
-          </h1>
+          </PremiumText>
           <p className="mt-7 max-w-3xl text-lg font-light leading-8 text-white/52">
             {copy.hero.body}
           </p>
@@ -488,7 +485,7 @@ export default function PricingPage() {
 
           <PriceCard
             action={{
-              href: proHref,
+              href: proPaymentHref,
               onClick: openProPanel,
               text: copy.plans.pro.action
             }}
@@ -505,101 +502,168 @@ export default function PricingPage() {
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.38em] text-white/42">{copy.funnel.eyebrow}</p>
-              <h2 className="mt-4 max-w-4xl text-4xl font-light leading-tight text-white md:text-5xl">
+              <PremiumText as="h2" className="mt-4 max-w-4xl text-4xl font-light leading-tight text-white md:text-5xl" variant="faq">
                 {copy.funnel.title}
-              </h2>
+              </PremiumText>
             </div>
-            <Link
-              className="flex h-16 min-w-[270px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white"
-              href={proHref}
+            <PremiumButton
+              className="min-w-[270px]"
+              href={proPaymentHref}
+              icon={<ArrowRight size={20} />}
               onClick={(event) => {
                 event.preventDefault();
                 openProPanel();
               }}
             >
               {copy.funnel.cta}
-              <ArrowRight size={20} />
-            </Link>
+            </PremiumButton>
           </div>
         </section>
+
       </section>
 
-      {selectedPlan ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/82 px-3 py-3 backdrop-blur-xl">
-          <div className="relative max-h-[calc(100vh-24px)] w-full max-w-4xl overflow-y-auto border border-white/18 bg-[#101112] p-4 shadow-[0_40px_120px_rgba(0,0,0,0.65)] md:p-5">
+      {selectedPlan && typeof document !== "undefined" ? createPortal((
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/86 px-3 py-4 backdrop-blur-xl md:items-center md:py-6">
+          <div className="relative max-h-[calc(100dvh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[8px] border border-white/20 bg-[#101112] shadow-[0_40px_120px_rgba(0,0,0,0.72)]">
             <button
               aria-label={copy.modal.close}
-              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center border border-white/15 bg-black/30 text-white/62 transition-colors hover:border-white hover:text-white"
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/62 transition-colors hover:border-white hover:text-white"
               onClick={closePlanPanel}
               type="button"
             >
               <X size={18} />
             </button>
 
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-start">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/42">{copy.modal.selected}</p>
-                <h2 className="mt-3 max-w-3xl text-3xl font-light leading-none text-white md:text-5xl">
-                  {selectedPlan.title}
-                </h2>
-                <p className="mt-4 text-3xl font-black text-white md:text-4xl">{selectedPlan.price}</p>
-                <p className="mt-4 max-w-2xl text-base font-light leading-7 text-white/58">{selectedPlan.description}</p>
-
-                <div className="mt-5 hidden gap-3 sm:grid sm:grid-cols-2">
-                  <div className="border border-white/10 bg-white/[0.035] p-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">{copy.modal.plan}</p>
-                    <p className="mt-2 text-lg text-white">{selectedPlan.label}</p>
-                  </div>
-                  <div className="border border-white/10 bg-white/[0.035] p-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">{copy.modal.status}</p>
-                    <p className="mt-2 text-lg text-white">{copy.modal.ready}</p>
-                  </div>
+            <div className="relative border-b border-white/10 p-6 pr-14 md:p-7 md:pr-16">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.14),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_54%)]" />
+              <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/42">{copy.modal.selected}</p>
+                  <h2 className="mt-3 text-3xl font-light leading-tight text-white md:text-4xl">{copy.modal.payTitle}</h2>
+                  <p className="mt-3 max-w-xl text-sm font-light leading-6 text-white/58">{copy.modal.payBody}</p>
+                </div>
+                <div className="shrink-0 border border-emerald-300/20 bg-emerald-300/[0.06] px-4 py-3 text-left sm:text-right">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-100/50">{selectedPlan.title}</p>
+                  <p className="mt-1 text-lg font-semibold text-white">{selectedPlan.price}</p>
+                  <p className="mt-1 text-xs font-semibold text-emerald-200">{copy.modal.ready}</p>
                 </div>
               </div>
+            </div>
 
-              <aside className="flex flex-col border border-white/10 bg-white/[0.035] p-4">
-                <Sparkles className="text-white/70" size={20} />
-                <h3 className="mt-3 text-2xl font-light text-white">{copy.modal.payTitle}</h3>
-                <p className="mt-3 text-sm font-light leading-6 text-white/54">
-                  {copy.modal.payBody}
-                </p>
-                <div className="mt-4 border border-white/12 bg-white p-3">
+            <div className="p-6 md:p-8">
+              <div className="grid gap-6 md:grid-cols-[280px_1fr] md:items-start">
+                <div className="mx-auto w-full max-w-[220px] rounded-[8px] border border-white/14 bg-white p-3 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:max-w-none">
                   <img
                     alt={copy.modal.qrAlt}
-                    className="mx-auto aspect-square w-full max-w-[210px]"
+                    className="h-auto w-full"
+                    height={320}
                     src={paynetQrImage}
+                    width={320}
                   />
                 </div>
-                <ol className="mt-4 grid gap-2 text-xs font-light leading-5 text-white/58">
-                  {copy.modal.instructions.map((instruction, index) => (
-                    <li key={instruction}>{index + 1}. {instruction}</li>
-                  ))}
-                </ol>
-                <div className="mt-4 grid gap-2">
-                  <div className="border border-white/10 bg-black/25 p-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{copy.hero.paymentTitle}</p>
-                    <p className="mt-2 text-xs font-light leading-5 text-white/58">{copy.hero.paymentBody}</p>
-                  </div>
-                </div>
-                <div className="mt-auto grid gap-2 pt-4">
+
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/42">Payment steps</p>
+                  <ol className="mt-4 grid gap-3">
+                    {copy.modal.instructions.map((instruction, index) => (
+                      <li className="flex gap-3 text-sm font-light leading-6 text-white/64" key={instruction}>
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/14 bg-white text-xs font-black text-black">
+                          {index + 1}
+                        </span>
+                        <span>{instruction}</span>
+                      </li>
+                    ))}
+                  </ol>
+
                   <a
-                    className="flex h-11 items-center justify-between border border-white bg-white px-4 text-[11px] font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-white"
+                    className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-[8px] border border-white/18 bg-white px-5 text-center text-[11px] font-black uppercase tracking-[0.24em] text-black transition-transform hover:-translate-y-0.5"
                     href={telegramReceiptUrl(selectedPlan)}
                     rel="noreferrer"
                     target="_blank"
                   >
                     {copy.modal.receiptCta}
-                    <ArrowRight size={18} />
+                    <ArrowRight size={17} />
                   </a>
-                  <div className="border border-white/12 bg-black/25 p-3 text-xs font-light leading-5 text-white/52">
+
+                  <p className="mt-5 border border-amber-200/18 bg-amber-200/[0.06] p-3 text-xs font-light leading-5 text-amber-100/72">
                     {copy.modal.note}
-                  </div>
+                  </p>
                 </div>
-              </aside>
+              </div>
             </div>
           </div>
         </div>
-      ) : null}
+      ), document.body) : null}
+
+      <div className="pricing-payment-target" id="payment-panel">
+        <div className="relative max-h-[calc(100dvh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[8px] border border-white/20 bg-[#101112] shadow-[0_40px_120px_rgba(0,0,0,0.72)]">
+          <a
+            aria-label={copy.modal.close}
+            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/62 transition-colors hover:border-white hover:text-white"
+            href="#"
+          >
+            <X size={18} />
+          </a>
+
+          <div className="relative border-b border-white/10 p-6 pr-14 md:p-7 md:pr-16">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.14),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_54%)]" />
+            <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/42">{copy.modal.selected}</p>
+                <h2 className="mt-3 text-3xl font-light leading-tight text-white md:text-4xl">{copy.modal.payTitle}</h2>
+                <p className="mt-3 max-w-xl text-sm font-light leading-6 text-white/58">{copy.modal.payBody}</p>
+              </div>
+              <div className="shrink-0 border border-emerald-300/20 bg-emerald-300/[0.06] px-4 py-3 text-left sm:text-right">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-100/50">{copy.plans.pro.title}</p>
+                <p className="mt-1 text-lg font-semibold text-white">{copy.plans.pro.price}</p>
+                <p className="mt-1 text-xs font-semibold text-emerald-200">{copy.modal.ready}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 md:p-8">
+            <div className="grid gap-6 md:grid-cols-[280px_1fr] md:items-start">
+              <div className="mx-auto w-full max-w-[220px] rounded-[8px] border border-white/14 bg-white p-3 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:max-w-none">
+                <img
+                  alt={copy.modal.qrAlt}
+                  className="h-auto w-full"
+                  height={320}
+                  src={paynetQrImage}
+                  width={320}
+                />
+              </div>
+
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/42">Payment steps</p>
+                <ol className="mt-4 grid gap-3">
+                  {copy.modal.instructions.map((instruction, index) => (
+                    <li className="flex gap-3 text-sm font-light leading-6 text-white/64" key={instruction}>
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/14 bg-white text-xs font-black text-black">
+                        {index + 1}
+                      </span>
+                      <span>{instruction}</span>
+                    </li>
+                  ))}
+                </ol>
+
+                <a
+                  className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-[8px] border border-white/18 bg-white px-5 text-center text-[11px] font-black uppercase tracking-[0.24em] text-black transition-transform hover:-translate-y-0.5"
+                  href={`https://t.me/${telegramBotUsername}?start=pro`}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {copy.modal.receiptCta}
+                  <ArrowRight size={17} />
+                </a>
+
+                <p className="mt-5 border border-amber-200/18 bg-amber-200/[0.06] p-3 text-xs font-light leading-5 text-amber-100/72">
+                  {copy.modal.note}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

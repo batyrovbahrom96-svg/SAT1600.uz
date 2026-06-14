@@ -1,19 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
-import { api, clearAuth, getStudentName, getToken } from "@/lib/api";
+import { PremiumButton } from "@/components/PremiumButton";
+import { api, clearAuth, getStudentName, getSubscriptionStatus, getToken } from "@/lib/api";
 import { languages, useLanguage, type Language } from "@/lib/i18n";
 
 const skipHomeIntroEvent = "sattest:skip-home-intro";
 
 export function LuxuryNavbar() {
   const [studentName, setStudentName] = useState<string | null>(null);
+  const [isProActive, setIsProActive] = useState(false);
   const { language, setLanguage } = useLanguage();
   const navCopy: Record<Language, Array<{ label: string; href: string }>> = {
     en: [
       { label: "About Us", href: "/about-us" },
       { label: "Free Diagnostic", href: "/mock-test" },
+      { label: "SAT Mock Test", href: "/sat-mock" },
       { label: "Practice", href: "/practice" },
       { label: "Demo Report", href: "/results/demo" },
       { label: "My 1400+", href: "/my-1400" },
@@ -22,6 +26,7 @@ export function LuxuryNavbar() {
     ru: [
       { label: "О нас", href: "/about-us" },
       { label: "Бесплатная диагностика", href: "/mock-test" },
+      { label: "SAT Mock Test", href: "/sat-mock" },
       { label: "Практика", href: "/practice" },
       { label: "Демо отчет", href: "/results/demo" },
       { label: "Мой 1400+", href: "/my-1400" },
@@ -30,6 +35,7 @@ export function LuxuryNavbar() {
     uz: [
       { label: "Biz haqimizda", href: "/about-us" },
       { label: "Bepul diagnostika", href: "/mock-test" },
+      { label: "SAT Mock Test", href: "/sat-mock" },
       { label: "Mashqlar", href: "/practice" },
       { label: "Demo hisobot", href: "/results/demo" },
       { label: "Mening 1400+", href: "/my-1400" },
@@ -76,23 +82,32 @@ export function LuxuryNavbar() {
     const refreshAuth = () => {
       if (!getToken()) {
         setStudentName(null);
+        setIsProActive(false);
         return;
       }
 
       const savedName = getStudentName();
       if (savedName) {
         setStudentName(savedName);
-        return;
+      } else {
+        api<{ full_name: string }>("/api/auth/me")
+          .then((profile) => {
+            if (!active) return;
+            localStorage.setItem("sat1600_full_name", profile.full_name);
+            setStudentName(profile.full_name);
+          })
+          .catch(() => {
+            if (active) setStudentName(null);
+          });
       }
 
-      api<{ full_name: string }>("/api/auth/me")
-        .then((profile) => {
+      getSubscriptionStatus()
+        .then((status) => {
           if (!active) return;
-          localStorage.setItem("sat1600_full_name", profile.full_name);
-          setStudentName(profile.full_name);
+          setIsProActive(status.has_active_subscription);
         })
         .catch(() => {
-          if (active) setStudentName(null);
+          if (active) setIsProActive(false);
         });
     };
 
@@ -125,7 +140,14 @@ export function LuxuryNavbar() {
             }
           }}
         >
-          <img className="h-auto w-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.32)]" src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" />
+          <Image
+            className="h-auto w-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.32)]"
+            src="/assets/brand/sattest-wordmark.png"
+            alt="SATTEST.UZ"
+            width={620}
+            height={113}
+            priority
+          />
         </Link>
 
         <div className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
@@ -146,18 +168,29 @@ export function LuxuryNavbar() {
           </div>
           {studentName ? (
             <>
-              <Link className="hidden h-11 max-w-[190px] items-center border border-white bg-white px-4 text-[10px] font-black uppercase tracking-[0.14em] text-black transition-colors hover:bg-transparent hover:text-white lg:flex 2xl:max-w-[240px] 2xl:px-5 2xl:tracking-[0.16em]" href={withLanguage("/dashboard")}>
-                <span className="truncate">{studentName}</span>
-              </Link>
+              <span className="hidden lg:block">
+                <PremiumButton className="max-w-[230px] 2xl:max-w-[280px]" href={withLanguage("/dashboard")} variant="compact">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate">{studentName}</span>
+                    {isProActive ? (
+                      <span className="shrink-0 rounded-full border border-white/35 bg-white/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.14em] text-white">
+                        Pro
+                      </span>
+                    ) : null}
+                  </span>
+                </PremiumButton>
+              </span>
               <button className="flex h-9 min-w-[64px] items-center justify-center whitespace-nowrap border border-white/12 bg-white/[0.035] px-2 text-[8px] font-black uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-white/35 hover:text-white sm:h-11 sm:min-w-[112px] sm:px-4 sm:text-[10px] sm:tracking-[0.22em]" onClick={logout} type="button">
                 {actionCopy.logout[language]}
               </button>
             </>
           ) : (
             <>
-              <Link className="hidden h-11 items-center border border-white bg-white px-5 text-[10px] font-black uppercase tracking-[0.22em] text-black transition-colors hover:bg-transparent hover:text-white sm:flex" href={withLanguage("/pricing")}>
-                {actionCopy.pricing[language]}
-              </Link>
+              <span className="hidden sm:block">
+                <PremiumButton href={withLanguage("/pricing")} variant="compact">
+                  {actionCopy.pricing[language]}
+                </PremiumButton>
+              </span>
               <Link className="h-9 whitespace-nowrap border border-white/12 bg-white/[0.035] px-2 text-[8px] font-black uppercase tracking-[0.1em] leading-[36px] text-white/70 transition-colors hover:border-white/35 hover:text-white sm:h-11 sm:px-4 sm:text-[10px] sm:tracking-[0.22em] sm:leading-[44px]" href={withLanguage("/login")}>
                 {actionCopy.login[language]}
               </Link>

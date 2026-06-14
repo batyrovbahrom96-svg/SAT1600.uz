@@ -16,6 +16,8 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { PremiumButton } from "@/components/PremiumButton";
+import { PremiumText } from "@/components/PremiumText";
 import { getSubscriptionStatus, getToken } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
 
@@ -450,12 +452,9 @@ function PracticeHeroPreview({ copy }: { copy: (typeof practiceCopy)[Language] }
           </div>
         ))}
       </div>
-      <Link
-        className="mt-5 flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-        href="#sample-practice-preview"
-      >
-        {copy.trySamples} <ArrowRight size={18} />
-      </Link>
+      <PremiumButton className="mt-5 w-full" href="#sample-practice-preview" icon={<ArrowRight size={18} />} variant="glass">
+        {copy.trySamples}
+      </PremiumButton>
     </div>
   );
 }
@@ -570,9 +569,9 @@ function SamplePracticePreview({ isUnlocked = false, copy }: { isUnlocked?: bool
               : copy.lockedBody}
           </p>
         </div>
-        <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href={isUnlocked ? "/practice/reading" : "/pricing?plan=pro"}>
-          {isUnlocked ? copy.startFull : copy.unlockPro} <ArrowRight size={18} />
-        </Link>
+        <PremiumButton href={isUnlocked ? "/practice/reading" : "/pricing?plan=pro"} icon={<ArrowRight size={18} />}>
+          {isUnlocked ? copy.startFull : copy.unlockPro}
+        </PremiumButton>
       </div>
     </section>
   );
@@ -603,7 +602,7 @@ export default function PracticeAccessPage() {
 
   if (!hasCheckedAuth) {
     return (
-      <main className="min-h-screen bg-[#101112] text-white">
+      <main className="sat-lux-page min-h-screen text-white">
         <LuxuryNavbar />
         <section className="mx-auto flex min-h-[calc(100vh-81px)] max-w-4xl flex-col items-center justify-center px-5 text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/38">{copy.practice}</p>
@@ -615,15 +614,15 @@ export default function PracticeAccessPage() {
 
   if (isLoggedIn && hasActiveSubscription) {
     return (
-      <main className="min-h-screen bg-[#101112] text-white">
+      <main className="sat-lux-page min-h-screen text-white">
         <LuxuryNavbar />
 
         <section className="mx-auto min-h-[calc(100vh-81px)] max-w-7xl px-5 py-14 md:px-8">
           <div className="border-b border-white/10 pb-10">
             <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.unlockedEyebrow}</p>
-            <h1 className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl">
+            <PremiumText as="h1" className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl" variant="hero">
               {copy.unlockedTitle}
-            </h1>
+            </PremiumText>
             <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
               {copy.unlockedBody}
             </p>
@@ -711,16 +710,16 @@ export default function PracticeAccessPage() {
 
   if (isLoggedIn) {
     return (
-      <main className="min-h-screen bg-[#101112] text-white">
+      <main className="sat-lux-page min-h-screen text-white">
         <LuxuryNavbar />
 
         <section className="mx-auto min-h-[calc(100vh-81px)] max-w-7xl px-5 py-14 md:px-8">
           <div className="grid gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1fr_440px] lg:items-end">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.heroEyebrow}</p>
-              <h1 className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl">
+              <PremiumText as="h1" className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl" variant="hero">
                 {copy.loggedTitle}
-              </h1>
+              </PremiumText>
               <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
                 {copy.loggedBody}
               </p>
@@ -741,9 +740,9 @@ export default function PracticeAccessPage() {
                 {copy.autoOpen}
               </p>
             </div>
-            <Link className="mt-5 flex h-13 min-w-[220px] items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white md:mt-0" href="/pricing?plan=pro">
-              {copy.unlockPro} <ArrowRight size={18} />
-            </Link>
+            <PremiumButton className="mt-5 min-w-[220px] md:mt-0" href="/pricing?plan=pro" icon={<ArrowRight size={18} />}>
+              {copy.unlockPro}
+            </PremiumButton>
           </div>
         </section>
       </main>
@@ -751,16 +750,16 @@ export default function PracticeAccessPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#101112] text-white">
+    <main className="sat-lux-page min-h-screen text-white">
       <LuxuryNavbar />
 
       <section className="mx-auto min-h-[calc(100vh-81px)] max-w-7xl px-5 py-14 md:px-8">
         <div className="grid gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1fr_440px] lg:items-end">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.heroEyebrow}</p>
-            <h1 className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl">
+            <PremiumText as="h1" className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl" variant="hero">
               {copy.heroTitle}
-            </h1>
+            </PremiumText>
             <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
               {copy.heroBody}
             </p>
@@ -778,12 +777,12 @@ export default function PracticeAccessPage() {
               {copy.saveBody}
             </p>
           </div>
-          <Link className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing">
-            {copy.choosePlan} <ArrowRight size={18} />
-          </Link>
-          <Link className="flex h-13 items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/mock-test">
-            {copy.freeDiagnostic} <UserPlus size={18} />
-          </Link>
+          <PremiumButton href="/pricing" icon={<ArrowRight size={18} />}>
+            {copy.choosePlan}
+          </PremiumButton>
+          <PremiumButton href="/mock-test" icon={<UserPlus size={18} />} variant="glass">
+            {copy.freeDiagnostic}
+          </PremiumButton>
         </div>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-3">

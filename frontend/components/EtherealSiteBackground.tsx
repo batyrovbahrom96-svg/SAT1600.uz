@@ -1,6 +1,5 @@
 "use client";
 
-import { animate, type AnimationPlaybackControls, useMotionValue } from "framer-motion";
 import { useEffect, useId, useRef } from "react";
 
 function mapRange(value: number, fromLow: number, fromHigh: number, toLow: number, toHigh: number) {
@@ -13,11 +12,13 @@ function useInstanceId() {
   return `shadowoverlay-${useId().replace(/:/g, "")}`;
 }
 
+function now() {
+  return window.performance?.now?.() ?? Date.now();
+}
+
 export function EtherealSiteBackground() {
   const id = useInstanceId();
   const feColorMatrixRef = useRef<SVGFEColorMatrixElement>(null);
-  const hueRotateMotionValue = useMotionValue(180);
-  const hueRotateAnimation = useRef<AnimationPlaybackControls | null>(null);
   const scale = 64;
   const speed = 54;
   const displacementScale = mapRange(scale, 1, 100, 20, 100);
@@ -26,24 +27,26 @@ export function EtherealSiteBackground() {
   useEffect(() => {
     if (!feColorMatrixRef.current) return undefined;
 
-    hueRotateAnimation.current?.stop();
-    hueRotateMotionValue.set(0);
-    hueRotateAnimation.current = animate(hueRotateMotionValue, 360, {
-      delay: 0,
-      duration: animationDuration / 25,
-      ease: "linear",
-      onUpdate: (value) => {
-        feColorMatrixRef.current?.setAttribute("values", String(value));
-      },
-      repeat: Infinity,
-      repeatDelay: 0,
-      repeatType: "loop"
-    });
+    let frameId = 0;
+    let lastFrameAt = 0;
+    const frameInterval = 1000 / 30;
+    const startedAt = now();
+    const durationMs = (animationDuration / 25) * 1000;
+    const tick = (now: number) => {
+      if (now - lastFrameAt >= frameInterval) {
+        lastFrameAt = now;
+        const progress = ((now - startedAt) % durationMs) / durationMs;
+        feColorMatrixRef.current?.setAttribute("values", String(progress * 360));
+      }
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
 
     return () => {
-      hueRotateAnimation.current?.stop();
+      window.cancelAnimationFrame(frameId);
     };
-  }, [animationDuration, hueRotateMotionValue]);
+  }, [animationDuration]);
 
   return (
     <div className="site-ethereal-bg" aria-hidden="true">

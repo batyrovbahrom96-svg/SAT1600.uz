@@ -1,11 +1,17 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  compress: true,
   devIndicators: false,
+  productionBrowserSourceMaps: false,
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
     remotePatterns: [
-      { protocol: "https", hostname: "api.sattest.uz" }
+      { protocol: "https", hostname: "api.sattest.uz" },
+      { protocol: "https", hostname: "api.qrserver.com" }
     ]
   },
   poweredByHeader: false,
@@ -22,6 +28,18 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/assets/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" }
+        ]
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" }
+        ]
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
@@ -34,4 +52,8 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default nextConfig;
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true"
+});
+
+export default withBundleAnalyzer(nextConfig);

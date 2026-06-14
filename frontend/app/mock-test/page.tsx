@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Mail, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
@@ -81,11 +81,17 @@ export default function FreeDiagnosticPage() {
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [emailPromptDone, setEmailPromptDone] = useState(false);
   const [email, setEmail] = useState("");
+  const [questionVisible, setQuestionVisible] = useState(true);
 
   const currentQuestion = freeDiagnosticQuestions[currentIndex];
   const selectedAnswer = currentQuestion ? answers[currentQuestion.id] : undefined;
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
-  const progress = Math.round((answeredCount / freeDiagnosticQuestions.length) * 100);
+
+  useEffect(() => {
+    setQuestionVisible(false);
+    const timeout = window.setTimeout(() => setQuestionVisible(true), 80);
+    return () => window.clearTimeout(timeout);
+  }, [currentIndex]);
 
   function chooseAnswer(choice: string) {
     if (!currentQuestion) return;
@@ -151,7 +157,15 @@ export default function FreeDiagnosticPage() {
         </div>
 
         {currentQuestion ? (
-          <section className="border border-white/10 bg-white/[0.035] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+          <section
+            className="border border-white/10 bg-white/[0.035] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]"
+            style={{
+              opacity: questionVisible ? 1 : 0,
+              transform: questionVisible ? "translateY(0)" : "translateY(10px)",
+              transition: "opacity 0.2s ease, transform 0.2s ease",
+              willChange: "opacity, transform"
+            }}
+          >
             <div className="border-b border-white/10 pb-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -166,8 +180,8 @@ export default function FreeDiagnosticPage() {
                   {answeredCount}/{freeDiagnosticQuestions.length} {copy.answered}
                 </div>
               </div>
-              <div className="mt-5 h-1.5 overflow-hidden bg-white/10">
-                <div className="h-full bg-[#c8bd88] transition-all duration-300" style={{ width: `${progress}%` }} />
+              <div className="mt-5">
+                <ProgressBar current={answeredCount} total={freeDiagnosticQuestions.length} />
               </div>
             </div>
 
@@ -246,5 +260,22 @@ export default function FreeDiagnosticPage() {
         </div>
       ) : null}
     </main>
+  );
+}
+
+function ProgressBar({ current, total }: { current: number; total: number }) {
+  const pct = Math.min(100, Math.max(0, (current / total) * 100));
+
+  return (
+    <div className="h-1.5 w-full overflow-hidden rounded-sm bg-white/10">
+      <div
+        className="h-full rounded-sm bg-[#c8bd88]"
+        style={{
+          width: `${pct}%`,
+          transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+          willChange: "width"
+        }}
+      />
+    </div>
   );
 }

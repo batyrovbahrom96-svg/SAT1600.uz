@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { ArrowRight, BarChart3, BookOpenCheck, Lock, Target, XCircle } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { PremiumButton } from "@/components/PremiumButton";
+import { Skeleton } from "@/components/SkeletonLoader";
 import { getToken } from "@/lib/api";
 import { calculateDiagnosticResult, freeDiagnosticQuestions, type DiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-diagnostic-storage";
@@ -104,11 +105,13 @@ export default function FreeDiagnosticResultsPage() {
   const { language } = useLanguage();
   const copy = resultCopy[language];
   const [stored, setStored] = useState<StoredFreeDiagnostic | null>(null);
+  const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     setStored(getFreeDiagnosticResult());
+    setHasCheckedStorage(true);
   }, []);
 
   useEffect(() => {
@@ -164,6 +167,26 @@ export default function FreeDiagnosticResultsPage() {
     return `/register?${params.toString()}&next=${encodeURIComponent(paymentUrl)}`;
   }, [isLoggedIn, paymentUrl, stored?.email]);
 
+  if (!hasCheckedStorage) {
+    return (
+      <main className="min-h-screen bg-[#080908] text-white" data-sattest-no-translate="true">
+        <LuxuryNavbar />
+        <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-8 px-5 py-12 md:px-8 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="pt-10">
+            <Skeleton width="220px" height="12px" />
+            <Skeleton width="min(640px, 90vw)" height="96px" borderRadius="4px" style={{ marginTop: 28 }} />
+            <Skeleton width="min(540px, 80vw)" height="26px" borderRadius="4px" style={{ marginTop: 28 }} />
+          </div>
+          <div className="grid gap-3 border border-white/10 bg-white/[0.035] p-5">
+            <Skeleton height="96px" />
+            <Skeleton height="96px" />
+            <Skeleton height="96px" />
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   if (!result) {
     return (
       <main className="min-h-screen bg-[#080908] text-white" data-sattest-no-translate="true">
@@ -171,9 +194,9 @@ export default function FreeDiagnosticResultsPage() {
         <section className="mx-auto flex min-h-[calc(100vh-81px)] max-w-4xl flex-col justify-center px-5 py-14 text-center md:px-8">
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#c8bd88]">Free Diagnostic</p>
           <h1 className="mt-6 text-5xl font-light leading-none md:text-7xl">{copy.missing}</h1>
-          <Link className="mx-auto mt-8 flex h-14 min-w-[280px] items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/mock-test">
-            {copy.restart} <ArrowRight size={18} />
-          </Link>
+          <PremiumButton className="mx-auto mt-8 min-w-[280px]" href="/mock-test" icon={<ArrowRight size={18} />}>
+            {copy.restart}
+          </PremiumButton>
         </section>
       </main>
     );
@@ -187,6 +210,7 @@ export default function FreeDiagnosticResultsPage() {
     <main className="min-h-screen bg-[#080908] text-white" data-sattest-no-translate="true">
       <LuxuryNavbar />
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
+        <RevealSection delay={0}>
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#c8bd88]">{copy.eyebrow}</p>
@@ -204,7 +228,9 @@ export default function FreeDiagnosticResultsPage() {
             <ScoreTile label={copy.totalRange} value={`${result.estimatedMin}-${result.estimatedMax}`} />
           </div>
         </div>
+        </RevealSection>
 
+        <RevealSection delay={180}>
         <div className="mt-10 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
           <section className="border border-white/10 bg-white/[0.035] p-5">
             <div className="flex items-center gap-3">
@@ -256,7 +282,9 @@ export default function FreeDiagnosticResultsPage() {
             </div>
           </section>
         </div>
+        </RevealSection>
 
+        <RevealSection delay={360}>
         <section className="mt-6 border border-white/10 bg-white/[0.035] p-5">
           <div className="flex items-center gap-3">
             <BookOpenCheck className="text-[#c8bd88]" size={20} />
@@ -275,7 +303,9 @@ export default function FreeDiagnosticResultsPage() {
             <p className="mt-5 text-lg leading-8 text-white/58">{copy.noMiss}</p>
           )}
         </section>
+        </RevealSection>
 
+        <RevealSection delay={540}>
         <section className="mt-6 border border-[#c8bd88]/35 bg-[#c8bd88]/[0.07] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
           <div className="grid gap-8 lg:grid-cols-[1fr_0.82fr] lg:items-end">
             <div>
@@ -300,14 +330,37 @@ export default function FreeDiagnosticResultsPage() {
                 <p className="text-3xl font-light">{copy.threeMonth}</p>
                 <p className="mt-2 text-sm text-white/52">{copy.threeMonthNote}</p>
               </div>
-              <Link className="flex h-14 items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href={unlockUrl}>
-                {copy.cta} <ArrowRight size={18} />
-              </Link>
+              <PremiumButton className="w-full" href={unlockUrl} icon={<ArrowRight size={18} />}>
+                {copy.cta}
+              </PremiumButton>
             </div>
           </div>
         </section>
+        </RevealSection>
       </section>
     </main>
+  );
+}
+
+function RevealSection({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setVisible(true), delay);
+    return () => window.clearTimeout(timeout);
+  }, [delay]);
+
+  return (
+    <div
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(16px)",
+        transition: "opacity 0.5s ease, transform 0.5s ease",
+        willChange: "opacity, transform"
+      }}
+    >
+      {children}
+    </div>
   );
 }
 

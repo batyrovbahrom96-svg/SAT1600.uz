@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowRight, BookOpenCheck, CalendarDays, GraduationCap, Lock, Target, Timer, Trophy } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpenCheck, CalendarDays, CheckCircle2, ClipboardList, GraduationCap, Lock, Route, ShieldCheck, Target, Timer, Trophy } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { PremiumButton } from "@/components/PremiumButton";
+import { PremiumText } from "@/components/PremiumText";
 import { ApiError, api, getSubscriptionStatus } from "@/lib/api";
 
 type ResultQuestion = {
@@ -35,6 +37,25 @@ type CurriculumBlock = {
   focus: string[];
   hours: string;
   testLabel: string;
+  diagnosticSignal: string;
+  masteryTarget: string;
+  drills: string[];
+  reviewProtocol: string;
+  checkpoint: string;
+};
+
+type CurriculumPhase = {
+  week: string;
+  title: string;
+  target: string;
+  hours: string;
+  work: string;
+};
+
+type MasteryGate = {
+  label: string;
+  target: string;
+  evidence: string;
 };
 
 type PracticeChoice = {
@@ -97,6 +118,8 @@ export default function CurriculumPage() {
 
   const plan = useMemo(() => results ? buildCurriculum(results) : null, [results]);
   const lesson = useMemo(() => activeBlock ? buildPracticeLesson(activeBlock) : null, [activeBlock]);
+  const routeUnlocked = !subscriptionChecked || hasActiveSubscription;
+  const shouldShowLocked = subscriptionChecked && !hasActiveSubscription;
 
   function openPractice(block: CurriculumBlock) {
     setActiveBlock(block);
@@ -120,7 +143,7 @@ export default function CurriculumPage() {
 
   if (!results || !plan) {
     return (
-      <main className="min-h-screen bg-[#101112] text-white">
+      <main className="sat-lux-page min-h-screen text-white">
         <LuxuryNavbar />
         <section className="mx-auto flex min-h-[70vh] max-w-4xl flex-col items-center justify-center px-5 text-center">
           <GraduationCap size={42} className="text-white/70" />
@@ -134,15 +157,17 @@ export default function CurriculumPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#101112] text-white">
+    <main className="sat-lux-page min-h-screen text-white">
       <LuxuryNavbar />
       <section className="mx-auto max-w-7xl px-5 py-10 md:px-8 md:py-14">
         <div className="grid gap-8 border-b border-white/10 pb-10 lg:grid-cols-[1fr_420px] lg:items-end">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Personal curriculum</p>
-            <h1 className="mt-5 text-5xl font-light leading-none text-white md:text-7xl">1400+ SAT route</h1>
+            <PremiumText as="h1" className="mt-5 text-5xl font-light leading-none text-white md:text-7xl" variant="route">
+              1400+ SAT command center
+            </PremiumText>
             <p className="mt-6 max-w-3xl text-lg font-light leading-8 text-white/50">
-              This plan is built from your diagnostic mistakes, weak topics, and section scores. Start with the weakest skills, then prove improvement through Reading/Writing and Math section tests.
+              This is not a checklist. It is a score-growth operating system built from your diagnostic misses, weak topics, section scores, trap patterns, and retake pressure.
             </p>
           </div>
           <div className="grid grid-cols-2 border border-white/10 bg-white/[0.035]">
@@ -154,26 +179,64 @@ export default function CurriculumPage() {
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <SummaryCard icon={<CalendarDays size={22} />} label="Plan length" value="30 days" detail="7-day sprint repeated with harder targets" />
           <SummaryCard icon={<Timer size={22} />} label="Daily study" value={plan.dailyHours} detail="Based on distance from 1400+" />
-          <SummaryCard icon={<Trophy size={22} />} label="Score gap" value={`${Math.max(0, 1400 - results.score_total)} pts`} detail="Main goal for this cycle" />
+          <SummaryCard icon={<Trophy size={22} />} label="Score gap" value={`${plan.scoreGap} pts`} detail={plan.strategy} />
         </div>
+
+        <section className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="border border-white/10 bg-white/[0.035] p-6">
+            <div className="flex items-center gap-3">
+              <Route className="text-[#c8bd88]" size={22} />
+              <h2 className="text-3xl font-light text-white">Adaptive score strategy</h2>
+            </div>
+            <p className="mt-4 text-sm font-light leading-7 text-white/58">
+              SATTEST chooses the next work by score gap, missed question type, repeated topic, and whether the mistake was conceptual, timing-based, or a careless trap.
+            </p>
+            <div className="mt-5 grid gap-3">
+              {plan.operatingRules.map((rule, index) => (
+                <div className="grid grid-cols-[38px_1fr] gap-3 border border-white/10 bg-black/25 p-3" key={rule}>
+                  <span className="flex h-9 w-9 items-center justify-center border border-white/15 text-sm font-black text-white/62">
+                    {index + 1}
+                  </span>
+                  <p className="text-sm font-light leading-6 text-white/64">{rule}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border border-white/10 bg-white/[0.035] p-6">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="text-emerald-100/75" size={22} />
+              <h2 className="text-3xl font-light text-white">Mastery gates before moving on</h2>
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {plan.masteryGates.map((gate) => (
+                <div className="border border-white/10 bg-black/25 p-4" key={gate.label}>
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">{gate.label}</p>
+                  <strong className="mt-3 block text-2xl font-light text-white">{gate.target}</strong>
+                  <p className="mt-3 text-xs font-light leading-5 text-white/48">{gate.evidence}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         <section className="mt-6 border border-emerald-300/25 bg-emerald-300/[0.06] p-5">
           <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.36em] text-emerald-100/58">
-                {hasActiveSubscription ? "Pro access active" : "Exercises require Pro"}
+                {routeUnlocked ? "Pro access active" : "Exercises require Pro"}
               </p>
               <h2 className="mt-4 text-3xl font-light leading-tight text-white md:text-4xl">
-                {hasActiveSubscription
+                {routeUnlocked
                   ? "Your route is unlocked. Start the practice engine."
                   : "Your route is ready. The exact exercises are locked below."}
               </h2>
               <p className="mt-3 max-w-3xl text-sm font-light leading-7 text-white/58">
-                {hasActiveSubscription
+                {routeUnlocked
                   ? "Your approved payment is active on this account. Open a weak-topic exercise below, review the supervised theory, and retake the section when the set is complete."
                   : "The free diagnostic identified the score leaks. Pro opens the actual question sets, supervised theory, mistake notebook, and the next mini mock needed to repair them."}
               </p>
-              {!hasActiveSubscription ? (
+              {shouldShowLocked ? (
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
                   {buildLockedRoutePreview(plan.blocks).map((item) => (
                     <div className="border border-white/10 bg-black/25 p-3" key={item}>
@@ -186,13 +249,20 @@ export default function CurriculumPage() {
                 </div>
               ) : null}
             </div>
-            <button
-              className="flex h-14 min-w-[250px] items-center justify-between border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-              onClick={() => hasActiveSubscription ? plan.blocks[0] && openPractice(plan.blocks[0]) : router.push("/pricing?plan=pro")}
+            <PremiumButton
+              className="min-w-[250px]"
+              icon={<ArrowRight size={18} />}
+              onClick={() => {
+                if (routeUnlocked) {
+                  if (plan.blocks[0]) openPractice(plan.blocks[0]);
+                  return;
+                }
+                router.push("/pricing?plan=pro");
+              }}
               type="button"
             >
-              {subscriptionChecked && hasActiveSubscription ? "Start Pro route" : "Unlock Pro"} <ArrowRight size={18} />
-            </button>
+              {routeUnlocked ? "Start Pro route" : "Unlock Pro"}
+            </PremiumButton>
           </div>
         </section>
 
@@ -206,47 +276,105 @@ export default function CurriculumPage() {
                 </div>
                 <BookOpenCheck className="text-white/55" size={28} />
               </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="border border-white/10 bg-black/20 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Diagnostic signal</p>
+                  <p className="mt-3 text-sm font-light leading-6 text-white/64">{block.diagnosticSignal}</p>
+                </div>
+                <div className="border border-white/10 bg-black/20 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Mastery target</p>
+                  <p className="mt-3 text-sm font-light leading-6 text-white/64">{block.masteryTarget}</p>
+                </div>
+              </div>
               <div className="mt-5 grid gap-2">
                 {block.focus.map((topic) => (
                   <button
                     className={`flex items-center justify-between border border-white/10 bg-black/20 px-4 py-3 text-left transition-colors hover:border-white/35 hover:bg-white/[0.06] ${
-                      hasActiveSubscription ? "" : "relative overflow-hidden"
+                      routeUnlocked ? "" : "relative overflow-hidden"
                     }`}
                     key={topic}
-                    onClick={() => hasActiveSubscription ? openPractice(block) : router.push("/pricing?plan=pro")}
+                    onClick={() => {
+                      if (routeUnlocked) {
+                        openPractice(block);
+                        return;
+                      }
+                      router.push("/pricing?plan=pro");
+                    }}
                     type="button"
                   >
-                    <span className={`text-sm font-light text-white/70 ${hasActiveSubscription ? "" : "blur-[1px]"}`}>
+                    <span className={`text-sm font-light text-white/70 ${routeUnlocked ? "" : "blur-[1px]"}`}>
                       {topic}
                     </span>
                     <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-100/55">
-                      {hasActiveSubscription ? "Open exercise" : "Locked exercise"}
+                      {routeUnlocked ? "Open exercise" : "Locked exercise"}
                     </span>
                   </button>
                 ))}
               </div>
-              <div className="mt-5 border border-white/10 bg-black/20 p-4">
-                <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">Bound test</div>
-                <div className="mt-2 text-xl font-light text-white">{block.testLabel}</div>
-                <p className="mt-2 text-sm font-light leading-6 text-white/48">
-                  Study {block.hours}, then take this section test to confirm that the weakness is improving.
-                </p>
+              <div className="mt-5 grid gap-3">
+                {block.drills.map((drill) => (
+                  <div className="flex gap-3 border border-white/10 bg-black/20 p-3" key={drill}>
+                    <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-100/70" size={16} />
+                    <p className="text-sm font-light leading-6 text-white/60">{drill}</p>
+                  </div>
+                ))}
               </div>
-              <button
-                className="mt-5 flex h-12 w-full items-center justify-between border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-                onClick={() => hasActiveSubscription ? openPractice(block) : router.push("/pricing?plan=pro")}
+              <div className="mt-5 border border-white/10 bg-black/20 p-4">
+                <div className="flex items-center gap-3">
+                  <ClipboardList className="text-white/45" size={18} />
+                  <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">Review protocol</div>
+                </div>
+                <p className="mt-3 text-sm font-light leading-6 text-white/55">{block.reviewProtocol}</p>
+                <div className="mt-4 border border-white/10 bg-white/[0.035] p-3">
+                  <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">Bound test</div>
+                  <div className="mt-2 text-xl font-light text-white">{block.testLabel}</div>
+                  <p className="mt-2 text-sm font-light leading-6 text-white/48">
+                    Study {block.hours}. Checkpoint: {block.checkpoint}
+                  </p>
+                </div>
+              </div>
+              <PremiumButton
+                className="mt-5 w-full"
+                icon={<ArrowRight size={18} />}
+                onClick={() => {
+                  if (routeUnlocked) {
+                    openPractice(block);
+                    return;
+                  }
+                  router.push("/pricing?plan=pro");
+                }}
                 type="button"
               >
-                {hasActiveSubscription ? "Start exercises" : "Unlock exercises"} <ArrowRight size={18} />
-              </button>
+                {routeUnlocked ? "Start exercises" : "Unlock exercises"}
+              </PremiumButton>
             </article>
           ))}
         </section>
 
         <section className="mt-6 border border-white/10 bg-white/[0.035] p-6">
           <div className="flex items-center gap-3">
+            <BarChart3 className="text-[#c8bd88]" />
+            <h2 className="text-2xl font-light text-white">Four-week 1400+ progression</h2>
+          </div>
+          <div className="mt-5 grid gap-4 lg:grid-cols-4">
+            {plan.phases.map((phase) => (
+              <div className="border border-white/10 bg-black/20 p-4" key={phase.week}>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/35">{phase.week}</p>
+                <h3 className="mt-3 text-xl font-light text-white">{phase.title}</h3>
+                <div className="mt-4 grid gap-2 text-sm">
+                  <p className="text-[#d7cc95]">{phase.target}</p>
+                  <p className="text-white/46">{phase.hours}</p>
+                  <p className="leading-6 text-white/58">{phase.work}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-6 border border-white/10 bg-white/[0.035] p-6">
+          <div className="flex items-center gap-3">
             <Target className="text-yellow-100/70" />
-            <h2 className="text-2xl font-light text-white">First 7 days</h2>
+            <h2 className="text-2xl font-light text-white">First 7 days: exact operating plan</h2>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
             {plan.days.map((day, index) => (
@@ -282,29 +410,110 @@ function buildCurriculum(results: Results) {
   const mathWeaknesses = sectionWeaknesses(results, "math", weaknesses);
   const scoreGap = Math.max(0, 1400 - results.score_total);
   const dailyHours = scoreGap >= 300 ? "3-4 hours" : scoreGap >= 150 ? "2-3 hours" : "90-120 min";
+  const strategy = scoreGap >= 300
+    ? "Concept repair before speed"
+    : scoreGap >= 150
+      ? "Accuracy under time"
+      : "Hard-question polish";
   const blocks: CurriculumBlock[] = [
     {
       section: "Reading and Writing",
       title: "Evidence, structure, and grammar recovery",
       focus: readingWeaknesses.slice(0, 4),
       hours: "45-70 minutes daily",
-      testLabel: "Full Reading and Writing Section Test"
+      testLabel: "Full Reading and Writing Section Test",
+      diagnosticSignal: signalFromTopics(readingWeaknesses, "Reading/Writing misses show the biggest risk in proof, logic, and sentence control."),
+      masteryTarget: "85%+ on two timed RW sets with written evidence for every correction.",
+      drills: [
+        `Proof ladder: redo ${readingWeaknesses[0] || "the weakest RW topic"} misses, then solve 10 near-transfer questions.`,
+        `Timing split: 12 medium questions untimed, then 12 harder questions in 18 minutes.`,
+        "Mistake notebook: label each miss as evidence, transition, grammar, or wording trap."
+      ],
+      reviewProtocol: "For every wrong answer, write the exact sentence or data point that proves the correct choice and one reason the selected choice failed.",
+      checkpoint: "Retake one RW module after two clean drill sets."
     },
     {
       section: "Math",
       title: "Algebra, advanced math, and precision recovery",
       focus: mathWeaknesses.slice(0, 4),
       hours: "45-70 minutes daily",
-      testLabel: "Full Math Section Test"
+      testLabel: "Full Math Section Test",
+      diagnosticSignal: signalFromTopics(mathWeaknesses, "Math misses show the biggest risk in equation setup, function meaning, and precision."),
+      masteryTarget: "90%+ untimed accuracy, then 80%+ timed accuracy on the same skill family.",
+      drills: [
+        `Concept rebuild: solve 8 guided ${mathWeaknesses[0] || "Advanced Math"} examples before the timed set.`,
+        `Transfer set: 18 questions mixing ${mathWeaknesses.slice(0, 2).join(" and ") || "algebra and functions"}.`,
+        "Precision audit: identify whether each miss came from setup, algebra step, calculator use, or answering the wrong value."
+      ],
+      reviewProtocol: "Redo each missed problem from a blank page, then write the fastest method and the trap answer you nearly chose.",
+      checkpoint: "Retake one Math module after the transfer set reaches the target accuracy."
     }
   ];
 
   const primary = weaknesses[0] || "mixed weak topics";
   const secondary = weaknesses[1] || "timing and accuracy";
+  const phases: CurriculumPhase[] = [
+    {
+      week: "Week 1",
+      title: "Stop the score leaks",
+      target: `${results.score_total} to ${Math.min(1400, results.score_total + 45)}`,
+      hours: dailyHours,
+      work: `Repair ${primary}, rebuild missing rules, and redo every diagnostic miss without time pressure.`
+    },
+    {
+      week: "Week 2",
+      title: "Convert accuracy into speed",
+      target: `${Math.min(1400, results.score_total + 45)} to ${Math.min(1400, results.score_total + 90)}`,
+      hours: dailyHours,
+      work: `Timed sets for ${primary} and ${secondary}; wrong-answer notebook reviewed before each session.`
+    },
+    {
+      week: "Week 3",
+      title: "Mixed module pressure",
+      target: `${Math.min(1400, results.score_total + 90)} to ${Math.min(1400, results.score_total + 140)}`,
+      hours: dailyHours,
+      work: "Mixed RW and Math modules, hard-question triage, and retake planning from repeated traps."
+    },
+    {
+      week: "Week 4",
+      title: "1400+ retake cycle",
+      target: `${Math.min(1400, results.score_total + 140)} to 1400+`,
+      hours: dailyHours,
+      work: "Full mock, section retake, final weak-topic sprint, and parent-ready progress snapshot."
+    }
+  ];
+  const masteryGates: MasteryGate[] = [
+    {
+      label: "Accuracy gate",
+      target: scoreGap >= 200 ? "80%+" : "88%+",
+      evidence: "Two focused sets in a row before topic is marked improved."
+    },
+    {
+      label: "Timing gate",
+      target: "1:15 avg",
+      evidence: "Medium questions under target time without losing accuracy."
+    },
+    {
+      label: "Retake gate",
+      target: "+40 pts",
+      evidence: "Section retake confirms the weakness is no longer repeating."
+    }
+  ];
+  const operatingRules = [
+    `Start each day with the weakest active topic: ${primary}.`,
+    "Theory appears only when the diagnostic shows the rule is missing, not for every topic.",
+    "Timed work starts after concept accuracy improves, so speed does not hide weak understanding.",
+    "A topic is not closed until a retake proves the same trap disappeared."
+  ];
 
   return {
     dailyHours,
+    strategy,
+    scoreGap,
     blocks,
+    phases,
+    masteryGates,
+    operatingRules,
     days: [
       `Review every missed ${primary} question. Write the rule, the trap, and the correct proof.`,
       `Drill ${primary} without a timer until accuracy reaches 75%.`,
@@ -315,6 +524,11 @@ function buildCurriculum(results: Results) {
       `Take a mixed checkpoint and update the next 7-day sprint from the new mistakes.`
     ]
   };
+}
+
+function signalFromTopics(topics: string[], fallback: string) {
+  if (!topics.length) return fallback;
+  return `Priority signal: ${topics.slice(0, 3).join(", ")} appeared in missed or low-accuracy work.`;
 }
 
 function buildLockedRoutePreview(blocks: CurriculumBlock[]) {

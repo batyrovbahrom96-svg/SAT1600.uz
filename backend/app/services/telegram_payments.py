@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import json
 import re
-from urllib import error, request
+from urllib import error, parse, request
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -171,7 +171,7 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     db.commit()
     db.refresh(subscription)
 
-    _send_message(chat_id, _receipt_active_message(subscription))
+    _send_message(chat_id, _receipt_active_message(subscription, user))
     _notify_admin_for_auto_activation(subscription, user, message)
     return {"ok": True, "subscription_id": str(subscription.id), "status": "active"}
 
@@ -220,7 +220,7 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
         db.commit()
         _answer_callback(callback_id, "Access activated.")
         if student_chat_id:
-            _send_message(student_chat_id, _receipt_active_message(subscription))
+            _send_message(student_chat_id, _receipt_active_message(subscription, user))
         _edit_admin_message(callback_query, f"APPROVED\n\n{_subscription_summary(subscription, user)}")
         return {"ok": True, "status": "active"}
 
@@ -515,22 +515,43 @@ def build_daily_pro_report(db: Session) -> str:
     )
 
 
-def _receipt_active_message(subscription: Subscription) -> str:
+def _public_frontend_url() -> str:
+    frontend_url = get_settings().frontend_url.rstrip("/")
+    if "localhost" in frontend_url or "127.0.0.1" in frontend_url:
+        return "https://www.sattest.uz"
+    return frontend_url
+
+
+def _pro_login_link(email: str | None, next_path: str) -> str:
+    base = _public_frontend_url()
+    if not email:
+        return f"{base}{next_path}"
+    query = parse.urlencode({"email": email, "next": next_path})
+    return f"{base}/login?{query}"
+
+
+def _receipt_active_message(subscription: Subscription, user: User | None = None) -> str:
     start = _format_subscription_date(subscription.current_period_start)
     end = _format_subscription_date(subscription.current_period_end)
+    email = user.email if user else None
+    curriculum_link = _pro_login_link(email, "/my-1400?lang=en")
+    mock_link = _pro_login_link(email, "/sat-mock?lang=en")
     return (
         "EN: Receipt received. SATTEST.UZ Pro was activated instantly by the bot.\n"
         f"Start day: {start}\n"
         f"End day: {end}\n"
-        "Open https://www.sattest.uz/login and continue your practice.\n\n"
+        f"Open your Pro curriculum: {curriculum_link}\n"
+        f"Start SAT Mock Test: {mock_link}\n\n"
         "RU: Чек получен. SATTEST.UZ Pro был мгновенно активирован ботом.\n"
         f"Дата начала: {start}\n"
         f"Дата окончания: {end}\n"
-        "Откройте https://www.sattest.uz/login и продолжайте практику.\n\n"
+        f"Откройте Pro curriculum: {curriculum_link}\n"
+        f"Начать SAT Mock Test: {mock_link}\n\n"
         "UZ: Chek qabul qilindi. SATTEST.UZ Pro bot orqali darhol faollashtirildi.\n"
         f"Boshlanish kuni: {start}\n"
         f"Tugash kuni: {end}\n"
-        "https://www.sattest.uz/login sahifasini oching va practice davom ettiring.\n\n"
+        f"Pro curriculum: {curriculum_link}\n"
+        f"SAT Mock Test boshlash: {mock_link}\n\n"
         f"{PAYMENT_WARNING_TEXT}"
     )
 

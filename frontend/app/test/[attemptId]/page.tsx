@@ -976,6 +976,8 @@ export default function TestPage() {
   const spentByQuestion = useRef<Record<string, number>>({});
   const firstInteractionByQuestion = useRef<Record<string, number>>({});
   const interactionCountByQuestion = useRef<Record<string, number>>({});
+  const activeModuleKey = useRef<string | null>(null);
+  const activeQuestionId = useRef<string | null>(null);
   const secureModeActiveRef = useRef(false);
   const integrityLockedRef = useRef(false);
   const isBreakActiveRef = useRef(false);
@@ -1019,9 +1021,21 @@ export default function TestPage() {
         }))
     };
 
+    const nextModuleKey = `${normalizedData.attempt.current_section}:${normalizedData.attempt.current_module}`;
+    const previousModuleKey = activeModuleKey.current;
+    const previousQuestionId = activeQuestionId.current;
+    activeModuleKey.current = nextModuleKey;
+
     setModuleData(normalizedData);
     setSecondsLeft(data.duration_seconds);
-    setIndex(0);
+    setIndex((currentIndex) => {
+      if (previousModuleKey !== nextModuleKey) return 0;
+      if (previousQuestionId) {
+        const preservedIndex = normalizedData.questions.findIndex((item) => item.id === previousQuestionId);
+        if (preservedIndex >= 0) return preservedIndex;
+      }
+      return Math.min(currentIndex, Math.max(0, normalizedData.questions.length - 1));
+    });
     setIsCheckWorkActive(false);
     setIsModuleOverActive(false);
     setAnswers(Object.fromEntries(Object.entries(data.answers).map(([id, answer]) => [id, answer.selected_answer || ""])));
@@ -1197,8 +1211,10 @@ export default function TestPage() {
   }, [question]);
 
   useEffect(() => {
+    const nextQuestion = moduleData?.questions[index];
+    activeQuestionId.current = nextQuestion?.id ?? null;
     setCurrentQuestion(index + 1);
-  }, [index]);
+  }, [index, moduleData]);
 
   useEffect(() => {
     if (!moduleData) return;

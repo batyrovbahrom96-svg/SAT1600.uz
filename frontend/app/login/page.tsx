@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api, saveAuth } from "@/lib/api";
@@ -8,6 +8,16 @@ import { api, saveAuth } from "@/lib/api";
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [emailFromLink, setEmailFromLink] = useState("");
+  const [nextPath, setNextPath] = useState("/dashboard");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get("email") || "";
+    const requestedNext = params.get("next") || "";
+    setEmailFromLink(email);
+    setNextPath(requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/dashboard");
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -18,7 +28,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email: form.get("email"), password: form.get("password") })
       });
       saveAuth(result.access_token, result.full_name);
-      router.push("/dashboard");
+      router.push(nextPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }
@@ -43,7 +53,7 @@ export default function LoginPage() {
           <h2 className="text-3xl font-black text-white">Login</h2>
           <p className="mt-3 text-sm font-semibold leading-6 text-[#9f9f9f]">Use the account you created to continue your SAT practice.</p>
           <label className="mt-8 block text-xs font-black uppercase tracking-[0.2em] text-[#9f9f9f]">Email</label>
-          <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="email" type="email" required />
+          <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="email" onChange={(event) => setEmailFromLink(event.target.value)} type="email" value={emailFromLink} required />
           <label className="mt-5 block text-xs font-black uppercase tracking-[0.2em] text-[#9f9f9f]">Password</label>
           <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="password" type="password" required />
           {error ? <p className="mt-5 border border-red-400/30 bg-red-950/20 p-3 text-sm font-semibold text-red-200">{error}</p> : null}

@@ -19,7 +19,8 @@ export function DevOverlayCleaner() {
     };
 
     hideNextBadge();
-    const observer = new MutationObserver(hideNextBadge);
+    if (typeof window.MutationObserver === "undefined") return;
+    const observer = new window.MutationObserver(hideNextBadge);
     observer.observe(document.documentElement, { childList: true, subtree: true });
     const timer = window.setInterval(hideNextBadge, 800);
 

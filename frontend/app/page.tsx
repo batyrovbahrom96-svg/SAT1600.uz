@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Mail, Phone, Play, Send, Volume2, VolumeX, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { PremiumButton } from "@/components/PremiumButton";
+import { PremiumText } from "@/components/PremiumText";
 import { useLanguage, type Language } from "@/lib/i18n";
 import { studentResults, type StudentResult } from "@/lib/student-results";
 
@@ -47,11 +50,11 @@ const loadingSequence = [20, 50, 70, 100];
 const skipHomeIntroKey = "sattest_skip_home_intro";
 const skipHomeIntroEvent = "sattest:skip-home-intro";
 const partnerLogos = [
-  { logo: "/assets/partners/mister%20doniyor.webp", name: "Mr. Doniyor School" },
-  { logo: "/assets/partners/result-logo.jpg", name: "Result Learning Center" },
-  { logo: "/assets/partners/Thompson.jpg", name: "Thompson Learning Center" },
-  { logo: "/assets/partners/Cambridge%20Learning%20Center.jpg", name: "Cambridge Learning Center" },
-  { logo: "/assets/partners/Richmond%20School.png", name: "Richmond School" }
+  { logo: "/assets/partners/optimized/mister-doniyor.webp", name: "Mr. Doniyor School" },
+  { logo: "/assets/partners/optimized/result-logo.webp", name: "Result Learning Center" },
+  { logo: "/assets/partners/optimized/thompson.webp", name: "Thompson Learning Center" },
+  { logo: "/assets/partners/optimized/cambridge-learning-center.webp", name: "Cambridge Learning Center" },
+  { logo: "/assets/partners/optimized/richmond-school.webp", name: "Richmond School" }
 ];
 
 const studentResultCopy: Record<
@@ -1039,6 +1042,31 @@ function getLoaderDigits(value: number) {
     .map((digit) => (digit === " " ? "\u00a0" : digit));
 }
 
+function getTopScorePreviewImage(src: string) {
+  const fileName = src.split("/").pop();
+  if (!fileName) return src;
+  const slug = fileName.replace(/\.(png|jpe?g|webp)$/i, "");
+  return `/assets/results/top-sat/previews/${slug}-preview.webp`;
+}
+
+function getTopScoreAvatarImage(src: string) {
+  const fileName = src.split("/").pop();
+  if (!fileName) return src;
+  const slug = fileName.replace(/\.(png|jpe?g|webp)$/i, "");
+  return `/assets/results/top-sat/previews/${slug}-avatar.webp`;
+}
+
+function getStudentPreviewImage(src: string) {
+  return src.includes("/top-sat/") ? getTopScoreAvatarImage(src) : src;
+}
+
+function getResultPosterImage(src: string) {
+  const fileName = src.split("/").pop();
+  if (!fileName) return src;
+  const slug = fileName.replace(/\.(png|jpe?g|webp)$/i, "");
+  return `/assets/results/previews/${slug}-poster.webp`;
+}
+
 function TestimonialCard({
   student,
   quote,
@@ -1058,7 +1086,13 @@ function TestimonialCard({
       style={{ "--accent": student.accent } as CSSProperties & Record<"--accent", string>}
     >
       <div className="student-testimonials-section__student">
-        <img src={student.image} alt={`${student.name} SAT result student`} />
+        <Image
+          src={getStudentPreviewImage(student.image)}
+          alt={`${student.name} SAT result student`}
+          width={136}
+          height={136}
+          sizes="68px"
+        />
         <div>
           <strong>{student.name}</strong>
           <span>{student.score}</span>
@@ -1092,7 +1126,12 @@ function TopScoreProofCard({
       style={{ "--accent": proof.accent } as CSSProperties & Record<"--accent", string>}
     >
       <div className="top-score-proof-section__certificate">
-        <img src={proof.image} alt={`${proof.name} ${proof.score} SAT score report`} />
+        <Image
+          src={getTopScorePreviewImage(proof.image)}
+          alt={`${proof.name} ${proof.score} SAT score report`}
+          fill
+          sizes="(max-width: 768px) 82vw, 320px"
+        />
       </div>
       <div className="top-score-proof-section__cardCopy">
         <span>{copy.studentProofLabel}</span>
@@ -1164,6 +1203,24 @@ export default function Home() {
   }, [skipIntroNow]);
 
   useEffect(() => {
+    if (!isLoading) return undefined;
+
+    const skipHiddenIntro = () => {
+      if (document.hidden) {
+        setIsLoaderExiting(false);
+        setIsLoading(false);
+      }
+    };
+
+    skipHiddenIntro();
+    document.addEventListener("visibilitychange", skipHiddenIntro);
+
+    return () => {
+      document.removeEventListener("visibilitychange", skipHiddenIntro);
+    };
+  }, [isLoading]);
+
+  useEffect(() => {
     window.addEventListener(skipHomeIntroEvent, skipIntroNow);
 
     return () => {
@@ -1188,9 +1245,9 @@ export default function Home() {
       const timers = [
         window.setTimeout(() => {
           setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
-        }, 180),
-        window.setTimeout(() => setLoadingStage("brand"), 320),
-        window.setTimeout(() => finishLoading(), 820)
+        }, 260),
+        window.setTimeout(() => setLoadingStage("brand"), 560),
+        window.setTimeout(() => finishLoading(), 1250)
       ];
 
       return () => {
@@ -1198,19 +1255,18 @@ export default function Home() {
       };
     }
 
-    const compactIntro = shouldUseFastHomeIntro();
     const timers = [
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[1], step: frame.step + 1 }));
-      }, compactIntro ? 900 : 1500),
+      }, 720),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[2], step: frame.step + 1 }));
-      }, compactIntro ? 1800 : 3000),
+      }, 1440),
       window.setTimeout(() => {
         setLoadingFrame((frame) => ({ previous: frame.current, current: loadingSequence[3], step: frame.step + 1 }));
-      }, compactIntro ? 2700 : 4500),
-      window.setTimeout(() => setLoadingStage("brand"), compactIntro ? 3600 : 6000),
-      window.setTimeout(() => finishLoading(), compactIntro ? 7200 : 10800)
+      }, 2160),
+      window.setTimeout(() => setLoadingStage("brand"), 2850),
+      window.setTimeout(() => finishLoading(), 4200)
     ];
 
     return () => {
@@ -1327,7 +1383,14 @@ export default function Home() {
         <div className="partner-marquee__track" aria-hidden="true">
           {[...partnerLogos, ...partnerLogos, ...partnerLogos, ...partnerLogos].map((partner, index) => (
             <span className="partner-marquee__item" key={`${partner.name}-${index}`}>
-              <img className="partner-marquee__logo" src={partner.logo} alt={partner.name} loading="lazy" decoding="async" />
+              <Image
+                className="partner-marquee__logo"
+                src={partner.logo}
+                alt={partner.name}
+                width={250}
+                height={84}
+                sizes="(max-width: 768px) 180px, 250px"
+              />
             </span>
           ))}
         </div>
@@ -1337,16 +1400,15 @@ export default function Home() {
         <div className="hero-proof-intro" data-sattest-no-translate="true">
           <div className="hero-proof-intro__copy">
             <p className="nex-kicker">{copy.heroProof.eyebrow}</p>
-            <h1>{copy.heroProof.title}</h1>
+            <PremiumText as="h1" variant="hero">{copy.heroProof.title}</PremiumText>
             <p>{copy.heroProof.body}</p>
             <div className="hero-proof-intro__actions">
-              <Link className="nex-cta" href="/mock-test">
-                <span>{copy.heroProof.cta}</span>
-                <ArrowRight size={18} />
-              </Link>
-              <a className="hero-proof-intro__secondary" href="#top-score-proof-title">
+              <PremiumButton className="nex-cta" href="/mock-test" icon={<ArrowRight size={18} />}>
+                {copy.heroProof.cta}
+              </PremiumButton>
+              <PremiumButton className="hero-proof-intro__secondary" href="#top-score-proof-title" variant="secondary">
                 {copy.heroProof.secondaryCta}
-              </a>
+              </PremiumButton>
             </div>
             <div className="hero-proof-intro__stats" aria-label="Verified SAT score proof">
               {copy.heroProof.stats.map((stat) => (
@@ -1360,14 +1422,20 @@ export default function Home() {
           </div>
 
           <div className="hero-proof-intro__reports" aria-label="Verified student SAT score reports">
-            {topScoreProofs.slice(0, 3).map((proof) => (
+            {topScoreProofs.slice(0, 3).map((proof, index) => (
               <article
                 className="hero-proof-card"
                 key={proof.name}
                 style={{ "--accent": proof.accent } as CSSProperties & Record<"--accent", string>}
               >
                 <div className="hero-proof-card__image">
-                  <img src={proof.image} alt={`${proof.name} ${proof.score} SAT score report`} />
+                  <Image
+                    src={getTopScorePreviewImage(proof.image)}
+                    alt={`${proof.name} ${proof.score} SAT score report`}
+                    fill
+                    sizes="(max-width: 900px) 80vw, 260px"
+                    priority={index === 0}
+                  />
                 </div>
                 <div className="hero-proof-card__copy">
                   <span>{copy.topScores.studentProofLabel}</span>
@@ -1397,11 +1465,10 @@ export default function Home() {
       <section className="top-score-proof-section" aria-labelledby="top-score-proof-title" data-sattest-no-translate="true">
         <div className="top-score-proof-section__copy">
           <p className="top-score-proof-section__eyebrow">{copy.topScores.eyebrow}</p>
-          <h2 id="top-score-proof-title">{copy.topScores.title}</h2>
-          <Link className="top-score-proof-section__cta" href="/mock-test">
+          <PremiumText as="h2" id="top-score-proof-title" variant="proof">{copy.topScores.title}</PremiumText>
+          <PremiumButton className="top-score-proof-section__cta" href="/mock-test" icon={<ArrowRight size={18} />}>
             {copy.topScores.cta}
-            <ArrowRight size={18} />
-          </Link>
+          </PremiumButton>
         </div>
 
         <div className="top-score-proof-section__stats" aria-label="SAT score proof highlights">
@@ -1442,7 +1509,7 @@ export default function Home() {
       <section className="student-video-proof-section" aria-labelledby="student-video-proof-title" data-sattest-no-translate="true">
         <div className="student-video-proof-section__copy">
           <p>{copy.videoProof.eyebrow}</p>
-          <h2 id="student-video-proof-title">{copy.videoProof.title}</h2>
+          <PremiumText as="h2" id="student-video-proof-title" variant="video">{copy.videoProof.title}</PremiumText>
         </div>
 
         <div
@@ -1465,12 +1532,11 @@ export default function Home() {
               >
                 <video
                   className="student-video-proof-card__video"
-                  src={isPerformanceMode ? undefined : result.video}
-                  poster={result.certificate ?? "/assets/brand/sattest-intro-logo.png"}
+                  poster={result.certificate ? getResultPosterImage(result.certificate) : "/assets/brand/sattest-intro-logo.png"}
                   muted
                   loop
                   playsInline
-                  preload="metadata"
+                  preload="none"
                 />
                 <span className="student-video-proof-card__shade" aria-hidden="true" />
                 <span className="student-video-proof-card__play" aria-hidden="true">
@@ -1511,7 +1577,7 @@ export default function Home() {
           <article className="homepage-route-section__card" key={slide.id}>
             <span>{slide.stat}</span>
             <p>{slide.eyebrow}</p>
-            <h2>{slide.title.join(" ")}</h2>
+            <PremiumText as="h2" variant="route">{slide.title.join(" ")}</PremiumText>
             <em>{slide.body}</em>
             <Link href={slide.href}>
               {slide.cta}
@@ -1523,10 +1589,13 @@ export default function Home() {
 
       <section className="founder-trust-section" aria-labelledby="founder-trust-title">
         <div className="founder-trust-section__media">
-          <img
+          <Image
             className="founder-trust-section__photo"
             src="/assets/brand/botirov-brothers-richmond-school.jpg"
             alt="Bakhrom Botirov and Doniyor Botirov, founders of SATTEST.UZ"
+            width={960}
+            height={1280}
+            sizes="(max-width: 900px) 92vw, 560px"
           />
           <div className="founder-trust-section__score">
             <span>Founders of SATTEST.UZ</span>
@@ -1537,7 +1606,9 @@ export default function Home() {
 
         <div className="founder-trust-section__copy">
           <p className="founder-trust-section__eyebrow">Founder proof</p>
-          <h2 id="founder-trust-title">SATTEST.UZ is founded by Bakhrom Botirov and Doniyor Botirov.</h2>
+          <PremiumText as="h2" id="founder-trust-title" variant="founder">
+            SATTEST.UZ is founded by Bakhrom Botirov and Doniyor Botirov.
+          </PremiumText>
           <p>
             The platform is led by founders who have personally reached elite SAT results.
             Bakhrom Botirov is the founder and CEO of Richmond School, a CELTA and PGCEi holder,
@@ -1570,7 +1641,12 @@ export default function Home() {
               onClick={() => setActiveFounderProof("bakhrom")}
               type="button"
             >
-              <img src="/assets/results/bakhrom-botirov-1540-sat.jpg" alt="Bakhrom Botirov 1540 SAT score report" />
+              <Image
+                src="/assets/results/bakhrom-botirov-1540-sat.jpg"
+                alt="Bakhrom Botirov 1540 SAT score report"
+                fill
+                sizes="(max-width: 900px) 45vw, 260px"
+              />
               <span>Bakhrom Botirov · 1540 SAT certificate</span>
             </button>
             <button
@@ -1578,7 +1654,12 @@ export default function Home() {
               onClick={() => setActiveFounderProof("doniyor")}
               type="button"
             >
-              <img src="/assets/results/doniyor-botirov-1590-sat.jpg" alt="Doniyor Botirov 1590 SAT score report" />
+              <Image
+                src="/assets/results/doniyor-botirov-1590-sat.jpg"
+                alt="Doniyor Botirov 1590 SAT score report"
+                fill
+                sizes="(max-width: 900px) 45vw, 260px"
+              />
               <span>Doniyor Botirov · 1590 SAT certificate</span>
             </button>
             <div>
@@ -1598,8 +1679,8 @@ export default function Home() {
       <section className="student-testimonials-section" aria-labelledby="student-testimonials-title">
         <div className="student-testimonials-section__intro">
           <p>{copy.testimonials.eyebrow}</p>
-          <h2 id="student-testimonials-title">{copy.testimonials.title}</h2>
-          <span>{copy.testimonials.body}</span>
+          <PremiumText as="h2" id="student-testimonials-title" variant="testimonial">{copy.testimonials.title}</PremiumText>
+          <span className="student-testimonials-section__body">{copy.testimonials.body}</span>
         </div>
 
         <div className="student-testimonials-section__stage" aria-label="Moving student feedback">
@@ -1628,7 +1709,9 @@ export default function Home() {
       <section className="platform-ad-section" aria-labelledby="platform-ad-title">
         <div className="platform-ad-section__copy">
           <p className="platform-ad-section__eyebrow">Why SATTEST.UZ works</p>
-          <h2 id="platform-ad-title">A diagnostic SAT platform that turns mistakes into a plan.</h2>
+          <PremiumText as="h2" id="platform-ad-title" variant="platform">
+            A diagnostic SAT platform that turns mistakes into a plan.
+          </PremiumText>
           <p className="platform-ad-section__body">
             Students do not just finish a mock test. They receive score reports, weakness maps,
             mistake analysis, and targeted practice routes built around Reading, Writing, and Math.
@@ -1680,7 +1763,9 @@ export default function Home() {
       <section className="diagnostic-preview-section" aria-labelledby="diagnostic-preview-title">
         <div className="diagnostic-preview-section__intro">
           <p className="diagnostic-preview-section__eyebrow">Diagnostic preview</p>
-          <h2 id="diagnostic-preview-title">Before a student practices, SATTEST.UZ shows exactly what is holding the score down.</h2>
+          <PremiumText as="h2" id="diagnostic-preview-title" variant="diagnostic">
+            Before a student practices, SATTEST.UZ shows exactly what is holding the score down.
+          </PremiumText>
           <p>
             The mock test becomes a personal report: section scores, weak question types, repeated
             mistake patterns, timing pressure, and the first study tasks needed to start improving.
@@ -1762,7 +1847,9 @@ export default function Home() {
       <section className="study-growth-section" aria-labelledby="study-growth-title">
         <div className="study-growth-section__copy">
           <p className="study-growth-section__eyebrow">Personal study plan</p>
-          <h2 id="study-growth-title">A 30-day route built from the exact mistakes in the diagnostic test.</h2>
+          <PremiumText as="h2" id="study-growth-title" variant="study">
+            A 30-day route built from the exact mistakes in the diagnostic test.
+          </PremiumText>
           <p className="study-growth-section__body">
             SATTEST.UZ does not give random practice. After the mock test, every wrong answer becomes
             a weakness target, every weakness becomes a daily task, and every task is connected to
@@ -1862,12 +1949,11 @@ export default function Home() {
       <section className="parent-journey-section" aria-labelledby="parent-journey-title">
         <div className="parent-journey-section__intro">
           <p className="parent-journey-section__eyebrow">{copy.parent.eyebrow}</p>
-          <h2 id="parent-journey-title">{copy.parent.title}</h2>
+          <PremiumText as="h2" id="parent-journey-title" variant="parent">{copy.parent.title}</PremiumText>
           <p>{copy.parent.body}</p>
-          <Link className="parent-journey-section__cta" href="/pricing">
-            <span>{copy.parent.cta}</span>
-            <ArrowRight size={18} />
-          </Link>
+          <PremiumButton className="parent-journey-section__cta" href="/pricing" icon={<ArrowRight size={18} />}>
+            {copy.parent.cta}
+          </PremiumButton>
         </div>
 
         <div className="parent-journey-section__dashboard" aria-label="Parent progress tracking preview">
@@ -1899,7 +1985,7 @@ export default function Home() {
       <section className="homepage-faq-section" aria-labelledby="homepage-faq-title">
         <div className="homepage-faq-section__intro">
           <p className="homepage-faq-section__eyebrow">{copy.faq.eyebrow}</p>
-          <h2 id="homepage-faq-title">{copy.faq.title}</h2>
+          <PremiumText as="h2" id="homepage-faq-title" variant="faq">{copy.faq.title}</PremiumText>
           <p>{copy.faq.body}</p>
           <div className="homepage-faq-section__languageNotes" aria-label={copy.faq.paymentLabel}>
             <div>
@@ -1907,10 +1993,9 @@ export default function Home() {
               <p>{copy.faq.paymentBody}</p>
             </div>
           </div>
-          <Link className="homepage-faq-section__cta" href="/pricing">
-            <span>{copy.faq.cta}</span>
-            <ArrowRight size={18} />
-          </Link>
+          <PremiumButton className="homepage-faq-section__cta" href="/pricing" icon={<ArrowRight size={18} />}>
+            {copy.faq.cta}
+          </PremiumButton>
         </div>
 
         <div className="homepage-faq-section__list">
@@ -1925,12 +2010,12 @@ export default function Home() {
 
       <footer className="site-contact-footer" aria-labelledby="site-contact-footer-title">
         <div className="site-contact-footer__brand">
-          <img src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" />
+          <Image src="/assets/brand/sattest-wordmark.png" alt="SATTEST.UZ" width={620} height={113} sizes="190px" />
           <p>{copy.contact.eyebrow}</p>
         </div>
 
         <div className="site-contact-footer__copy">
-          <h2 id="site-contact-footer-title">{copy.contact.title}</h2>
+          <PremiumText as="h2" id="site-contact-footer-title" variant="contact">{copy.contact.title}</PremiumText>
           <p>{copy.contact.body}</p>
         </div>
 
@@ -2034,10 +2119,13 @@ export default function Home() {
               </div>
               {activeResultVideo.certificate ? (
                 <div className="results-modal__certificatePanel">
-                  <img
+                  <Image
                     alt={`${activeResultVideo.name} SAT score report`}
                     className="results-modal__certificate"
                     src={activeResultVideo.certificate}
+                    width={989}
+                    height={1280}
+                    sizes="(max-width: 900px) 92vw, 500px"
                   />
                 </div>
               ) : null}
@@ -2092,7 +2180,7 @@ export default function Home() {
             >
               <X size={18} />
             </button>
-            <img
+            <Image
               src={
                 activeFounderProof === "bakhrom"
                   ? "/assets/results/bakhrom-botirov-1540-sat.jpg"
@@ -2103,6 +2191,9 @@ export default function Home() {
                   ? "Bakhrom Botirov 1540 SAT score report"
                   : "Doniyor Botirov 1590 SAT score report"
               }
+              width={989}
+              height={1280}
+              sizes="(max-width: 900px) 92vw, 780px"
             />
           </div>
         </div>

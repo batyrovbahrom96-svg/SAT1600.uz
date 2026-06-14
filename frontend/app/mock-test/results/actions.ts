@@ -14,7 +14,7 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http
 export async function notifyDiagnosticResult(payload: DiagnosticNotificationPayload) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   const estimatedScore = Math.round(Number(payload.estimatedScore));
-  const timestamp = new Date().toISOString();
+  const timestamp = payload.timestamp || new Date().toISOString();
 
   if (!secret) {
     console.error("Diagnostic Telegram notification skipped: TELEGRAM_WEBHOOK_SECRET is missing in the frontend server environment.");
