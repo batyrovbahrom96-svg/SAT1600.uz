@@ -126,9 +126,6 @@ export default function CurriculumPage() {
     setActiveQuestion(0);
     setSelectedAnswer("");
     setIsConfirmed(false);
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
   }
 
   function openBlockOrPricing(block: CurriculumBlock) {
@@ -626,7 +623,10 @@ function PracticeOverlay({
   const isLastQuestion = activeQuestion === lesson.questions.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black text-white">
+    <div
+      className="fixed inset-0 z-[9999] overflow-y-auto bg-black text-white"
+      style={{ position: "fixed", zIndex: 9999 }}
+    >
       <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
         <div className="flex items-center justify-between border-b border-white/10 pb-5">
           <div>
