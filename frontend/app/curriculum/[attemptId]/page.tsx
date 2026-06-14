@@ -126,6 +126,17 @@ export default function CurriculumPage() {
     setActiveQuestion(0);
     setSelectedAnswer("");
     setIsConfirmed(false);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  function openBlockOrPricing(block: CurriculumBlock) {
+    if (routeUnlocked) {
+      openPractice(block);
+      return;
+    }
+    router.push("/pricing?plan=pro");
   }
 
   function closePractice() {
@@ -293,13 +304,7 @@ export default function CurriculumPage() {
                       routeUnlocked ? "" : "relative overflow-hidden"
                     }`}
                     key={topic}
-                    onClick={() => {
-                      if (routeUnlocked) {
-                        openPractice(block);
-                        return;
-                      }
-                      router.push("/pricing?plan=pro");
-                    }}
+                    onClick={() => openBlockOrPricing(block)}
                     type="button"
                   >
                     <span className={`text-sm font-light text-white/70 ${routeUnlocked ? "" : "blur-[1px]"}`}>
@@ -325,24 +330,25 @@ export default function CurriculumPage() {
                   <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">Review protocol</div>
                 </div>
                 <p className="mt-3 text-sm font-light leading-6 text-white/55">{block.reviewProtocol}</p>
-                <div className="mt-4 border border-white/10 bg-white/[0.035] p-3">
+                <button
+                  className="mt-4 w-full border border-white/10 bg-white/[0.035] p-3 text-left transition-colors hover:border-white/35 hover:bg-white/[0.07]"
+                  onClick={() => openBlockOrPricing(block)}
+                  type="button"
+                >
                   <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/38">Bound test</div>
-                  <div className="mt-2 text-xl font-light text-white">{block.testLabel}</div>
+                  <div className="mt-2 flex items-center justify-between gap-4 text-xl font-light text-white">
+                    <span>{block.testLabel}</span>
+                    <ArrowRight className="shrink-0 text-white/55" size={18} />
+                  </div>
                   <p className="mt-2 text-sm font-light leading-6 text-white/48">
                     Study {block.hours}. Checkpoint: {block.checkpoint}
                   </p>
-                </div>
+                </button>
               </div>
               <PremiumButton
                 className="mt-5 w-full"
                 icon={<ArrowRight size={18} />}
-                onClick={() => {
-                  if (routeUnlocked) {
-                    openPractice(block);
-                    return;
-                  }
-                  router.push("/pricing?plan=pro");
-                }}
+                onClick={() => openBlockOrPricing(block)}
                 type="button"
               >
                 {routeUnlocked ? "Start exercises" : "Unlock exercises"}
@@ -620,7 +626,7 @@ function PracticeOverlay({
   const isLastQuestion = activeQuestion === lesson.questions.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[80] overflow-y-auto bg-black text-white">
+    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black text-white">
       <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
         <div className="flex items-center justify-between border-b border-white/10 pb-5">
           <div>
