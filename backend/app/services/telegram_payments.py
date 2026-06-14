@@ -534,24 +534,23 @@ def _receipt_active_message(subscription: Subscription, user: User | None = None
     start = _format_subscription_date(subscription.current_period_start)
     end = _format_subscription_date(subscription.current_period_end)
     email = user.email if user else None
-    curriculum_link = _pro_login_link(email, "/my-1400?lang=en")
     mock_link = _pro_login_link(email, "/sat-mock?lang=en")
     return (
         "EN: Receipt received. SATTEST.UZ Pro was activated instantly by the bot.\n"
         f"Start day: {start}\n"
         f"End day: {end}\n"
-        f"Open your Pro curriculum: {curriculum_link}\n"
-        f"Start SAT Mock Test: {mock_link}\n\n"
+        f"Start here: {mock_link}\n"
+        "Log in or register with the same email, complete the full SAT Mock Test, then your Pro Curriculum opens from the result.\n\n"
         "RU: Чек получен. SATTEST.UZ Pro был мгновенно активирован ботом.\n"
         f"Дата начала: {start}\n"
         f"Дата окончания: {end}\n"
-        f"Откройте Pro curriculum: {curriculum_link}\n"
-        f"Начать SAT Mock Test: {mock_link}\n\n"
+        f"Начните здесь: {mock_link}\n"
+        "Войдите или зарегистрируйтесь с тем же email, пройдите полный SAT Mock Test, затем Pro Curriculum откроется из результата.\n\n"
         "UZ: Chek qabul qilindi. SATTEST.UZ Pro bot orqali darhol faollashtirildi.\n"
         f"Boshlanish kuni: {start}\n"
         f"Tugash kuni: {end}\n"
-        f"Pro curriculum: {curriculum_link}\n"
-        f"SAT Mock Test boshlash: {mock_link}\n\n"
+        f"Shu yerdan boshlang: {mock_link}\n"
+        "Xuddi shu email bilan kiring yoki ro'yxatdan o'ting, to'liq SAT Mock Testni yeching, keyin Pro Curriculum natijadan ochiladi.\n\n"
         f"{PAYMENT_WARNING_TEXT}"
     )
 
