@@ -17,7 +17,7 @@ export function LuxuryNavbar() {
     en: [
       { label: "About Us", href: "/about-us" },
       { label: "Free Diagnostic", href: "/mock-test" },
-      { label: "SAT Mock Test", href: "/sat-mock" },
+      { label: "SAT Mock Test", href: "/sat-test" },
       { label: "Practice", href: "/practice" },
       { label: "Demo Report", href: "/results/demo" },
       { label: "My 1400+", href: "/my-1400" },
@@ -26,7 +26,7 @@ export function LuxuryNavbar() {
     ru: [
       { label: "О нас", href: "/about-us" },
       { label: "Бесплатная диагностика", href: "/mock-test" },
-      { label: "SAT Mock Test", href: "/sat-mock" },
+      { label: "SAT Mock Test", href: "/sat-test" },
       { label: "Практика", href: "/practice" },
       { label: "Демо отчет", href: "/results/demo" },
       { label: "Мой 1400+", href: "/my-1400" },
@@ -35,7 +35,7 @@ export function LuxuryNavbar() {
     uz: [
       { label: "Biz haqimizda", href: "/about-us" },
       { label: "Bepul diagnostika", href: "/mock-test" },
-      { label: "SAT Mock Test", href: "/sat-mock" },
+      { label: "SAT Mock Test", href: "/sat-test" },
       { label: "Mashqlar", href: "/practice" },
       { label: "Demo hisobot", href: "/results/demo" },
       { label: "Mening 1400+", href: "/my-1400" },

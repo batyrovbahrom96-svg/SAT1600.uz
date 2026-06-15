@@ -31,7 +31,7 @@ from app.services.sat_engine import (
     save_answer,
     start_attempt,
 )
-from app.services.telegram_payments import handle_telegram_update, notify_admin_diagnostic_result, process_subscription_maintenance
+from app.services.telegram_payments import handle_telegram_update, notify_admin_diagnostic_result, notify_admin_full_mock_result, process_subscription_maintenance
 
 router = APIRouter(prefix="/api")
 verification_codes: dict[str, dict[str, datetime | str]] = {}
@@ -40,6 +40,15 @@ verification_codes: dict[str, dict[str, datetime | str]] = {}
 class DiagnosticResultNotification(BaseModel):
     timestamp: str
     estimated_score: int = Field(ge=400, le=1600)
+    weak_areas: list[str] = Field(default_factory=list, max_length=5)
+    language: str = Field(pattern="^(EN|RU|UZ|en|ru|uz)$")
+
+
+class FullMockResultNotification(BaseModel):
+    timestamp: str
+    total_score: int = Field(ge=400, le=1600)
+    rw_score: int = Field(ge=200, le=800)
+    math_score: int = Field(ge=200, le=800)
     weak_areas: list[str] = Field(default_factory=list, max_length=5)
     language: str = Field(pattern="^(EN|RU|UZ|en|ru|uz)$")
 
@@ -234,6 +243,24 @@ async def telegram_diagnostic_result(request: Request, payload: DiagnosticResult
     return notify_admin_diagnostic_result(
         timestamp=payload.timestamp,
         estimated_score=payload.estimated_score,
+        weak_areas=payload.weak_areas,
+        language=payload.language.upper(),
+    )
+
+
+@router.post("/telegram/full-mock-result")
+async def telegram_full_mock_result(request: Request, payload: FullMockResultNotification) -> dict:
+    settings = get_settings()
+    if settings.telegram_webhook_secret:
+        secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+        if secret != settings.telegram_webhook_secret:
+            raise HTTPException(status_code=403, detail="Invalid Telegram full mock secret")
+
+    return notify_admin_full_mock_result(
+        timestamp=payload.timestamp,
+        total_score=payload.total_score,
+        rw_score=payload.rw_score,
+        math_score=payload.math_score,
         weak_areas=payload.weak_areas,
         language=payload.language.upper(),
     )

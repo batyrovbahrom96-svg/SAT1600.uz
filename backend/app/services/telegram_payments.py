@@ -380,6 +380,32 @@ def notify_admin_diagnostic_result(
     return {"ok": bool(response.get("ok", True)), "telegram": response}
 
 
+def notify_admin_full_mock_result(
+    *,
+    timestamp: str,
+    total_score: int,
+    rw_score: int,
+    math_score: int,
+    weak_areas: list[str],
+    language: str,
+) -> dict:
+    settings = get_settings()
+    if not settings.telegram_admin_chat_id:
+        return {"ok": False, "skipped": "telegram_admin_chat_id_missing"}
+
+    cleaned_weak_areas = [area.strip() for area in weak_areas if area.strip()]
+    weak_area_line = ", ".join(cleaned_weak_areas) if cleaned_weak_areas else "No weak areas detected"
+    text = (
+        "Full Mock Test Completed\n\n"
+        f"Score: {total_score} (R&W: {rw_score} · Math: {math_score})\n"
+        f"Weak areas: {weak_area_line}\n"
+        f"Language: {language.upper()}\n"
+        f"Time: {timestamp}"
+    )
+    response = _send_message(settings.telegram_admin_chat_id, text)
+    return {"ok": bool(response.get("ok", True)), "telegram": response}
+
+
 def _subscription_summary(subscription: Subscription, user: User | None) -> str:
     email = user.email if user else "Unknown email"
     full_name = user.full_name if user else "Unknown user"
@@ -534,7 +560,7 @@ def _receipt_active_message(subscription: Subscription, user: User | None = None
     start = _format_subscription_date(subscription.current_period_start)
     end = _format_subscription_date(subscription.current_period_end)
     email = user.email if user else None
-    mock_link = _pro_login_link(email, "/sat-mock?lang=en")
+    mock_link = _pro_login_link(email, "/sat-test?lang=en")
     return (
         "EN: Receipt received. SATTEST.UZ Pro was activated instantly by the bot.\n"
         f"Start day: {start}\n"
