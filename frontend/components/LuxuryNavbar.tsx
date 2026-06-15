@@ -13,11 +13,11 @@ export function LuxuryNavbar() {
   const [studentName, setStudentName] = useState<string | null>(null);
   const [isProActive, setIsProActive] = useState(false);
   const { language, setLanguage } = useLanguage();
-  const navCopy: Record<Language, Array<{ label: string; href: string }>> = {
+  const navCopy: Record<Language, Array<{ label: string; href: string; proHref?: string }>> = {
     en: [
       { label: "About Us", href: "/about-us" },
       { label: "Free Diagnostic", href: "/mock-test" },
-      { label: "SAT Mock Test", href: "/sat-test" },
+      { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
       { label: "Practice", href: "/practice" },
       { label: "Demo Report", href: "/results/demo" },
       { label: "My 1400+", href: "/my-1400" },
@@ -26,7 +26,7 @@ export function LuxuryNavbar() {
     ru: [
       { label: "О нас", href: "/about-us" },
       { label: "Бесплатная диагностика", href: "/mock-test" },
-      { label: "SAT Mock Test", href: "/sat-test" },
+      { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
       { label: "Практика", href: "/practice" },
       { label: "Демо отчет", href: "/results/demo" },
       { label: "Мой 1400+", href: "/my-1400" },
@@ -35,7 +35,7 @@ export function LuxuryNavbar() {
     uz: [
       { label: "Biz haqimizda", href: "/about-us" },
       { label: "Bepul diagnostika", href: "/mock-test" },
-      { label: "SAT Mock Test", href: "/sat-test" },
+      { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
       { label: "Mashqlar", href: "/practice" },
       { label: "Demo hisobot", href: "/results/demo" },
       { label: "Mening 1400+", href: "/my-1400" },
@@ -202,7 +202,7 @@ export function LuxuryNavbar() {
           {navItems.map((item) => (
             <Link
               className="shrink-0 whitespace-nowrap px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-white/48 transition-colors hover:text-white sm:px-4 sm:text-[10px] sm:tracking-[0.2em]"
-              href={withLanguage(item.href)}
+              href={withLanguage(isProActive && item.proHref ? item.proHref : item.href)}
               key={item.label}
             >
               {item.label}
