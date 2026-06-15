@@ -1,6 +1,6 @@
 export const FULL_MOCK_PROGRESS_KEY = "sattest_full_mock_progress";
 export const FULL_MOCK_RESULTS_KEY = "sattest_full_mock_results";
-export const FULL_MOCK_BANK_VERSION = "2026-06-hard-v2";
+export const FULL_MOCK_BANK_VERSION = "2026-06-hard-v3";
 
 export type FullMockSection = "rw" | "math";
 export type FullMockModuleNumber = 1 | 2 | 3 | 4;
@@ -203,17 +203,17 @@ const rwCorePrompts: PromptSeed[] = [
   },
   {
     topic: "Quantitative Evidence",
-    trapType: "rate versus total",
-    passage: "Table: Compost collected by three schools. North: 400 kg from 200 students. East: 330 kg from 110 students. West: 360 kg from 180 students.",
-    prompt: "Which statement is best supported by the table?",
+    trapType: "trend misread",
+    passage: "Graph data: A line graph shows average monthly library visits after weekend hours were introduced in March. January: 1,200 visits. February: 1,260. March: 1,520. April: 1,810. May: 1,980.",
+    prompt: "Which statement best supports the claim that weekend hours were associated with increased library use?",
     choices: [
-      "North collected the most compost per student.",
-      "East collected the most compost per student.",
-      "West collected the least total compost.",
-      "All three schools collected the same amount per student.",
+      "Visits increased only slightly before March but rose more sharply from March through May.",
+      "The library had exactly the same number of visits in January and February.",
+      "Weekend hours caused visits to decrease after March.",
+      "The graph shows that visits were highest before weekend hours began.",
     ],
-    correctAnswer: "B",
-    explanation: "East collected 330/110 = 3 kg per student, more than North or West.",
+    correctAnswer: "A",
+    explanation: "The graph shows a stronger upward trend after weekend hours were introduced in March.",
   },
 ];
 
@@ -229,17 +229,17 @@ const rwExpansionPrompts: PromptSeed[] = [
   },
   {
     topic: "Command of Evidence",
-    trapType: "unsupported inference",
-    passage: "Researchers tested two coatings on solar panels. Coating X increased output by 3% in dry conditions but had no effect in humid conditions. Coating Y increased output by 2% in both dry and humid conditions.",
-    prompt: "Which choice best supports the claim that Coating Y may be more reliable across climates?",
+    trapType: "wrong trend comparison",
+    passage: "Graph data: A line graph compares two solar-panel coatings across humidity levels. At 20% humidity, Coating X output is 104 units and Coating Y is 102. At 60% humidity, X is 100 and Y is 102. At 90% humidity, X is 96 and Y is 101.",
+    prompt: "Which choice best supports the claim that Coating Y is more stable as humidity increases?",
     choices: [
-      "Coating X produced the highest single-condition improvement.",
-      "Coating Y improved output in both dry and humid conditions.",
-      "Both coatings were tested on solar panels.",
-      "Humid conditions can affect some materials.",
+      "Coating X has the highest output at 20% humidity.",
+      "Coating Y changes only from 102 to 101 units, while Coating X drops from 104 to 96.",
+      "Both coatings were tested at three humidity levels.",
+      "Coating X and Coating Y are both used on solar panels.",
     ],
     correctAnswer: "B",
-    explanation: "Reliability across climates is supported by improvement in both tested conditions.",
+    explanation: "Choice B compares the trends and shows that Y remains nearly constant while X declines.",
   },
   {
     topic: "Main Idea",
@@ -317,17 +317,17 @@ const rwExpansionPrompts: PromptSeed[] = [
   },
   {
     topic: "Quantitative Evidence",
-    trapType: "incorrect trend",
-    passage: "Table: Average battery life after 500 charges. Model A: 82% capacity. Model B: 76% capacity. Model C: 88% capacity.",
-    prompt: "Which choice best describes the data?",
+    trapType: "graph peak misread",
+    passage: "Graph data: A bar graph shows enzyme activity at different temperatures. 10 C: 18 units. 20 C: 44 units. 30 C: 71 units. 40 C: 68 units. 50 C: 25 units.",
+    prompt: "Which conclusion is best supported by the graph?",
     choices: [
-      "Model C retained the greatest capacity after 500 charges.",
-      "Model B retained more capacity than Model A.",
-      "All three models retained less than 80% capacity.",
-      "Model A and Model C retained the same capacity.",
+      "Enzyme activity increases steadily at every temperature shown.",
+      "Enzyme activity is highest at 30 C and then declines at higher temperatures.",
+      "The enzyme is inactive at 20 C.",
+      "The enzyme has the same activity at 10 C and 50 C.",
     ],
-    correctAnswer: "A",
-    explanation: "Model C's 88% is higher than Model A's 82% and Model B's 76%.",
+    correctAnswer: "B",
+    explanation: "The highest value is 71 units at 30 C; activity is lower at 40 C and much lower at 50 C.",
   },
   {
     topic: "Rhetorical Synthesis",
@@ -428,12 +428,17 @@ const rwExpansionPrompts: PromptSeed[] = [
   },
   {
     topic: "Quantitative Evidence",
-    trapType: "misread smallest difference",
-    passage: "Table: Median commute times. City A: 31 minutes. City B: 28 minutes. City C: 43 minutes. City D: 35 minutes.",
-    prompt: "Which two cities have the most similar median commute times?",
-    choices: ["A and B", "A and C", "B and D", "C and D"],
+    trapType: "scatterplot correlation trap",
+    passage: "Graph data: A scatterplot compares weekly practice hours and score improvement for 40 students. Most students practicing 0-2 hours improved 0-20 points. Most students practicing 3-5 hours improved 30-70 points. Most students practicing 6-8 hours improved 70-120 points.",
+    prompt: "Which statement is best supported by the scatterplot?",
+    choices: [
+      "Students who practiced more hours generally showed larger score improvements.",
+      "Every student who practiced 0-2 hours lost points.",
+      "Practice hours had no visible relationship to score improvement.",
+      "All students who practiced 6-8 hours improved by exactly 120 points.",
+    ],
     correctAnswer: "A",
-    explanation: "A and B differ by 3 minutes, less than the other listed pairs.",
+    explanation: "The clusters move upward as practice hours increase, showing a positive association.",
   },
 ];
 
@@ -470,17 +475,17 @@ const rwHardPrompts: PromptSeed[] = [
   },
   {
     topic: "Command of Evidence",
-    trapType: "table comparison error",
-    passage: "Table: Average minutes of daily reading and vocabulary gains. Group A: 12 minutes, 4-point gain. Group B: 24 minutes, 9-point gain. Group C: 30 minutes, 10-point gain.",
-    prompt: "Which statement is best supported by the table?",
+    trapType: "two-line graph comparison",
+    passage: "Graph data: A two-line graph shows renewable electricity generated by two sources from 2020 to 2024. Solar: 18, 25, 37, 52, 70 terawatt-hours. Wind: 42, 47, 51, 55, 59 terawatt-hours.",
+    prompt: "Which statement best supports the claim that solar generation was catching up to wind generation?",
     choices: [
-      "Vocabulary gains rose as average daily reading time increased, though the increase from Group B to C was small.",
-      "Group C read less than Group B but gained more vocabulary points.",
-      "Reading time had no relationship to vocabulary gains.",
-      "Group A gained more vocabulary points per minute than every other group.",
+      "Solar generation rose by 52 terawatt-hours, while wind generation rose by 17.",
+      "Wind generation was lower than solar generation in 2020.",
+      "Solar and wind generation were equal in every year shown.",
+      "Wind generation decreased from 2020 to 2024.",
     ],
     correctAnswer: "A",
-    explanation: "The table shows gains increasing from 4 to 9 to 10 as reading time increases.",
+    explanation: "Solar increased much faster than wind, narrowing and then passing the gap by 2024.",
   },
   {
     topic: "Rhetorical Synthesis",
@@ -544,17 +549,17 @@ const rwHardPrompts: PromptSeed[] = [
   },
   {
     topic: "Quantitative Evidence",
-    trapType: "conditional interpretation",
-    passage: "Table: Percent of seedlings surviving after 30 days. Full shade: 42%. Partial shade: 71%. Full sun: 64%. Partial shade with mulch: 83%.",
-    prompt: "Which claim is best supported by the data?",
+    trapType: "trend with exception",
+    passage: "Graph data: A line graph shows average response time for an app after three updates. Before updates: 4.8 seconds. After Update 1: 3.9 seconds. After Update 2: 3.1 seconds. After Update 3: 3.3 seconds.",
+    prompt: "Which claim is best supported by the graph?",
     choices: [
-      "Mulch under partial shade was associated with the highest survival rate.",
-      "Full shade produced higher survival than full sun.",
-      "Partial shade without mulch produced the lowest survival.",
-      "All light conditions produced survival rates above 70%.",
+      "Response time generally decreased after the updates, though it rose slightly after Update 3.",
+      "Each update made response time exactly one second faster.",
+      "The app was slowest after Update 3.",
+      "Update 2 increased response time compared with Update 1.",
     ],
     correctAnswer: "A",
-    explanation: "The highest value in the table is 83% for partial shade with mulch.",
+    explanation: "The trend improves from 4.8 to 3.1 seconds, with a small increase to 3.3 after the final update.",
   },
 ];
 
