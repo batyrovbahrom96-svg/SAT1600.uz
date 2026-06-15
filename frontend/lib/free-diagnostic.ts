@@ -281,88 +281,103 @@ export const freeDiagnosticQuestions: DiagnosticQuestion[] = [
   },
   {
     id: "fd-q019",
-    section: "math",
-    topic: "Geometry and Trigonometry",
+    section: "rw",
+    topic: "Rhetorical Synthesis",
     difficulty: "hard",
-    prompt: "In a right triangle, one acute angle measures 30 degrees and the side opposite that angle has length 7. If the hypotenuse has length h, what is h?",
-    choices: ["7", "7sqrt(3)", "14", "21"],
-    correctAnswer: "14",
-    trapType: "30-60-90 ratio error",
-    explanation: "In a 30-60-90 triangle, the side opposite 30 degrees is half the hypotenuse. If that side is 7, then h = 14."
+    prompt:
+      "While researching urban heat, a student took these notes: Light-colored roofs reflect more sunlight than dark roofs. A 2021 study of 38 apartment buildings found that buildings with light-colored roofs used less electricity for cooling in July. The effect was strongest on the top floors. Some cities offer rebates to owners who install reflective roofing. The student wants to emphasize a research finding about reflective roofs. Which choice best uses relevant information from the notes?",
+    choices: [
+      "A 2021 study of 38 apartment buildings found that light-colored roofs reduced July cooling-electricity use, especially on top floors.",
+      "Some cities offer rebates to building owners who install roofs that are light-colored and reflective.",
+      "Dark roofs and light-colored roofs differ in how much sunlight they reflect during hot weather.",
+      "Apartment buildings can have several floors, and the top floors may experience more heat than lower floors."
+    ],
+    correctAnswer: "A 2021 study of 38 apartment buildings found that light-colored roofs reduced July cooling-electricity use, especially on top floors.",
+    trapType: "rhetorical synthesis goal mismatch",
+    explanation: "The goal is to emphasize a research finding, so the correct choice includes the study, the sample of 38 buildings, and the result about reduced cooling-electricity use. The other choices use related notes but do not center the research finding."
   },
   {
     id: "fd-q020",
     section: "rw",
-    topic: "Transitions",
+    topic: "Cross-Text Connections",
     difficulty: "hard",
     prompt:
-      "A group of archaeologists used aerial photographs to identify possible settlement sites in farmland that had not been excavated. The images revealed rectangular patterns in several fields, which might have been traces of walls or paths. ______, when the team later visited the fields, they found pottery fragments near the same patterns, strengthening the case that the marks were human-made.",
-    choices: ["Additionally", "Nevertheless", "Instead", "In contrast"],
-    correctAnswer: "Additionally",
-    trapType: "transition logic mismatch",
-    explanation: "The field visit adds supporting evidence to the aerial images, so Additionally fits. Nevertheless and In contrast imply opposition, while Instead suggests replacement."
+      "Text 1: Some literary scholars argue that the short stories of writer Amara N'Diaye should be read primarily as political works. These scholars note that N'Diaye often wrote about labor strikes, migration laws, and public protests.\n\nText 2: Critic Jonas Bell agrees that N'Diaye's stories include political settings, but he argues that their main achievement is psychological. In Bell's view, the stories are most powerful when they show how private doubts and memories shape characters' decisions.\n\nBased on the texts, how would Bell most likely respond to the scholars described in Text 1?",
+    choices: [
+      "He would say that they overemphasize the political contexts and underemphasize the stories' focus on inner experience.",
+      "He would agree that N'Diaye's stories should be read only as records of public protests.",
+      "He would argue that N'Diaye avoided political topics entirely in order to focus on family life.",
+      "He would claim that the stories are less effective when they describe private doubts and memories."
+    ],
+    correctAnswer: "He would say that they overemphasize the political contexts and underemphasize the stories' focus on inner experience.",
+    trapType: "dual-text disagreement distortion",
+    explanation: "Text 2 says Bell acknowledges political settings but sees the main achievement as psychological. Therefore, he would likely object that Text 1's scholars put too much weight on politics and too little on inner experience."
   },
   {
     id: "fd-q021",
     section: "math",
-    topic: "Statistics and Probability",
-    difficulty: "medium",
-    prompt: "The numbers 4, 6, 8, 10, and 22 have a mean of 10. If 22 is removed, what is the mean of the remaining numbers?",
-    choices: ["6", "7", "8", "10"],
-    correctAnswer: "7",
-    trapType: "mean recalculation error",
-    explanation: "After removing 22, the remaining numbers are 4, 6, 8, and 10. Their sum is 28, and 28 / 4 = 7."
+    topic: "Advanced Math",
+    difficulty: "hard",
+    prompt: "The line y = x + 3 intersects the parabola y = x^2 - 3x - 2 at two points. What is the positive x-coordinate of an intersection point?",
+    choices: ["1", "2", "4", "5"],
+    correctAnswer: "5",
+    trapType: "linear-quadratic system setup error",
+    explanation: "Set the expressions for y equal: x + 3 = x^2 - 3x - 2. Subtract x + 3 from both sides to get x^2 - 4x - 5 = 0. Factor: (x - 5)(x + 1) = 0, so x = 5 or x = -1. The positive x-coordinate is 5."
   },
   {
     id: "fd-q022",
-    section: "rw",
-    topic: "Rhetorical Synthesis",
-    difficulty: "medium",
-    prompt:
-      "While researching urban trees, a student took these notes: Silver maples grow quickly. Their shallow roots can damage sidewalks. Ginkgo trees grow slowly. Ginkgo roots rarely disturb pavement. City planners often choose trees for narrow streets. The student wants to recommend a tree for narrow streets where sidewalk damage is a concern. Which choice best uses relevant information from the notes?",
-    choices: [
-      "Because ginkgo roots rarely disturb pavement, ginkgo trees may be a better choice for narrow streets where sidewalk damage is a concern.",
-      "Silver maples grow quickly, so they are always the best tree for city planners to plant.",
-      "Ginkgo trees grow slowly, and city planners often choose trees for narrow streets.",
-      "Silver maples and ginkgo trees are both used in cities for several different reasons."
-    ],
-    correctAnswer: "Because ginkgo roots rarely disturb pavement, ginkgo trees may be a better choice for narrow streets where sidewalk damage is a concern.",
-    trapType: "irrelevant note selection",
-    explanation: "The goal is to recommend a tree when sidewalk damage matters. The correct answer selects the relevant note about ginkgo roots and connects it to the planning concern."
+    section: "math",
+    topic: "Advanced Math",
+    difficulty: "hard",
+    prompt: "Functions f and g are defined by f(x) = 2x^2 - 3 and g(x) = x - 4. If f(g(a)) = 47 and a > 4, what is the value of a?",
+    choices: ["6", "8", "9", "11"],
+    correctAnswer: "9",
+    trapType: "composite function constraint error",
+    explanation: "Since g(a) = a - 4, f(g(a)) = 2(a - 4)^2 - 3. Set 2(a - 4)^2 - 3 = 47, so 2(a - 4)^2 = 50 and (a - 4)^2 = 25. Thus a - 4 = 5 or -5. The constraint a > 4 gives a = 9."
   },
   {
     id: "fd-q023",
     section: "math",
-    topic: "Statistics and Probability",
+    topic: "Geometry and Trigonometry",
     difficulty: "hard",
-    prompt: "A bag contains 5 red tiles, 3 blue tiles, and 2 green tiles. If one tile is selected at random, what is the probability that the tile is not blue?",
-    choices: ["3/10", "1/2", "7/10", "8/10"],
-    correctAnswer: "7/10",
-    trapType: "complement probability error",
-    explanation: "There are 10 tiles total. Not blue means red or green, which is 5 + 2 = 7 tiles. The probability is 7/10."
+    prompt: "A circle in the xy-plane has equation (x - 2)^2 + (y + 3)^2 = 25. Point P lies on the circle and has x-coordinate 5. If P is above the center of the circle, what is the y-coordinate of P?",
+    choices: ["-7", "-1", "1", "5"],
+    correctAnswer: "1",
+    trapType: "circle standard form sign error",
+    explanation: "The center is (2, -3) and the radius is 5. Substitute x = 5: (5 - 2)^2 + (y + 3)^2 = 25, so 9 + (y + 3)^2 = 25 and (y + 3)^2 = 16. Thus y = 1 or y = -7. Above the center means y > -3, so y = 1."
   },
   {
     id: "fd-q024",
     section: "rw",
-    topic: "Boundaries",
-    difficulty: "medium",
+    topic: "Command of Evidence",
+    difficulty: "hard",
     prompt:
-      "A laboratory assistant recorded the temperature every ten minutes during the trial. The readings stayed within a narrow range, suggesting that the heating system was stable throughout the experiment. Which choice completes the text so that it conforms to Standard English conventions? The assistant checked the sensor twice ___ the trial continued without interruption.",
-    choices: [", and", "; and", "and,", ", but,"],
-    correctAnswer: ", and",
-    trapType: "punctuation boundary error",
-    explanation: "The sentence joins two independent clauses with the coordinating conjunction and, so a comma before and is correct. A semicolon before and is unnecessary, and the other choices create punctuation errors."
+      "A researcher compared the average water use of four greenhouse crops before and after installing a drip-irrigation system.\n\nCrop | Before installation | After installation\nTomatoes | 18 liters/day | 12 liters/day\nCucumbers | 16 liters/day | 13 liters/day\nPeppers | 15 liters/day | 10 liters/day\nLettuce | 10 liters/day | 8 liters/day\n\nThe researcher claims that the system reduced water use for every crop studied, but that the size of the reduction varied by crop. Which choice best supports the claim?",
+    choices: [
+      "All four crops used fewer liters per day after installation, and the reductions ranged from 2 liters per day for lettuce to 6 liters per day for tomatoes.",
+      "Tomatoes used 18 liters per day before installation, which was more than any other crop used before installation.",
+      "After installation, cucumbers used 13 liters per day, which was more than peppers and lettuce used after installation.",
+      "Lettuce used less water than tomatoes both before and after the drip-irrigation system was installed."
+    ],
+    correctAnswer: "All four crops used fewer liters per day after installation, and the reductions ranged from 2 liters per day for lettuce to 6 liters per day for tomatoes.",
+    trapType: "data table evidence mismatch",
+    explanation: "The claim has two parts: every crop used less water, and the reductions varied. The correct choice checks all four before-after pairs and gives different reduction sizes, directly supporting both parts."
   },
   {
     id: "fd-q025",
     section: "math",
-    topic: "Word Problem: Linear Model",
-    difficulty: "medium",
-    prompt: "A printer charges a fixed setup fee plus 900 UZS for each page. A 20-page document costs 23,000 UZS. What is the fixed setup fee?",
-    choices: ["5,000 UZS", "9,000 UZS", "18,000 UZS", "23,900 UZS"],
-    correctAnswer: "5,000 UZS",
-    trapType: "linear model intercept error",
-    explanation: "The page charge is 20 x 900 = 18,000 UZS. Subtract this from the total: 23,000 - 18,000 = 5,000 UZS. The fixed setup fee is the intercept of the linear model."
+    topic: "Advanced Math",
+    difficulty: "hard",
+    prompt: "The function h is defined by h(t) = 800(1.15)^t, where t is the number of years after an initial measurement. Which statement best describes the meaning of 1.15 in this function?",
+    choices: [
+      "The value of h increases by 15% each year.",
+      "The value of h increases by 115% each year.",
+      "The initial value of h is 1.15.",
+      "The value of h increases by 15 units each year."
+    ],
+    correctAnswer: "The value of h increases by 15% each year.",
+    trapType: "exponential percent interpretation error",
+    explanation: "In an exponential model of the form initial value times (1 + r)^t, the base 1.15 means the quantity is multiplied by 1.15 each year. That is a 15% increase each year, not a 115% increase or a constant increase of 15 units."
   }
 ];
 
