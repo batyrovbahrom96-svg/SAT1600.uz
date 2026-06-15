@@ -1,5 +1,6 @@
 export const FULL_MOCK_PROGRESS_KEY = "sattest_full_mock_progress";
 export const FULL_MOCK_RESULTS_KEY = "sattest_full_mock_results";
+export const FULL_MOCK_BANK_VERSION = "2026-06-hard-v2";
 
 export type FullMockSection = "rw" | "math";
 export type FullMockModuleNumber = 1 | 2 | 3 | 4;
@@ -21,6 +22,7 @@ export type FullMockQuestion = {
 };
 
 export type FullMockProgress = {
+  bankVersion?: string;
   startedAt: number;
   currentModule: FullMockModuleNumber;
   currentQuestion: number;
@@ -34,6 +36,7 @@ export type FullMockProgress = {
 };
 
 export type FullMockResult = {
+  bankVersion?: string;
   completedAt: number;
   totalScore: number;
   rwScore: number;
@@ -85,326 +88,706 @@ const mathTopics = [
   "Advanced Algebra",
 ];
 
-const rwPrompts = [
+type PromptSeed = {
+  topic: string;
+  trapType: string;
+  prompt: string;
+  passage?: string;
+  choices: string[];
+  correctAnswer: "A" | "B" | "C" | "D";
+  explanation: string;
+};
+
+const rwCorePrompts: PromptSeed[] = [
   {
     topic: "Words in Context",
-    trapType: "similar-sounding word",
-    prompt: 'As used in the text, what does "clear" most nearly mean?',
-    passage: "The researcher made the relationship clear by comparing two groups under the same conditions.",
-    choices: ["transparent", "simple", "obvious", "understandable"],
-    correctAnswer: "D",
-    explanation: "In this sentence, clear means easy to understand, not physically transparent.",
+    trapType: "near-synonym overreach",
+    passage: "The historian's claim is not that the treaty immediately transformed trade, but that its effects were gradual and contingent on later changes in port regulation.",
+    prompt: 'As used in the text, what does "contingent" most nearly mean?',
+    choices: ["dependent", "accidental", "temporary", "documented"],
+    correctAnswer: "A",
+    explanation: "The effects depended on later regulatory changes, so contingent means dependent.",
   },
   {
     topic: "Command of Evidence",
-    trapType: "unsupported evidence",
-    prompt: "Which choice best supports the claim that the program improved accuracy over time?",
-    passage: "Students first averaged 58% on mixed practice. After two weeks of review and retakes, the same group averaged 74% on a comparable set.",
+    trapType: "wrong comparison",
+    passage: "A study of 120 students compared two review systems. Students using weekly error logs improved from 61% to 78% on matched grammar sets, while students who only reread notes improved from 63% to 68%.",
+    prompt: "Which choice best supports the claim that error logs were associated with a larger improvement than rereading notes?",
     choices: [
-      "Students practiced every day.",
-      "The average increased from 58% to 74% on comparable work.",
-      "The program included review.",
-      "Some students took retakes.",
+      "Both groups began with similar scores.",
+      "The error-log group gained 17 percentage points, while the rereading group gained 5.",
+      "The study included 120 students.",
+      "Rereading notes still produced some improvement.",
     ],
     correctAnswer: "B",
-    explanation: "The score increase on comparable work directly supports improvement.",
+    explanation: "Choice B directly compares the size of the improvement in the two groups.",
   },
   {
     topic: "Main Idea",
-    trapType: "too narrow",
+    trapType: "too narrow summary",
+    passage: "Some coastal cities build higher seawalls after repeated flooding. Others restore wetlands, which absorb storm surge and create wildlife habitat. Planners increasingly argue that the most resilient approach combines engineered barriers with natural buffers.",
     prompt: "Which choice best states the main idea of the text?",
-    passage: "Many cities plant trees for beauty, but the practical benefits are larger: shade reduces heat, roots slow runoff, and green streets can improve walking conditions.",
     choices: [
-      "Trees are mainly decorative.",
-      "Urban trees provide several practical benefits beyond appearance.",
-      "Runoff is the biggest urban problem.",
-      "Walking conditions depend only on shade.",
+      "Wetlands are useful only because they create habitat.",
+      "Coastal resilience may require both built structures and restored ecosystems.",
+      "Seawalls are no longer used by coastal planners.",
+      "Flooding affects every coastal city in the same way.",
     ],
     correctAnswer: "B",
-    explanation: "The passage lists multiple practical benefits, not one narrow effect.",
+    explanation: "The final sentence presents the central claim: combine engineered and natural protection.",
   },
   {
     topic: "Transitions",
     trapType: "wrong relationship",
-    prompt: "Which transition best completes the text?",
-    passage: "The first trial produced inconsistent results. _____, the second trial used a larger sample and tighter controls.",
-    choices: ["Similarly", "For example", "Therefore", "In contrast"],
-    correctAnswer: "D",
-    explanation: "The second trial differs from the first, so contrast is required.",
+    passage: "The first translation of the poem preserved its literal meaning. _____, it flattened the original rhythm, making the poem feel less musical.",
+    prompt: "Which choice completes the text with the most logical transition?",
+    choices: ["For instance", "However", "Similarly", "Therefore"],
+    correctAnswer: "B",
+    explanation: "The second sentence gives a limitation that contrasts with the first sentence's strength.",
   },
   {
     topic: "Rhetorical Synthesis",
-    trapType: "wrong goal",
-    prompt: "The student wants to emphasize a contrast between two findings. Which choice best uses the notes?",
-    passage: "Notes: Study A found that short breaks improved focus. Study B found that breaks longer than 20 minutes reduced return-to-task speed.",
+    trapType: "missed student goal",
+    passage: "Notes: Astronomer Vera Rubin studied galaxy rotation. Stars at galaxy edges moved faster than expected. Her observations supported the existence of dark matter. The student wants to introduce Rubin's contribution to astronomy.",
+    prompt: "Which choice best uses the notes to accomplish the student's goal?",
     choices: [
-      "Both studies examined student focus and break length.",
-      "Although short breaks improved focus, breaks longer than 20 minutes slowed students' return to work.",
-      "Study A was about focus, and Study B was about speed.",
-      "Researchers often study breaks in learning environments.",
+      "Vera Rubin's observations of unexpectedly fast-moving outer stars helped support the existence of dark matter.",
+      "Dark matter is one of several topics studied by astronomers who observe galaxies.",
+      "Some stars at galaxy edges move at speeds that researchers did not expect.",
+      "Rubin studied galaxy rotation, a subject also studied by other astronomers.",
     ],
-    correctAnswer: "B",
-    explanation: "Choice B directly contrasts the positive effect of short breaks with the negative effect of longer breaks.",
+    correctAnswer: "A",
+    explanation: "Choice A names Rubin and explains the significance of her work.",
   },
   {
     topic: "Grammar Precision",
-    trapType: "tense mismatch",
+    trapType: "modifier placement",
+    passage: "To measure tiny vibrations, the engineers installed sensors on the bridge that could detect movements smaller than a millimeter.",
     prompt: "Which choice completes the text so that it conforms to Standard English?",
-    passage: "Although the Dust Bowl was a period of severe drought during the 1930s, dust storms often _____ over 100 million acres of land.",
-    choices: ["affected", "will have affected", "are affecting", "will affect"],
-    correctAnswer: "A",
-    explanation: "The sentence describes a past historical period, so simple past is correct.",
+    choices: [
+      "NO CHANGE",
+      "installed sensors that could detect movements smaller than a millimeter on the bridge",
+      "installed, on the bridge, sensors that could detect movements smaller than a millimeter",
+      "installed sensors on the bridge, detecting movements smaller than a millimeter",
+    ],
+    correctAnswer: "C",
+    explanation: "Choice C clearly places the detecting ability with the sensors, not the bridge.",
   },
   {
     topic: "Dual Text Reasoning",
-    trapType: "confused disagreement",
+    trapType: "point of disagreement",
+    passage: "Text 1: Because digital archives remove fragile documents from public handling, they mainly protect historical materials. Text 2: Digital archives do protect documents, but their larger value is widening access for people who cannot travel to special collections.",
     prompt: "Based on the texts, how would Author 2 most likely respond to Author 1?",
-    passage: "Text 1: Online archives mainly help experts because documents require special training to interpret. Text 2: Online archives help the public too because guided labels can make complex documents usable.",
     choices: [
-      "By agreeing that archives should remain limited to experts",
-      "By arguing that guided labels can make archives useful to nonexperts",
-      "By claiming that labels make archives less accurate",
-      "By saying experts should stop using archives",
+      "By arguing that preservation is not the only major benefit of digital archives",
+      "By denying that fragile documents need protection",
+      "By claiming that special collections should stop digitizing documents",
+      "By suggesting that public access damages all archives",
     ],
-    correctAnswer: "B",
-    explanation: "Author 2 disagrees by saying public access can work when labels guide readers.",
+    correctAnswer: "A",
+    explanation: "Author 2 accepts preservation but says access is the larger value.",
   },
   {
     topic: "Text Structure",
-    trapType: "function error",
+    trapType: "function misread",
+    passage: "Early maps of ocean currents were often based on sailors' reports. Later, researchers used floating instruments that transmitted location data, allowing currents to be measured continuously rather than inferred from scattered observations.",
     prompt: "What is the main purpose of the second sentence?",
-    passage: "Early battery designs stored little energy. By contrast, newer lithium-ion designs hold more charge while weighing less.",
     choices: [
-      "To introduce an opposing claim",
-      "To define a technical term",
-      "To show an improvement over earlier designs",
-      "To question the value of batteries",
+      "To explain a methodological improvement over earlier mapping practices",
+      "To argue that sailors' reports were intentionally false",
+      "To define the term ocean current",
+      "To list the names of researchers who used floating instruments",
     ],
-    correctAnswer: "C",
-    explanation: "The second sentence contrasts newer batteries with earlier weaker designs.",
+    correctAnswer: "A",
+    explanation: "The sentence shows how later measurement improved on earlier inferred reports.",
   },
   {
     topic: "Quantitative Evidence",
-    trapType: "misread data",
-    prompt: "Which statement is supported by the data?",
-    passage: "Table: Club members in 2024 - Debate 32, Robotics 48, Music 40.",
+    trapType: "rate versus total",
+    passage: "Table: Compost collected by three schools. North: 400 kg from 200 students. East: 330 kg from 110 students. West: 360 kg from 180 students.",
+    prompt: "Which statement is best supported by the table?",
     choices: [
-      "Robotics had the most members.",
-      "Debate had more members than Music.",
-      "Music and Debate had the same membership.",
-      "Robotics had fewer than 40 members.",
+      "North collected the most compost per student.",
+      "East collected the most compost per student.",
+      "West collected the least total compost.",
+      "All three schools collected the same amount per student.",
+    ],
+    correctAnswer: "B",
+    explanation: "East collected 330/110 = 3 kg per student, more than North or West.",
+  },
+];
+
+const rwExpansionPrompts: PromptSeed[] = [
+  {
+    topic: "Words in Context",
+    trapType: "connotation trap",
+    passage: "The committee did not reject the proposal outright; instead, it tabled the measure until members could review the budget data.",
+    prompt: 'As used in the text, what does "tabled" most nearly mean?',
+    choices: ["displayed", "postponed", "calculated", "approved"],
+    correctAnswer: "B",
+    explanation: "In a committee context, tabled means postponed for later consideration.",
+  },
+  {
+    topic: "Command of Evidence",
+    trapType: "unsupported inference",
+    passage: "Researchers tested two coatings on solar panels. Coating X increased output by 3% in dry conditions but had no effect in humid conditions. Coating Y increased output by 2% in both dry and humid conditions.",
+    prompt: "Which choice best supports the claim that Coating Y may be more reliable across climates?",
+    choices: [
+      "Coating X produced the highest single-condition improvement.",
+      "Coating Y improved output in both dry and humid conditions.",
+      "Both coatings were tested on solar panels.",
+      "Humid conditions can affect some materials.",
+    ],
+    correctAnswer: "B",
+    explanation: "Reliability across climates is supported by improvement in both tested conditions.",
+  },
+  {
+    topic: "Main Idea",
+    trapType: "opposite emphasis",
+    passage: "For decades, researchers treated sleep as a passive state. Newer work shows that the sleeping brain consolidates memories, regulates emotion, and clears metabolic waste, suggesting that sleep is an active biological process.",
+    prompt: "Which choice best states the main idea of the text?",
+    choices: [
+      "Sleep is now understood as an active process with several important functions.",
+      "Researchers no longer study sleep.",
+      "Metabolic waste is the only reason people need sleep.",
+      "Older sleep research was more accurate than newer work.",
     ],
     correctAnswer: "A",
-    explanation: "Robotics has 48 members, the highest number in the table.",
-  },
-];
-
-const mathPrompts = [
-  {
-    topic: "Linear Equations",
-    trapType: "operation reversal",
-    prompt: "If 3x + 7 = 28, what is the value of x?",
-    choices: ["5", "7", "9", "11"],
-    correctAnswer: "B",
-    explanation: "Subtract 7 to get 3x = 21, so x = 7.",
+    explanation: "The text contrasts an old view with newer evidence that sleep is active and functional.",
   },
   {
-    topic: "Systems of Equations",
-    trapType: "substitution error",
-    prompt: "If y = x + 3 and y = 2x - 5, what is x?",
-    choices: ["4", "6", "8", "10"],
-    correctAnswer: "C",
-    explanation: "Set x + 3 = 2x - 5, so x = 8.",
-  },
-  {
-    topic: "Quadratics",
-    trapType: "factoring trap",
-    prompt: "What are the solutions to x^2 - 5x + 6 = 0?",
-    choices: ["1 and 6", "2 and 3", "-2 and -3", "-1 and -6"],
-    correctAnswer: "B",
-    explanation: "The quadratic factors as (x - 2)(x - 3), so x = 2 or 3.",
-  },
-  {
-    topic: "Functions",
-    trapType: "input-output swap",
-    prompt: "If f(x) = 2x^2 - 1, what is f(3)?",
-    choices: ["11", "15", "17", "18"],
-    correctAnswer: "C",
-    explanation: "f(3) = 2(9) - 1 = 17.",
-  },
-  {
-    topic: "Circle Equations",
-    trapType: "radius squared",
-    prompt: "The circle (x - 2)^2 + (y + 1)^2 = 25 has radius",
-    choices: ["5", "10", "25", "50"],
+    topic: "Transitions",
+    trapType: "cause-effect confusion",
+    passage: "The clay tablets were buried for centuries. _____, many preserved details about ordinary trade that rarely appear in royal inscriptions.",
+    prompt: "Which choice completes the text with the most logical transition?",
+    choices: ["Nevertheless", "Consequently", "For example", "Similarly"],
     correctAnswer: "A",
-    explanation: "The right side is r^2, so r = 5.",
+    explanation: "Despite being buried for centuries, the tablets preserved useful details.",
   },
   {
-    topic: "Exponential Models",
-    trapType: "percent direction",
-    prompt: "A value increases by 12% each year. Which expression gives the value after t years if the initial value is 80?",
-    choices: ["80(0.12)^t", "80(1.12)^t", "80 + 12t", "80(0.88)^t"],
-    correctAnswer: "B",
-    explanation: "A 12% increase multiplies by 1.12 each year.",
-  },
-  {
-    topic: "Ratios and Percentages",
-    trapType: "base percent error",
-    prompt: "A price of 240 is reduced by 25%. What is the new price?",
-    choices: ["60", "120", "180", "215"],
-    correctAnswer: "C",
-    explanation: "25% of 240 is 60, so the new price is 180.",
-  },
-  {
-    topic: "Advanced Algebra",
-    trapType: "distribution error",
-    prompt: "If 2(a + 4) = 18, what is a?",
-    choices: ["5", "7", "9", "11"],
-    correctAnswer: "A",
-    explanation: "Divide by 2 to get a + 4 = 9, so a = 5.",
-  },
-];
-
-const hardItems: FullMockQuestion[] = [
-  {
-    id: "rw2-hard-19",
-    section: "rw",
-    module: 2,
-    variant: "hard",
     topic: "Rhetorical Synthesis",
-    difficulty: "medium-hard",
-    trapType: "wrong synthesis goal",
-    passage: "Notes: Dr. Kim studied urban gardens in Seoul. Gardens lowered nearby surface temperatures by 1.8 C. Gardens with tree cover had the strongest effect. The student wants to emphasize the condition that made the effect strongest.",
+    trapType: "irrelevant detail",
+    passage: "Notes: The Arctic tern migrates from the Arctic to the Antarctic. Its round-trip journey can exceed 70,000 kilometers. No other bird is known to migrate farther. The student wants to emphasize the extremity of the tern's migration.",
+    prompt: "Which choice best uses the notes to accomplish the student's goal?",
+    choices: [
+      "The Arctic tern travels from the Arctic to the Antarctic and may complete a round-trip migration of over 70,000 kilometers, farther than any other known bird.",
+      "The Arctic tern is a bird that lives in cold regions during parts of the year.",
+      "Many birds migrate, but scientists track the Arctic tern especially carefully.",
+      "The Arctic and Antarctic are both important habitats for migratory animals.",
+    ],
+    correctAnswer: "A",
+    explanation: "Choice A emphasizes distance and the comparison to all other known birds.",
+  },
+  {
+    topic: "Grammar Precision",
+    trapType: "subject-verb agreement",
+    passage: "The collection of essays, along with the editor's notes and timeline, _____ a detailed view of the author's development.",
+    prompt: "Which choice completes the text so that it conforms to Standard English?",
+    choices: ["provide", "provides", "have provided", "were providing"],
+    correctAnswer: "B",
+    explanation: "The singular subject collection takes the singular verb provides.",
+  },
+  {
+    topic: "Dual Text Reasoning",
+    trapType: "overstated agreement",
+    passage: "Text 1: Public bike-share programs reduce car trips only when stations are placed near transit stops. Text 2: Station placement matters, but pricing and bike-lane safety can be just as important in whether riders use bike-share.",
+    prompt: "How would Author 2 most likely respond to Author 1?",
+    choices: [
+      "By saying station placement is one factor but not the only important factor",
+      "By arguing that station placement has no effect",
+      "By claiming that bike-share programs always reduce car trips",
+      "By denying that transit stops exist in cities",
+    ],
+    correctAnswer: "A",
+    explanation: "Text 2 broadens the explanation beyond station placement.",
+  },
+  {
+    topic: "Text Structure",
+    trapType: "role of evidence",
+    passage: "The novelist's early reviews were mixed. One critic praised the vivid dialogue but found the plot too loose; another admired the structure but disliked the dialogue. These disagreements suggest that the novel resisted easy classification.",
+    prompt: "What function do the critics' responses serve in the text?",
+    choices: [
+      "They illustrate the mixed reception mentioned in the first sentence.",
+      "They prove that the novel was never published.",
+      "They explain how the novelist revised the book.",
+      "They show that all critics disliked the same feature.",
+    ],
+    correctAnswer: "A",
+    explanation: "The two responses give concrete examples of mixed reviews.",
+  },
+  {
+    topic: "Quantitative Evidence",
+    trapType: "incorrect trend",
+    passage: "Table: Average battery life after 500 charges. Model A: 82% capacity. Model B: 76% capacity. Model C: 88% capacity.",
+    prompt: "Which choice best describes the data?",
+    choices: [
+      "Model C retained the greatest capacity after 500 charges.",
+      "Model B retained more capacity than Model A.",
+      "All three models retained less than 80% capacity.",
+      "Model A and Model C retained the same capacity.",
+    ],
+    correctAnswer: "A",
+    explanation: "Model C's 88% is higher than Model A's 82% and Model B's 76%.",
+  },
+  {
+    topic: "Rhetorical Synthesis",
+    trapType: "wrong emphasis",
+    passage: "Notes: Biologist Nalini Nadkarni studies forest canopies. She developed methods for climbing into treetops safely. Her work revealed that canopy ecosystems contain diverse plants, insects, and fungi. The student wants to emphasize the scientific impact of Nadkarni's methods.",
     prompt: "Which choice best accomplishes the student's goal?",
     choices: [
-      { label: "A", text: "Dr. Kim studied urban gardens in Seoul and measured surface temperatures." },
-      { label: "B", text: "Urban gardens lowered nearby surface temperatures, especially when they included tree cover." },
-      { label: "C", text: "The study found that some gardens changed surface temperatures by 1.8 C." },
-      { label: "D", text: "Urban gardens are often studied because cities can become hot in summer." },
+      "By developing safe ways to study treetops directly, Nadkarni helped reveal the diversity of canopy ecosystems.",
+      "Nalini Nadkarni is a biologist who climbs trees as part of her work.",
+      "Forests contain many species, including plants, insects, and fungi.",
+      "Scientists sometimes need special equipment to work safely.",
+    ],
+    correctAnswer: "A",
+    explanation: "Choice A connects the method to the discovery, which is the scientific impact.",
+  },
+  {
+    topic: "Command of Evidence",
+    trapType: "confusing absolute and relative change",
+    passage: "In 2010, Library P had 8,000 visits and Library Q had 5,000. By 2020, Library P had 10,000 visits and Library Q had 8,000.",
+    prompt: "Which statement is supported by the data?",
+    choices: [
+      "Library Q had a larger percentage increase in visits than Library P.",
+      "Library P had fewer visits than Library Q in 2020.",
+      "Both libraries increased by exactly 3,000 visits.",
+      "Library P's visits doubled between 2010 and 2020.",
+    ],
+    correctAnswer: "A",
+    explanation: "Q rose 3,000 from 5,000, a 60% increase; P rose 2,000 from 8,000, a 25% increase.",
+  },
+  {
+    topic: "Grammar Precision",
+    trapType: "punctuation boundary",
+    passage: "The archive contains letters, maps, and field notebooks _____ all of which help researchers reconstruct the expedition.",
+    prompt: "Which choice completes the text so that it conforms to Standard English?",
+    choices: [",", ";", ":", "—"],
+    correctAnswer: "D",
+    explanation: "A dash can introduce the summarizing phrase all of which; a comma alone creates a boundary problem.",
+  },
+  {
+    topic: "Words in Context",
+    trapType: "discipline-specific meaning",
+    passage: "The economist called the model elegant because it explained several patterns with only two assumptions.",
+    prompt: 'As used in the text, what does "elegant" most nearly mean?',
+    choices: ["fashionable", "simple and effective", "expensive", "decorative"],
+    correctAnswer: "B",
+    explanation: "In this academic context, elegant means efficient and explanatory, not stylish.",
+  },
+  {
+    topic: "Text Structure",
+    trapType: "misread contrast",
+    passage: "The new microscope did not merely enlarge images. It also allowed researchers to observe living cells for longer periods without damaging them.",
+    prompt: "What is the function of the second sentence?",
+    choices: [
+      "It adds an important capability beyond magnification.",
+      "It rejects the claim that microscopes enlarge images.",
+      "It defines living cells.",
+      "It describes damage caused by every microscope.",
+    ],
+    correctAnswer: "A",
+    explanation: "The phrase not merely signals that the second sentence adds another benefit.",
+  },
+  {
+    topic: "Transitions",
+    trapType: "example versus result",
+    passage: "The artist mixed crushed minerals into the paint. _____, some areas of the mural still sparkle when light strikes them.",
+    prompt: "Which choice completes the text with the most logical transition?",
+    choices: ["As a result", "In contrast", "For example", "Nevertheless"],
+    correctAnswer: "A",
+    explanation: "The sparkle is a result of the mineral mixture.",
+  },
+  {
+    topic: "Main Idea",
+    trapType: "too broad claim",
+    passage: "Artificial reefs can create habitat for fish, but poorly planned reefs may disrupt existing ecosystems. Marine planners therefore evaluate local currents, species, and seafloor conditions before construction.",
+    prompt: "Which choice best states the main idea?",
+    choices: [
+      "Artificial reefs can be useful, but they require careful planning.",
+      "Artificial reefs always damage ecosystems.",
+      "Marine planners no longer build reefs.",
+      "Currents are the only factor in reef construction.",
+    ],
+    correctAnswer: "A",
+    explanation: "The text balances potential benefit with the need for careful evaluation.",
+  },
+  {
+    topic: "Dual Text Reasoning",
+    trapType: "confused stance",
+    passage: "Text 1: Rewilding farmland should prioritize large mammals because they reshape entire landscapes. Text 2: Large mammals can matter, but insects and soil organisms often restore ecosystem functions before visible landscape changes occur.",
+    prompt: "What would Author 2 most likely criticize about Author 1's claim?",
+    choices: [
+      "It overlooks less visible organisms that can be essential to restoration.",
+      "It gives too much attention to insects and soil organisms.",
+      "It denies that ecosystems can change over time.",
+      "It claims that farmland never supports mammals.",
+    ],
+    correctAnswer: "A",
+    explanation: "Text 2 argues that Author 1's focus is too narrow.",
+  },
+  {
+    topic: "Quantitative Evidence",
+    trapType: "misread smallest difference",
+    passage: "Table: Median commute times. City A: 31 minutes. City B: 28 minutes. City C: 43 minutes. City D: 35 minutes.",
+    prompt: "Which two cities have the most similar median commute times?",
+    choices: ["A and B", "A and C", "B and D", "C and D"],
+    correctAnswer: "A",
+    explanation: "A and B differ by 3 minutes, less than the other listed pairs.",
+  },
+];
+
+const rwHardPrompts: PromptSeed[] = [
+  ...rwCorePrompts.slice(0, 9),
+  ...rwExpansionPrompts.slice(0, 9),
+  {
+    topic: "Rhetorical Synthesis",
+    trapType: "wrong synthesis goal",
+    passage: "Notes: Dr. Kim studied urban gardens in Seoul. Gardens lowered nearby surface temperatures by 1.8 C on average. Gardens with tree cover had the strongest cooling effect. The student wants to emphasize the condition that made the effect strongest.",
+    prompt: "Which choice best accomplishes the student's goal?",
+    choices: [
+      "Dr. Kim studied urban gardens in Seoul and measured surface temperatures.",
+      "Urban gardens lowered nearby surface temperatures, especially when they included tree cover.",
+      "The study found that some gardens changed surface temperatures by 1.8 C.",
+      "Urban gardens are often studied because cities can become hot in summer.",
     ],
     correctAnswer: "B",
     explanation: "Choice B includes both the result and the condition that strengthened it.",
   },
   {
-    id: "rw2-hard-20",
-    section: "rw",
-    module: 2,
-    variant: "hard",
     topic: "Dual Text Reasoning",
-    difficulty: "medium-hard",
     trapType: "missed point of disagreement",
     passage: "Text 1: Museum audio guides reduce careful looking because visitors focus on narration instead of visual details. Text 2: Audio guides can deepen looking when they ask visitors to inspect specific visual evidence before giving interpretation.",
     prompt: "What is the main point of disagreement between the authors?",
     choices: [
-      { label: "A", text: "Whether museums should display visual art" },
-      { label: "B", text: "Whether audio guides necessarily reduce visitors' attention to visual details" },
-      { label: "C", text: "Whether visitors prefer audio or written labels" },
-      { label: "D", text: "Whether interpretation is possible without trained experts" },
+      "Whether museums should display visual art",
+      "Whether audio guides necessarily reduce visitors' attention to visual details",
+      "Whether visitors prefer audio or written labels",
+      "Whether interpretation is possible without trained experts",
     ],
     correctAnswer: "B",
     explanation: "Text 1 says guides reduce looking; Text 2 says guides can improve looking if designed well.",
   },
   {
-    id: "math2-hard-19",
-    section: "math",
-    module: 4,
-    variant: "hard",
-    topic: "Systems of Equations",
-    difficulty: "medium-hard",
-    trapType: "linear-quadratic substitution",
-    passage: "A line and a parabola intersect at two points.",
-    prompt: "If y = x + 2 and y = x^2 - 4, what is the positive x-coordinate of an intersection point?",
-    choices: [
-      { label: "A", text: "2" },
-      { label: "B", text: "3" },
-      { label: "C", text: "4" },
-      { label: "D", text: "6" },
-    ],
-    correctAnswer: "B",
-    explanation: "Set x + 2 = x^2 - 4. Then x^2 - x - 6 = 0, so x = 3 or -2.",
-  },
-  {
-    id: "math2-hard-20",
-    section: "math",
-    module: 4,
-    variant: "hard",
-    topic: "Functions",
-    difficulty: "hard",
-    trapType: "composite function constraint",
-    prompt: "Let f(x) = 2x + 5 and g(x) = x^2 - 3. If f(g(k)) = 17 and k > 0, what is k?",
-    choices: [
-      { label: "A", text: "2" },
-      { label: "B", text: "3" },
-      { label: "C", text: "4" },
-      { label: "D", text: "5" },
-    ],
-    correctAnswer: "B",
-    explanation: "2(k^2 - 3) + 5 = 17, so 2k^2 - 1 = 17, k^2 = 9, and k = 3 because k is positive.",
-  },
-  {
-    id: "math2-hard-21",
-    section: "math",
-    module: 4,
-    variant: "hard",
-    topic: "Circle Equations",
-    difficulty: "hard",
-    trapType: "standard form point test",
-    prompt: "A circle has center (3, -2) and passes through (7, 1). Which equation represents the circle?",
-    choices: [
-      { label: "A", text: "(x - 3)^2 + (y + 2)^2 = 25" },
-      { label: "B", text: "(x + 3)^2 + (y - 2)^2 = 25" },
-      { label: "C", text: "(x - 3)^2 + (y + 2)^2 = 5" },
-      { label: "D", text: "(x - 7)^2 + (y - 1)^2 = 25" },
-    ],
-    correctAnswer: "A",
-    explanation: "The radius squared is (7 - 3)^2 + (1 + 2)^2 = 16 + 9 = 25.",
-  },
-  {
-    id: "rw2-hard-24",
-    section: "rw",
-    module: 2,
-    variant: "hard",
     topic: "Command of Evidence",
-    difficulty: "hard",
     trapType: "table comparison error",
     passage: "Table: Average minutes of daily reading and vocabulary gains. Group A: 12 minutes, 4-point gain. Group B: 24 minutes, 9-point gain. Group C: 30 minutes, 10-point gain.",
     prompt: "Which statement is best supported by the table?",
     choices: [
-      { label: "A", text: "Vocabulary gains rose as average daily reading time increased, though the increase from Group B to C was small." },
-      { label: "B", text: "Group C read less than Group B but gained more vocabulary points." },
-      { label: "C", text: "Reading time had no relationship to vocabulary gains." },
-      { label: "D", text: "Group A gained more vocabulary points per minute than every other group." },
+      "Vocabulary gains rose as average daily reading time increased, though the increase from Group B to C was small.",
+      "Group C read less than Group B but gained more vocabulary points.",
+      "Reading time had no relationship to vocabulary gains.",
+      "Group A gained more vocabulary points per minute than every other group.",
     ],
     correctAnswer: "A",
     explanation: "The table shows gains increasing from 4 to 9 to 10 as reading time increases.",
   },
   {
-    id: "math2-hard-22",
-    section: "math",
-    module: 4,
-    variant: "hard",
+    topic: "Rhetorical Synthesis",
+    trapType: "audience mismatch",
+    passage: "Notes: Engineer Fazlur Rahman Khan designed structural systems for tall buildings. His tube-frame design reduced the amount of steel needed. The John Hancock Center used this approach. The student wants to explain why Khan's design mattered to architects.",
+    prompt: "Which choice best uses the notes to accomplish the student's goal?",
+    choices: [
+      "Khan's tube-frame design mattered because it let architects build very tall structures with less steel.",
+      "The John Hancock Center is a tall building that used an engineering design.",
+      "Fazlur Rahman Khan was an engineer whose work involved buildings.",
+      "Architects and engineers often work together on large construction projects.",
+    ],
+    correctAnswer: "A",
+    explanation: "Choice A explains the significance of the design for architecture.",
+  },
+  {
+    topic: "Grammar Precision",
+    trapType: "logical comparison",
+    passage: "Unlike those of most desert plants, the leaves of the creosote bush are coated with a resin that helps reduce water loss.",
+    prompt: "Which choice best maintains the sentence's logical comparison?",
+    choices: [
+      "NO CHANGE",
+      "Unlike most desert plants, the leaves of the creosote bush",
+      "Unlike the leaves of most desert plants, the creosote bush",
+      "Unlike most desert plant leaves, the creosote bush's resin",
+    ],
+    correctAnswer: "A",
+    explanation: "The sentence compares leaves with leaves, which is logical.",
+  },
+  {
+    topic: "Transitions",
+    trapType: "subtle concession",
+    passage: "The survey included thousands of participants, giving it statistical power. _____, because all participants were volunteers, the findings may not represent the entire population.",
+    prompt: "Which choice completes the text with the most logical transition?",
+    choices: ["Moreover", "Nevertheless", "For instance", "Accordingly"],
+    correctAnswer: "B",
+    explanation: "The second sentence introduces a limitation despite the study's strength.",
+  },
+  {
+    topic: "Words in Context",
+    trapType: "academic nuance",
+    passage: "The new evidence did not overturn the existing theory; rather, it refined the theory by identifying the conditions under which its predictions fail.",
+    prompt: 'As used in the text, what does "refined" most nearly mean?',
+    choices: ["made more precise", "made more polite", "rejected completely", "repeated exactly"],
+    correctAnswer: "A",
+    explanation: "The evidence makes the theory more precise by defining its limits.",
+  },
+  {
+    topic: "Text Structure",
+    trapType: "purpose of qualification",
+    passage: "Researchers once assumed that all tool use in crows was learned by imitation. However, experiments with young crows raised without adult models show that some tool behaviors can emerge without direct teaching.",
+    prompt: "What is the function of the second sentence?",
+    choices: [
+      "It qualifies an earlier assumption by presenting evidence against its universality.",
+      "It proves that adult crows never use tools.",
+      "It explains why imitation is impossible to study.",
+      "It defines the term tool behavior.",
+    ],
+    correctAnswer: "A",
+    explanation: "The experiments show that the original assumption is not always true.",
+  },
+  {
+    topic: "Quantitative Evidence",
+    trapType: "conditional interpretation",
+    passage: "Table: Percent of seedlings surviving after 30 days. Full shade: 42%. Partial shade: 71%. Full sun: 64%. Partial shade with mulch: 83%.",
+    prompt: "Which claim is best supported by the data?",
+    choices: [
+      "Mulch under partial shade was associated with the highest survival rate.",
+      "Full shade produced higher survival than full sun.",
+      "Partial shade without mulch produced the lowest survival.",
+      "All light conditions produced survival rates above 70%.",
+    ],
+    correctAnswer: "A",
+    explanation: "The highest value in the table is 83% for partial shade with mulch.",
+  },
+];
+
+const mathCorePrompts: PromptSeed[] = [
+  {
+    topic: "Linear Equations",
+    trapType: "operation reversal",
+    prompt: "If 5(2x - 3) - 4 = 3x + 23, what is the value of x?",
+    choices: ["4", "5", "6", "7"],
+    correctAnswer: "C",
+    explanation: "10x - 19 = 3x + 23, so 7x = 42 and x = 6.",
+  },
+  {
+    topic: "Systems of Equations",
+    trapType: "substitution error",
+    prompt: "The system 2x + 3y = 19 and x - y = 2 has solution (x, y). What is x?",
+    choices: ["3", "4", "5", "7"],
+    correctAnswer: "C",
+    explanation: "From x = y + 2. Substitute: 2(y + 2) + 3y = 19, so y = 3 and x = 5.",
+  },
+  {
+    topic: "Quadratics",
+    trapType: "factoring trap",
+    prompt: "If x^2 - 8x + 7 = 0, what is the greater solution?",
+    choices: ["1", "3", "7", "8"],
+    correctAnswer: "C",
+    explanation: "The expression factors as (x - 1)(x - 7), so the greater solution is 7.",
+  },
+  {
+    topic: "Functions",
+    trapType: "input-output swap",
+    prompt: "If f(x) = x^2 - 4x + 9, what is f(6) - f(2)?",
+    choices: ["0", "8", "12", "16"],
+    correctAnswer: "D",
+    explanation: "f(6)=21 and f(2)=5, so the difference is 16.",
+  },
+  {
+    topic: "Circle Equations",
+    trapType: "radius squared",
+    prompt: "A circle has equation (x + 4)^2 + (y - 3)^2 = 49. What is its radius?",
+    choices: ["7", "14", "49", "98"],
+    correctAnswer: "A",
+    explanation: "The right side is r^2, so r = 7.",
+  },
+  {
     topic: "Exponential Models",
-    difficulty: "very-hard",
+    trapType: "percent direction",
+    prompt: "A bacteria culture has 1,200 cells and grows by 18% each hour. Which expression represents the number of cells after t hours?",
+    choices: ["1200(0.18)^t", "1200(1.18)^t", "1200 + 18t", "1200(0.82)^t"],
+    correctAnswer: "B",
+    explanation: "An 18% increase multiplies by 1.18 each hour.",
+  },
+  {
+    topic: "Ratios and Percentages",
+    trapType: "base percent error",
+    prompt: "A jacket's price is increased by 20% and then discounted by 20%. If the original price was 100, what is the final price?",
+    choices: ["80", "96", "100", "104"],
+    correctAnswer: "B",
+    explanation: "After the increase the price is 120; 20% off 120 gives 96.",
+  },
+  {
+    topic: "Advanced Algebra",
+    trapType: "distribution error",
+    prompt: "If 3(a - 2) + 2(a + 5) = 29, what is a?",
+    choices: ["3", "4", "5", "6"],
+    correctAnswer: "C",
+    explanation: "3a - 6 + 2a + 10 = 29, so 5a + 4 = 29 and a = 5.",
+  },
+  {
+    topic: "Linear Equations",
+    trapType: "slope intercept trap",
+    prompt: "A line passes through (2, 9) and has slope -3. What is the y-intercept?",
+    choices: ["3", "9", "12", "15"],
+    correctAnswer: "D",
+    explanation: "Using y = mx + b: 9 = -3(2) + b, so b = 15.",
+  },
+  {
+    topic: "Systems of Equations",
+    trapType: "elimination sign error",
+    prompt: "If 4x - y = 11 and 2x + y = 13, what is x + y?",
+    choices: ["7", "8", "9", "10"],
+    correctAnswer: "C",
+    explanation: "Adding gives 6x = 24, so x = 4. Then y = 5, and x + y = 9.",
+  },
+  {
+    topic: "Quadratics",
+    trapType: "vertex confusion",
+    prompt: "The function f(x) = (x - 5)^2 - 11 has a minimum value of",
+    choices: ["-11", "-5", "5", "11"],
+    correctAnswer: "A",
+    explanation: "The squared term is minimized at 0, so the minimum value is -11.",
+  },
+  {
+    topic: "Functions",
+    trapType: "composition order",
+    prompt: "If f(x) = 3x - 1 and g(x) = x + 4, what is f(g(2))?",
+    choices: ["9", "13", "17", "21"],
+    correctAnswer: "C",
+    explanation: "g(2)=6, and f(6)=18-1=17.",
+  },
+  {
+    topic: "Circle Equations",
+    trapType: "center sign",
+    prompt: "What is the center of the circle (x - 6)^2 + (y + 2)^2 = 36?",
+    choices: ["(6, -2)", "(-6, 2)", "(6, 2)", "(-6, -2)"],
+    correctAnswer: "A",
+    explanation: "The standard form gives center (6, -2).",
+  },
+  {
+    topic: "Exponential Models",
+    trapType: "initial value error",
+    prompt: "The function P(t)=750(1.04)^t models a population after t years. What is P(0)?",
+    choices: ["0", "4", "750", "780"],
+    correctAnswer: "C",
+    explanation: "At t=0, the exponential factor is 1, so the initial value is 750.",
+  },
+  {
+    topic: "Ratios and Percentages",
+    trapType: "part-whole reversal",
+    prompt: "In a class, the ratio of juniors to seniors is 5 to 7. If there are 36 students total, how many are seniors?",
+    choices: ["15", "18", "21", "24"],
+    correctAnswer: "C",
+    explanation: "There are 12 ratio parts, so each part is 3 students. Seniors: 7*3=21.",
+  },
+  {
+    topic: "Advanced Algebra",
+    trapType: "fraction equation",
+    prompt: "If (x + 3)/4 = (2x - 1)/7, what is x?",
+    choices: ["-25", "-17", "17", "25"],
+    correctAnswer: "D",
+    explanation: "7x + 21 = 8x - 4, so x = 25.",
+  },
+  {
+    topic: "Linear Equations",
+    trapType: "unit rate trap",
+    prompt: "A taxi charges 12,000 UZS plus 3,500 UZS per kilometer. If a ride costs 43,500 UZS, how many kilometers was the ride?",
+    choices: ["7", "8", "9", "10"],
+    correctAnswer: "C",
+    explanation: "Subtract 12,000 to get 31,500; divide by 3,500 to get 9.",
+  },
+  {
+    topic: "Systems of Equations",
+    trapType: "parameter interpretation",
+    prompt: "For what value of k does the system y = 2x + k and y = -x + 9 have solution x = 3?",
+    choices: ["0", "2", "3", "6"],
+    correctAnswer: "A",
+    explanation: "At x=3, the second line gives y=6. Then 6=2(3)+k, so k=0.",
+  },
+  {
+    topic: "Quadratics",
+    trapType: "discriminant reasoning",
+    prompt: "Which equation has exactly one real solution?",
+    choices: ["x^2 - 6x + 9 = 0", "x^2 - 5x + 6 = 0", "x^2 + x - 6 = 0", "x^2 - 9 = 0"],
+    correctAnswer: "A",
+    explanation: "x^2 - 6x + 9 = (x - 3)^2, so it has one real solution.",
+  },
+  {
+    topic: "Functions",
+    trapType: "inverse relation trap",
+    prompt: "If h(x)=4x+7, what value of x makes h(x)=31?",
+    choices: ["4", "5", "6", "7"],
+    correctAnswer: "C",
+    explanation: "4x + 7 = 31, so x = 6.",
+  },
+  {
+    topic: "Circle Equations",
+    trapType: "distance formula",
+    prompt: "A circle has center (-1, 4) and radius 5. Which point lies on the circle?",
+    choices: ["(2, 8)", "(4, 4)", "(-1, 10)", "(-6, -2)"],
+    correctAnswer: "A",
+    explanation: "The distance from (-1,4) to (2,8) is sqrt(3^2+4^2)=5.",
+  },
+  {
+    topic: "Exponential Models",
+    trapType: "decay factor",
+    prompt: "A quantity decreases by 9% each month. Which factor should multiply the quantity each month?",
+    choices: ["0.09", "0.91", "1.09", "9"],
+    correctAnswer: "B",
+    explanation: "If 9% is lost, 91% remains, so the multiplier is 0.91.",
+  },
+  {
+    topic: "Advanced Algebra",
+    trapType: "equivalent expression",
+    prompt: "Which expression is equivalent to (x^2 - 9)/(x - 3), for x not equal to 3?",
+    choices: ["x - 3", "x + 3", "x^2 + 3", "3x"],
+    correctAnswer: "B",
+    explanation: "x^2 - 9 = (x - 3)(x + 3), so the expression simplifies to x + 3.",
+  },
+];
+
+const mathHardPrompts: PromptSeed[] = [
+  ...mathCorePrompts.slice(0, 18),
+  {
+    topic: "Systems of Equations",
+    trapType: "linear-quadratic substitution",
+    passage: "A line and a parabola intersect at two points.",
+    prompt: "If y = x + 2 and y = x^2 - 4, what is the positive x-coordinate of an intersection point?",
+    choices: ["2", "3", "4", "6"],
+    correctAnswer: "B",
+    explanation: "Set x + 2 = x^2 - 4. Then x^2 - x - 6 = 0, so x = 3 or -2.",
+  },
+  {
+    topic: "Functions",
+    trapType: "composite function constraint",
+    prompt: "Let f(x) = 2x + 5 and g(x) = x^2 - 3. If f(g(k)) = 17 and k > 0, what is k?",
+    choices: ["2", "3", "4", "5"],
+    correctAnswer: "B",
+    explanation: "2(k^2 - 3) + 5 = 17, so 2k^2 - 1 = 17, k^2 = 9, and k = 3 because k is positive.",
+  },
+  {
+    topic: "Circle Equations",
+    trapType: "standard form point test",
+    prompt: "A circle has center (3, -2) and passes through (7, 1). Which equation represents the circle?",
+    choices: ["(x - 3)^2 + (y + 2)^2 = 25", "(x + 3)^2 + (y - 2)^2 = 25", "(x - 3)^2 + (y + 2)^2 = 5", "(x - 7)^2 + (y - 1)^2 = 25"],
+    correctAnswer: "A",
+    explanation: "The radius squared is (7 - 3)^2 + (1 + 2)^2 = 16 + 9 = 25.",
+  },
+  {
+    topic: "Exponential Models",
     trapType: "percentage interpretation",
     prompt: "The function h(t) = 500(0.84)^t models a quantity t years after measurement begins. Which statement best describes the quantity?",
-    choices: [
-      { label: "A", text: "It starts at 84 and increases by 500 each year." },
-      { label: "B", text: "It starts at 500 and decreases by 16% each year." },
-      { label: "C", text: "It starts at 500 and decreases by 84% each year." },
-      { label: "D", text: "It starts at 500 and increases by 16% each year." },
-    ],
+    choices: ["It starts at 84 and increases by 500 each year.", "It starts at 500 and decreases by 16% each year.", "It starts at 500 and decreases by 84% each year.", "It starts at 500 and increases by 16% each year."],
     correctAnswer: "B",
     explanation: "A factor of 0.84 means 84% remains each year, so the decrease is 16%.",
   },
 ];
 
-function makeChoices(values: string[], correctAnswer: string): FullMockChoice[] {
+function makeChoices(values: string[]): FullMockChoice[] {
   return values.map((text, index) => ({ label: ["A", "B", "C", "D"][index] as FullMockChoice["label"], text }));
 }
 
 function buildQuestion(
-  source: typeof rwPrompts[number] | typeof mathPrompts[number],
+  source: PromptSeed,
   index: number,
   section: FullMockSection,
   module: FullMockModuleNumber,
@@ -421,50 +804,44 @@ function buildQuestion(
     trapType: source.trapType,
     passage: "passage" in source ? source.passage : undefined,
     prompt: source.prompt,
-    choices: makeChoices(source.choices, source.correctAnswer),
+    choices: makeChoices(source.choices),
     correctAnswer: source.correctAnswer as FullMockQuestion["correctAnswer"],
     explanation: source.explanation,
   };
 }
 
 function fillModule(
+  source: PromptSeed[],
   section: FullMockSection,
   module: FullMockModuleNumber,
   variant: "core" | "easy" | "hard",
   count: number,
-  difficulty: FullMockQuestion["difficulty"],
+  difficultyForIndex: (index: number) => FullMockQuestion["difficulty"],
 ): FullMockQuestion[] {
-  const source = section === "rw" ? rwPrompts : mathPrompts;
-  return Array.from({ length: count }, (_, i) => buildQuestion(source[i % source.length], i + 1, section, module, variant, difficulty));
+  return Array.from({ length: count }, (_, i) => buildQuestion(source[i % source.length], i + 1, section, module, variant, difficultyForIndex(i + 1)));
 }
 
-const rw1 = fillModule("rw", 1, "core", 27, "medium");
-const rw2Easy = fillModule("rw", 2, "easy", 27, "medium");
-const rw2HardBase = fillModule("rw", 2, "hard", 27, "hard").map((question, index) => ({ ...question, id: `rw2-hard-${String(index + 1).padStart(2, "0")}` }));
-const math1 = fillModule("math", 3, "core", 22, "medium");
-const math2Easy = fillModule("math", 4, "easy", 22, "medium");
-const math2HardBase = fillModule("math", 4, "hard", 22, "hard").map((question, index) => ({ ...question, id: `math2-hard-${String(index + 1).padStart(2, "0")}` }));
-
-function replaceQuestion(bank: FullMockQuestion[], replacement: FullMockQuestion) {
-  const number = Number(replacement.id.split("-").pop());
-  if (!Number.isFinite(number) || number < 1 || number > bank.length) return bank;
-  const next = [...bank];
-  next[number - 1] = replacement;
-  return next;
-}
+const rwMediumBank = [...rwCorePrompts, ...rwExpansionPrompts];
+const rw1 = fillModule(rwMediumBank, "rw", 1, "core", 27, (index) => index >= 19 ? "medium-hard" : "medium");
+const rw2Easy = fillModule([...rwExpansionPrompts, ...rwCorePrompts], "rw", 2, "easy", 27, (index) => index >= 19 ? "medium-hard" : "medium");
+const rw2Hard = fillModule(rwHardPrompts, "rw", 2, "hard", 27, (index) => index >= 22 ? "very-hard" : index >= 19 ? "hard" : "medium-hard");
+const math1 = fillModule(mathCorePrompts.slice(0, 22), "math", 3, "core", 22, (index) => index >= 17 ? "medium-hard" : "medium");
+const math2Easy = fillModule([...mathCorePrompts.slice(8, 22), ...mathCorePrompts.slice(0, 8)], "math", 4, "easy", 22, (index) => index >= 17 ? "medium-hard" : "medium");
+const math2Hard = fillModule(mathHardPrompts, "math", 4, "hard", 22, (index) => index >= 20 ? "very-hard" : index >= 17 ? "hard" : "medium-hard");
 
 export const FULL_MOCK_BANK = {
   rw1,
   rw2Easy,
-  rw2Hard: hardItems.filter((q) => q.section === "rw").reduce(replaceQuestion, rw2HardBase),
+  rw2Hard,
   math1,
   math2Easy,
-  math2Hard: hardItems.filter((q) => q.section === "math").reduce(replaceQuestion, math2HardBase),
+  math2Hard,
 };
 
 export function createInitialProgress(): FullMockProgress {
   const now = Date.now();
   return {
+    bankVersion: FULL_MOCK_BANK_VERSION,
     startedAt: now,
     currentModule: 1,
     currentQuestion: 1,
@@ -506,8 +883,18 @@ export function chooseNextVariant(progress: FullMockProgress, completedModule: F
   return "core";
 }
 
-function scaleScore(correct: number, total: number) {
-  const raw = 200 + (correct / total) * 600;
+const difficultyWeights: Record<FullMockQuestion["difficulty"], number> = {
+  easy: 0.86,
+  medium: 1,
+  "medium-hard": 1.12,
+  hard: 1.25,
+  "very-hard": 1.42,
+};
+
+function scaleWeightedScore(answers: Array<{ isCorrect: boolean; question: FullMockQuestion }>) {
+  const total = answers.reduce((sum, answer) => sum + difficultyWeights[answer.question.difficulty], 0);
+  const earned = answers.reduce((sum, answer) => sum + (answer.isCorrect ? difficultyWeights[answer.question.difficulty] : 0), 0);
+  const raw = 200 + (earned / Math.max(total, 1)) * 600;
   return Math.max(200, Math.min(800, Math.round(raw / 10) * 10));
 }
 
@@ -528,8 +915,8 @@ export function calculateFullMockResult(progress: FullMockProgress): FullMockRes
   });
   const rwAnswers = answers.filter((answer) => answer.question.section === "rw");
   const mathAnswers = answers.filter((answer) => answer.question.section === "math");
-  const rwScore = scaleScore(rwAnswers.filter((answer) => answer.isCorrect).length, rwAnswers.length);
-  const mathScore = scaleScore(mathAnswers.filter((answer) => answer.isCorrect).length, mathAnswers.length);
+  const rwScore = scaleWeightedScore(rwAnswers);
+  const mathScore = scaleWeightedScore(mathAnswers);
   const topicMap = new Map<string, { correct: number; total: number }>();
   for (const answer of answers) {
     const entry = topicMap.get(answer.topic) ?? { correct: 0, total: 0 };
@@ -545,6 +932,7 @@ export function calculateFullMockResult(progress: FullMockProgress): FullMockRes
   })).sort((a, b) => a.percent - b.percent || b.total - a.total);
   const trapTypes = Array.from(new Set(answers.filter((answer) => !answer.isCorrect).map((answer) => answer.trapType))).slice(0, 6);
   return {
+    bankVersion: FULL_MOCK_BANK_VERSION,
     completedAt: Date.now(),
     totalScore: rwScore + mathScore,
     rwScore,

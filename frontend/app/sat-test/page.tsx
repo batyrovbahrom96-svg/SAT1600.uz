@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { notifyFullMockResult } from "@/app/sat-test/actions";
 import {
   FULL_MOCK_MODULES,
+  FULL_MOCK_BANK_VERSION,
   FULL_MOCK_PROGRESS_KEY,
   FULL_MOCK_RESULTS_KEY,
   calculateFullMockResult,
@@ -134,6 +135,11 @@ export default function SatTestPage() {
 
   useEffect(() => {
     const saved = safeReadJson<FullMockProgress>(FULL_MOCK_PROGRESS_KEY);
+    if (saved && saved.bankVersion !== FULL_MOCK_BANK_VERSION) {
+      window.localStorage.removeItem(FULL_MOCK_PROGRESS_KEY);
+      window.localStorage.removeItem(FULL_MOCK_RESULTS_KEY);
+      return;
+    }
     if (saved && !safeReadJson(FULL_MOCK_RESULTS_KEY)) {
       setResumeProgress(saved);
     }
@@ -175,6 +181,7 @@ export default function SatTestPage() {
     const nextCompleted = Array.from(new Set([...(sourceProgress.completedModules ?? []), currentModule]));
     const nextProgress: FullMockProgress = {
       ...sourceProgress,
+      bankVersion: FULL_MOCK_BANK_VERSION,
       moduleScores: { ...sourceProgress.moduleScores, [String(currentModule)]: score },
       completedModules: nextCompleted,
     };
@@ -188,6 +195,7 @@ export default function SatTestPage() {
     const nextVariant = chooseNextVariant(nextProgress, currentModule);
     const withVariant: FullMockProgress = {
       ...nextProgress,
+      bankVersion: FULL_MOCK_BANK_VERSION,
       currentModule: nextModule,
       currentQuestion: 1,
       moduleVariants: {
@@ -238,6 +246,7 @@ export default function SatTestPage() {
     const moduleSeconds = FULL_MOCK_MODULES[resumeProgress.currentModule].seconds;
     const restored = {
       ...resumeProgress,
+      bankVersion: FULL_MOCK_BANK_VERSION,
       moduleStartedAt: resumeProgress.moduleStartedAt ?? Date.now(),
       moduleEndsAt: resumeProgress.moduleEndsAt && resumeProgress.moduleEndsAt > Date.now()
         ? resumeProgress.moduleEndsAt
@@ -253,6 +262,7 @@ export default function SatTestPage() {
     const now = Date.now();
     const next = {
       ...progress,
+      bankVersion: FULL_MOCK_BANK_VERSION,
       moduleStartedAt: now,
       moduleEndsAt: now + FULL_MOCK_MODULES[progress.currentModule].seconds * 1000,
     };
@@ -264,7 +274,7 @@ export default function SatTestPage() {
   function saveEmail(skip = false) {
     if (!progress) return;
     const email = skip ? progress.email : emailDraft.trim() || progress.email;
-    const next = { ...progress, email };
+    const next = { ...progress, bankVersion: FULL_MOCK_BANK_VERSION, email };
     safeWriteJson(FULL_MOCK_PROGRESS_KEY, next);
     setProgress(next);
   }
@@ -273,6 +283,7 @@ export default function SatTestPage() {
     if (!progress || !currentQuestion) return;
     const next = {
       ...progress,
+      bankVersion: FULL_MOCK_BANK_VERSION,
       answers: {
         ...progress.answers,
         [currentQuestion.id]: answer,
@@ -290,7 +301,7 @@ export default function SatTestPage() {
       completeModule(progress);
       return;
     }
-    const next = { ...progress, currentQuestion: nextIndex };
+    const next = { ...progress, bankVersion: FULL_MOCK_BANK_VERSION, currentQuestion: nextIndex };
     safeWriteJson(FULL_MOCK_PROGRESS_KEY, next);
     setProgress(next);
   }
