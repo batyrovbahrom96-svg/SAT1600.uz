@@ -26,6 +26,10 @@ const resultsCopy: Record<Language, {
   lockedScoreLabel: string;
   unlockScoreCta: string;
   weakAreas: string;
+  trendsTitle: string;
+  rwTrend: string;
+  mathTrend: string;
+  accuracy: string;
   locked: string;
   mistakeExample: string;
   yourAnswer: string;
@@ -62,6 +66,10 @@ const resultsCopy: Record<Language, {
     lockedScoreLabel: "Your result",
     unlockScoreCta: "Open result",
     weakAreas: "Your weak areas",
+    trendsTitle: "Performance trends",
+    rwTrend: "Reading & Writing trend",
+    mathTrend: "Math trend",
+    accuracy: "Accuracy",
     locked: "Locked",
     mistakeExample: "Mistake review sample",
     yourAnswer: "Your answer",
@@ -111,6 +119,10 @@ const resultsCopy: Record<Language, {
     lockedScoreLabel: "Ваш результат",
     unlockScoreCta: "Открыть результат",
     weakAreas: "Ваши слабые места",
+    trendsTitle: "Динамика результата",
+    rwTrend: "Тренд Reading & Writing",
+    mathTrend: "Тренд Math",
+    accuracy: "Точность",
     locked: "Закрыто",
     mistakeExample: "Пример разбора ошибки",
     yourAnswer: "Ваш ответ",
@@ -160,6 +172,10 @@ const resultsCopy: Record<Language, {
     lockedScoreLabel: "Natijangiz",
     unlockScoreCta: "Natijani ochish",
     weakAreas: "Sizning zaif mavzularingiz",
+    trendsTitle: "Natija dinamikasi",
+    rwTrend: "Reading & Writing trendi",
+    mathTrend: "Math trendi",
+    accuracy: "Aniqlik",
     locked: "Yopiq",
     mistakeExample: "Xato tahlili namunasi",
     yourAnswer: "Sizning javobingiz",
@@ -210,6 +226,88 @@ function QrImage({ alt }: { alt: string }) {
   );
 }
 
+function buildTrendPoints(result: FullMockResult, section: "rw" | "math") {
+  const answers = result.answers.filter((answer) => answer.question.section === section);
+  const interval = section === "rw" ? 9 : 7;
+  let correct = 0;
+  return answers.reduce<Array<{ label: string; percent: number; correct: number; total: number }>>((points, answer, index) => {
+    if (answer.isCorrect) correct += 1;
+    const total = index + 1;
+    if (total % interval === 0 || total === answers.length) {
+      points.push({
+        label: `${total}`,
+        percent: Math.round((correct / total) * 100),
+        correct,
+        total,
+      });
+    }
+    return points;
+  }, []);
+}
+
+function TrendChart({
+  title,
+  points,
+  accuracyLabel,
+}: {
+  title: string;
+  points: Array<{ label: string; percent: number; correct: number; total: number }>;
+  accuracyLabel: string;
+}) {
+  const width = 520;
+  const height = 220;
+  const paddingX = 34;
+  const paddingY = 28;
+  const plotWidth = width - paddingX * 2;
+  const plotHeight = height - paddingY * 2;
+  const coords = points.map((point, index) => {
+    const x = paddingX + (points.length <= 1 ? plotWidth : (index / (points.length - 1)) * plotWidth);
+    const y = paddingY + (1 - point.percent / 100) * plotHeight;
+    return { ...point, x, y };
+  });
+  const linePath = coords.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
+  const areaPath = coords.length
+    ? `${linePath} L ${coords.at(-1)?.x.toFixed(1)} ${height - paddingY} L ${coords[0].x.toFixed(1)} ${height - paddingY} Z`
+    : "";
+  const latest = points.at(-1);
+
+  return (
+    <article className="border border-white/15 bg-white/[0.04] p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-xl font-bold">{title}</h3>
+          <p className="mt-1 text-sm text-white/50">{accuracyLabel}</p>
+        </div>
+        {latest ? (
+          <div className="text-right">
+            <p className="text-3xl font-black">{latest.percent}%</p>
+            <p className="text-xs font-bold text-white/45">{latest.correct}/{latest.total}</p>
+          </div>
+        ) : null}
+      </div>
+      <svg className="mt-5 h-auto w-full" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={title}>
+        {[0, 25, 50, 75, 100].map((value) => {
+          const y = paddingY + (1 - value / 100) * plotHeight;
+          return (
+            <g key={value}>
+              <line x1={paddingX} x2={width - paddingX} y1={y} y2={y} stroke="rgba(255,255,255,0.10)" strokeWidth="1" />
+              <text x="4" y={y + 4} fill="rgba(255,255,255,0.38)" fontSize="11">{value}</text>
+            </g>
+          );
+        })}
+        {areaPath ? <path d={areaPath} fill="rgba(185,243,204,0.14)" /> : null}
+        {linePath ? <path d={linePath} fill="none" stroke="#b9f3cc" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" /> : null}
+        {coords.map((point) => (
+          <g key={point.label}>
+            <circle cx={point.x} cy={point.y} fill="#050505" r="7" stroke="#b9f3cc" strokeWidth="3" />
+            <text x={point.x} y={height - 6} fill="rgba(255,255,255,0.45)" fontSize="11" textAnchor="middle">{point.label}</text>
+          </g>
+        ))}
+      </svg>
+    </article>
+  );
+}
+
 export default function FullMockResultsPage() {
   const { language } = useLanguage();
   const copy = pick(resultsCopy, language);
@@ -244,6 +342,8 @@ export default function FullMockResultsPage() {
 
   const firstWrong = useMemo(() => result?.answers.find((answer) => !answer.isCorrect), [result]);
   const bars = result?.topicAccuracy.slice(0, 4) ?? [];
+  const rwTrend = useMemo(() => result ? buildTrendPoints(result, "rw") : [], [result]);
+  const mathTrend = useMemo(() => result ? buildTrendPoints(result, "math") : [], [result]);
 
   if (!result) {
     return (
@@ -278,6 +378,10 @@ export default function FullMockResultsPage() {
               <p className="text-white/55">Math</p>
               <p className="text-4xl font-black">{result.mathScore}</p>
             </div>
+          </div>
+          <div className="mt-10 grid gap-5 lg:grid-cols-2">
+            <TrendChart title={copy.rwTrend} points={rwTrend} accuracyLabel={copy.accuracy} />
+            <TrendChart title={copy.mathTrend} points={mathTrend} accuracyLabel={copy.accuracy} />
           </div>
           <div className="mt-10 grid gap-5 lg:grid-cols-2">
             {result.topicAccuracy.map((topic) => (
@@ -372,6 +476,19 @@ export default function FullMockResultsPage() {
               <p className="mt-4 text-white/65">{copy.perfectFallback}</p>
             )}
           </article>
+        </section>
+
+        <section className="relative overflow-hidden border border-white/15 bg-white/[0.04] p-6">
+          <h2 className="text-2xl font-light">{copy.trendsTitle}</h2>
+          <div className="mt-6 grid gap-5 blur-[6px] lg:grid-cols-2">
+            <TrendChart title={copy.rwTrend} points={rwTrend} accuracyLabel={copy.accuracy} />
+            <TrendChart title={copy.mathTrend} points={mathTrend} accuracyLabel={copy.accuracy} />
+          </div>
+          <div className="absolute inset-0 grid place-items-center bg-black/25">
+            <div className="inline-flex items-center gap-2 border border-white/20 bg-black/70 px-4 py-3 text-sm font-black uppercase tracking-[0.16em]">
+              <Lock size={18} /> {copy.locked}
+            </div>
+          </div>
         </section>
 
         <section className="border border-[#b9f3cc]/30 bg-[#b9f3cc]/10 p-7" id="pay">
