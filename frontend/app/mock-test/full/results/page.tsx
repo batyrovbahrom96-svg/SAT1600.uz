@@ -215,34 +215,32 @@ export default function FullMockResultsPage() {
   const copy = pick(resultsCopy, language);
   const [result, setResult] = useState<FullMockResult | null>(null);
   const [unlocked, setUnlocked] = useState(false);
-  const [checkingPro, setCheckingPro] = useState(true);
+  const [checkingPro, setCheckingPro] = useState(false);
 
   useEffect(() => {
     const stored = safeReadJson<FullMockResult>(FULL_MOCK_RESULTS_KEY);
     setResult(stored);
-
-    async function check() {
-      if (!stored) {
-        setCheckingPro(false);
-        return;
-      }
-      if (!getToken()) {
-        setUnlocked(false);
-        setCheckingPro(false);
-        return;
-      }
-      try {
-        const status = await getSubscriptionStatus();
-        setUnlocked(Boolean(status.has_active_subscription));
-      } catch {
-        setUnlocked(false);
-      } finally {
-        setCheckingPro(false);
-      }
-    }
-
-    check();
   }, []);
+
+  async function unlockWithPro() {
+    if (!getToken()) {
+      window.location.href = `/login?next=${encodeURIComponent("/mock-test/full/results")}`;
+      return;
+    }
+    setCheckingPro(true);
+    try {
+      const status = await getSubscriptionStatus();
+      if (status.has_active_subscription) {
+        setUnlocked(true);
+        return;
+      }
+      document.getElementById("pay")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch {
+      document.getElementById("pay")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } finally {
+      setCheckingPro(false);
+    }
+  }
 
   const firstWrong = useMemo(() => result?.answers.find((answer) => !answer.isCorrect), [result]);
   const bars = result?.topicAccuracy.slice(0, 4) ?? [];
@@ -324,9 +322,9 @@ export default function FullMockResultsPage() {
           <p className="text-xs font-black uppercase tracking-[0.28em] text-[#d8d09b]">{copy.lockedScoreLabel}</p>
           <p className="mt-5 text-7xl font-black"><LockedBlocks /></p>
           <p className="mt-4 text-2xl text-white/60">R&W: <LockedBlocks /> · Math: <LockedBlocks /></p>
-          <a className="mt-8 inline-flex items-center gap-3 bg-[#b9f3cc] px-7 py-4 text-xs font-black uppercase tracking-[0.18em] text-black" href="#pay">
+          <button className="mt-8 inline-flex items-center gap-3 bg-[#b9f3cc] px-7 py-4 text-xs font-black uppercase tracking-[0.18em] text-black" onClick={unlockWithPro} type="button">
             {copy.unlockScoreCta} <ArrowRight size={18} />
-          </a>
+          </button>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
