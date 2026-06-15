@@ -17,9 +17,95 @@ import {
   type FullMockModuleNumber,
   type FullMockProgress,
 } from "@/lib/full-mock-test";
-import { useLanguage } from "@/lib/i18n";
+import { pick, useLanguage, type Language } from "@/lib/i18n";
 
 type ScreenState = "intro" | "test" | "break";
+
+const satTestCopy: Record<Language, {
+  introTitle: string;
+  resumePrompt: (question: number) => string;
+  resume: string;
+  restart: string;
+  start: string;
+  saved: string;
+  moduleDone: (module: number) => string;
+  nextStarts: (time: string) => string;
+  saveProgress: string;
+  save: string;
+  skip: string;
+  startNextModule: string;
+  practiceTest: string;
+  markForReview: string;
+  undo: string;
+  back: string;
+  questionProgress: (current: number, total: number, global: number) => string;
+  endModule: string;
+  next: string;
+}> = {
+  en: {
+    introTitle: "Digital SAT Mock Test — 98 questions",
+    resumePrompt: (question) => `You have an unfinished test. Continue from question ${question}?`,
+    resume: "Continue",
+    restart: "Start over",
+    start: "Start test",
+    saved: "Result saved",
+    moduleDone: (module) => `Module ${module} completed.`,
+    nextStarts: (time) => `The next module starts in ${time}.`,
+    saveProgress: "Save progress? Enter your email:",
+    save: "Save",
+    skip: "Skip",
+    startNextModule: "Start next module",
+    practiceTest: "This is a practice test",
+    markForReview: "Mark for Review",
+    undo: "Undo",
+    back: "Back",
+    questionProgress: (current, total, global) => `Question ${current} of ${total} · Total ${global} of 98`,
+    endModule: "End Module",
+    next: "Next",
+  },
+  ru: {
+    introTitle: "Digital SAT Mock Test — 98 вопросов",
+    resumePrompt: (question) => `У вас есть незавершённый тест. Продолжить с вопроса ${question}?`,
+    resume: "Продолжить",
+    restart: "Начать заново",
+    start: "Начать тест",
+    saved: "Результат сохранён",
+    moduleDone: (module) => `Модуль ${module} завершён.`,
+    nextStarts: (time) => `Следующий модуль начнётся через ${time}.`,
+    saveProgress: "Сохранить прогресс? Введите email:",
+    save: "Сохранить",
+    skip: "Пропустить",
+    startNextModule: "Начать следующий модуль",
+    practiceTest: "Это тренировочный тест",
+    markForReview: "Отметить для проверки",
+    undo: "Отменить",
+    back: "Назад",
+    questionProgress: (current, total, global) => `Вопрос ${current} из ${total} · Всего ${global} из 98`,
+    endModule: "Завершить модуль",
+    next: "Далее",
+  },
+  uz: {
+    introTitle: "Digital SAT Mock Test — 98 ta savol",
+    resumePrompt: (question) => `Sizda tugallanmagan test bor. ${question}-savoldan davom ettirasizmi?`,
+    resume: "Davom ettirish",
+    restart: "Qaytadan boshlash",
+    start: "Testni boshlash",
+    saved: "Natija saqlandi",
+    moduleDone: (module) => `${module}-modul yakunlandi.`,
+    nextStarts: (time) => `Keyingi modul ${time} dan keyin boshlanadi.`,
+    saveProgress: "Progressni saqlaysizmi? Email kiriting:",
+    save: "Saqlash",
+    skip: "O'tkazib yuborish",
+    startNextModule: "Keyingi modulni boshlash",
+    practiceTest: "Bu mashq testi",
+    markForReview: "Tekshirish uchun belgilash",
+    undo: "Bekor qilish",
+    back: "Orqaga",
+    questionProgress: (current, total, global) => `Savol ${current}/${total} · Jami ${global}/98`,
+    endModule: "Modulni yakunlash",
+    next: "Keyingi",
+  },
+};
 
 function formatTime(seconds: number) {
   const safe = Math.max(0, seconds);
@@ -37,6 +123,7 @@ function moduleOffset(moduleNumber: FullMockModuleNumber) {
 
 export default function SatTestPage() {
   const { language } = useLanguage();
+  const copy = pick(satTestCopy, language);
   const [screen, setScreen] = useState<ScreenState>("intro");
   const [progress, setProgress] = useState<FullMockProgress | null>(null);
   const [resumeProgress, setResumeProgress] = useState<FullMockProgress | null>(null);
@@ -213,22 +300,22 @@ export default function SatTestPage() {
       <main className="min-h-screen bg-[#f7f7f4] text-[#071124]">
         <section className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center px-6 text-center">
           <p className="mb-5 text-xs font-black uppercase tracking-[0.28em] text-[#12613f]">SATTEST.UZ</p>
-          <h1 className="text-4xl font-black tracking-tight sm:text-6xl">Digital SAT Mock Test — 98 вопросов</h1>
+          <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{copy.introTitle}</h1>
           {resumeProgress ? (
             <div className="mt-8 w-full max-w-2xl border border-[#ccd4ca] bg-white p-5 text-left shadow-[0_18px_60px_rgba(7,17,36,0.08)]">
-              <p className="text-lg font-bold">У вас есть незавершённый тест. Продолжить с вопроса {moduleOffset(resumeProgress.currentModule) + resumeProgress.currentQuestion}?</p>
+              <p className="text-lg font-bold">{copy.resumePrompt(moduleOffset(resumeProgress.currentModule) + resumeProgress.currentQuestion)}</p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button className="bg-[#00a86b] px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-white" onClick={resume} type="button">
-                  Продолжить
+                  {copy.resume}
                 </button>
                 <button className="border border-[#071124]/20 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-[#071124]" onClick={beginFresh} type="button">
-                  Начать заново
+                  {copy.restart}
                 </button>
               </div>
             </div>
           ) : null}
           <button className="mt-8 inline-flex items-center gap-3 bg-[#00a86b] px-7 py-4 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_50px_rgba(0,168,107,0.24)]" onClick={beginFresh} type="button">
-            Начать тест <ArrowRight size={20} />
+            {copy.start} <ArrowRight size={20} />
           </button>
         </section>
       </main>
@@ -241,12 +328,12 @@ export default function SatTestPage() {
       <main className="min-h-screen bg-[#f7f7f4] text-[#071124]">
         <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6">
           <div className="border border-[#ccd4ca] bg-white p-8 shadow-[0_18px_60px_rgba(7,17,36,0.08)]">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-[#12613f]">Результат сохранён</p>
-            <h1 className="mt-4 text-4xl font-black">Модуль {justCompleted} завершён.</h1>
-            <p className="mt-4 text-lg text-[#4b5565]">Следующий модуль начнётся через {formatTime(breakSeconds)}.</p>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-[#12613f]">{copy.saved}</p>
+            <h1 className="mt-4 text-4xl font-black">{copy.moduleDone(justCompleted)}</h1>
+            <p className="mt-4 text-lg text-[#4b5565]">{copy.nextStarts(formatTime(breakSeconds))}</p>
             {justCompleted === 1 ? (
               <div className="mt-8 border border-[#e0e5dd] bg-[#f7f7f4] p-5">
-                <p className="font-bold">Сохранить прогресс? Введите email:</p>
+                <p className="font-bold">{copy.saveProgress}</p>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                   <input
                     className="min-h-12 flex-1 border border-[#cfd6cd] bg-white px-4 text-[#071124] outline-none"
@@ -256,16 +343,16 @@ export default function SatTestPage() {
                     value={emailDraft}
                   />
                   <button className="bg-[#071124] px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-white" onClick={() => saveEmail(false)} type="button">
-                    Сохранить
+                    {copy.save}
                   </button>
                   <button className="border border-[#071124]/20 px-5 py-3 text-xs font-black uppercase tracking-[0.16em]" onClick={() => saveEmail(true)} type="button">
-                    Пропустить
+                    {copy.skip}
                   </button>
                 </div>
               </div>
             ) : null}
             <button className="mt-8 inline-flex items-center gap-3 bg-[#00a86b] px-7 py-4 text-sm font-black uppercase tracking-[0.18em] text-white" onClick={startNextModule} type="button">
-              Начать следующий модуль <ArrowRight size={20} />
+              {copy.startNextModule} <ArrowRight size={20} />
             </button>
           </div>
         </section>
@@ -279,7 +366,7 @@ export default function SatTestPage() {
         <div className="flex min-h-16 items-center justify-between gap-4 px-5">
           <div className="min-w-0">
             <p className="truncate text-sm font-black">{moduleInfo.title}</p>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#526073]">This is a practice test</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#526073]">{copy.practiceTest}</p>
           </div>
           <div className={["flex items-center gap-2 text-xl font-black", warning ? "text-[#a16207] animate-pulse" : "text-[#071124]"].join(" ")}>
             <Clock size={20} /> {formatTime(secondsLeft)}
@@ -303,11 +390,11 @@ export default function SatTestPage() {
             <div className="flex items-center gap-4">
               <span className="grid h-12 w-12 place-items-center bg-[#030817] text-xl font-black text-white">{progress?.currentQuestion}</span>
               <span className="inline-flex items-center gap-2 text-sm font-black text-[#526073]">
-                <Bookmark size={18} /> Mark for Review
+                <Bookmark size={18} /> {copy.markForReview}
               </span>
             </div>
             <button className="inline-flex items-center gap-2 text-sm font-black text-[#8a93a3]" type="button">
-              <RotateCcw size={18} /> Undo
+              <RotateCcw size={18} /> {copy.undo}
             </button>
           </div>
 
@@ -333,15 +420,15 @@ export default function SatTestPage() {
 
       <footer className="sticky bottom-0 z-20 flex min-h-16 items-center justify-between border-t border-[#d8ddd6] bg-white px-5">
         <button className="text-sm font-black text-[#526073] disabled:opacity-35" disabled={(progress?.currentQuestion ?? 1) <= 1} onClick={() => moveQuestion(-1)} type="button">
-          Back
+          {copy.back}
         </button>
-        <p className="text-sm font-black text-[#526073]">Question {progress?.currentQuestion ?? 1} of {questions.length} · Total {totalQuestionNumber} of 98</p>
+        <p className="text-sm font-black text-[#526073]">{copy.questionProgress(progress?.currentQuestion ?? 1, questions.length, totalQuestionNumber)}</p>
         <div className="flex gap-3">
           <button className="hidden border border-[#071124]/20 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] sm:block" onClick={() => completeModule(progress)} type="button">
-            End Module
+            {copy.endModule}
           </button>
           <button className="inline-flex items-center gap-3 rounded-md bg-[#2554d8] px-6 py-3 text-sm font-black text-white shadow-[inset_0_0_0_2px_rgba(255,255,255,0.45)]" onClick={() => moveQuestion(1)} type="button">
-            {progress && progress.currentQuestion >= questions.length ? "End Module" : "Next"} <ArrowRight size={18} />
+            {progress && progress.currentQuestion >= questions.length ? copy.endModule : copy.next} <ArrowRight size={18} />
           </button>
         </div>
       </footer>
