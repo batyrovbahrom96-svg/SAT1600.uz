@@ -4,7 +4,7 @@ import { ArrowRight, Check, CheckCircle2, Lock, MessageCircle } from "lucide-rea
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getSubscriptionStatus, getToken } from "@/lib/api";
-import { FULL_MOCK_RESULTS_KEY, safeReadJson, safeWriteJson, type FullMockResult } from "@/lib/full-mock-test";
+import { FULL_MOCK_RESULTS_KEY, safeReadJson, type FullMockResult } from "@/lib/full-mock-test";
 import { pick, useLanguage, type Language } from "@/lib/i18n";
 
 const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
@@ -221,16 +221,8 @@ export default function FullMockResultsPage() {
     const stored = safeReadJson<FullMockResult>(FULL_MOCK_RESULTS_KEY);
     setResult(stored);
 
-    const query = new URLSearchParams(window.location.search);
-    const wantsUnlock = query.get("unlocked") === "true";
-
     async function check() {
       if (!stored) {
-        setCheckingPro(false);
-        return;
-      }
-      if (stored.paid) {
-        setUnlocked(true);
         setCheckingPro(false);
         return;
       }
@@ -241,13 +233,7 @@ export default function FullMockResultsPage() {
       }
       try {
         const status = await getSubscriptionStatus();
-        const isPro = Boolean(status.has_active_subscription);
-        if (isPro && wantsUnlock) {
-          const next = { ...stored, paid: true };
-          safeWriteJson(FULL_MOCK_RESULTS_KEY, next);
-          setResult(next);
-        }
-        setUnlocked(isPro);
+        setUnlocked(Boolean(status.has_active_subscription));
       } catch {
         setUnlocked(false);
       } finally {
