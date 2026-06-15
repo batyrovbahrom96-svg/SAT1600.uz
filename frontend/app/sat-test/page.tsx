@@ -15,6 +15,7 @@ import {
   getModuleQuestions,
   safeReadJson,
   safeWriteJson,
+  type FullMockChart,
   type FullMockModuleNumber,
   type FullMockProgress,
 } from "@/lib/full-mock-test";
@@ -120,6 +121,120 @@ function moduleOffset(moduleNumber: FullMockModuleNumber) {
   if (moduleNumber === 2) return 27;
   if (moduleNumber === 3) return 54;
   return 76;
+}
+
+function QuestionChart({ chart }: { chart: FullMockChart }) {
+  const width = 620;
+  const height = 330;
+  const padding = { top: 42, right: 32, bottom: 70, left: 70 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+
+  if (chart.type === "scatter") {
+    const minX = chart.minX ?? Math.min(...chart.points.map((point) => point.x));
+    const maxX = chart.maxX ?? Math.max(...chart.points.map((point) => point.x));
+    const minY = chart.minY ?? 0;
+    const maxY = chart.maxY ?? Math.max(...chart.points.map((point) => point.y));
+    const xScale = (value: number) => padding.left + ((value - minX) / (maxX - minX || 1)) * plotWidth;
+    const yScale = (value: number) => padding.top + plotHeight - ((value - minY) / (maxY - minY || 1)) * plotHeight;
+
+    return (
+      <figure className="mt-8 overflow-hidden border border-[#d9dfd8] bg-[#fbfbf8] p-4 shadow-[0_12px_35px_rgba(7,17,36,0.06)]">
+        <svg className="h-auto w-full" role="img" viewBox={`0 0 ${width} ${height}`} aria-label={chart.title}>
+          <text x={padding.left} y="25" className="fill-[#071124] text-[20px] font-black">{chart.title}</text>
+          {[0, 1, 2, 3, 4].map((tick) => {
+            const y = padding.top + (plotHeight / 4) * tick;
+            const value = Math.round(maxY - ((maxY - minY) / 4) * tick);
+            return (
+              <g key={tick}>
+                <line x1={padding.left} x2={width - padding.right} y1={y} y2={y} stroke="#e3e7e0" />
+                <text x={padding.left - 12} y={y + 5} textAnchor="end" className="fill-[#647084] text-[12px] font-bold">{value}</text>
+              </g>
+            );
+          })}
+          <line x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} stroke="#9aa4b2" />
+          <line x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} stroke="#9aa4b2" />
+          {[minX, (minX + maxX) / 2, maxX].map((value) => (
+            <text key={value} x={xScale(value)} y={height - padding.bottom + 24} textAnchor="middle" className="fill-[#647084] text-[12px] font-bold">{Math.round(value * 10) / 10}</text>
+          ))}
+          {chart.trend ? (
+            <line
+              x1={xScale(chart.trend.from.x)}
+              x2={xScale(chart.trend.to.x)}
+              y1={yScale(chart.trend.from.y)}
+              y2={yScale(chart.trend.to.y)}
+              stroke={chart.trend.color}
+              strokeDasharray="8 7"
+              strokeWidth="4"
+            />
+          ) : null}
+          {chart.points.map((point, index) => (
+            <circle key={`${point.x}-${point.y}-${index}`} cx={xScale(point.x)} cy={yScale(point.y)} r="6" fill="#071124" opacity="0.82" />
+          ))}
+          <text x={padding.left + plotWidth / 2} y={height - 18} textAnchor="middle" className="fill-[#071124] text-[13px] font-black">{chart.xLabel}</text>
+          <text x="18" y={padding.top + plotHeight / 2} textAnchor="middle" transform={`rotate(-90 18 ${padding.top + plotHeight / 2})`} className="fill-[#071124] text-[13px] font-black">{chart.yLabel}</text>
+        </svg>
+      </figure>
+    );
+  }
+
+  const values = chart.series.flatMap((series) => series.values);
+  const min = chart.min ?? Math.min(0, ...values);
+  const max = chart.max ?? Math.max(...values);
+  const xAt = (index: number) => padding.left + (chart.labels.length === 1 ? plotWidth / 2 : (index / (chart.labels.length - 1)) * plotWidth);
+  const yAt = (value: number) => padding.top + plotHeight - ((value - min) / (max - min || 1)) * plotHeight;
+  const barGroupWidth = plotWidth / chart.labels.length;
+  const barWidth = Math.min(42, (barGroupWidth - 18) / chart.series.length);
+
+  return (
+    <figure className="mt-8 overflow-hidden border border-[#d9dfd8] bg-[#fbfbf8] p-4 shadow-[0_12px_35px_rgba(7,17,36,0.06)]">
+      <svg className="h-auto w-full" role="img" viewBox={`0 0 ${width} ${height}`} aria-label={chart.title}>
+        <text x={padding.left} y="25" className="fill-[#071124] text-[20px] font-black">{chart.title}</text>
+        {[0, 1, 2, 3, 4].map((tick) => {
+          const y = padding.top + (plotHeight / 4) * tick;
+          const value = Math.round((max - ((max - min) / 4) * tick) * 10) / 10;
+          return (
+            <g key={tick}>
+              <line x1={padding.left} x2={width - padding.right} y1={y} y2={y} stroke="#e3e7e0" />
+              <text x={padding.left - 12} y={y + 5} textAnchor="end" className="fill-[#647084] text-[12px] font-bold">{value}</text>
+            </g>
+          );
+        })}
+        <line x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} stroke="#9aa4b2" />
+        <line x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} stroke="#9aa4b2" />
+        {chart.type === "line" ? chart.series.map((series) => {
+          const points = series.values.map((value, index) => `${xAt(index)},${yAt(value)}`).join(" ");
+          return (
+            <g key={series.name}>
+              <polyline points={points} fill="none" stroke={series.color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+              {series.values.map((value, index) => (
+                <circle key={`${series.name}-${index}`} cx={xAt(index)} cy={yAt(value)} r="5" fill={series.color} />
+              ))}
+            </g>
+          );
+        }) : chart.series.map((series, seriesIndex) => (
+          <g key={series.name}>
+            {series.values.map((value, index) => {
+              const x = padding.left + index * barGroupWidth + (barGroupWidth - chart.series.length * barWidth) / 2 + seriesIndex * barWidth;
+              const y = yAt(value);
+              return <rect key={`${series.name}-${index}`} x={x} y={y} width={barWidth} height={height - padding.bottom - y} fill={series.color} rx="3" />;
+            })}
+          </g>
+        ))}
+        {chart.labels.map((label, index) => (
+          <text key={label} x={xAt(index)} y={height - padding.bottom + 24} textAnchor="middle" className="fill-[#647084] text-[12px] font-bold">{label}</text>
+        ))}
+        <text x={padding.left + plotWidth / 2} y={height - 18} textAnchor="middle" className="fill-[#071124] text-[13px] font-black">{chart.xLabel}</text>
+        <text x="18" y={padding.top + plotHeight / 2} textAnchor="middle" transform={`rotate(-90 18 ${padding.top + plotHeight / 2})`} className="fill-[#071124] text-[13px] font-black">{chart.yLabel}</text>
+        {chart.series.map((series, index) => (
+          <g key={series.name} transform={`translate(${padding.left + index * 145}, ${height - 48})`}>
+            <rect width="14" height="14" fill={series.color} rx="2" />
+            <text x="22" y="12" className="fill-[#526073] text-[12px] font-black">{series.name}</text>
+          </g>
+        ))}
+      </svg>
+    </figure>
+  );
 }
 
 export default function SatTestPage() {
@@ -394,6 +509,7 @@ export default function SatTestPage() {
       <section className="mx-auto grid max-w-6xl grid-cols-1 bg-white lg:grid-cols-[1fr_0.85fr]">
         <article className="min-h-[calc(100vh-9rem)] border-r border-[#dde2df] p-7 sm:p-12">
           <p className="max-w-2xl text-xl leading-relaxed sm:text-2xl">{currentQuestion?.passage}</p>
+          {currentQuestion?.chart ? <QuestionChart chart={currentQuestion.chart} /> : null}
         </article>
 
         <article className="p-7 sm:p-10">

@@ -1,10 +1,33 @@
 export const FULL_MOCK_PROGRESS_KEY = "sattest_full_mock_progress";
 export const FULL_MOCK_RESULTS_KEY = "sattest_full_mock_results";
-export const FULL_MOCK_BANK_VERSION = "2026-06-hard-v3";
+export const FULL_MOCK_BANK_VERSION = "2026-06-hard-v4";
 
 export type FullMockSection = "rw" | "math";
 export type FullMockModuleNumber = 1 | 2 | 3 | 4;
 export type FullMockChoice = { label: "A" | "B" | "C" | "D"; text: string };
+export type FullMockChart =
+  | {
+      type: "line" | "bar";
+      title: string;
+      xLabel: string;
+      yLabel: string;
+      labels: string[];
+      series: Array<{ name: string; values: number[]; color: string }>;
+      min?: number;
+      max?: number;
+    }
+  | {
+      type: "scatter";
+      title: string;
+      xLabel: string;
+      yLabel: string;
+      points: Array<{ x: number; y: number }>;
+      trend?: { from: { x: number; y: number }; to: { x: number; y: number }; color: string };
+      minX?: number;
+      maxX?: number;
+      minY?: number;
+      maxY?: number;
+    };
 
 export type FullMockQuestion = {
   id: string;
@@ -15,6 +38,7 @@ export type FullMockQuestion = {
   difficulty: "easy" | "medium" | "medium-hard" | "hard" | "very-hard";
   trapType: string;
   passage?: string;
+  chart?: FullMockChart;
   prompt: string;
   choices: FullMockChoice[];
   correctAnswer: "A" | "B" | "C" | "D";
@@ -93,6 +117,7 @@ type PromptSeed = {
   trapType: string;
   prompt: string;
   passage?: string;
+  chart?: FullMockChart;
   choices: string[];
   correctAnswer: "A" | "B" | "C" | "D";
   explanation: string;
@@ -205,6 +230,16 @@ const rwCorePrompts: PromptSeed[] = [
     topic: "Quantitative Evidence",
     trapType: "trend misread",
     passage: "Graph data: A line graph shows average monthly library visits after weekend hours were introduced in March. January: 1,200 visits. February: 1,260. March: 1,520. April: 1,810. May: 1,980.",
+    chart: {
+      type: "line",
+      title: "Average Monthly Library Visits",
+      xLabel: "Month",
+      yLabel: "Visits",
+      labels: ["Jan", "Feb", "Mar", "Apr", "May"],
+      series: [{ name: "Visits", values: [1200, 1260, 1520, 1810, 1980], color: "#2563eb" }],
+      min: 1100,
+      max: 2050,
+    },
     prompt: "Which statement best supports the claim that weekend hours were associated with increased library use?",
     choices: [
       "Visits increased only slightly before March but rose more sharply from March through May.",
@@ -231,6 +266,19 @@ const rwExpansionPrompts: PromptSeed[] = [
     topic: "Command of Evidence",
     trapType: "wrong trend comparison",
     passage: "Graph data: A line graph compares two solar-panel coatings across humidity levels. At 20% humidity, Coating X output is 104 units and Coating Y is 102. At 60% humidity, X is 100 and Y is 102. At 90% humidity, X is 96 and Y is 101.",
+    chart: {
+      type: "line",
+      title: "Solar-Panel Output by Humidity",
+      xLabel: "Humidity",
+      yLabel: "Output units",
+      labels: ["20%", "60%", "90%"],
+      series: [
+        { name: "Coating X", values: [104, 100, 96], color: "#2563eb" },
+        { name: "Coating Y", values: [102, 102, 101], color: "#059669" },
+      ],
+      min: 94,
+      max: 106,
+    },
     prompt: "Which choice best supports the claim that Coating Y is more stable as humidity increases?",
     choices: [
       "Coating X has the highest output at 20% humidity.",
@@ -319,6 +367,16 @@ const rwExpansionPrompts: PromptSeed[] = [
     topic: "Quantitative Evidence",
     trapType: "graph peak misread",
     passage: "Graph data: A bar graph shows enzyme activity at different temperatures. 10 C: 18 units. 20 C: 44 units. 30 C: 71 units. 40 C: 68 units. 50 C: 25 units.",
+    chart: {
+      type: "bar",
+      title: "Enzyme Activity by Temperature",
+      xLabel: "Temperature",
+      yLabel: "Activity units",
+      labels: ["10 C", "20 C", "30 C", "40 C", "50 C"],
+      series: [{ name: "Activity", values: [18, 44, 71, 68, 25], color: "#0f766e" }],
+      min: 0,
+      max: 80,
+    },
     prompt: "Which conclusion is best supported by the graph?",
     choices: [
       "Enzyme activity increases steadily at every temperature shown.",
@@ -430,6 +488,31 @@ const rwExpansionPrompts: PromptSeed[] = [
     topic: "Quantitative Evidence",
     trapType: "scatterplot correlation trap",
     passage: "Graph data: A scatterplot compares weekly practice hours and score improvement for 40 students. Most students practicing 0-2 hours improved 0-20 points. Most students practicing 3-5 hours improved 30-70 points. Most students practicing 6-8 hours improved 70-120 points.",
+    chart: {
+      type: "scatter",
+      title: "Practice Hours and Score Improvement",
+      xLabel: "Weekly practice hours",
+      yLabel: "Score improvement",
+      points: [
+        { x: 0.5, y: 8 },
+        { x: 1.2, y: 16 },
+        { x: 1.8, y: 12 },
+        { x: 2.0, y: 20 },
+        { x: 3.1, y: 38 },
+        { x: 3.8, y: 46 },
+        { x: 4.5, y: 61 },
+        { x: 5.0, y: 70 },
+        { x: 6.1, y: 78 },
+        { x: 6.8, y: 96 },
+        { x: 7.3, y: 110 },
+        { x: 8.0, y: 118 },
+      ],
+      trend: { from: { x: 0.5, y: 10 }, to: { x: 8, y: 112 }, color: "#2563eb" },
+      minX: 0,
+      maxX: 8,
+      minY: 0,
+      maxY: 125,
+    },
     prompt: "Which statement is best supported by the scatterplot?",
     choices: [
       "Students who practiced more hours generally showed larger score improvements.",
@@ -477,6 +560,19 @@ const rwHardPrompts: PromptSeed[] = [
     topic: "Command of Evidence",
     trapType: "two-line graph comparison",
     passage: "Graph data: A two-line graph shows renewable electricity generated by two sources from 2020 to 2024. Solar: 18, 25, 37, 52, 70 terawatt-hours. Wind: 42, 47, 51, 55, 59 terawatt-hours.",
+    chart: {
+      type: "line",
+      title: "Renewable Electricity Generated",
+      xLabel: "Year",
+      yLabel: "Terawatt-hours",
+      labels: ["2020", "2021", "2022", "2023", "2024"],
+      series: [
+        { name: "Solar", values: [18, 25, 37, 52, 70], color: "#f59e0b" },
+        { name: "Wind", values: [42, 47, 51, 55, 59], color: "#2563eb" },
+      ],
+      min: 10,
+      max: 75,
+    },
     prompt: "Which statement best supports the claim that solar generation was catching up to wind generation?",
     choices: [
       "Solar generation rose by 52 terawatt-hours, while wind generation rose by 17.",
@@ -551,6 +647,16 @@ const rwHardPrompts: PromptSeed[] = [
     topic: "Quantitative Evidence",
     trapType: "trend with exception",
     passage: "Graph data: A line graph shows average response time for an app after three updates. Before updates: 4.8 seconds. After Update 1: 3.9 seconds. After Update 2: 3.1 seconds. After Update 3: 3.3 seconds.",
+    chart: {
+      type: "line",
+      title: "Average App Response Time",
+      xLabel: "Update stage",
+      yLabel: "Seconds",
+      labels: ["Before", "Update 1", "Update 2", "Update 3"],
+      series: [{ name: "Response time", values: [4.8, 3.9, 3.1, 3.3], color: "#7c3aed" }],
+      min: 2.8,
+      max: 5,
+    },
     prompt: "Which claim is best supported by the graph?",
     choices: [
       "Response time generally decreased after the updates, though it rose slightly after Update 3.",
@@ -808,6 +914,7 @@ function buildQuestion(
     difficulty,
     trapType: source.trapType,
     passage: "passage" in source ? source.passage : undefined,
+    chart: source.chart,
     prompt: source.prompt,
     choices: makeChoices(source.choices),
     correctAnswer: source.correctAnswer as FullMockQuestion["correctAnswer"],
