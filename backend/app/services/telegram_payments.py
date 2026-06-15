@@ -576,7 +576,8 @@ def _receipt_active_message(subscription: Subscription, user: User | None = None
         f"Boshlanish kuni: {start}\n"
         f"Tugash kuni: {end}\n"
         f"Shu yerdan boshlang: {mock_link}\n"
-        "Xuddi shu email bilan kiring yoki ro'yxatdan o'ting, to'liq SAT Mock Testni yeching, keyin Pro Curriculum natijadan ochiladi.\n\n"
+        "Xuddi shu email bilan kiring yoki ro'yxatdan o'ting, to'liq SAT Mock Testni yeching, keyin Pro Curriculum natijadan ochiladi.\n"
+        "Kanalimizga qo'shiling: @sattestuz — har kuni foydali materiallar\n\n"
         f"{PAYMENT_WARNING_TEXT}"
     )
 

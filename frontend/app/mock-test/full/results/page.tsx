@@ -18,6 +18,7 @@ const resultsCopy: Record<Language, {
   missingBody: string;
   missingCta: string;
   scoreLabel: string;
+  channelLine: string;
   trapsTitle: string;
   curriculumCta: string;
   completedTitle: string;
@@ -53,6 +54,7 @@ const resultsCopy: Record<Language, {
     missingBody: "Complete the full mock test first. Your progress will be saved in this browser.",
     missingCta: "Start full test",
     scoreLabel: "Your SAT score",
+    channelLine: "Yangi SAT materiallari va foydali maslahatlar uchun: @sattestuz",
     trapsTitle: "Trap types to fix",
     curriculumCta: "Open Pro Curriculum",
     completedTitle: "Test completed. 98 of 98 questions.",
@@ -101,6 +103,7 @@ const resultsCopy: Record<Language, {
     missingBody: "Сначала завершите полный mock test. Ваш прогресс сохранится в этом браузере.",
     missingCta: "Начать полный тест",
     scoreLabel: "Ваш результат SAT",
+    channelLine: "Yangi SAT materiallari va foydali maslahatlar uchun: @sattestuz",
     trapsTitle: "Ловушки, которые нужно исправить",
     curriculumCta: "Открыть Pro Curriculum",
     completedTitle: "Тест завершён. 98 из 98 вопросов.",
@@ -149,6 +152,7 @@ const resultsCopy: Record<Language, {
     missingBody: "Avval to'liq mock testni yakunlang. Progressingiz shu brauzerda saqlanadi.",
     missingCta: "To'liq testni boshlash",
     scoreLabel: "SAT natijangiz",
+    channelLine: "Yangi SAT materiallari va foydali maslahatlar uchun: @sattestuz",
     trapsTitle: "Tuzatish kerak bo'lgan xato tuzoqlari",
     curriculumCta: "Pro Curriculumni ochish",
     completedTitle: "Test yakunlandi. 98 ta savoldan 98 tasi bajarildi.",
@@ -278,6 +282,9 @@ export default function FullMockResultsPage() {
         <section className="mx-auto max-w-6xl">
           <p className="text-xs font-black uppercase tracking-[0.28em] text-[#b9f3cc]">{copy.scoreLabel}</p>
           <h1 className="mt-4 text-6xl font-black sm:text-8xl">{result.totalScore}</h1>
+          <a className="mt-4 inline-flex text-sm font-semibold text-[#b9f3cc] underline-offset-4 hover:underline" href="https://t.me/sattestuz" target="_blank" rel="noreferrer">
+            {copy.channelLine}
+          </a>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="border border-white/15 bg-white/[0.04] p-6">
               <p className="text-white/55">R&W</p>
