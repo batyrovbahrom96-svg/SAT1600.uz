@@ -6,21 +6,20 @@ import { useEffect, useMemo, useState } from "react";
 import { getSubscriptionStatus, getToken } from "@/lib/api";
 import { FULL_MOCK_RESULTS_KEY, safeReadJson, safeWriteJson, type FullMockResult } from "@/lib/full-mock-test";
 
+const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
+const telegramBotUrl = `https://t.me/${telegramBotUsername}?start=pro`;
+const paynetQrPayload =
+  "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
+const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(paynetQrPayload)}`;
+
 function LockedBlocks() {
   return <span aria-label="locked score" className="tracking-[0.12em]">████</span>;
 }
 
-function QrImage({ src, alt }: { src: string; alt: string }) {
-  const [failed, setFailed] = useState(false);
+function QrImage({ alt }: { alt: string }) {
   return (
-    <div className="grid min-h-[220px] place-items-center border border-white/15 bg-white p-3">
-      {failed ? (
-        <div className="grid h-[200px] w-[200px] place-items-center border border-black/20 bg-[#f7f7f4] text-center text-xs font-black uppercase tracking-[0.14em] text-black/50">
-          QR placeholder
-        </div>
-      ) : (
-        <img className="h-[220px] w-[220px] object-contain" src={src} alt={alt} onError={() => setFailed(true)} />
-      )}
+    <div className="grid min-h-[260px] place-items-center border border-white/15 bg-white p-4">
+      <img className="h-[250px] w-[250px] object-contain" src={paynetQrImage} alt={alt} />
     </div>
   );
 }
@@ -224,11 +223,11 @@ export default function FullMockResultsPage() {
             <p className="text-xs font-black uppercase tracking-[0.24em] text-white/45">Pro · 1 месяц</p>
             <h3 className="mt-3 text-4xl font-black">200,000 сум</h3>
             <div className="mt-6">
-              <QrImage src="/qr-monthly.png" alt="QR оплата 200,000 сум" />
+              <QrImage alt="Paynet QR оплата 200,000 сум" />
             </div>
             <p className="mt-4 text-center text-white/70">Отсканируй → Оплати → Получи доступ</p>
-            <a className="mt-5 inline-flex items-center gap-2 text-[#b9f3cc]" href="https://t.me/FounderSATTESTUZ" target="_blank" rel="noreferrer">
-              <MessageCircle size={18} /> или напиши @FounderSATTESTUZ
+            <a className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-3 border border-[#b9f3cc]/35 bg-[#b9f3cc] px-5 text-center text-[11px] font-black uppercase tracking-[0.18em] text-black" href={telegramBotUrl} target="_blank" rel="noreferrer">
+              <MessageCircle size={18} /> Оплатил — отправить чек в @{telegramBotUsername}
             </a>
           </article>
 
@@ -237,9 +236,12 @@ export default function FullMockResultsPage() {
             <p className="text-xs font-black uppercase tracking-[0.24em] text-white/45">Pro · 3 месяца</p>
             <h3 className="mt-3 text-4xl font-black">600,000 сум</h3>
             <div className="mt-6">
-              <QrImage src="/qr-3month.png" alt="QR оплата 600,000 сум" />
+              <QrImage alt="Paynet QR оплата 600,000 сум" />
             </div>
             <p className="mt-4 text-center text-white/70">Отсканируй → Оплати → Получи доступ</p>
+            <a className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-3 border border-[#b9f3cc]/35 bg-[#b9f3cc] px-5 text-center text-[11px] font-black uppercase tracking-[0.18em] text-black" href={telegramBotUrl} target="_blank" rel="noreferrer">
+              <MessageCircle size={18} /> Оплатил — отправить чек в @{telegramBotUsername}
+            </a>
           </article>
         </section>
 
@@ -248,7 +250,7 @@ export default function FullMockResultsPage() {
           <ol className="mt-5 space-y-3 text-lg text-white/72">
             <li>1. Отсканируй QR код выше</li>
             <li>2. Оплати через Paynet / Click / Payme</li>
-            <li>3. Отправь скриншот оплаты боту: @SATTESTbot с email регистрации</li>
+            <li>3. Нажми кнопку выше и отправь скриншот оплаты боту: @{telegramBotUsername} с email регистрации</li>
             <li>4. Доступ откроется автоматически в течение 60 секунд</li>
           </ol>
           <p className="mt-5 text-white/65">Или напиши напрямую: @FounderSATTESTUZ</p>
