@@ -932,7 +932,6 @@ export default function TestPage() {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [marked, setMarked] = useState<Record<string, boolean>>({});
-  const [currentQuestion, setCurrentQuestion] = useState(1);
   const [markedForReview, setMarkedForReview] = useState<Set<number>>(new Set());
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [isBreakActive, setIsBreakActive] = useState(false);
@@ -1186,6 +1185,7 @@ export default function TestPage() {
   }, [isMathSection]);
 
   const question = moduleData?.questions[index];
+  const activeQuestionNumber = moduleData ? Math.min(index + 1, moduleData.questions.length) : 1;
   const isCrossTextQuestion = question?.data_payload?.type === "cross_text"
     && typeof question.data_payload.text_1 === "string"
     && typeof question.data_payload.text_2 === "string";
@@ -1213,7 +1213,6 @@ export default function TestPage() {
   useEffect(() => {
     const nextQuestion = moduleData?.questions[index];
     activeQuestionId.current = nextQuestion?.id ?? null;
-    setCurrentQuestion(index + 1);
   }, [index, moduleData]);
 
   useEffect(() => {
@@ -1670,7 +1669,6 @@ export default function TestPage() {
   }
 
   function goToQuestion(questionNumber: number) {
-    setCurrentQuestion(questionNumber);
     setIndex(questionNumber - 1);
     setIsNavigatorOpen(false);
     setIsCheckWorkActive(false);
@@ -1682,7 +1680,7 @@ export default function TestPage() {
   }
 
   function navigatorButtonClass(item: Question, questionNumber: number) {
-    if (questionNumber === currentQuestion) return "border-2 border-black bg-white text-slate-950";
+    if (questionNumber === activeQuestionNumber) return "border-2 border-black bg-white text-slate-950";
     if (isNavigatorQuestionAnswered(item)) return "border-2 border-blue-600 bg-white text-blue-600";
     return "border-2 border-dashed border-gray-400 bg-white text-gray-500";
   }
@@ -2188,7 +2186,7 @@ export default function TestPage() {
             <div className="mb-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 min-w-9 items-center justify-center bg-slate-950 text-base font-bold text-white">
-                  {index + 1}
+                  {activeQuestionNumber}
                 </div>
                 <button
                   onClick={() => toggleMark(question.id)}
@@ -2459,7 +2457,7 @@ export default function TestPage() {
               onClick={() => setIsNavigatorOpen(true)}
               type="button"
             >
-              Question {currentQuestion} of {moduleData.questions.length}
+              Question {activeQuestionNumber} of {moduleData.questions.length}
             </button>
           </div>
           <div className="flex justify-end">
