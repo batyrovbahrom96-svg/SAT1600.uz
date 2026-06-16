@@ -347,3 +347,76 @@ Use:
 - Telemetry and quality flags
 
 Look for weird wording, guessing patterns, excessive hesitation, bad distractors, and graph questions that do not require reasoning.
+
+## QR Payment + Telegram Approval Flow
+
+The diagnostic results page now sends students to `/payment`. The flow is:
+
+1. Student sees Uzbek Pro payment page with estimated score, weak areas, `200,000 UZS / month`, `600,000 UZS / 3 months`, Payme QR, and Click QR.
+2. Student pays and clicks `To'lovni tasdiqlash`.
+3. Backend creates an order reference like `SAT-123456`.
+4. Student lands on `/payment/confirm?ref=SAT-123456` and opens `@SATTEST_UZ_bot`.
+5. Bot receives the payment screenshot and forwards it to the Founder/admin with `✅ Tasdiqlash` and `❌ Rad etish`.
+6. Approval creates an active Pro subscription and sends the student a result/pro access link.
+7. `/admin` shows pending payment orders, activated orders, rejected orders, and total revenue.
+
+Required backend environment variables:
+
+```bash
+TELEGRAM_BOT_TOKEN=123456789:botfather-token
+ADMIN_CHAT_ID=123456789
+TELEGRAM_ADMIN_CHAT_ID=123456789
+DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require
+PAYME_QR_URL=https://your-cdn/payme-qr.png
+CLICK_QR_URL=https://your-cdn/click-qr.png
+FRONTEND_URL=https://www.sattest.uz
+```
+
+`ADMIN_CHAT_ID` is included for clarity, but the app reads `TELEGRAM_ADMIN_CHAT_ID`.
+
+How to get a Telegram bot token:
+
+1. Open Telegram and message `@BotFather`.
+2. Send `/newbot`.
+3. Choose name: `SATTEST.UZ Bot`.
+4. Choose username: `SATTEST_UZ_bot`.
+5. Copy the token into `TELEGRAM_BOT_TOKEN`.
+
+How to set `TELEGRAM_ADMIN_CHAT_ID`:
+
+1. Message your bot once from the Founder Telegram account.
+2. Temporarily open `https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getUpdates`.
+3. Find `message.chat.id`.
+4. Put that number into `TELEGRAM_ADMIN_CHAT_ID`.
+
+How to deploy on Railway:
+
+1. Push this repository to GitHub.
+2. In Railway, create a project from the GitHub repo.
+3. Add a PostgreSQL database service.
+4. Set `DATABASE_URL=${{Postgres.DATABASE_URL}}` or the manual PostgreSQL URL.
+5. Add all variables listed above.
+6. Confirm Railway uses `railway.toml`; it builds `backend/Dockerfile`.
+7. Deploy.
+8. In Railway shell or deploy logs, confirm migrations ran, including `009_payment_orders.sql`.
+9. Set the Telegram webhook:
+
+```bash
+curl "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook" \
+  -d "url=https://api.sattest.uz/api/telegram/webhook" \
+  -d "secret_token=$TELEGRAM_WEBHOOK_SECRET"
+```
+
+Local verification:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+Backend syntax check:
+
+```bash
+python3 -m py_compile backend/app/models/sat.py backend/app/api/routes.py backend/app/services/telegram_payments.py
+```

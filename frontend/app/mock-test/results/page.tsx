@@ -157,7 +157,7 @@ export default function FreeDiagnosticResultsPage() {
       });
   }, [language, result, stored]);
 
-  const paymentUrl = useMemo(() => `/pricing?lang=${language}&plan=pro&from=free-diagnostic&payment=qr`, [language]);
+  const paymentUrl = useMemo(() => `/payment?lang=${language}&from=free-diagnostic`, [language]);
   const unlockUrl = useMemo(() => {
     if (isLoggedIn) return paymentUrl;
     const params = new URLSearchParams();

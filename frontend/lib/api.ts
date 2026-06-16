@@ -48,6 +48,32 @@ export type SubscriptionStatus = {
   } | null;
 };
 
+export type PaymentConfig = {
+  payme_qr_url: string;
+  click_qr_url: string;
+  telegram_bot_url: string;
+  plans: Record<string, { amount: number; days: number; label: string }>;
+};
+
+export type PaymentOrder = {
+  id: string;
+  reference: string;
+  status: string;
+  student_name: string;
+  email: string;
+  subscription_type: "monthly" | "three_month";
+  amount: number;
+  currency: string;
+  estimated_score: number | null;
+  weak_areas: string[];
+  telegram_url: string;
+  payme_qr_url: string;
+  click_qr_url: string;
+  created_at: string;
+  activation_date: string | null;
+  expiry_date: string | null;
+};
+
 function getSafeStorage() {
   if (typeof window === "undefined") return null;
   try {
@@ -129,6 +155,25 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 
 export async function getSubscriptionStatus() {
   return api<SubscriptionStatus>("/api/subscriptions/me");
+}
+
+export async function getPaymentConfig() {
+  return api<PaymentConfig>("/api/payment/config");
+}
+
+export async function createPaymentOrder(payload: {
+  subscription_type: "monthly" | "three_month";
+  estimated_score?: number | null;
+  weak_areas?: string[];
+}) {
+  return api<PaymentOrder>("/api/payment/orders", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getPaymentOrder(reference: string) {
+  return api<PaymentOrder>(`/api/payment/orders/${encodeURIComponent(reference)}`);
 }
 
 export function saveAuth(token: string, fullName?: string | null) {

@@ -60,9 +60,37 @@ type AdminSubscription = {
   created_at: string;
 };
 
+type AdminPaymentOrder = {
+  id: string;
+  reference: string;
+  student_name: string;
+  email: string;
+  subscription_type: string;
+  amount: number;
+  currency: string;
+  status: string;
+  estimated_score: number | null;
+  weak_areas: string[];
+  telegram_username: string | null;
+  telegram_phone: string | null;
+  activation_date: string | null;
+  expiry_date: string | null;
+  created_at: string;
+};
+
+type AdminPaymentOrderSummary = {
+  pending: AdminPaymentOrder[];
+  activated: AdminPaymentOrder[];
+  rejected: AdminPaymentOrder[];
+  total_revenue: number;
+  currency: string;
+  all: AdminPaymentOrder[];
+};
+
 export default function AdminPage() {
   const [questions, setQuestions] = useState<QualityQuestion[]>([]);
   const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>([]);
+  const [paymentOrders, setPaymentOrders] = useState<AdminPaymentOrderSummary | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
@@ -73,6 +101,9 @@ export default function AdminPage() {
     }).catch((err) => setMessage(err.message));
     api<AdminSubscription[]>("/api/admin/subscriptions")
       .then(setSubscriptions)
+      .catch((err) => setMessage(err.message));
+    api<AdminPaymentOrderSummary>("/api/admin/payment-orders")
+      .then(setPaymentOrders)
       .catch((err) => setMessage(err.message));
   }
 
@@ -139,6 +170,74 @@ export default function AdminPage() {
         </div>
 
         {message ? <p className="mt-4 rounded-md bg-blue-50 p-3 font-semibold text-brand">{message}</p> : null}
+
+        <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-black text-ink">Telegram payment orders</h2>
+              <p className="mt-1 text-sm text-slate-600">Pending screenshots, activated subscriptions, and revenue from the Uzbek QR flow.</p>
+            </div>
+            <div className="rounded-lg bg-emerald-50 px-4 py-3 text-right">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Total revenue</p>
+              <p className="text-2xl font-black text-emerald-800">
+                {(paymentOrders?.total_revenue ?? 0).toLocaleString()} {paymentOrders?.currency ?? "UZS"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <StatCard label="Pending" value={paymentOrders?.pending.length ?? 0} />
+            <StatCard label="Activated" value={paymentOrders?.activated.length ?? 0} />
+            <StatCard label="Rejected" value={paymentOrders?.rejected.length ?? 0} />
+          </div>
+
+          <div className="mt-4 overflow-auto rounded-lg border border-slate-200">
+            <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
+              <thead className="bg-slate-50">
+                <tr className="border-b border-slate-200">
+                  <th className="p-3">Reference</th>
+                  <th className="p-3">Student</th>
+                  <th className="p-3">Plan</th>
+                  <th className="p-3">Amount</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Telegram</th>
+                  <th className="p-3">Score</th>
+                  <th className="p-3">Weak areas</th>
+                  <th className="p-3">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paymentOrders?.all.length ? paymentOrders.all.map((order) => (
+                  <tr key={order.id} className="border-b border-slate-100">
+                    <td className="p-3 font-black text-ink">{order.reference}</td>
+                    <td className="p-3">
+                      <div className="font-bold text-ink">{order.student_name}</div>
+                      <div className="text-xs text-slate-500">{order.email}</div>
+                    </td>
+                    <td className="p-3 font-bold">{order.subscription_type === "three_month" ? "3 months" : "1 month"}</td>
+                    <td className="p-3">{order.amount.toLocaleString()} {order.currency}</td>
+                    <td className="p-3">
+                      <span className={`rounded-md px-2 py-1 text-xs font-black ${order.status === "approved" ? "bg-emerald-50 text-emerald-700" : order.status === "rejected" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-slate-600">
+                      {order.telegram_username ? `@${order.telegram_username}` : "n/a"}
+                      {order.telegram_phone ? <div className="text-xs">{order.telegram_phone}</div> : null}
+                    </td>
+                    <td className="p-3 text-slate-600">{order.estimated_score ?? "n/a"}</td>
+                    <td className="p-3 text-slate-600">{order.weak_areas?.join(", ") || "n/a"}</td>
+                    <td className="p-3 text-slate-600">{new Date(order.created_at).toLocaleString()}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td className="p-4 text-slate-500" colSpan={9}>No payment orders yet.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -342,6 +441,15 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg border border-slate-200 p-4">
       <div className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</div>
       <div className="mt-2 text-2xl font-black text-ink">{value}</div>
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <div className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-2 text-3xl font-black text-ink">{value}</div>
     </div>
   );
 }

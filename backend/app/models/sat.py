@@ -266,3 +266,27 @@ class Subscription(Base):
     price_amount: Mapped[float | None] = mapped_column(Numeric(10, 2))
     currency: Mapped[str] = mapped_column(String(8), default="UZS")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class PaymentOrder(Base):
+    __tablename__ = "payment_orders"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reference: Mapped[str] = mapped_column(String(16), unique=True, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    subscription_type: Mapped[str] = mapped_column(String(24))
+    amount: Mapped[float] = mapped_column(Numeric(10, 2))
+    currency: Mapped[str] = mapped_column(String(8), default="UZS")
+    status: Mapped[str] = mapped_column(String(40), default="pending")
+    estimated_score: Mapped[int | None] = mapped_column(Integer)
+    weak_areas: Mapped[list] = mapped_column(JSON, default=list)
+    telegram_chat_id: Mapped[str | None] = mapped_column(String(80))
+    telegram_username: Mapped[str | None] = mapped_column(String(255))
+    telegram_phone: Mapped[str | None] = mapped_column(String(40))
+    screenshot_file_id: Mapped[str | None] = mapped_column(String(255))
+    admin_message_id: Mapped[str | None] = mapped_column(String(80))
+    activation_date: Mapped[datetime | None] = mapped_column(DateTime)
+    expiry_date: Mapped[datetime | None] = mapped_column(DateTime)
+    rejection_reason: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

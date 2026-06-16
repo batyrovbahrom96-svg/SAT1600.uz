@@ -17,7 +17,7 @@ from app.api.deps import get_current_user, require_admin
 from app.core.config import get_settings
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db, get_engine
-from app.models import Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, Subscription, Test, TestAttempt, TestTelemetrySummary, User
+from app.models import PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, Subscription, Test, TestAttempt, TestTelemetrySummary, User
 from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, ResultsOut, TokenResponse, VerificationCodeRequest
 from app.services.graph_engine import generate_linear_graph, generate_sat_graph_set
 from app.services.sat_engine import (
@@ -51,6 +51,18 @@ class FullMockResultNotification(BaseModel):
     math_score: int = Field(ge=200, le=800)
     weak_areas: list[str] = Field(default_factory=list, max_length=5)
     language: str = Field(pattern="^(EN|RU|UZ|en|ru|uz)$")
+
+
+class PaymentOrderCreate(BaseModel):
+    subscription_type: str = Field(pattern="^(monthly|three_month)$")
+    estimated_score: int | None = Field(default=None, ge=400, le=1600)
+    weak_areas: list[str] = Field(default_factory=list, max_length=8)
+
+
+PAYMENT_PLANS = {
+    "monthly": {"amount": 200000, "days": 30, "label": "1 month"},
+    "three_month": {"amount": 600000, "days": 90, "label": "3 months"},
+}
 
 
 @router.get("/health")
@@ -187,6 +199,48 @@ def my_subscription(db: Session = Depends(get_db), user: User = Depends(get_curr
             "current_period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
         },
     }
+
+
+@router.get("/payment/config")
+def payment_config() -> dict:
+    settings = get_settings()
+    return {
+        "payme_qr_url": settings.payme_qr_url,
+        "click_qr_url": settings.click_qr_url,
+        "telegram_bot_url": "https://t.me/SATTEST_UZ_bot",
+        "plans": {
+            key: {"amount": value["amount"], "days": value["days"], "label": value["label"]}
+            for key, value in PAYMENT_PLANS.items()
+        },
+    }
+
+
+@router.post("/payment/orders")
+def create_payment_order(
+    payload: PaymentOrderCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    plan = PAYMENT_PLANS[payload.subscription_type]
+    reference = _new_payment_reference(db)
+    order = PaymentOrder(
+        reference=reference,
+        user_id=user.id,
+        subscription_type=payload.subscription_type,
+        amount=plan["amount"],
+        estimated_score=payload.estimated_score,
+        weak_areas=payload.weak_areas,
+    )
+    db.add(order)
+    db.commit()
+    db.refresh(order)
+    return _payment_order_payload(order, user)
+
+
+@router.get("/payment/orders/{reference}")
+def get_payment_order(reference: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    order = _owned_payment_order(db, reference, user)
+    return _payment_order_payload(order, user)
 
 
 @router.post("/telegram/webhook")
@@ -517,6 +571,30 @@ def admin_subscriptions(db: Session = Depends(get_db), _: User = Depends(require
     ]
 
 
+@router.get("/admin/payment-orders")
+def admin_payment_orders(db: Session = Depends(get_db), _: User = Depends(require_admin)) -> dict:
+    rows = (
+        db.execute(
+            select(PaymentOrder, User)
+            .join(User, PaymentOrder.user_id == User.id)
+            .order_by(PaymentOrder.created_at.desc())
+            .limit(200)
+        )
+        .all()
+    )
+    orders = [_admin_payment_order_payload(order, user) for order, user in rows]
+    activated = [order for order, _ in rows if order.status == "approved"]
+    total_revenue = sum(float(order.amount or 0) for order in activated)
+    return {
+        "pending": [order for order in orders if order["status"] in {"pending", "telegram_opened", "screenshot_received"}],
+        "activated": [order for order in orders if order["status"] == "approved"],
+        "rejected": [order for order in orders if order["status"] == "rejected"],
+        "total_revenue": total_revenue,
+        "currency": "UZS",
+        "all": orders,
+    }
+
+
 @router.post("/admin/subscriptions/{subscription_id}/revoke")
 def revoke_subscription(subscription_id: UUID, db: Session = Depends(get_db), _: User = Depends(require_admin)) -> dict:
     subscription = db.get(Subscription, subscription_id)
@@ -678,6 +756,67 @@ def _owned_attempt(db: Session, attempt_id: UUID, user: User) -> TestAttempt:
     if not attempt or attempt.user_id != user.id:
         raise HTTPException(status_code=404, detail="Attempt not found")
     return attempt
+
+
+def _new_payment_reference(db: Session) -> str:
+    for _ in range(20):
+        reference = f"SAT-{random.SystemRandom().randint(0, 999999):06d}"
+        exists = db.execute(select(PaymentOrder.id).where(PaymentOrder.reference == reference)).first()
+        if not exists:
+            return reference
+    raise HTTPException(status_code=503, detail="Unable to create payment reference")
+
+
+def _owned_payment_order(db: Session, reference: str, user: User) -> PaymentOrder:
+    order = db.execute(select(PaymentOrder).where(PaymentOrder.reference == reference.upper())).scalar_one_or_none()
+    if not order or order.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Payment order not found")
+    return order
+
+
+def _payment_order_payload(order: PaymentOrder, user: User) -> dict:
+    settings = get_settings()
+    telegram_url = f"https://t.me/SATTEST_UZ_bot?start={order.reference}"
+    return {
+        "id": order.id,
+        "reference": order.reference,
+        "status": order.status,
+        "student_name": user.full_name,
+        "email": user.email,
+        "subscription_type": order.subscription_type,
+        "amount": float(order.amount or 0),
+        "currency": order.currency,
+        "estimated_score": order.estimated_score,
+        "weak_areas": order.weak_areas or [],
+        "telegram_url": telegram_url,
+        "payme_qr_url": settings.payme_qr_url,
+        "click_qr_url": settings.click_qr_url,
+        "created_at": order.created_at.isoformat(),
+        "activation_date": order.activation_date.isoformat() if order.activation_date else None,
+        "expiry_date": order.expiry_date.isoformat() if order.expiry_date else None,
+    }
+
+
+def _admin_payment_order_payload(order: PaymentOrder, user: User) -> dict:
+    return {
+        "id": order.id,
+        "reference": order.reference,
+        "student_name": user.full_name,
+        "email": user.email,
+        "subscription_type": order.subscription_type,
+        "amount": float(order.amount or 0),
+        "currency": order.currency,
+        "status": order.status,
+        "estimated_score": order.estimated_score,
+        "weak_areas": order.weak_areas or [],
+        "telegram_username": order.telegram_username,
+        "telegram_phone": order.telegram_phone,
+        "screenshot_file_id": order.screenshot_file_id,
+        "activation_date": order.activation_date.isoformat() if order.activation_date else None,
+        "expiry_date": order.expiry_date.isoformat() if order.expiry_date else None,
+        "created_at": order.created_at.isoformat(),
+        "updated_at": order.updated_at.isoformat(),
+    }
 
 
 def _record_exposures(db: Session, attempt: TestAttempt, questions: list[Question]) -> None:

@@ -195,6 +195,33 @@ CREATE TABLE subscriptions (
 CREATE INDEX ix_subscriptions_status_period ON subscriptions(status, current_period_end);
 CREATE INDEX ix_subscriptions_provider_customer ON subscriptions(provider_customer_id);
 
+CREATE TABLE payment_orders (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  reference VARCHAR(16) NOT NULL UNIQUE,
+  user_id UUID NOT NULL REFERENCES users(id),
+  subscription_type VARCHAR(24) NOT NULL,
+  amount NUMERIC(10, 2) NOT NULL,
+  currency VARCHAR(8) NOT NULL DEFAULT 'UZS',
+  status VARCHAR(40) NOT NULL DEFAULT 'pending',
+  estimated_score INTEGER,
+  weak_areas JSONB NOT NULL DEFAULT '[]',
+  telegram_chat_id VARCHAR(80),
+  telegram_username VARCHAR(255),
+  telegram_phone VARCHAR(40),
+  screenshot_file_id VARCHAR(255),
+  admin_message_id VARCHAR(80),
+  activation_date TIMESTAMP,
+  expiry_date TIMESTAMP,
+  rejection_reason TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX ix_payment_orders_reference ON payment_orders(reference);
+CREATE INDEX ix_payment_orders_status_created ON payment_orders(status, created_at DESC);
+CREATE INDEX ix_payment_orders_user_created ON payment_orders(user_id, created_at DESC);
+CREATE INDEX ix_payment_orders_telegram_chat ON payment_orders(telegram_chat_id);
+
 CREATE INDEX ix_questions_sat_routing ON questions(test_id, section, module, adaptive_level, difficulty);
 CREATE INDEX ix_questions_source ON questions(source);
 CREATE INDEX ix_questions_topic ON questions(topic);

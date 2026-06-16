@@ -12,7 +12,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models import Subscription, User
+from app.models import PaymentOrder, Subscription, User
 
 PLAN_ALIASES = {
     "pro": "pro",
@@ -23,6 +23,11 @@ PLAN_ALIASES = {
 
 PLAN_PRICES = {
     "pro": 200000,
+}
+
+ORDER_PLAN_DAYS = {
+    "monthly": 30,
+    "three_month": 90,
 }
 
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
@@ -114,7 +119,10 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     text = str(message.get("text") or message.get("caption") or "").strip()
 
     if text.startswith("/start"):
-        _send_message(chat_id, START_MESSAGE)
+        parts = text.split(maxsplit=1)
+        if len(parts) > 1 and parts[1].strip().upper().startswith("SAT-"):
+            return _handle_payment_order_start(chat_id, parts[1].strip().upper(), message, db)
+        _send_message(chat_id, "Salom! To'lov skrinshoting yubor 📸\n\n" + START_MESSAGE)
         return {"ok": True}
 
     if text.startswith(("/pro_report", "/report")):
@@ -124,6 +132,11 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     if not has_receipt:
         _send_message(chat_id, RECEIPT_REQUEST_MESSAGE)
         return {"ok": True}
+
+    if db is not None:
+        active_order = _latest_order_for_chat(db, chat_id)
+        if active_order:
+            return _handle_payment_order_screenshot(active_order, message, db)
 
     receipt = _extract_receipt_payload(text)
     if not receipt["email"] or not receipt["phone"] or not receipt["full_name"]:
@@ -186,11 +199,15 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
         _answer_callback(callback_id, "Only Founder can manage payment access.")
         return {"ok": True, "ignored": True}
 
-    action, _, raw_subscription_id = data.partition(":")
+    action, _, raw_id = data.partition(":")
     if db is None:
         _answer_callback(callback_id, "Database is not connected, approve manually.")
         return {"ok": True, "manual": True}
 
+    if action in {"payapprove", "paydeny"}:
+        return _handle_payment_order_callback(callback_query, action, raw_id.upper(), db)
+
+    raw_subscription_id = raw_id
     if action not in {"approve", "deny", "revoke"}:
         _answer_callback(callback_id, "Unknown action.")
         return {"ok": True, "ignored": True}
@@ -251,6 +268,188 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
         )
     _edit_admin_message(callback_query, f"DENIED\n\n{_subscription_summary(subscription, user)}")
     return {"ok": True, "status": "denied"}
+
+
+def _handle_payment_order_start(chat_id: str, reference: str, message: dict, db: Session | None) -> dict:
+    if db is None:
+        _send_message(chat_id, "Ma'lumotlar bazasi vaqtincha ulanmagan. Iltimos, birozdan keyin qayta urinib ko'ring.")
+        return {"ok": True, "database": False}
+
+    order = db.execute(select(PaymentOrder).where(PaymentOrder.reference == reference)).scalar_one_or_none()
+    if not order:
+        _send_message(chat_id, "Buyurtma topilmadi. Iltimos, SATTEST.UZ payment sahifasidan qayta urinib ko'ring.")
+        return {"ok": True, "order_found": False}
+
+    from_user = message.get("from", {})
+    order.telegram_chat_id = chat_id
+    order.telegram_username = from_user.get("username")
+    if message.get("contact"):
+      order.telegram_phone = message["contact"].get("phone_number")
+    if order.status == "pending":
+        order.status = "telegram_opened"
+    db.commit()
+
+    _send_message(
+        chat_id,
+        f"Salom! To'lov skrinshoting yubor 📸\n\n"
+        f"Buyurtma raqami: {order.reference}\n"
+        "Skrinshotni shu chatga yuboring. Founder tekshiradi va 5 daqiqa ichida Pro faollashtiriladi ✅",
+    )
+    return {"ok": True, "reference": order.reference}
+
+
+def _latest_order_for_chat(db: Session, chat_id: str) -> PaymentOrder | None:
+    return (
+        db.execute(
+            select(PaymentOrder)
+            .where(
+                PaymentOrder.telegram_chat_id == chat_id,
+                PaymentOrder.status.in_(["pending", "telegram_opened", "screenshot_received"]),
+            )
+            .order_by(PaymentOrder.created_at.desc())
+        )
+        .scalars()
+        .first()
+    )
+
+
+def _handle_payment_order_screenshot(order: PaymentOrder, message: dict, db: Session) -> dict:
+    file_id = _receipt_file_id(message)
+    from_user = message.get("from", {})
+    order.screenshot_file_id = file_id
+    order.telegram_username = from_user.get("username") or order.telegram_username
+    if message.get("contact"):
+        order.telegram_phone = message["contact"].get("phone_number")
+    order.status = "screenshot_received"
+    db.commit()
+
+    _send_message(
+        str(message.get("chat", {}).get("id", "")),
+        f"Chek qabul qilindi ✅\nBuyurtma raqami: {order.reference}\n5 daqiqa ichida tekshiramiz.",
+    )
+    _notify_admin_for_payment_order(order, message, db)
+    return {"ok": True, "reference": order.reference, "status": order.status}
+
+
+def _receipt_file_id(message: dict) -> str | None:
+    photos = message.get("photo") or []
+    if photos:
+        return photos[-1].get("file_id")
+    document = message.get("document") or {}
+    return document.get("file_id")
+
+
+def _notify_admin_for_payment_order(order: PaymentOrder, message: dict, db: Session) -> None:
+    settings = get_settings()
+    if not settings.telegram_admin_chat_id:
+        return
+
+    user = db.get(User, order.user_id)
+    from_user = message.get("from", {})
+    username = from_user.get("username")
+    sender_name = " ".join(part for part in [from_user.get("first_name"), from_user.get("last_name")] if part) or "Unknown"
+    sender_line = f"{sender_name}" + (f" (@{username})" if username else "")
+    phone = order.telegram_phone or "Not available"
+    weak_areas = ", ".join(order.weak_areas or []) or "Not provided"
+    amount = f"{int(order.amount or 0):,}".replace(",", " ")
+
+    text = (
+        "SATTEST.UZ payment waiting for approval.\n\n"
+        f"Order: {order.reference}\n"
+        f"Student: {user.full_name if user else 'Unknown'}\n"
+        f"Email: {user.email if user else 'Unknown'}\n"
+        f"Telegram: {sender_line}\n"
+        f"Phone: {phone}\n"
+        f"Plan: {_order_plan_label(order.subscription_type)}\n"
+        f"Amount: {amount} {order.currency}\n"
+        f"Estimated score: {order.estimated_score or 'n/a'}\n"
+        f"Weak areas: {weak_areas}\n\n"
+        "Tekshirib, tasdiqlang yoki rad eting."
+    )
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {"text": "✅ Tasdiqlash", "callback_data": f"payapprove:{order.reference}"},
+                {"text": "❌ Rad etish", "callback_data": f"paydeny:{order.reference}"},
+            ]
+        ]
+    }
+
+    _copy_message(settings.telegram_admin_chat_id, message["chat"]["id"], message["message_id"])
+    response = _send_message(settings.telegram_admin_chat_id, text, reply_markup=keyboard)
+    message_id = (response.get("result") or {}).get("message_id")
+    if message_id:
+        order.admin_message_id = str(message_id)
+        db.commit()
+
+
+def _handle_payment_order_callback(callback_query: dict, action: str, reference: str, db: Session) -> dict:
+    callback_id = callback_query.get("id")
+    order = db.execute(select(PaymentOrder).where(PaymentOrder.reference == reference)).scalar_one_or_none()
+    if not order:
+        _answer_callback(callback_id, "Order not found.")
+        return {"ok": True, "order_found": False}
+
+    user = db.get(User, order.user_id)
+    if not user:
+        _answer_callback(callback_id, "User not found.")
+        return {"ok": True, "user_found": False}
+
+    if action == "paydeny":
+        order.status = "rejected"
+        order.rejection_reason = "Admin rejected payment screenshot"
+        db.commit()
+        _answer_callback(callback_id, "Payment rejected.")
+        if order.telegram_chat_id:
+            _send_message(
+                order.telegram_chat_id,
+                "Uzr, to'lovni tasdiqlay olmadik.\n"
+                "Iltimos qayta urinib ko'ring yoki @Bakhrom_Botirov ga murojaat qiling",
+            )
+        _edit_admin_message(callback_query, f"REJECTED\n\nOrder: {order.reference}\nStudent: {user.full_name}\nEmail: {user.email}")
+        return {"ok": True, "status": "rejected"}
+
+    now = datetime.utcnow()
+    days = ORDER_PLAN_DAYS.get(order.subscription_type, 30)
+    expiry = now + timedelta(days=days)
+    subscription = Subscription(
+        user_id=user.id,
+        plan="pro",
+        status="active",
+        provider="telegram_payment_order",
+        provider_customer_id=order.telegram_chat_id,
+        payer_full_name=user.full_name,
+        payer_phone=order.telegram_phone,
+        current_period_start=now,
+        current_period_end=expiry,
+        price_amount=order.amount,
+        currency=order.currency,
+    )
+    order.status = "approved"
+    order.activation_date = now
+    order.expiry_date = expiry
+    db.add(subscription)
+    db.commit()
+
+    _answer_callback(callback_id, "Pro activated.")
+    if order.telegram_chat_id:
+        result_link = _mock_result_link(user)
+        _send_message(
+            order.telegram_chat_id,
+            "🎉 Tabriklaymiz! Pro obunangiz faollashtirildi!\n"
+            "SATTEST.UZ ga kiring va boshlang: https://www.sattest.uz/pro\n\n"
+            f"Mock natijangizni ochish: {result_link}",
+            reply_markup=_receipt_active_keyboard(user),
+        )
+    _edit_admin_message(
+        callback_query,
+        f"APPROVED\n\nOrder: {order.reference}\nStudent: {user.full_name}\nEmail: {user.email}\nExpires: {_format_subscription_date(expiry)}",
+    )
+    return {"ok": True, "status": "approved"}
+
+
+def _order_plan_label(subscription_type: str) -> str:
+    return "3 months" if subscription_type == "three_month" else "1 month"
 
 
 def _handle_admin_report_command(chat_id: str, db: Session | None) -> dict:
