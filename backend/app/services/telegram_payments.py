@@ -12,7 +12,8 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models import PaymentOrder, Subscription, User
+from app.models import PaymentOrder, Subscription, TelegramAudience, TestAttempt, User
+from app.services.messages import BUTTONS, LANGUAGE_BUTTONS, MESSAGES, SUPPORTED_LANGUAGES
 
 PLAN_ALIASES = {
     "pro": "pro",
@@ -105,6 +106,9 @@ def handle_telegram_update(update: dict, db: Session | None) -> dict:
     if callback_query := update.get("callback_query"):
         return _handle_callback(callback_query, db)
 
+    if chat_member := update.get("chat_member"):
+        return _handle_chat_member(chat_member, db)
+
     if message := update.get("message"):
         return _handle_message(message, db)
 
@@ -118,12 +122,26 @@ def _handle_message(message: dict, db: Session | None) -> dict:
 
     text = str(message.get("text") or message.get("caption") or "").strip()
 
+    if message.get("new_chat_members"):
+        return _handle_new_chat_members(message, db)
+
     if text.startswith("/start"):
         parts = text.split(maxsplit=1)
         if len(parts) > 1 and parts[1].strip().upper().startswith("SAT-"):
             return _handle_payment_order_start(chat_id, parts[1].strip().upper(), message, db)
+        if len(parts) > 1 and parts[1].strip().lower() in {"pro", "pay", "payment"}:
+            _send_message(chat_id, "Salom! To'lov skrinshoting yubor 📸\n\n" + START_MESSAGE, reply_markup=_payment_help_keyboard())
+            return {"ok": True, "payment_help": True}
+        if db is not None:
+            return _send_welcome_from_message(message, db)
         _send_message(chat_id, "Salom! To'lov skrinshoting yubor 📸\n\n" + START_MESSAGE, reply_markup=_payment_help_keyboard())
         return {"ok": True}
+
+    if text.startswith("/stats"):
+        return _handle_stats_command(chat_id, db)
+
+    if text.startswith(("/broadcast_uz", "/broadcast_ru", "/broadcast_en", "/broadcast_all")):
+        return _handle_broadcast_command(chat_id, text, db)
 
     if text.startswith(("/pro_report", "/report")):
         return _handle_admin_report_command(chat_id, db)
@@ -193,6 +211,12 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
     callback_id = callback_query.get("id")
     data = str(callback_query.get("data") or "")
     admin_chat_id = str(callback_query.get("message", {}).get("chat", {}).get("id", ""))
+
+    if data.startswith("lang:"):
+        return _handle_language_callback(callback_query, db)
+
+    if data.startswith("goal:"):
+        return _handle_goal_callback(callback_query, db)
 
     settings = get_settings()
     if settings.telegram_admin_chat_id and admin_chat_id != str(settings.telegram_admin_chat_id):
@@ -268,6 +292,142 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
         )
     _edit_admin_message(callback_query, f"DENIED\n\n{_subscription_summary(subscription, user)}")
     return {"ok": True, "status": "denied"}
+
+
+def _handle_chat_member(chat_member: dict, db: Session | None) -> dict:
+    if db is None:
+        return {"ok": True, "database": False}
+
+    new_member = chat_member.get("new_chat_member") or {}
+    status = str(new_member.get("status") or "")
+    user = new_member.get("user") or {}
+    if status not in {"member", "administrator", "creator"} or user.get("is_bot"):
+        return {"ok": True, "ignored": True}
+
+    lead = _upsert_telegram_audience(db, user, str(user.get("id") or ""))
+    _send_welcome_to_lead(lead, db)
+    return {"ok": True, "welcome": True, "telegram_user_id": lead.telegram_user_id}
+
+
+def _handle_new_chat_members(message: dict, db: Session | None) -> dict:
+    if db is None:
+        return {"ok": True, "database": False}
+
+    chat_id = str(message.get("chat", {}).get("id", ""))
+    welcomed = 0
+    for user in message.get("new_chat_members") or []:
+        if user.get("is_bot"):
+            continue
+        lead = _upsert_telegram_audience(db, user, chat_id)
+        _send_welcome_to_lead(lead, db)
+        welcomed += 1
+    return {"ok": True, "welcomed": welcomed}
+
+
+def _send_welcome_from_message(message: dict, db: Session) -> dict:
+    from_user = message.get("from") or {}
+    chat_id = str(message.get("chat", {}).get("id", "") or from_user.get("id", ""))
+    lead = _upsert_telegram_audience(db, from_user, chat_id)
+    _send_welcome_to_lead(lead, db)
+    return {"ok": True, "welcome": True, "telegram_user_id": lead.telegram_user_id}
+
+
+def _upsert_telegram_audience(db: Session, telegram_user: dict, chat_id: str) -> TelegramAudience:
+    telegram_user_id = str(telegram_user.get("id") or chat_id)
+    detected_language = _detect_language(telegram_user.get("language_code"))
+    lead = db.execute(
+        select(TelegramAudience).where(TelegramAudience.telegram_user_id == telegram_user_id)
+    ).scalar_one_or_none()
+    now = datetime.utcnow()
+    if not lead:
+        lead = TelegramAudience(
+            telegram_user_id=telegram_user_id,
+            chat_id=chat_id or telegram_user_id,
+            detected_language=detected_language,
+            created_at=now,
+        )
+        db.add(lead)
+
+    lead.chat_id = chat_id or lead.chat_id or telegram_user_id
+    lead.username = telegram_user.get("username") or lead.username
+    lead.first_name = telegram_user.get("first_name") or lead.first_name
+    lead.last_name = telegram_user.get("last_name") or lead.last_name
+    if detected_language and not lead.language_confirmed:
+        lead.detected_language = detected_language
+    elif not telegram_user.get("language_code") and not lead.detected_language:
+        lead.detected_language = "unknown"
+    lead.updated_at = now
+    db.commit()
+    db.refresh(lead)
+    return lead
+
+
+def _send_welcome_to_lead(lead: TelegramAudience, db: Session) -> None:
+    first_name = lead.first_name or "friend"
+    languages = _welcome_languages(lead)
+    delivered = False
+    for language in languages:
+        response = _send_message(
+            lead.chat_id,
+            _message("welcome", language, first_name=first_name),
+            reply_markup=_diagnostic_keyboard(language, "start_test"),
+        )
+        delivered = delivered or bool(response.get("ok", True))
+    prompt_response = _send_message(lead.chat_id, _message("language_prompt", "en"), reply_markup=_language_keyboard())
+    delivered = delivered or bool(prompt_response.get("ok", True))
+    if delivered:
+        lead.welcome_sent_at = lead.welcome_sent_at or datetime.utcnow()
+        db.commit()
+
+
+def _handle_language_callback(callback_query: dict, db: Session | None) -> dict:
+    callback_id = callback_query.get("id")
+    language = str(callback_query.get("data") or "").partition(":")[2]
+    if language not in SUPPORTED_LANGUAGES:
+        _answer_callback(callback_id, "Unknown language.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _answer_callback(callback_id, "Database is not connected.")
+        return {"ok": True, "database": False}
+
+    from_user = callback_query.get("from") or {}
+    chat_id = str(callback_query.get("message", {}).get("chat", {}).get("id", "") or from_user.get("id", ""))
+    lead = _upsert_telegram_audience(db, from_user, chat_id)
+    now = datetime.utcnow()
+    lead.chosen_language = language
+    lead.language_confirmed = True
+    lead.language_set_date = now
+    lead.updated_at = now
+    db.commit()
+    _answer_callback(callback_id, _message("language_saved", language))
+    _send_message(lead.chat_id, _message("language_saved", language), reply_markup=_diagnostic_keyboard(language, "start_test"))
+    return {"ok": True, "language": language}
+
+
+def _handle_goal_callback(callback_query: dict, db: Session | None) -> dict:
+    callback_id = callback_query.get("id")
+    goal = str(callback_query.get("data") or "").partition(":")[2]
+    if goal not in {"1000-1100", "1200-1300", "1400+"}:
+        _answer_callback(callback_id, "Unknown goal.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _answer_callback(callback_id, "Database is not connected.")
+        return {"ok": True, "database": False}
+
+    from_user = callback_query.get("from") or {}
+    chat_id = str(callback_query.get("message", {}).get("chat", {}).get("id", "") or from_user.get("id", ""))
+    lead = _upsert_telegram_audience(db, from_user, chat_id)
+    language = _lead_language(lead)
+    lead.target_score = goal
+    lead.link_clicked_at = datetime.utcnow()
+    db.commit()
+    _answer_callback(callback_id, "OK")
+    _send_message(
+        lead.chat_id,
+        _message("goal_reply", language, first_name=lead.first_name or "friend", goal=goal),
+        reply_markup=_diagnostic_keyboard(language, "start_now"),
+    )
+    return {"ok": True, "goal": goal}
 
 
 def _handle_payment_order_start(chat_id: str, reference: str, message: dict, db: Session | None) -> dict:
@@ -458,6 +618,50 @@ def _handle_admin_report_command(chat_id: str, db: Session | None) -> dict:
     report = build_daily_pro_report(db)
     _send_message(chat_id, report)
     return {"ok": True, "report": True}
+
+
+def _handle_stats_command(chat_id: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can request SATTEST.UZ bot statistics.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so stats are unavailable.")
+        return {"ok": True, "database": False}
+
+    _send_message(chat_id, build_welcome_bot_stats(db))
+    return {"ok": True, "stats": True}
+
+
+def _handle_broadcast_command(chat_id: str, text: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can send SATTEST.UZ broadcasts.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so broadcast is unavailable.")
+        return {"ok": True, "database": False}
+
+    command, _, body = text.partition(" ")
+    body = body.strip()
+    if command == "/broadcast_all":
+        versions = _parse_broadcast_versions(body)
+        if not versions:
+            _send_message(
+                chat_id,
+                "Use:\n/broadcast_all\nUZ: Uzbek message\nRU: Russian message\nEN: English message",
+            )
+            return {"ok": True, "broadcast": False}
+        sent = _broadcast_all_languages(db, versions)
+    else:
+        language = command.removeprefix("/broadcast_")
+        if language not in SUPPORTED_LANGUAGES or not body:
+            _send_message(chat_id, "Use /broadcast_uz message, /broadcast_ru message, or /broadcast_en message.")
+            return {"ok": True, "broadcast": False}
+        sent = _broadcast_single_language(db, language, body)
+
+    _send_message(chat_id, f"Broadcast sent: {sent}")
+    return {"ok": True, "broadcast": True, "sent": sent}
 
 
 def _notify_admin_for_approval(subscription: Subscription, user: User, message: dict) -> None:
@@ -675,7 +879,8 @@ def process_subscription_maintenance(db: Session, *, send_daily_report: bool = F
         if settings.telegram_admin_chat_id:
             _send_message(settings.telegram_admin_chat_id, build_daily_pro_report(db))
 
-    return {"reminders_sent": reminders_sent, "expired": expired_count}
+    welcome_followups = process_welcome_followups(db)
+    return {"reminders_sent": reminders_sent, "expired": expired_count, "welcome_followups": welcome_followups}
 
 
 def build_daily_pro_report(db: Session) -> str:
@@ -734,11 +939,227 @@ def build_daily_pro_report(db: Session) -> str:
     )
 
 
+def process_welcome_followups(db: Session) -> dict:
+    now = datetime.utcnow()
+    leads = db.execute(select(TelegramAudience)).scalars().all()
+    sent = {"followup1": 0, "followup2": 0, "pro_reminder": 0}
+
+    for lead in leads:
+        created_at = lead.created_at or now
+        age = now - created_at
+        language = _lead_language(lead)
+        first_name = lead.first_name or "friend"
+
+        if age >= timedelta(hours=24) and not lead.followup_24h_sent_at:
+            response = _send_message(
+                lead.chat_id,
+                _message("followup1", language, first_name=first_name),
+                reply_markup=_goal_keyboard(),
+            )
+            if response.get("ok", True):
+                lead.followup_24h_sent_at = now
+                sent["followup1"] += 1
+
+        if age >= timedelta(hours=72) and not lead.followup_72h_sent_at:
+            response = _send_message(
+                lead.chat_id,
+                _message("followup2", language, first_name=first_name),
+                reply_markup=_diagnostic_keyboard(language, "start_now_free"),
+            )
+            if response.get("ok", True):
+                lead.followup_72h_sent_at = now
+                sent["followup2"] += 1
+
+        if age >= timedelta(days=7) and not lead.pro_reminder_sent_at:
+            response = _send_message(
+                lead.chat_id,
+                _message("pro_reminder", language, first_name=first_name),
+                reply_markup=_pro_reminder_keyboard(language),
+            )
+            if response.get("ok", True):
+                lead.pro_reminder_sent_at = now
+                sent["pro_reminder"] += 1
+
+    db.commit()
+    return sent
+
+
+def build_welcome_bot_stats(db: Session) -> str:
+    now = datetime.utcnow()
+    today_start = datetime(now.year, now.month, now.day)
+    week_start = now - timedelta(days=7)
+    month_start = now - timedelta(days=30)
+    leads = db.execute(select(TelegramAudience)).scalars().all()
+    total = len(leads)
+    language_counts = {language: 0 for language in SUPPORTED_LANGUAGES}
+    for lead in leads:
+        language_counts[_lead_language(lead)] += 1
+
+    welcome_sent = sum(1 for lead in leads if lead.welcome_sent_at)
+    link_clicked = sum(1 for lead in leads if lead.link_clicked_at or lead.target_score)
+    today = sum(1 for lead in leads if lead.created_at and lead.created_at >= today_start)
+    week = sum(1 for lead in leads if lead.created_at and lead.created_at >= week_start)
+    month = sum(1 for lead in leads if lead.created_at and lead.created_at >= month_start)
+    tests_taken = db.execute(select(func.count(TestAttempt.id)).where(TestAttempt.completed_at.is_not(None))).scalar_one()
+    pro_taken = db.execute(
+        select(func.count(Subscription.id)).where(
+            Subscription.status == "active",
+            or_(Subscription.current_period_end.is_(None), Subscription.current_period_end > now),
+        )
+    ).scalar_one()
+
+    return (
+        "📊 SATTEST BOT STATISTIKA\n\n"
+        f"👥 Jami foydalanuvchilar: {total}\n\n"
+        "🌐 TIL BO'YICHA:\n"
+        f"🇺🇿 O'zbek: {language_counts['uz']} ({_percent(language_counts['uz'], total)}%)\n"
+        f"🇷🇺 Русский: {language_counts['ru']} ({_percent(language_counts['ru'], total)}%)\n"
+        f"🇬🇧 English: {language_counts['en']} ({_percent(language_counts['en'], total)}%)\n\n"
+        f"✅ Xush kelibsiz xabari: {welcome_sent}\n"
+        f"🔗 Link bosganlar: {link_clicked} ({_percent(link_clicked, total)}%)\n"
+        f"🧪 Test topshirganlar: {tests_taken} ({_percent(tests_taken, total)}%)\n"
+        f"💰 Pro olganlar: {pro_taken} ({_percent(pro_taken, total)}%)\n\n"
+        f"📅 Bugun: {today}\n"
+        f"📅 Bu hafta: {week}\n"
+        f"📅 Bu oy: {month}"
+    )
+
+
+def _broadcast_single_language(db: Session, language: str, text: str) -> int:
+    sent = 0
+    for lead in db.execute(select(TelegramAudience)).scalars().all():
+        if _lead_language(lead) != language:
+            continue
+        _send_message(lead.chat_id, text)
+        sent += 1
+    return sent
+
+
+def _broadcast_all_languages(db: Session, versions: dict[str, str]) -> int:
+    sent = 0
+    for lead in db.execute(select(TelegramAudience)).scalars().all():
+        language = _lead_language(lead)
+        _send_message(lead.chat_id, versions[language])
+        sent += 1
+    return sent
+
+
+def _parse_broadcast_versions(text: str) -> dict[str, str] | None:
+    matches = list(re.finditer(r"(?im)^\s*(UZ|RU|EN)\s*:\s*", text))
+    if len(matches) < 3:
+        return None
+    versions: dict[str, str] = {}
+    for index, match in enumerate(matches):
+        key = match.group(1).lower()
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        value = text[start:end].strip()
+        if value:
+            versions[key] = value
+    return versions if all(language in versions for language in SUPPORTED_LANGUAGES) else None
+
+
 def _public_frontend_url() -> str:
     frontend_url = get_settings().frontend_url.rstrip("/")
     if "localhost" in frontend_url or "127.0.0.1" in frontend_url:
         return "https://www.sattest.uz"
     return frontend_url
+
+
+def _detect_language(language_code: str | None) -> str | None:
+    if not language_code:
+        return None
+    lowered = language_code.lower()
+    if lowered.startswith("uz"):
+        return "uz"
+    if lowered.startswith("ru"):
+        return "ru"
+    if lowered.startswith("en"):
+        return "en"
+    return "en"
+
+
+def _lead_language(lead: TelegramAudience | None) -> str:
+    if not lead:
+        return "en"
+    language = lead.chosen_language or lead.detected_language or "en"
+    return language if language in SUPPORTED_LANGUAGES else "en"
+
+
+def _welcome_languages(lead: TelegramAudience) -> list[str]:
+    if lead.chosen_language in SUPPORTED_LANGUAGES:
+        return [lead.chosen_language]
+    if lead.detected_language in SUPPORTED_LANGUAGES:
+        return [lead.detected_language]
+    if lead.detected_language == "unknown":
+        return list(SUPPORTED_LANGUAGES)
+    return ["en"]
+
+
+def _message(key: str, language: str, **values: str) -> str:
+    language = language if language in SUPPORTED_LANGUAGES else "en"
+    template = MESSAGES[key].get(language) or MESSAGES[key]["en"]
+    return template.format(**values)
+
+
+def _button(key: str, language: str) -> str:
+    language = language if language in SUPPORTED_LANGUAGES else "en"
+    return BUTTONS[key].get(language) or BUTTONS[key]["en"]
+
+
+def _percent(part: int | float, total: int | float) -> int:
+    return round((float(part) / float(total)) * 100) if total else 0
+
+
+def _diagnostic_url() -> str:
+    return _public_link("/mock-test/diagnostic")
+
+
+def _pricing_url() -> str:
+    return _public_link("/pricing?plan=pro")
+
+
+def _diagnostic_keyboard(language: str, button_key: str) -> dict:
+    return {
+        "inline_keyboard": [
+            [{"text": _button(button_key, language), "url": _diagnostic_url()}],
+        ]
+    }
+
+
+def _language_keyboard() -> dict:
+    return {
+        "inline_keyboard": [
+            [
+                {"text": LANGUAGE_BUTTONS["uz"], "callback_data": "lang:uz"},
+                {"text": LANGUAGE_BUTTONS["ru"], "callback_data": "lang:ru"},
+                {"text": LANGUAGE_BUTTONS["en"], "callback_data": "lang:en"},
+            ]
+        ]
+    }
+
+
+def _goal_keyboard() -> dict:
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "1000-1100 🎯", "callback_data": "goal:1000-1100"},
+                {"text": "1200-1300 🎯", "callback_data": "goal:1200-1300"},
+                {"text": "1400+ 🏆", "callback_data": "goal:1400+"},
+            ]
+        ]
+    }
+
+
+def _pro_reminder_keyboard(language: str) -> dict:
+    return {
+        "inline_keyboard": [
+            [
+                {"text": _button("get_pro", language), "url": _pricing_url()},
+                {"text": _button("have_question", language), "url": "https://t.me/Bakhrom_Botirov"},
+            ]
+        ]
+    }
 
 
 def _pro_login_link(email: str | None, next_path: str) -> str:

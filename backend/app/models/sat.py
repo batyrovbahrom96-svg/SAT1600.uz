@@ -45,6 +45,10 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(255))
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(32), default="student")
+    detected_language: Mapped[str | None] = mapped_column(String(16))
+    chosen_language: Mapped[str | None] = mapped_column(String(16))
+    language_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    language_set_date: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     attempts: Mapped[list["TestAttempt"]] = relationship(back_populates="user")
@@ -288,5 +292,28 @@ class PaymentOrder(Base):
     activation_date: Mapped[datetime | None] = mapped_column(DateTime)
     expiry_date: Mapped[datetime | None] = mapped_column(DateTime)
     rejection_reason: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class TelegramAudience(Base):
+    __tablename__ = "telegram_audience"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    telegram_user_id: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    chat_id: Mapped[str] = mapped_column(String(80), index=True)
+    username: Mapped[str | None] = mapped_column(String(255))
+    first_name: Mapped[str | None] = mapped_column(String(255))
+    last_name: Mapped[str | None] = mapped_column(String(255))
+    detected_language: Mapped[str | None] = mapped_column(String(16))
+    chosen_language: Mapped[str | None] = mapped_column(String(16))
+    language_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    language_set_date: Mapped[datetime | None] = mapped_column(DateTime)
+    target_score: Mapped[str | None] = mapped_column(String(24))
+    welcome_sent_at: Mapped[datetime | None] = mapped_column(DateTime)
+    followup_24h_sent_at: Mapped[datetime | None] = mapped_column(DateTime)
+    followup_72h_sent_at: Mapped[datetime | None] = mapped_column(DateTime)
+    pro_reminder_sent_at: Mapped[datetime | None] = mapped_column(DateTime)
+    link_clicked_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
