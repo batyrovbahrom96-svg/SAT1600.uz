@@ -122,7 +122,7 @@ def _handle_message(message: dict, db: Session | None) -> dict:
         parts = text.split(maxsplit=1)
         if len(parts) > 1 and parts[1].strip().upper().startswith("SAT-"):
             return _handle_payment_order_start(chat_id, parts[1].strip().upper(), message, db)
-        _send_message(chat_id, "Salom! To'lov skrinshoting yubor 📸\n\n" + START_MESSAGE)
+        _send_message(chat_id, "Salom! To'lov skrinshoting yubor 📸\n\n" + START_MESSAGE, reply_markup=_payment_help_keyboard())
         return {"ok": True}
 
     if text.startswith(("/pro_report", "/report")):
@@ -130,7 +130,7 @@ def _handle_message(message: dict, db: Session | None) -> dict:
 
     has_receipt = bool(message.get("photo") or message.get("document"))
     if not has_receipt:
-        _send_message(chat_id, RECEIPT_REQUEST_MESSAGE)
+        _send_message(chat_id, RECEIPT_REQUEST_MESSAGE, reply_markup=_payment_help_keyboard())
         return {"ok": True}
 
     if db is not None:
@@ -294,6 +294,7 @@ def _handle_payment_order_start(chat_id: str, reference: str, message: dict, db:
         f"Salom! To'lov skrinshoting yubor 📸\n\n"
         f"Buyurtma raqami: {order.reference}\n"
         "Skrinshotni shu chatga yuboring. Founder tekshiradi va 5 daqiqa ichida Pro faollashtiriladi ✅",
+        reply_markup=_payment_help_keyboard(),
     )
     return {"ok": True, "reference": order.reference}
 
@@ -433,14 +434,7 @@ def _handle_payment_order_callback(callback_query: dict, action: str, reference:
 
     _answer_callback(callback_id, "Pro activated.")
     if order.telegram_chat_id:
-        result_link = _mock_result_link(user)
-        _send_message(
-            order.telegram_chat_id,
-            "🎉 Tabriklaymiz! Pro obunangiz faollashtirildi!\n"
-            "SATTEST.UZ ga kiring va boshlang: https://www.sattest.uz/pro\n\n"
-            f"Mock natijangizni ochish: {result_link}",
-            reply_markup=_receipt_active_keyboard(user),
-        )
+        _send_message(order.telegram_chat_id, _receipt_active_message(subscription, user), reply_markup=_receipt_active_keyboard(user))
     _edit_admin_message(
         callback_query,
         f"APPROVED\n\nOrder: {order.reference}\nStudent: {user.full_name}\nEmail: {user.email}\nExpires: {_format_subscription_date(expiry)}",
@@ -763,6 +757,32 @@ def _mock_result_link(user: User | None = None) -> str:
     return _pro_login_link(user.email if user else None, _mock_result_next_path())
 
 
+def _platform_link(user: User | None, next_path: str) -> str:
+    return _pro_login_link(user.email if user else None, next_path)
+
+
+def _public_link(path: str) -> str:
+    return f"{_public_frontend_url()}{path}"
+
+
+def _payment_help_keyboard() -> dict:
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "Create account", "url": _public_link("/register")},
+                {"text": "Login", "url": _public_link("/login")},
+            ],
+            [
+                {"text": "Pricing / QR", "url": _public_link("/pricing?plan=pro")},
+                {"text": "Support", "url": "https://t.me/FounderSATTESTUZ"},
+            ],
+            [
+                {"text": "Open SATTEST.UZ", "url": _public_link("/")},
+            ],
+        ]
+    }
+
+
 def _receipt_active_keyboard(user: User | None = None) -> dict:
     return {
         "inline_keyboard": [
@@ -774,9 +794,33 @@ def _receipt_active_keyboard(user: User | None = None) -> dict:
             ],
             [
                 {
-                    "text": "Kanalimiz @sattestuz",
+                    "text": "My 1400+ route",
+                    "url": _platform_link(user, "/my-1400"),
+                },
+                {
+                    "text": "Practice",
+                    "url": _platform_link(user, "/practice"),
+                },
+            ],
+            [
+                {
+                    "text": "Full SAT Mock",
+                    "url": _platform_link(user, "/sat-mock"),
+                },
+                {
+                    "text": "Dashboard",
+                    "url": _platform_link(user, "/dashboard"),
+                },
+            ],
+            [
+                {
+                    "text": "Support",
+                    "url": "https://t.me/FounderSATTESTUZ",
+                },
+                {
+                    "text": "Channel @sattestuz",
                     "url": "https://t.me/sattestuz",
-                }
+                },
             ],
         ]
     }
@@ -791,17 +835,17 @@ def _receipt_active_message(subscription: Subscription, user: User | None = None
         f"Start day: {start}\n"
         f"End day: {end}\n"
         f"Open your paid mock result: {result_link}\n"
-        "Tap the button below or log in with the same email to return directly to your full mock score and analysis.\n\n"
+        "Use the buttons below to return to your result, My 1400+, practice, dashboard, and full mock test.\n\n"
         "RU: Чек получен. SATTEST.UZ Pro был мгновенно активирован ботом.\n"
         f"Дата начала: {start}\n"
         f"Дата окончания: {end}\n"
         f"Открыть оплаченный mock результат: {result_link}\n"
-        "Нажмите кнопку ниже или войдите с тем же email, чтобы сразу вернуться к баллу и анализу полного mock test.\n\n"
+        "Используйте кнопки ниже, чтобы вернуться к результату, My 1400+, практике, dashboard и полному mock test.\n\n"
         "UZ: Chek qabul qilindi. SATTEST.UZ Pro bot orqali darhol faollashtirildi.\n"
         f"Boshlanish kuni: {start}\n"
         f"Tugash kuni: {end}\n"
         f"To'langan mock natijangizni oching: {result_link}\n"
-        "Pastdagi tugmani bosing yoki shu email bilan kiring, natija va tahlil sahifasiga to'g'ridan-to'g'ri qaytasiz.\n"
+        "Pastdagi tugmalar orqali natija, My 1400+, practice, dashboard va full mock testga tez qaytishingiz mumkin.\n"
         "Kanalimizga qo'shiling: @sattestuz — har kuni foydali materiallar\n\n"
         f"{PAYMENT_WARNING_TEXT}"
     )
