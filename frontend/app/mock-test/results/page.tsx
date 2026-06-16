@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { ArrowRight, BarChart3, BookOpenCheck, Check, Lock, MessageCircle, Target, XCircle } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpenCheck, Check, Lock, MessageCircle, Target, X, XCircle } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { PremiumButton } from "@/components/PremiumButton";
 import { Skeleton } from "@/components/SkeletonLoader";
@@ -54,6 +54,45 @@ const resultCopy = {
     proOpens: "Pro opens the full mock test result, My 1400+ route, unlimited practice, and mistake tracking after activation.",
     cta: "Paid — send receipt",
     qrAlt: "Pro Subscription 1 Paynet QR payment 200,000 UZS",
+    lockCard: {
+      title: "This information is LOCKED",
+      body: "You found 3 weak topics — but you need Pro to see them!",
+      includedTitle: "With Pro you get:",
+      benefits: [
+        "Weak topic list",
+        "Every mistake analysis",
+        "30-day personal plan",
+        "Full 98-question Mock Test",
+        "Unlimited practice tests"
+      ],
+      expired: "⚠️ Time is over! Get Pro now!",
+      countdownNote: "Your plan disappears today!",
+      primary: "🔑 GET PRO → 200,000 UZS/MONTH",
+      threeMonth: "💎 3 MONTHS → 600,000 UZS",
+      socialProof: "✅ 47 students got Pro this month"
+    },
+    paymentModal: {
+      title: "Pro payment QR",
+      body: "Scan the QR, complete payment, then upload your receipt to the Telegram bot.",
+      planMonthly: "Pro Subscription 1",
+      planThreeMonth: "Pro Subscription · 3 months",
+      monthlyPrice: "200,000 UZS / month",
+      threeMonthPrice: "600,000 UZS / 3 months",
+      scanLine: "Scan QR → Pay → Upload receipt",
+      instructionsTitle: "What to send in Telegram:",
+      instructions: [
+        "Payment screenshot or PDF receipt",
+        "Your registered email",
+        "Your full name and phone number"
+      ],
+      warningTitle: "Warning",
+      warningBody: "Fake receipts lead to account ban. If the payment is not found in payment records, Pro access can be revoked immediately.",
+      notificationTitle: "After you upload the receipt",
+      notificationBody: "The Telegram bot activates Pro and sends you back to SATTEST.UZ. Activation usually takes up to 60 seconds.",
+      telegramCta: "Upload receipt in Telegram",
+      close: "Close payment QR",
+      qrAlt: "Pro subscription payment QR"
+    },
     restart: "Retake Free Diagnostic",
     missing: "Diagnostic results were not found. Start the free diagnostic again."
   },
@@ -92,6 +131,45 @@ const resultCopy = {
     proOpens: "После активации Pro открывает полный mock test result, маршрут My 1400+, безлимитную практику и отслеживание ошибок.",
     cta: "Оплатил — отправить чек",
     qrAlt: "QR оплата Pro Subscription 1 Paynet 200,000 UZS",
+    lockCard: {
+      title: "Эта информация ЗАКРЫТА",
+      body: "Вы нашли 3 слабые темы — но чтобы увидеть их, нужен Pro!",
+      includedTitle: "В Pro вы получите:",
+      benefits: [
+        "Список слабых тем",
+        "Разбор каждой ошибки",
+        "Личный план на 30 дней",
+        "Полный Mock Test из 98 вопросов",
+        "Безлимитные тренировочные тесты"
+      ],
+      expired: "⚠️ Время вышло! Получите Pro сейчас!",
+      countdownNote: "Ваш план исчезнет сегодня!",
+      primary: "🔑 ПОЛУЧИТЬ PRO → 200,000 UZS/МЕСЯЦ",
+      threeMonth: "💎 3 МЕСЯЦА → 600,000 UZS",
+      socialProof: "✅ В этом месяце 47 учеников получили Pro"
+    },
+    paymentModal: {
+      title: "QR для оплаты Pro",
+      body: "Отсканируйте QR, оплатите и загрузите чек в Telegram-бот.",
+      planMonthly: "Pro Subscription 1",
+      planThreeMonth: "Pro Subscription · 3 месяца",
+      monthlyPrice: "200,000 UZS / месяц",
+      threeMonthPrice: "600,000 UZS / 3 месяца",
+      scanLine: "Сканируй QR → Оплати → Загрузи чек",
+      instructionsTitle: "Что отправить в Telegram:",
+      instructions: [
+        "Скриншот оплаты или PDF-чек",
+        "Email, использованный при регистрации",
+        "Ваше имя, фамилию и номер телефона"
+      ],
+      warningTitle: "Предупреждение",
+      warningBody: "Поддельные чеки приводят к блокировке аккаунта. Если платеж не найден в платежных записях, Pro-доступ может быть немедленно отозван.",
+      notificationTitle: "После загрузки чека",
+      notificationBody: "Telegram-бот активирует Pro и вернет вас на SATTEST.UZ. Обычно активация занимает до 60 секунд.",
+      telegramCta: "Загрузить чек в Telegram",
+      close: "Закрыть QR оплаты",
+      qrAlt: "QR-код оплаты Pro subscription"
+    },
     restart: "Пройти диагностику заново",
     missing: "Результаты диагностики не найдены. Начните бесплатную диагностику снова."
   },
@@ -130,10 +208,51 @@ const resultCopy = {
     proOpens: "Faollashtirilgandan keyin Pro to'liq mock test natijasi, My 1400+ yo'nalishi, cheksiz mashqlar va xatolar kuzatuvini ochadi.",
     cta: "To'ladim — chek yuborish",
     qrAlt: "Pro Subscription 1 Paynet QR to'lov 200,000 UZS",
+    lockCard: {
+      title: "Bu ma'lumotlar YOPIQ",
+      body: "Siz 3 ta zaif mavzuni aniqladingiz — lekin ularni ko'rish uchun Pro kerak!",
+      includedTitle: "Pro da siz olasiz:",
+      benefits: [
+        "Zaif mavzular ro'yxati",
+        "Har bir xato tahlili",
+        "30 kunlik shaxsiy reja",
+        "To'liq 98 savollik Mock Test",
+        "Cheksiz mashq testlari"
+      ],
+      expired: "⚠️ Vaqt tugadi! Hozir Pro oling!",
+      countdownNote: "Rejangiz bugun o'chadi!",
+      primary: "🔑 PRO OLISH → 200,000 UZS/OY",
+      threeMonth: "💎 3 OY → 600,000 UZS",
+      socialProof: "✅ Bu oy 47 o'quvchi Pro oldi"
+    },
+    paymentModal: {
+      title: "Pro to'lov QR kodi",
+      body: "QR kodni skaner qiling, to'lovni bajaring va chekni Telegram botga yuklang.",
+      planMonthly: "Pro Subscription 1",
+      planThreeMonth: "Pro Subscription · 3 oy",
+      monthlyPrice: "200,000 UZS / oy",
+      threeMonthPrice: "600,000 UZS / 3 oy",
+      scanLine: "QR skaner → To'lov → Chek yuklash",
+      instructionsTitle: "Telegramga yuboriladigan ma'lumotlar:",
+      instructions: [
+        "To'lov skrinshoti yoki PDF chek",
+        "Ro'yxatdan o'tgan emailingiz",
+        "Ism-familiya va telefon raqamingiz"
+      ],
+      warningTitle: "Ogohlantirish",
+      warningBody: "Soxta chek akkaunt bloklanishiga olib keladi. Agar to'lov yozuvlarda topilmasa, Pro kirish darhol bekor qilinishi mumkin.",
+      notificationTitle: "Chek yuklangandan keyin",
+      notificationBody: "Telegram bot Pro kirishni faollashtiradi va sizni SATTEST.UZ ga qaytaradi. Faollashish odatda 60 soniyagacha davom etadi.",
+      telegramCta: "Chekni Telegramga yuklash",
+      close: "To'lov QR kodini yopish",
+      qrAlt: "Pro subscription to'lov QR kodi"
+    },
     restart: "Bepul diagnostikani qayta topshirish",
     missing: "Diagnostika natijalari topilmadi. Bepul diagnostikani qaytadan boshlang."
   }
 };
+
+type ProPlan = "monthly" | "threeMonth";
 
 export default function FreeDiagnosticResultsPage() {
   const { language } = useLanguage();
@@ -141,6 +260,7 @@ export default function FreeDiagnosticResultsPage() {
   const [stored, setStored] = useState<StoredFreeDiagnostic | null>(null);
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(24 * 60 * 60);
+  const [paymentPlan, setPaymentPlan] = useState<ProPlan | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -311,7 +431,7 @@ export default function FreeDiagnosticResultsPage() {
         </RevealSection>
 
         <RevealSection delay={120}>
-          <DiagnosticProLockCard countdownSeconds={countdownSeconds} />
+          <DiagnosticProLockCard countdownSeconds={countdownSeconds} copy={copy.lockCard} onOpenPayment={setPaymentPlan} />
         </RevealSection>
 
         <RevealSection delay={180}>
@@ -439,6 +559,9 @@ export default function FreeDiagnosticResultsPage() {
         </section>
         </RevealSection>
       </section>
+      {paymentPlan ? (
+        <PaymentQrModal copy={copy.paymentModal} plan={paymentPlan} onClose={() => setPaymentPlan(null)} />
+      ) : null}
     </main>
   );
 }
@@ -455,7 +578,15 @@ function LockedAnalysisSection({ children }: { children: ReactNode }) {
   );
 }
 
-function DiagnosticProLockCard({ countdownSeconds }: { countdownSeconds: number }) {
+function DiagnosticProLockCard({
+  countdownSeconds,
+  copy,
+  onOpenPayment,
+}: {
+  countdownSeconds: number;
+  copy: (typeof resultCopy.en)["lockCard"];
+  onOpenPayment: (plan: ProPlan) => void;
+}) {
   const expired = countdownSeconds <= 0;
   const isUrgent = countdownSeconds > 0 && countdownSeconds <= 60 * 60;
 
@@ -464,59 +595,119 @@ function DiagnosticProLockCard({ countdownSeconds }: { countdownSeconds: number 
       <div className="mx-auto max-w-3xl text-white">
         <div className="flex items-center gap-3">
           <span className="text-3xl" aria-hidden="true">🔒</span>
-          <h2 className="text-3xl font-black leading-tight text-[#FFD700]">Bu ma'lumotlar YOPIQ</h2>
+          <h2 className="text-3xl font-black leading-tight text-[#FFD700]">{copy.title}</h2>
         </div>
 
         <p className="mt-5 text-2xl font-semibold leading-9">
-          Siz 3 ta zaif mavzuni aniqladingiz — lekin ularni ko'rish uchun Pro kerak!
+          {copy.body}
         </p>
 
         <div className="mt-6">
-          <p className="text-lg font-black text-white">Pro da siz olasiz:</p>
+          <p className="text-lg font-black text-white">{copy.includedTitle}</p>
           <div className="mt-4 grid gap-3 text-lg leading-7 text-white/82">
-            <p>✅ Zaif mavzular ro'yxati</p>
-            <p>✅ Har bir xato tahlili</p>
-            <p>✅ 30 kunlik shaxsiy reja</p>
-            <p>✅ To'liq 98 savollik Mock Test</p>
-            <p>✅ Cheksiz mashq testlari</p>
+            {copy.benefits.map((benefit) => (
+              <p key={benefit}>✅ {benefit}</p>
+            ))}
           </div>
         </div>
 
         <div className="mt-7 rounded-xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-4 text-center">
           {expired ? (
-            <p className="text-2xl font-black text-[#FFD700]">⚠️ Vaqt tugadi! Hozir Pro oling!</p>
+            <p className="text-2xl font-black text-[#FFD700]">{copy.expired}</p>
           ) : (
             <>
               <p className={["text-4xl font-black tabular-nums text-[#FFD700]", isUrgent ? "diagnostic-timer-pulse" : ""].join(" ")}>
                 ⏰ {formatCountdown(countdownSeconds)}
               </p>
-              <p className="mt-2 text-lg font-bold text-white">Rejangiz bugun o'chadi!</p>
+              <p className="mt-2 text-lg font-bold text-white">{copy.countdownNote}</p>
             </>
           )}
         </div>
 
         <div className="mt-6 grid gap-3">
-          <a
+          <button
             className="flex h-14 w-full items-center justify-center rounded-xl bg-[#FFD700] px-5 text-center text-lg font-black text-black transition hover:bg-white"
-            href={telegramBotUrl}
-            target="_blank"
-            rel="noreferrer"
+            onClick={() => onOpenPayment("monthly")}
+            type="button"
           >
-            🔑 PRO OLISH → 200,000 UZS/OY
-          </a>
-          <a
+            {copy.primary}
+          </button>
+          <button
             className="flex h-14 w-full items-center justify-center rounded-xl border border-[#FFD700]/55 bg-white/10 px-5 text-center text-lg font-black text-[#FFD700] transition hover:bg-[#FFD700] hover:text-black"
-            href={telegramBotUrl}
-            target="_blank"
-            rel="noreferrer"
+            onClick={() => onOpenPayment("threeMonth")}
+            type="button"
           >
-            💎 3 OY → 600,000 UZS
-          </a>
+            {copy.threeMonth}
+          </button>
         </div>
 
-        <p className="mt-5 text-center text-base font-bold text-white/82">✅ Bu oy 47 o'quvchi Pro oldi</p>
+        <p className="mt-5 text-center text-base font-bold text-white/82">{copy.socialProof}</p>
       </div>
     </section>
+  );
+}
+
+function PaymentQrModal({
+  copy,
+  onClose,
+  plan,
+}: {
+  copy: (typeof resultCopy.en)["paymentModal"];
+  onClose: () => void;
+  plan: ProPlan;
+}) {
+  const isThreeMonth = plan === "threeMonth";
+
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/78 px-4 py-6 backdrop-blur-md" role="dialog" aria-modal="true" aria-label={copy.title}>
+      <section className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-xl border border-[#FFD700]/30 bg-[#090a08] p-5 text-white shadow-[0_40px_120px_rgba(0,0,0,0.62)] md:p-7">
+        <div className="flex items-start justify-between gap-5">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-[#FFD700]">{isThreeMonth ? copy.planThreeMonth : copy.planMonthly}</p>
+            <h2 className="mt-3 text-4xl font-light leading-tight md:text-5xl">{copy.title}</h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-white/64">{copy.body}</p>
+          </div>
+          <button className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/15 text-white/60 transition hover:border-white/40 hover:text-white" onClick={onClose} type="button" aria-label={copy.close}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="mt-7 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+          <article className="rounded-xl border border-white/10 bg-white/[0.035] p-5">
+            <p className="text-3xl font-light">{isThreeMonth ? copy.threeMonthPrice : copy.monthlyPrice}</p>
+            <div className="mt-5 grid min-h-[330px] place-items-center rounded-lg bg-white p-4">
+              <img className="h-[310px] w-[310px] object-contain" src={paynetQrImage} alt={copy.qrAlt} />
+            </div>
+            <p className="mt-4 text-center text-xs font-black uppercase tracking-[0.2em] text-white/58">{copy.scanLine}</p>
+          </article>
+
+          <article className="rounded-xl border border-white/10 bg-black/35 p-5">
+            <h3 className="text-2xl font-semibold">{copy.instructionsTitle}</h3>
+            <div className="mt-5 grid gap-3">
+              {copy.instructions.map((instruction) => (
+                <p className="flex items-start gap-3 text-base leading-7 text-white/76" key={instruction}>
+                  <Check className="mt-1 shrink-0 text-[#FFD700]" size={18} /> {instruction}
+                </p>
+              ))}
+            </div>
+
+            <div className="mt-6 rounded-xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-4">
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-[#FFD700]">{copy.warningTitle}</p>
+              <p className="mt-2 text-sm leading-6 text-white/72">{copy.warningBody}</p>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-300/10 p-4">
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-emerald-200">{copy.notificationTitle}</p>
+              <p className="mt-2 text-sm leading-6 text-white/72">{copy.notificationBody}</p>
+            </div>
+
+            <a className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-[#FFD700] px-5 text-center text-base font-black uppercase tracking-[0.12em] text-black transition hover:bg-white" href={telegramBotUrl} target="_blank" rel="noreferrer">
+              <MessageCircle size={20} /> {copy.telegramCta}
+            </a>
+          </article>
+        </div>
+      </section>
+    </div>
   );
 }
 
