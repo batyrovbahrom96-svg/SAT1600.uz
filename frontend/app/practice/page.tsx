@@ -780,7 +780,7 @@ export default function PracticeAccessPage() {
           <PremiumButton href="/pricing" icon={<ArrowRight size={18} />}>
             {copy.choosePlan}
           </PremiumButton>
-          <PremiumButton href="/mock-test" icon={<UserPlus size={18} />} variant="glass">
+          <PremiumButton href="/mock-test/diagnostic" icon={<UserPlus size={18} />} variant="glass">
             {copy.freeDiagnostic}
           </PremiumButton>
         </div>

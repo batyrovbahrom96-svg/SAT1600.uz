@@ -475,7 +475,7 @@ export default function PricingPage() {
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
         <div className="grid gap-6 lg:grid-cols-2">
           <PriceCard
-            action={{ href: "/mock-test", text: copy.plans.free.action }}
+            action={{ href: "/mock-test/diagnostic", text: copy.plans.free.action }}
             benefits={freeBenefits}
             description={copy.plans.free.description}
             label={copy.plans.free.label}

@@ -82,7 +82,7 @@ export default function AboutUsPage() {
             SATTEST.UZ is not a simple practice website. It is a diagnostic SAT platform that turns every mock test into a personal study route, score report, weakness map, and 1400+ preparation plan.
           </p>
           <div className="about-hero__actions">
-            <PremiumButton href="/mock-test" icon={<ArrowRight size={18} />}>
+            <PremiumButton href="/mock-test/diagnostic" icon={<ArrowRight size={18} />}>
               Start Free Diagnostic
             </PremiumButton>
             <PremiumButton href="/pricing" icon={<ArrowRight size={18} />} variant="glass">

@@ -641,7 +641,7 @@ function ResultsUnavailableNotice() {
             ))}
           </div>
 
-          <PremiumButton className="mt-9" href="/mock-test" icon={<ArrowRight size={18} />}>
+          <PremiumButton className="mt-9" href="/mock-test/diagnostic" icon={<ArrowRight size={18} />}>
             Start free diagnostic
           </PremiumButton>
         </div>

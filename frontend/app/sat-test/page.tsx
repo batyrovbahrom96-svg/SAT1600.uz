@@ -13,6 +13,7 @@ import {
   countCorrect,
   createInitialProgress,
   getModuleQuestions,
+  safeRemoveJson,
   safeReadJson,
   safeWriteJson,
   type FullMockChart,
@@ -251,8 +252,8 @@ export default function SatTestPage() {
   useEffect(() => {
     const saved = safeReadJson<FullMockProgress>(FULL_MOCK_PROGRESS_KEY);
     if (saved && saved.bankVersion !== FULL_MOCK_BANK_VERSION) {
-      window.localStorage.removeItem(FULL_MOCK_PROGRESS_KEY);
-      window.localStorage.removeItem(FULL_MOCK_RESULTS_KEY);
+      safeRemoveJson(FULL_MOCK_PROGRESS_KEY);
+      safeRemoveJson(FULL_MOCK_RESULTS_KEY);
       return;
     }
     if (saved && !safeReadJson(FULL_MOCK_RESULTS_KEY)) {
@@ -350,7 +351,7 @@ export default function SatTestPage() {
   function beginFresh() {
     const initial = createInitialProgress();
     safeWriteJson(FULL_MOCK_PROGRESS_KEY, initial);
-    window.localStorage.removeItem(FULL_MOCK_RESULTS_KEY);
+    safeRemoveJson(FULL_MOCK_RESULTS_KEY);
     setProgress(initial);
     setResumeProgress(null);
     setScreen("test");

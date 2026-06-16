@@ -1057,6 +1057,7 @@ function translateNode(root: ParentNode, language: Language) {
   document.documentElement.lang = language;
 
   const nodeFilter = window.NodeFilter;
+  if (!nodeFilter) return;
   const walker = document.createTreeWalker(root, nodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const parent = node.parentElement;
@@ -1078,7 +1079,7 @@ function translateNode(root: ParentNode, language: Language) {
     node.nodeValue = dictionary ? dynamicTranslate(original, dictionary) : original;
   });
 
-  if (root instanceof window.Element) translateElementAttributes(root, dictionary);
+  if (window.Element && root instanceof window.Element) translateElementAttributes(root, dictionary);
   root.querySelectorAll?.("*").forEach((element) => translateElementAttributes(element, dictionary));
 }
 
@@ -1113,7 +1114,7 @@ export function SiteTranslator() {
     apply();
 
     if (typeof window.MutationObserver === "undefined") return;
-    const observer = new MutationObserver(() => {
+    const observer = new window.MutationObserver(() => {
       window.requestAnimationFrame(apply);
     });
     observer.observe(document.body, { childList: true, subtree: true });
@@ -1123,7 +1124,7 @@ export function SiteTranslator() {
 
   useEffect(() => {
     const onLanguageClick = (event: MouseEvent) => {
-      const target = event.target instanceof Element ? event.target.closest("[data-sattest-language]") : null;
+      const target = window.Element && event.target instanceof window.Element ? event.target.closest("[data-sattest-language]") : null;
       const next = target?.getAttribute("data-sattest-language");
       if (next === "en" || next === "ru" || next === "uz") {
         event.preventDefault();

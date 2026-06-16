@@ -1,15 +1,20 @@
 "use client";
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { ArrowRight, BarChart3, BookOpenCheck, Lock, Target, XCircle } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpenCheck, Check, Lock, MessageCircle, Target, XCircle } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { PremiumButton } from "@/components/PremiumButton";
 import { Skeleton } from "@/components/SkeletonLoader";
-import { getToken } from "@/lib/api";
 import { calculateDiagnosticResult, freeDiagnosticQuestions, type DiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-diagnostic-storage";
 import { useLanguage } from "@/lib/i18n";
 import { notifyDiagnosticResult } from "./actions";
+
+const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_UZ_bot";
+const telegramBotUrl = `https://t.me/${telegramBotUsername}?start=pro`;
+const paynetQrPayload =
+  "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
+const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(paynetQrPayload)}`;
 
 const resultCopy = {
   en: {
@@ -27,17 +32,26 @@ const resultCopy = {
     youAnswered: "You answered",
     correctAnswer: "Correct answer",
     noMiss: "No missed question in this diagnostic. Pro still opens the full 98-question mock test and a complete 30-day route.",
-    locked: "Payment page ready",
+    locked: "Pro subscription payment ready",
     upsellTitle: "Go Pro and reach 1400+.",
     goal: "Your diagnostic score:",
-    bridge: "See your weak areas, choose a plan, scan the Payme or Click QR code, then confirm payment in Telegram.",
+    bridge: "Scan the QR code now, pay for Pro Subscription 1, then send the receipt in Telegram.",
     upsellBodyA: "Your weak areas are",
     upsellBodyB:
       "After payment, @SATTEST_UZ_bot activates Pro and sends you back to SATTEST.UZ to open the full mock result, personal 1400+ curriculum, unlimited targeted practice, and mistake tracking.",
-    monthly: "200,000 UZS / month",
+    monthlyPlan: "Pro Subscription 1",
+    monthly: "200,000 UZS / 1 month",
     threeMonth: "600,000 UZS / 3 months",
     threeMonthNote: "Convenience for the full prep cycle. Same monthly price, paid once.",
-    cta: "Open payment page",
+    scanLine: "Scan QR → Pay → Send receipt",
+    instructions: [
+      "Pay 200,000 UZS with this QR code.",
+      `Send the payment screenshot to @${telegramBotUsername}.`,
+      "Write your registration email in the message."
+    ],
+    proOpens: "Pro opens the full mock test result, My 1400+ route, unlimited practice, and mistake tracking after activation.",
+    cta: "Paid — send receipt",
+    qrAlt: "Pro Subscription 1 Paynet QR payment 200,000 UZS",
     restart: "Retake Free Diagnostic",
     missing: "Diagnostic results were not found. Start the free diagnostic again."
   },
@@ -59,14 +73,23 @@ const resultCopy = {
     locked: "Страница оплаты готова",
     upsellTitle: "Перейдите на Pro и дойдите до 1400+.",
     goal: "Ваш балл диагностики:",
-    bridge: "Посмотрите слабые места, выберите тариф, отсканируйте QR Payme или Click и подтвердите оплату в Telegram.",
+    bridge: "Отсканируйте QR сейчас, оплатите Pro Subscription 1 и отправьте чек в Telegram.",
     upsellBodyA: "Ваши слабые места:",
     upsellBodyB:
       "После оплаты @SATTEST_UZ_bot активирует Pro и отправит вас обратно на SATTEST.UZ, чтобы открыть результат полного mock test, личный маршрут 1400+, целевую практику и отслеживание ошибок.",
-    monthly: "200,000 UZS / месяц",
+    monthlyPlan: "Pro Subscription 1",
+    monthly: "200,000 UZS / 1 месяц",
     threeMonth: "600,000 UZS / 3 месяца",
     threeMonthNote: "Удобно для полного цикла подготовки. Та же месячная цена, одним платежом.",
-    cta: "Открыть страницу оплаты",
+    scanLine: "Сканируй QR → Оплати → Отправь чек",
+    instructions: [
+      "Оплатите 200,000 UZS по этому QR-коду.",
+      `Отправьте скриншот оплаты в @${telegramBotUsername}.`,
+      "Напишите email регистрации в сообщении."
+    ],
+    proOpens: "После активации Pro открывает полный mock test result, маршрут My 1400+, безлимитную практику и отслеживание ошибок.",
+    cta: "Оплатил — отправить чек",
+    qrAlt: "QR оплата Pro Subscription 1 Paynet 200,000 UZS",
     restart: "Пройти диагностику заново",
     missing: "Результаты диагностики не найдены. Начните бесплатную диагностику снова."
   },
@@ -88,14 +111,23 @@ const resultCopy = {
     locked: "To'lov sahifasi tayyor",
     upsellTitle: "Pro-ga o'ting va 1400+ ga yeting!",
     goal: "Diagnostika balingiz:",
-    bridge: "Zaif joylaringizni ko'ring, tarif tanlang, Payme yoki Click QR kodini skaner qiling va Telegramda to'lovni tasdiqlang.",
+    bridge: "QR kodni hozir skaner qiling, Pro Subscription 1 uchun to'lang va chekni Telegramga yuboring.",
     upsellBodyA: "Zaif joylaringiz:",
     upsellBodyB:
       "To'lovdan keyin @SATTEST_UZ_bot Pro obunangizni faollashtiradi va sizni SATTEST.UZ ga qaytaradi: to'liq mock test natijasi, shaxsiy 1400+ curriculum, maqsadli mashqlar va xatolar kuzatuvi ochiladi.",
-    monthly: "200,000 UZS / oy",
+    monthlyPlan: "Pro Subscription 1",
+    monthly: "200,000 UZS / 1 oy",
     threeMonth: "600,000 UZS / 3 oy",
     threeMonthNote: "To'liq tayyorgarlik sikli uchun qulay. Oylik narx o'zgarmaydi, faqat bir martalik to'lov.",
-    cta: "To'lov sahifasini ochish",
+    scanLine: "QR skaner → To'lov → Chek yuborish",
+    instructions: [
+      "Ushbu QR kod orqali 200,000 UZS to'lang.",
+      `To'lov skrinshotini @${telegramBotUsername} ga yuboring.`,
+      "Xabarda ro'yxatdan o'tgan emailingizni yozing."
+    ],
+    proOpens: "Faollashtirilgandan keyin Pro to'liq mock test natijasi, My 1400+ yo'nalishi, cheksiz mashqlar va xatolar kuzatuvini ochadi.",
+    cta: "To'ladim — chek yuborish",
+    qrAlt: "Pro Subscription 1 Paynet QR to'lov 200,000 UZS",
     restart: "Bepul diagnostikani qayta topshirish",
     missing: "Diagnostika natijalari topilmadi. Bepul diagnostikani qaytadan boshlang."
   }
@@ -106,25 +138,11 @@ export default function FreeDiagnosticResultsPage() {
   const copy = resultCopy[language];
   const [stored, setStored] = useState<StoredFreeDiagnostic | null>(null);
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     setStored(getFreeDiagnosticResult());
     setHasCheckedStorage(true);
-  }, []);
-
-  useEffect(() => {
-    function syncAuth() {
-      setIsLoggedIn(Boolean(getToken()));
-    }
-    syncAuth();
-    window.addEventListener("sattest:auth-change", syncAuth);
-    window.addEventListener("storage", syncAuth);
-    return () => {
-      window.removeEventListener("sattest:auth-change", syncAuth);
-      window.removeEventListener("storage", syncAuth);
-    };
   }, []);
 
   const result = useMemo<DiagnosticResult | null>(() => {
@@ -136,9 +154,13 @@ export default function FreeDiagnosticResultsPage() {
     if (!result || !stored || typeof window === "undefined") return;
 
     const notificationKey = `sattest_diagnostic_notified_${stored.sessionId}`;
-    if (window.localStorage.getItem(notificationKey) === "sent") return;
+    try {
+      if (window.localStorage.getItem(notificationKey) === "sent") return;
+      window.localStorage.setItem(notificationKey, "pending");
+    } catch {
+      // The notification is helpful but should not block the result page.
+    }
 
-    window.localStorage.setItem(notificationKey, "pending");
     void notifyDiagnosticResult({
       timestamp: stored.completedAt,
       estimatedScore: result.estimatedTotal,
@@ -147,25 +169,21 @@ export default function FreeDiagnosticResultsPage() {
     })
       .then((response) => {
         if (response?.ok) {
-          window.localStorage.setItem(notificationKey, "sent");
+          try {
+            window.localStorage.setItem(notificationKey, "sent");
+          } catch {}
           return;
         }
-        window.localStorage.removeItem(notificationKey);
+        try {
+          window.localStorage.removeItem(notificationKey);
+        } catch {}
       })
       .catch(() => {
-        window.localStorage.removeItem(notificationKey);
+        try {
+          window.localStorage.removeItem(notificationKey);
+        } catch {}
       });
   }, [language, result, stored]);
-
-  const paymentUrl = useMemo(() => `/payment?lang=${language}&from=free-diagnostic`, [language]);
-  const unlockUrl = useMemo(() => {
-    if (isLoggedIn) return paymentUrl;
-    const params = new URLSearchParams();
-    params.set("plan", "pro");
-    params.set("from", "free-diagnostic");
-    if (stored?.email) params.set("email", stored.email);
-    return `/register?${params.toString()}&next=${encodeURIComponent(paymentUrl)}`;
-  }, [isLoggedIn, paymentUrl, stored?.email]);
 
   if (!hasCheckedStorage) {
     return (
@@ -194,7 +212,7 @@ export default function FreeDiagnosticResultsPage() {
         <section className="mx-auto flex min-h-[calc(100vh-81px)] max-w-4xl flex-col justify-center px-5 py-14 text-center md:px-8">
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#c8bd88]">Free Diagnostic</p>
           <h1 className="mt-6 text-5xl font-light leading-none md:text-7xl">{copy.missing}</h1>
-          <PremiumButton className="mx-auto mt-8 min-w-[280px]" href="/mock-test" icon={<ArrowRight size={18} />}>
+          <PremiumButton className="mx-auto mt-8 min-w-[280px]" href="/mock-test/diagnostic" icon={<ArrowRight size={18} />}>
             {copy.restart}
           </PremiumButton>
         </section>
@@ -322,17 +340,28 @@ export default function FreeDiagnosticResultsPage() {
                 {copy.upsellBodyA} <span className="font-semibold text-white" data-sattest-no-translate="true">{weakAreasText}</span>. {copy.upsellBodyB}
               </p>
             </div>
-            <div className="grid gap-3">
-              <div className="border border-white/10 bg-black/25 p-4">
-                <p className="text-3xl font-light">{copy.monthly}</p>
+            <div className="grid gap-4">
+              <article className="border border-white/15 bg-black/30 p-5">
+                <p className="text-[10px] font-black uppercase tracking-[0.26em] text-white/45">{copy.monthlyPlan}</p>
+                <h3 className="mt-3 text-4xl font-light">{copy.monthly}</h3>
+                <div className="mt-5 grid min-h-[290px] place-items-center border border-white/15 bg-white p-4">
+                  <img className="h-[270px] w-[270px] object-contain" src={paynetQrImage} alt={copy.qrAlt} />
+                </div>
+                <p className="mt-4 text-center text-sm font-semibold uppercase tracking-[0.16em] text-white/70">{copy.scanLine}</p>
+                <div className="mt-5 grid gap-3">
+                  {copy.instructions.map((instruction) => (
+                    <p className="flex items-start gap-3 text-sm leading-6 text-white/70" key={instruction}>
+                      <Check className="mt-0.5 shrink-0 text-[#c8bd88]" size={16} /> {instruction}
+                    </p>
+                  ))}
+                </div>
+                <a className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-3 border border-[#c8bd88]/45 bg-[#c8bd88] px-5 text-center text-[11px] font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-white" href={telegramBotUrl} target="_blank" rel="noreferrer">
+                  <MessageCircle size={18} /> {copy.cta}
+                </a>
+              </article>
+              <div className="border border-white/10 bg-black/25 p-4 text-sm leading-6 text-white/58">
+                {copy.proOpens}
               </div>
-              <div className="border border-white/10 bg-black/25 p-4">
-                <p className="text-3xl font-light">{copy.threeMonth}</p>
-                <p className="mt-2 text-sm text-white/52">{copy.threeMonthNote}</p>
-              </div>
-              <PremiumButton className="w-full" href={unlockUrl} icon={<ArrowRight size={18} />}>
-                {copy.cta}
-              </PremiumButton>
             </div>
           </div>
         </section>

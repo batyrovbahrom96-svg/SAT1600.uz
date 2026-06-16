@@ -1070,5 +1070,18 @@ export function safeReadJson<T>(key: string): T | null {
 
 export function safeWriteJson(key: string, value: unknown) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(value));
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Some embedded browsers disable storage. Keep the active session in memory instead of crashing.
+  }
+}
+
+export function safeRemoveJson(key: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Storage can be unavailable in restricted browser contexts.
+  }
 }

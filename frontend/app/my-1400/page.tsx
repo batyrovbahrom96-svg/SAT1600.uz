@@ -691,7 +691,7 @@ function My1400SavedDiagnostic({
             <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing?plan=pro&from=my-1400&payment=qr">
               {copy.openPaymentQr} <ArrowRight size={18} />
             </Link>
-            <Link className="flex items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/mock-test">
+            <Link className="flex items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/mock-test/diagnostic">
               {copy.retakeDiagnostic} <ArrowRight size={18} />
             </Link>
           </div>
@@ -824,7 +824,7 @@ function My1400PreviewDashboard({
                 <Link className="flex items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white" href="/pricing">
                   {copy.choosePlan} <ArrowRight size={18} />
                 </Link>
-                <Link className="flex items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/mock-test">
+                <Link className="flex items-center justify-between border border-white/15 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white" href="/mock-test/diagnostic">
                   {copy.startFreeDiagnostic} <ArrowRight size={18} />
                 </Link>
               </>

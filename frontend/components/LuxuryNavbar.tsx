@@ -16,7 +16,7 @@ export function LuxuryNavbar() {
   const navCopy: Record<Language, Array<{ label: string; href: string; proHref?: string }>> = {
     en: [
       { label: "About Us", href: "/about-us" },
-      { label: "Free Diagnostic", href: "/mock-test" },
+      { label: "Free Diagnostic", href: "/mock-test/diagnostic" },
       { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
       { label: "Practice", href: "/practice" },
       { label: "Demo Report", href: "/results/demo" },
@@ -25,7 +25,7 @@ export function LuxuryNavbar() {
     ],
     ru: [
       { label: "О нас", href: "/about-us" },
-      { label: "Бесплатная диагностика", href: "/mock-test" },
+      { label: "Бесплатная диагностика", href: "/mock-test/diagnostic" },
       { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
       { label: "Практика", href: "/practice" },
       { label: "Демо отчет", href: "/results/demo" },
@@ -34,7 +34,7 @@ export function LuxuryNavbar() {
     ],
     uz: [
       { label: "Biz haqimizda", href: "/about-us" },
-      { label: "Bepul diagnostika", href: "/mock-test" },
+      { label: "Bepul diagnostika", href: "/mock-test/diagnostic" },
       { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
       { label: "Mashqlar", href: "/practice" },
       { label: "Demo hisobot", href: "/results/demo" },
