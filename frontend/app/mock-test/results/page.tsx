@@ -15,6 +15,8 @@ const telegramBotUrl = `https://t.me/${telegramBotUsername}?start=pro`;
 const paynetQrPayload =
   "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
 const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(paynetQrPayload)}`;
+const diagnosticPaywallCountdownKey = "sattest_diagnostic_paywall_countdown_end";
+const diagnosticPaywallDurationMs = 24 * 60 * 60 * 1000;
 
 const resultCopy = {
   en: {
@@ -138,6 +140,7 @@ export default function FreeDiagnosticResultsPage() {
   const copy = resultCopy[language];
   const [stored, setStored] = useState<StoredFreeDiagnostic | null>(null);
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
+  const [countdownSeconds, setCountdownSeconds] = useState(24 * 60 * 60);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -149,6 +152,34 @@ export default function FreeDiagnosticResultsPage() {
     if (!stored) return null;
     return calculateDiagnosticResult(stored.answers);
   }, [stored]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    function getCountdownEnd() {
+      const raw = window.localStorage.getItem(diagnosticPaywallCountdownKey);
+      const saved = raw ? Number(raw) : 0;
+      if (Number.isFinite(saved) && saved > Date.now()) return saved;
+
+      const next = Date.now() + diagnosticPaywallDurationMs;
+      window.localStorage.setItem(diagnosticPaywallCountdownKey, String(next));
+      return next;
+    }
+
+    let endAt = Date.now() + diagnosticPaywallDurationMs;
+    try {
+      endAt = getCountdownEnd();
+    } catch {
+      endAt = Date.now() + diagnosticPaywallDurationMs;
+    }
+
+    const updateCountdown = () => {
+      setCountdownSeconds(Math.max(0, Math.ceil((endAt - Date.now()) / 1000)));
+    };
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!result || !stored || typeof window === "undefined") return;
@@ -222,10 +253,41 @@ export default function FreeDiagnosticResultsPage() {
 
   const workedExample = result.missedQuestions[0];
   const weakAreas = result.weakAreas.slice(0, 3);
-  const weakAreasText = formatList(weakAreas, language);
 
   return (
     <main className="min-h-screen bg-[#080908] text-white" data-sattest-no-translate="true">
+      <style>{`
+        .locked-section {
+          filter: blur(6px);
+          pointer-events: none;
+          user-select: none;
+          position: relative;
+        }
+
+        .lock-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0,0,0,0.5);
+          z-index: 10;
+          border-radius: 12px;
+        }
+
+        @keyframes diagnostic-timer-pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.03); opacity: 0.72; }
+        }
+
+        .diagnostic-timer-pulse {
+          animation: diagnostic-timer-pulse 1.2s ease-in-out infinite;
+        }
+      `}</style>
       <LuxuryNavbar />
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
         <RevealSection delay={0}>
@@ -248,8 +310,13 @@ export default function FreeDiagnosticResultsPage() {
         </div>
         </RevealSection>
 
+        <RevealSection delay={120}>
+          <DiagnosticProLockCard countdownSeconds={countdownSeconds} />
+        </RevealSection>
+
         <RevealSection delay={180}>
         <div className="mt-10 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+          <LockedAnalysisSection>
           <section className="border border-white/10 bg-white/[0.035] p-5">
             <div className="flex items-center gap-3">
               <BarChart3 className="text-[#c8bd88]" size={20} />
@@ -269,8 +336,10 @@ export default function FreeDiagnosticResultsPage() {
               ))}
             </div>
           </section>
+          </LockedAnalysisSection>
 
           <section className="grid gap-6">
+            <LockedAnalysisSection>
             <div className="border border-red-200/15 bg-red-400/10 p-5">
               <div className="flex items-center gap-3">
                 <Target className="text-red-100" size={20} />
@@ -284,7 +353,9 @@ export default function FreeDiagnosticResultsPage() {
                 ))}
               </div>
             </div>
+            </LockedAnalysisSection>
 
+            <LockedAnalysisSection>
             <div className="border border-white/10 bg-white/[0.035] p-5">
               <div className="flex items-center gap-3">
                 <XCircle className="text-[#c8bd88]" size={20} />
@@ -298,6 +369,7 @@ export default function FreeDiagnosticResultsPage() {
                 ))}
               </div>
             </div>
+            </LockedAnalysisSection>
           </section>
         </div>
         </RevealSection>
@@ -337,7 +409,7 @@ export default function FreeDiagnosticResultsPage() {
                 {copy.bridge}
               </p>
               <p className="mt-5 max-w-3xl text-lg leading-8 text-white/64">
-                {copy.upsellBodyA} <span className="font-semibold text-white" data-sattest-no-translate="true">{weakAreasText}</span>. {copy.upsellBodyB}
+                {copy.upsellBodyB}
               </p>
             </div>
             <div className="grid gap-4">
@@ -371,6 +443,91 @@ export default function FreeDiagnosticResultsPage() {
   );
 }
 
+function LockedAnalysisSection({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative overflow-hidden rounded-xl">
+      <div className="locked-section">{children}</div>
+      <div className="lock-overlay">
+        <Lock className="text-[#FFD700]" size={32} />
+        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.22em] text-white">Pro kerak</p>
+      </div>
+    </div>
+  );
+}
+
+function DiagnosticProLockCard({ countdownSeconds }: { countdownSeconds: number }) {
+  const expired = countdownSeconds <= 0;
+  const isUrgent = countdownSeconds > 0 && countdownSeconds <= 60 * 60;
+
+  return (
+    <section className="mt-8 rounded-xl border border-[#FFD700]/35 bg-black/55 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.38)] md:p-7">
+      <div className="mx-auto max-w-3xl text-white">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl" aria-hidden="true">🔒</span>
+          <h2 className="text-3xl font-black leading-tight text-[#FFD700]">Bu ma'lumotlar YOPIQ</h2>
+        </div>
+
+        <p className="mt-5 text-2xl font-semibold leading-9">
+          Siz 3 ta zaif mavzuni aniqladingiz — lekin ularni ko'rish uchun Pro kerak!
+        </p>
+
+        <div className="mt-6">
+          <p className="text-lg font-black text-white">Pro da siz olasiz:</p>
+          <div className="mt-4 grid gap-3 text-lg leading-7 text-white/82">
+            <p>✅ Zaif mavzular ro'yxati</p>
+            <p>✅ Har bir xato tahlili</p>
+            <p>✅ 30 kunlik shaxsiy reja</p>
+            <p>✅ To'liq 98 savollik Mock Test</p>
+            <p>✅ Cheksiz mashq testlari</p>
+          </div>
+        </div>
+
+        <div className="mt-7 rounded-xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-4 text-center">
+          {expired ? (
+            <p className="text-2xl font-black text-[#FFD700]">⚠️ Vaqt tugadi! Hozir Pro oling!</p>
+          ) : (
+            <>
+              <p className={["text-4xl font-black tabular-nums text-[#FFD700]", isUrgent ? "diagnostic-timer-pulse" : ""].join(" ")}>
+                ⏰ {formatCountdown(countdownSeconds)}
+              </p>
+              <p className="mt-2 text-lg font-bold text-white">Rejangiz bugun o'chadi!</p>
+            </>
+          )}
+        </div>
+
+        <div className="mt-6 grid gap-3">
+          <a
+            className="flex h-14 w-full items-center justify-center rounded-xl bg-[#FFD700] px-5 text-center text-lg font-black text-black transition hover:bg-white"
+            href={telegramBotUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            🔑 PRO OLISH → 200,000 UZS/OY
+          </a>
+          <a
+            className="flex h-14 w-full items-center justify-center rounded-xl border border-[#FFD700]/55 bg-white/10 px-5 text-center text-lg font-black text-[#FFD700] transition hover:bg-[#FFD700] hover:text-black"
+            href={telegramBotUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            💎 3 OY → 600,000 UZS
+          </a>
+        </div>
+
+        <p className="mt-5 text-center text-base font-bold text-white/82">✅ Bu oy 47 o'quvchi Pro oldi</p>
+      </div>
+    </section>
+  );
+}
+
+function formatCountdown(seconds: number) {
+  const safe = Math.max(0, seconds);
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const remainder = safe % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+}
+
 function RevealSection({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
   const [visible, setVisible] = useState(false);
 
@@ -400,11 +557,4 @@ function ScoreTile({ label, value }: { label: string; value: string }) {
       <p className="mt-3 text-5xl font-light text-white">{value}</p>
     </div>
   );
-}
-
-function formatList(items: string[], language: "en" | "ru" | "uz") {
-  if (items.length <= 1) return items[0] ?? "";
-  const conjunction = language === "ru" ? "и" : language === "uz" ? "va" : "and";
-  if (items.length === 2) return `${items[0]} ${conjunction} ${items[1]}`;
-  return `${items.slice(0, -1).join(", ")} ${conjunction} ${items[items.length - 1]}`;
 }
