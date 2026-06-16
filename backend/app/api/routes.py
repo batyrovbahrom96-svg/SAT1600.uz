@@ -207,7 +207,7 @@ def payment_config() -> dict:
     return {
         "payme_qr_url": settings.payme_qr_url,
         "click_qr_url": settings.click_qr_url,
-        "telegram_bot_url": "https://t.me/SATTEST_UZ_bot",
+        "telegram_bot_url": "https://t.me/SATTESTUZBot",
         "plans": {
             key: {"amount": value["amount"], "days": value["days"], "label": value["label"]}
             for key, value in PAYMENT_PLANS.items()
@@ -776,7 +776,7 @@ def _owned_payment_order(db: Session, reference: str, user: User) -> PaymentOrde
 
 def _payment_order_payload(order: PaymentOrder, user: User) -> dict:
     settings = get_settings()
-    telegram_url = f"https://t.me/SATTEST_UZ_bot?start={order.reference}"
+    telegram_url = f"https://t.me/SATTESTUZBot?start={order.reference}"
     return {
         "id": order.id,
         "reference": order.reference,

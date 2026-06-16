@@ -10,7 +10,7 @@ import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-d
 import { useLanguage } from "@/lib/i18n";
 import { notifyDiagnosticResult } from "./actions";
 
-const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_UZ_bot";
+const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
 const telegramBotUrl = `https://t.me/${telegramBotUsername}?start=pro`;
 const paynetQrPayload =
   "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
@@ -40,7 +40,7 @@ const resultCopy = {
     bridge: "Scan the QR code now, pay for Pro Subscription 1, then send the receipt in Telegram.",
     upsellBodyA: "Your weak areas are",
     upsellBodyB:
-      "After payment, @SATTEST_UZ_bot activates Pro and sends you back to SATTEST.UZ to open the full mock result, personal 1400+ curriculum, unlimited targeted practice, and mistake tracking.",
+      `After payment, @${telegramBotUsername} activates Pro and sends you back to SATTEST.UZ to open the full mock result, personal 1400+ curriculum, unlimited targeted practice, and mistake tracking.`,
     monthlyPlan: "Pro Subscription 1",
     monthly: "200,000 UZS / 1 month",
     threeMonth: "600,000 UZS / 3 months",
@@ -117,7 +117,7 @@ const resultCopy = {
     bridge: "Отсканируйте QR сейчас, оплатите Pro Subscription 1 и отправьте чек в Telegram.",
     upsellBodyA: "Ваши слабые места:",
     upsellBodyB:
-      "После оплаты @SATTEST_UZ_bot активирует Pro и отправит вас обратно на SATTEST.UZ, чтобы открыть результат полного mock test, личный маршрут 1400+, целевую практику и отслеживание ошибок.",
+      `После оплаты @${telegramBotUsername} активирует Pro и отправит вас обратно на SATTEST.UZ, чтобы открыть результат полного mock test, личный маршрут 1400+, целевую практику и отслеживание ошибок.`,
     monthlyPlan: "Pro Subscription 1",
     monthly: "200,000 UZS / 1 месяц",
     threeMonth: "600,000 UZS / 3 месяца",
@@ -194,7 +194,7 @@ const resultCopy = {
     bridge: "QR kodni hozir skaner qiling, Pro Subscription 1 uchun to'lang va chekni Telegramga yuboring.",
     upsellBodyA: "Zaif joylaringiz:",
     upsellBodyB:
-      "To'lovdan keyin @SATTEST_UZ_bot Pro obunangizni faollashtiradi va sizni SATTEST.UZ ga qaytaradi: to'liq mock test natijasi, shaxsiy 1400+ curriculum, maqsadli mashqlar va xatolar kuzatuvi ochiladi.",
+      `To'lovdan keyin @${telegramBotUsername} Pro obunangizni faollashtiradi va sizni SATTEST.UZ ga qaytaradi: to'liq mock test natijasi, shaxsiy 1400+ curriculum, maqsadli mashqlar va xatolar kuzatuvi ochiladi.`,
     monthlyPlan: "Pro Subscription 1",
     monthly: "200,000 UZS / 1 oy",
     threeMonth: "600,000 UZS / 3 oy",
