@@ -27,17 +27,17 @@ const resultCopy = {
     youAnswered: "You answered",
     correctAnswer: "Correct answer",
     noMiss: "No missed question in this diagnostic. Pro still opens the full 98-question mock test and a complete 30-day route.",
-    locked: "Full Mock Test Ready",
-    upsellTitle: "Your estimated score is",
-    goal: "Your goal is 1400+.",
-    bridge: "Your 30-day plan is ready. Unlock the full route while your weak areas are fresh.",
+    locked: "Payment page ready",
+    upsellTitle: "Go Pro and reach 1400+.",
+    goal: "Your diagnostic score:",
+    bridge: "See your weak areas, choose a plan, scan the Payme or Click QR code, then confirm payment in Telegram.",
     upsellBodyA: "Your weak areas are",
     upsellBodyB:
-      "SATTEST Pro includes the full 98-question identical Digital SAT mock test (2h14m, accurate scoring), a personalized 30-day plan built from this diagnostic, unlimited targeted practice, and mistake tracking.",
+      "After payment, @SATTEST_UZ_bot activates Pro and sends you back to SATTEST.UZ to open the full mock result, personal 1400+ curriculum, unlimited targeted practice, and mistake tracking.",
     monthly: "200,000 UZS / month",
     threeMonth: "600,000 UZS / 3 months",
     threeMonthNote: "Convenience for the full prep cycle. Same monthly price, paid once.",
-    cta: "Unlock Full Mock Test",
+    cta: "Open payment page",
     restart: "Retake Free Diagnostic",
     missing: "Diagnostic results were not found. Start the free diagnostic again."
   },
@@ -56,17 +56,17 @@ const resultCopy = {
     youAnswered: "Ваш ответ",
     correctAnswer: "Правильный ответ",
     noMiss: "В этой диагностике нет ошибок. Pro всё равно открывает полный mock test из 98 вопросов и полный 30-дневный маршрут.",
-    locked: "Полный mock test готов",
-    upsellTitle: "Ваш оценочный балл",
-    goal: "Ваша цель — 1400+.",
-    bridge: "Ваш 30-дневный план готов. Откройте полный маршрут, пока слабые места ещё свежие.",
+    locked: "Страница оплаты готова",
+    upsellTitle: "Перейдите на Pro и дойдите до 1400+.",
+    goal: "Ваш балл диагностики:",
+    bridge: "Посмотрите слабые места, выберите тариф, отсканируйте QR Payme или Click и подтвердите оплату в Telegram.",
     upsellBodyA: "Ваши слабые места:",
     upsellBodyB:
-      "SATTEST Pro включает полный Digital SAT mock test из 98 вопросов (2ч14м, точный балл), персональный 30-дневный план по этой диагностике, неограниченную целевую практику и отслеживание ошибок.",
+      "После оплаты @SATTEST_UZ_bot активирует Pro и отправит вас обратно на SATTEST.UZ, чтобы открыть результат полного mock test, личный маршрут 1400+, целевую практику и отслеживание ошибок.",
     monthly: "200,000 UZS / месяц",
     threeMonth: "600,000 UZS / 3 месяца",
     threeMonthNote: "Удобно для полного цикла подготовки. Та же месячная цена, одним платежом.",
-    cta: "Открыть полный mock test",
+    cta: "Открыть страницу оплаты",
     restart: "Пройти диагностику заново",
     missing: "Результаты диагностики не найдены. Начните бесплатную диагностику снова."
   },
@@ -85,17 +85,17 @@ const resultCopy = {
     youAnswered: "Sizning javobingiz",
     correctAnswer: "To'g'ri javob",
     noMiss: "Bu diagnostikada xato yo'q. Pro baribir 98 savollik to'liq mock test va 30 kunlik to'liq reja ochadi.",
-    locked: "To'liq mock test tayyor",
-    upsellTitle: "Taxminiy balingiz",
-    goal: "Maqsadingiz 1400+.",
-    bridge: "30 kunlik rejangiz tayyor. Zaif joylaringiz esingizda turgan paytda to'liq yo'nalishni oching.",
+    locked: "To'lov sahifasi tayyor",
+    upsellTitle: "Pro-ga o'ting va 1400+ ga yeting!",
+    goal: "Diagnostika balingiz:",
+    bridge: "Zaif joylaringizni ko'ring, tarif tanlang, Payme yoki Click QR kodini skaner qiling va Telegramda to'lovni tasdiqlang.",
     upsellBodyA: "Zaif joylaringiz:",
     upsellBodyB:
-      "SATTEST Pro ichida 98 savollik to'liq Digital SAT mock test (2 soat 14 daqiqa, aniq ball), shu diagnostika asosida shaxsiy 30 kunlik reja, cheksiz maqsadli mashqlar va xatolar kuzatuvi bor.",
+      "To'lovdan keyin @SATTEST_UZ_bot Pro obunangizni faollashtiradi va sizni SATTEST.UZ ga qaytaradi: to'liq mock test natijasi, shaxsiy 1400+ curriculum, maqsadli mashqlar va xatolar kuzatuvi ochiladi.",
     monthly: "200,000 UZS / oy",
     threeMonth: "600,000 UZS / 3 oy",
     threeMonthNote: "To'liq tayyorgarlik sikli uchun qulay. Oylik narx o'zgarmaydi, faqat bir martalik to'lov.",
-    cta: "To'liq Mock Testni ochish",
+    cta: "To'lov sahifasini ochish",
     restart: "Bepul diagnostikani qayta topshirish",
     missing: "Diagnostika natijalari topilmadi. Bepul diagnostikani qaytadan boshlang."
   }
@@ -313,7 +313,7 @@ export default function FreeDiagnosticResultsPage() {
                 <Lock size={16} /> {copy.locked}
               </p>
               <h2 className="mt-5 text-4xl font-light leading-tight md:text-6xl">
-                {copy.upsellTitle} {result.estimatedTotal}. {copy.goal}
+                {copy.upsellTitle} <span className="block text-white/72">{copy.goal} {result.estimatedTotal}</span>
               </h2>
               <p className="mt-5 max-w-3xl text-xl font-semibold leading-8 text-white">
                 {copy.bridge}
