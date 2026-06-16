@@ -163,7 +163,7 @@ Pro da nimalar bor:
 ✅ Cheksiz mashq testlari
 ✅ Xatolar kuzatuvi
 
-💎 200,000 UZS/oy
+💎 300,000 UZS/oy
 👉 sattest.uz/pro""",
         "ru": """Привет {first_name}! 🌟
 
@@ -177,7 +177,7 @@ Pro da nimalar bor:
 ✅ Безлимитные практики
 ✅ Отслеживание ошибок
 
-💎 200,000 UZS/месяц
+💎 300,000 UZS/месяц
 👉 sattest.uz/pro""",
         "en": """Hey {first_name}! 🌟
 
@@ -191,7 +191,7 @@ What Pro includes:
 ✅ Unlimited practice tests
 ✅ Mistake tracking
 
-💎 200,000 UZS/month
+💎 300,000 UZS/month
 👉 sattest.uz/pro""",
     },
     "language_prompt": {

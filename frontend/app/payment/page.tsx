@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createPaymentOrder, getPaymentConfig, getToken, type PaymentConfig } from "@/lib/api";
 import { calculateDiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult } from "@/lib/free-diagnostic-storage";
+import { MONTHLY_PRICE, MONTHLY_PRICE_LABEL, THREE_MONTH_PRICE, THREE_MONTH_PRICE_LABEL } from "@/lib/pricing";
 
 type Plan = "monthly" | "three_month";
 
@@ -14,8 +15,8 @@ const fallbackConfig: PaymentConfig = {
   click_qr_url: "",
   telegram_bot_url: "https://t.me/SATTESTUZBot",
   plans: {
-    monthly: { amount: 200000, days: 30, label: "1 month" },
-    three_month: { amount: 600000, days: 90, label: "3 months" },
+    monthly: { amount: MONTHLY_PRICE, days: 30, label: "1 month" },
+    three_month: { amount: THREE_MONTH_PRICE, days: 90, label: "3 months" },
   },
 };
 
@@ -84,8 +85,8 @@ export default function PaymentPage() {
 
           <section className="border border-white/10 bg-white/[0.035] p-6">
             <div className="grid gap-4 sm:grid-cols-2">
-              <PlanButton active={plan === "monthly"} label="200,000 UZS" sub="1 oy" onClick={() => setPlan("monthly")} />
-              <PlanButton active={plan === "three_month"} label="600,000 UZS" sub="3 oy" onClick={() => setPlan("three_month")} badge="Tavsiya" />
+              <PlanButton active={plan === "monthly"} label={MONTHLY_PRICE_LABEL} sub="1 oy" onClick={() => setPlan("monthly")} />
+              <PlanButton active={plan === "three_month"} label={THREE_MONTH_PRICE_LABEL} sub="3 oy" onClick={() => setPlan("three_month")} badge="Tavsiya" />
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">

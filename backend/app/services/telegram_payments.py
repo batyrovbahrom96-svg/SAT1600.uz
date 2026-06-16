@@ -12,6 +12,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_DAYS
 from app.models import PaymentOrder, Subscription, TelegramAudience, TestAttempt, User
 from app.services.messages import BUTTONS, LANGUAGE_BUTTONS, MESSAGES, SUPPORTED_LANGUAGES
 
@@ -23,12 +24,12 @@ PLAN_ALIASES = {
 }
 
 PLAN_PRICES = {
-    "pro": 200000,
+    "pro": MONTHLY_PRICE,
 }
 
 ORDER_PLAN_DAYS = {
-    "monthly": 30,
-    "three_month": 90,
+    "monthly": MONTHLY_PLAN_DAYS,
+    "three_month": THREE_MONTH_PLAN_DAYS,
 }
 
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")

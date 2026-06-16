@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_user, require_admin
 from app.core.config import get_settings
+from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_DAYS, THREE_MONTH_PRICE
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db, get_engine
 from app.models import PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, Subscription, Test, TestAttempt, TestTelemetrySummary, User
@@ -60,8 +61,8 @@ class PaymentOrderCreate(BaseModel):
 
 
 PAYMENT_PLANS = {
-    "monthly": {"amount": 200000, "days": 30, "label": "1 month"},
-    "three_month": {"amount": 600000, "days": 90, "label": "3 months"},
+    "monthly": {"amount": MONTHLY_PRICE, "days": MONTHLY_PLAN_DAYS, "label": "1 month"},
+    "three_month": {"amount": THREE_MONTH_PRICE, "days": THREE_MONTH_PLAN_DAYS, "label": "3 months"},
 }
 
 

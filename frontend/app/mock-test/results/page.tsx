@@ -42,18 +42,18 @@ const resultCopy = {
     upsellBodyB:
       `After payment, @${telegramBotUsername} activates Pro and sends you back to SATTEST.UZ to open the full mock result, personal 1400+ curriculum, unlimited targeted practice, and mistake tracking.`,
     monthlyPlan: "Pro Subscription 1",
-    monthly: "200,000 UZS / 1 month",
-    threeMonth: "600,000 UZS / 3 months",
+    monthly: "300,000 UZS / 1 month",
+    threeMonth: "900,000 UZS / 3 months",
     threeMonthNote: "Convenience for the full prep cycle. Same monthly price, paid once.",
     scanLine: "Scan QR → Pay → Send receipt",
     instructions: [
-      "Pay 200,000 UZS with this QR code.",
+      "Pay 300,000 UZS with this QR code.",
       `Send the payment screenshot to @${telegramBotUsername}.`,
       "Write your registration email in the message."
     ],
     proOpens: "Pro opens the full mock test result, My 1400+ route, unlimited practice, and mistake tracking after activation.",
     cta: "Paid — send receipt",
-    qrAlt: "Pro Subscription 1 Paynet QR payment 200,000 UZS",
+    qrAlt: "Pro Subscription 1 Paynet QR payment 300,000 UZS",
     lockCard: {
       title: "This information is LOCKED",
       body: "You found 3 weak topics — but you need Pro to see them!",
@@ -67,8 +67,8 @@ const resultCopy = {
       ],
       expired: "⚠️ Time is over! Get Pro now!",
       countdownNote: "Your plan disappears today!",
-      primary: "🔑 GET PRO → 200,000 UZS/MONTH",
-      threeMonth: "💎 3 MONTHS → 600,000 UZS",
+      primary: "🔑 GET PRO → 300,000 UZS/MONTH",
+      threeMonth: "💎 3 MONTHS → 900,000 UZS",
       socialProof: "✅ 47 students got Pro this month"
     },
     paymentModal: {
@@ -76,8 +76,8 @@ const resultCopy = {
       body: "Scan the QR, complete payment, then upload your receipt to the Telegram bot.",
       planMonthly: "Pro Subscription 1",
       planThreeMonth: "Pro Subscription · 3 months",
-      monthlyPrice: "200,000 UZS / month",
-      threeMonthPrice: "600,000 UZS / 3 months",
+      monthlyPrice: "300,000 UZS / month",
+      threeMonthPrice: "900,000 UZS / 3 months",
       scanLine: "Scan QR → Pay → Upload receipt",
       instructionsTitle: "What to send in Telegram:",
       instructions: [
@@ -119,18 +119,18 @@ const resultCopy = {
     upsellBodyB:
       `После оплаты @${telegramBotUsername} активирует Pro и отправит вас обратно на SATTEST.UZ, чтобы открыть результат полного mock test, личный маршрут 1400+, целевую практику и отслеживание ошибок.`,
     monthlyPlan: "Pro Subscription 1",
-    monthly: "200,000 UZS / 1 месяц",
-    threeMonth: "600,000 UZS / 3 месяца",
+    monthly: "300,000 UZS / 1 месяц",
+    threeMonth: "900,000 UZS / 3 месяца",
     threeMonthNote: "Удобно для полного цикла подготовки. Та же месячная цена, одним платежом.",
     scanLine: "Сканируй QR → Оплати → Отправь чек",
     instructions: [
-      "Оплатите 200,000 UZS по этому QR-коду.",
+      "Оплатите 300,000 UZS по этому QR-коду.",
       `Отправьте скриншот оплаты в @${telegramBotUsername}.`,
       "Напишите email регистрации в сообщении."
     ],
     proOpens: "После активации Pro открывает полный mock test result, маршрут My 1400+, безлимитную практику и отслеживание ошибок.",
     cta: "Оплатил — отправить чек",
-    qrAlt: "QR оплата Pro Subscription 1 Paynet 200,000 UZS",
+    qrAlt: "QR оплата Pro Subscription 1 Paynet 300,000 UZS",
     lockCard: {
       title: "Эта информация ЗАКРЫТА",
       body: "Вы нашли 3 слабые темы — но чтобы увидеть их, нужен Pro!",
@@ -144,8 +144,8 @@ const resultCopy = {
       ],
       expired: "⚠️ Время вышло! Получите Pro сейчас!",
       countdownNote: "Ваш план исчезнет сегодня!",
-      primary: "🔑 ПОЛУЧИТЬ PRO → 200,000 UZS/МЕСЯЦ",
-      threeMonth: "💎 3 МЕСЯЦА → 600,000 UZS",
+      primary: "🔑 ПОЛУЧИТЬ PRO → 300,000 UZS/МЕСЯЦ",
+      threeMonth: "💎 3 МЕСЯЦА → 900,000 UZS",
       socialProof: "✅ В этом месяце 47 учеников получили Pro"
     },
     paymentModal: {
@@ -153,8 +153,8 @@ const resultCopy = {
       body: "Отсканируйте QR, оплатите и загрузите чек в Telegram-бот.",
       planMonthly: "Pro Subscription 1",
       planThreeMonth: "Pro Subscription · 3 месяца",
-      monthlyPrice: "200,000 UZS / месяц",
-      threeMonthPrice: "600,000 UZS / 3 месяца",
+      monthlyPrice: "300,000 UZS / месяц",
+      threeMonthPrice: "900,000 UZS / 3 месяца",
       scanLine: "Сканируй QR → Оплати → Загрузи чек",
       instructionsTitle: "Что отправить в Telegram:",
       instructions: [
@@ -196,18 +196,18 @@ const resultCopy = {
     upsellBodyB:
       `To'lovdan keyin @${telegramBotUsername} Pro obunangizni faollashtiradi va sizni SATTEST.UZ ga qaytaradi: to'liq mock test natijasi, shaxsiy 1400+ curriculum, maqsadli mashqlar va xatolar kuzatuvi ochiladi.`,
     monthlyPlan: "Pro Subscription 1",
-    monthly: "200,000 UZS / 1 oy",
-    threeMonth: "600,000 UZS / 3 oy",
+    monthly: "300,000 UZS / 1 oy",
+    threeMonth: "900,000 UZS / 3 oy",
     threeMonthNote: "To'liq tayyorgarlik sikli uchun qulay. Oylik narx o'zgarmaydi, faqat bir martalik to'lov.",
     scanLine: "QR skaner → To'lov → Chek yuborish",
     instructions: [
-      "Ushbu QR kod orqali 200,000 UZS to'lang.",
+      "Ushbu QR kod orqali 300,000 UZS to'lang.",
       `To'lov skrinshotini @${telegramBotUsername} ga yuboring.`,
       "Xabarda ro'yxatdan o'tgan emailingizni yozing."
     ],
     proOpens: "Faollashtirilgandan keyin Pro to'liq mock test natijasi, My 1400+ yo'nalishi, cheksiz mashqlar va xatolar kuzatuvini ochadi.",
     cta: "To'ladim — chek yuborish",
-    qrAlt: "Pro Subscription 1 Paynet QR to'lov 200,000 UZS",
+    qrAlt: "Pro Subscription 1 Paynet QR to'lov 300,000 UZS",
     lockCard: {
       title: "Bu ma'lumotlar YOPIQ",
       body: "Siz 3 ta zaif mavzuni aniqladingiz — lekin ularni ko'rish uchun Pro kerak!",
@@ -221,8 +221,8 @@ const resultCopy = {
       ],
       expired: "⚠️ Vaqt tugadi! Hozir Pro oling!",
       countdownNote: "Rejangiz bugun o'chadi!",
-      primary: "🔑 PRO OLISH → 200,000 UZS/OY",
-      threeMonth: "💎 3 OY → 600,000 UZS",
+      primary: "🔑 PRO OLISH → 300,000 UZS/OY",
+      threeMonth: "💎 3 OY → 900,000 UZS",
       socialProof: "✅ Bu oy 47 o'quvchi Pro oldi"
     },
     paymentModal: {
@@ -230,8 +230,8 @@ const resultCopy = {
       body: "QR kodni skaner qiling, to'lovni bajaring va chekni Telegram botga yuklang.",
       planMonthly: "Pro Subscription 1",
       planThreeMonth: "Pro Subscription · 3 oy",
-      monthlyPrice: "200,000 UZS / oy",
-      threeMonthPrice: "600,000 UZS / 3 oy",
+      monthlyPrice: "300,000 UZS / oy",
+      threeMonthPrice: "900,000 UZS / 3 oy",
       scanLine: "QR skaner → To'lov → Chek yuklash",
       instructionsTitle: "Telegramga yuboriladigan ma'lumotlar:",
       instructions: [

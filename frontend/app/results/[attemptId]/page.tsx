@@ -35,6 +35,7 @@ import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { PremiumButton } from "@/components/PremiumButton";
 import { PremiumText } from "@/components/PremiumText";
 import { ApiError, api, getSubscriptionStatus } from "@/lib/api";
+import { MONTHLY_PRICE_PER_MONTH } from "@/lib/pricing";
 
 type ResultQuestion = {
   id: string;
@@ -513,7 +514,7 @@ export default function ResultsPage() {
               <h2 className="mt-4 text-3xl font-light leading-tight text-white md:text-4xl">
                 {hasActiveSubscription
                   ? "You can see the problem. Now open the exercises that fix it."
-                  : "Sizning 30 kunlik rejangiz tayyor. Pro: 200,000 so'm."}
+                  : `Sizning 30 kunlik rejangiz tayyor. Pro: ${MONTHLY_PRICE_PER_MONTH}.`}
               </h2>
               <p className="mt-4 max-w-3xl text-sm font-light leading-7 text-white/58">
                 {hasActiveSubscription
@@ -554,7 +555,7 @@ export default function ResultsPage() {
               <p className="mt-4 text-sm leading-6 text-white/55">
                 {hasActiveSubscription
                   ? "Start the first set now and retake the weak section after completion."
-                  : "Your 30-day plan is ready now. Pay 200,000 so'm and open the route while the weak spots are fresh."}
+                  : `Your 30-day plan is ready now. Unlock Pro for ${MONTHLY_PRICE_PER_MONTH} while the weak spots are fresh.`}
               </p>
               <PremiumButton
                 className="mt-5 w-full"
@@ -562,7 +563,7 @@ export default function ResultsPage() {
                 onClick={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro&from=diagnostic-result")}
                 type="button"
               >
-                {hasActiveSubscription ? "Open my route" : "Pay 200,000 so'm and unlock"}
+                {hasActiveSubscription ? "Open my route" : `🔑 Unlock Pro — ${MONTHLY_PRICE_PER_MONTH} →`}
               </PremiumButton>
             </div>
           </div>

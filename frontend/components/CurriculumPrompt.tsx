@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, BookOpenCheck, CalendarDays, GraduationCap, Lock, Target, Timer, X } from "lucide-react";
+import { MONTHLY_PRICE_PER_MONTH } from "@/lib/pricing";
 
 export function CurriculumPrompt({
   onClose,
@@ -43,7 +44,7 @@ export function CurriculumPrompt({
               <h2 className="mt-5 max-w-3xl text-5xl font-light leading-none text-white md:text-7xl">
                 {isUnlocked
                   ? "Your weak topics are clear. Open your exercise route now."
-                  : "Sizning 30 kunlik rejangiz tayyor. Pro: 200,000 so'm."}
+                  : `Sizning 30 kunlik rejangiz tayyor. Pro: ${MONTHLY_PRICE_PER_MONTH}.`}
               </h2>
               <p className="mt-6 max-w-2xl text-base font-light leading-8 text-white/55">
                 {isUnlocked
@@ -119,7 +120,7 @@ export function CurriculumPrompt({
                   <div className="mt-2 text-sm font-light leading-6 text-white/52">
                     {isUnlocked
                       ? `${nextMockDate}. Continue the repair cycle and retake the weak section.`
-                      : "Pay 200,000 so'm, confirm through the Telegram bot, and start the plan while motivation is highest."}
+                      : `Unlock Pro for ${MONTHLY_PRICE_PER_MONTH}, confirm through the Telegram bot, and start the plan while motivation is highest.`}
                   </div>
                 </div>
               </div>
@@ -139,7 +140,7 @@ export function CurriculumPrompt({
               onClick={onOpen}
               type="button"
             >
-              {isUnlocked ? "Open exercise route" : "Pay 200,000 so'm and unlock"} <ArrowRight size={18} />
+              {isUnlocked ? "Open exercise route" : `🔑 Unlock Pro — ${MONTHLY_PRICE_PER_MONTH} →`} <ArrowRight size={18} />
             </button>
           </div>
         </section>
