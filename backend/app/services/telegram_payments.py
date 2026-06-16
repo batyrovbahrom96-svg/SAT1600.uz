@@ -171,7 +171,7 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     db.commit()
     db.refresh(subscription)
 
-    _send_message(chat_id, _receipt_active_message(subscription, user))
+    _send_message(chat_id, _receipt_active_message(subscription, user), reply_markup=_receipt_active_keyboard(user))
     _notify_admin_for_auto_activation(subscription, user, message)
     return {"ok": True, "subscription_id": str(subscription.id), "status": "active"}
 
@@ -220,7 +220,7 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
         db.commit()
         _answer_callback(callback_id, "Access activated.")
         if student_chat_id:
-            _send_message(student_chat_id, _receipt_active_message(subscription, user))
+            _send_message(student_chat_id, _receipt_active_message(subscription, user), reply_markup=_receipt_active_keyboard(user))
         _edit_admin_message(callback_query, f"APPROVED\n\n{_subscription_summary(subscription, user)}")
         return {"ok": True, "status": "active"}
 
@@ -556,27 +556,53 @@ def _pro_login_link(email: str | None, next_path: str) -> str:
     return f"{base}/login?{query}"
 
 
+def _mock_result_next_path() -> str:
+    return "/mock-test/full/results?unlocked=true"
+
+
+def _mock_result_link(user: User | None = None) -> str:
+    return _pro_login_link(user.email if user else None, _mock_result_next_path())
+
+
+def _receipt_active_keyboard(user: User | None = None) -> dict:
+    return {
+        "inline_keyboard": [
+            [
+                {
+                    "text": "Open my mock result",
+                    "url": _mock_result_link(user),
+                }
+            ],
+            [
+                {
+                    "text": "Kanalimiz @sattestuz",
+                    "url": "https://t.me/sattestuz",
+                }
+            ],
+        ]
+    }
+
+
 def _receipt_active_message(subscription: Subscription, user: User | None = None) -> str:
     start = _format_subscription_date(subscription.current_period_start)
     end = _format_subscription_date(subscription.current_period_end)
-    email = user.email if user else None
-    mock_link = _pro_login_link(email, "/sat-mock?lang=en")
+    result_link = _mock_result_link(user)
     return (
         "EN: Receipt received. SATTEST.UZ Pro was activated instantly by the bot.\n"
         f"Start day: {start}\n"
         f"End day: {end}\n"
-        f"Start here: {mock_link}\n"
-        "Log in or register with the same email, then open the harder Pro SAT Mock Test. The public /sat-test remains free for everyone.\n\n"
+        f"Open your paid mock result: {result_link}\n"
+        "Tap the button below or log in with the same email to return directly to your full mock score and analysis.\n\n"
         "RU: Чек получен. SATTEST.UZ Pro был мгновенно активирован ботом.\n"
         f"Дата начала: {start}\n"
         f"Дата окончания: {end}\n"
-        f"Начните здесь: {mock_link}\n"
-        "Войдите или зарегистрируйтесь с тем же email, затем откройте более сложный Pro SAT Mock Test. Публичный /sat-test остается бесплатным для всех.\n\n"
+        f"Открыть оплаченный mock результат: {result_link}\n"
+        "Нажмите кнопку ниже или войдите с тем же email, чтобы сразу вернуться к баллу и анализу полного mock test.\n\n"
         "UZ: Chek qabul qilindi. SATTEST.UZ Pro bot orqali darhol faollashtirildi.\n"
         f"Boshlanish kuni: {start}\n"
         f"Tugash kuni: {end}\n"
-        f"Shu yerdan boshlang: {mock_link}\n"
-        "Xuddi shu email bilan kiring yoki ro'yxatdan o'ting, keyin qiyinroq Pro SAT Mock Testni oching. Ommaviy /sat-test hamma uchun bepul qoladi.\n"
+        f"To'langan mock natijangizni oching: {result_link}\n"
+        "Pastdagi tugmani bosing yoki shu email bilan kiring, natija va tahlil sahifasiga to'g'ridan-to'g'ri qaytasiz.\n"
         "Kanalimizga qo'shiling: @sattestuz — har kuni foydali materiallar\n\n"
         f"{PAYMENT_WARNING_TEXT}"
     )

@@ -320,9 +320,38 @@ export default function FullMockResultsPage() {
     setResult(stored);
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unlocked") !== "true") return;
+
+    async function openUnlockedResult() {
+      const nextPath = "/mock-test/full/results?unlocked=true";
+      if (!getToken()) {
+        window.location.href = `/login?next=${encodeURIComponent(nextPath)}`;
+        return;
+      }
+
+      setCheckingPro(true);
+      try {
+        const status = await getSubscriptionStatus();
+        if (status.has_active_subscription) {
+          setUnlocked(true);
+          return;
+        }
+        document.getElementById("pay")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch {
+        document.getElementById("pay")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } finally {
+        setCheckingPro(false);
+      }
+    }
+
+    openUnlockedResult();
+  }, []);
+
   async function unlockWithPro() {
     if (!getToken()) {
-      window.location.href = `/login?next=${encodeURIComponent("/mock-test/full/results")}`;
+      window.location.href = `/login?next=${encodeURIComponent("/mock-test/full/results?unlocked=true")}`;
       return;
     }
     setCheckingPro(true);
