@@ -207,7 +207,7 @@ def payment_config() -> dict:
     return {
         "payme_qr_url": settings.payme_qr_url,
         "click_qr_url": settings.click_qr_url,
-        "telegram_bot_url": "https://t.me/SATTEST_UZ_bot",
+        "telegram_bot_url": "https://t.me/SATTESTUZBot",
         "plans": {
             key: {"amount": value["amount"], "days": value["days"], "label": value["label"]}
             for key, value in PAYMENT_PLANS.items()
@@ -273,8 +273,8 @@ def telegram_status() -> dict:
         "bot_token_configured": bool(settings.telegram_bot_token),
         "bot_token_valid": bool(bot.get("ok")),
         "bot_username": ((bot.get("result") or {}).get("username") if bot.get("ok") else None),
-        "bot_expected_username": "SATTEST_UZ_bot",
-        "bot_username_matches_expected": ((bot.get("result") or {}).get("username") == "SATTEST_UZ_bot" if bot.get("ok") else False),
+        "bot_expected_username": "SATTESTUZBot",
+        "bot_username_matches_expected": ((bot.get("result") or {}).get("username") == "SATTESTUZBot" if bot.get("ok") else False),
         "webhook_secret_configured": bool(settings.telegram_webhook_secret),
         "admin_chat_id_configured": bool(settings.telegram_admin_chat_id),
         "channel_id_configured": bool(settings.telegram_channel_id),
@@ -782,7 +782,7 @@ def _owned_payment_order(db: Session, reference: str, user: User) -> PaymentOrde
 
 def _payment_order_payload(order: PaymentOrder, user: User) -> dict:
     settings = get_settings()
-    telegram_url = f"https://t.me/SATTEST_UZ_bot?start={order.reference}"
+    telegram_url = f"https://t.me/SATTESTUZBot?start={order.reference}"
     return {
         "id": order.id,
         "reference": order.reference,
