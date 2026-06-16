@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Bookmark, Clock, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bookmark, Clock, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { notifyFullMockResult } from "@/app/sat-test/actions";
 import {
@@ -20,7 +20,7 @@ import {
   type FullMockModuleNumber,
   type FullMockProgress,
 } from "@/lib/full-mock-test";
-import { pick, useLanguage, type Language } from "@/lib/i18n";
+import { languages, pick, useLanguage, type Language } from "@/lib/i18n";
 
 type ScreenState = "intro" | "test" | "break";
 
@@ -41,6 +41,8 @@ const satTestCopy: Record<Language, {
   markForReview: string;
   undo: string;
   back: string;
+  backToIntro: string;
+  backToSite: string;
   questionProgress: (current: number, total: number, global: number) => string;
   endModule: string;
   next: string;
@@ -62,6 +64,8 @@ const satTestCopy: Record<Language, {
     markForReview: "Mark for Review",
     undo: "Undo",
     back: "Back",
+    backToIntro: "Back to intro",
+    backToSite: "Back to site",
     questionProgress: (current, total, global) => `Question ${current} of ${total} · Total ${global} of 98`,
     endModule: "End Module",
     next: "Next",
@@ -83,6 +87,8 @@ const satTestCopy: Record<Language, {
     markForReview: "Отметить для проверки",
     undo: "Отменить",
     back: "Назад",
+    backToIntro: "Назад к началу",
+    backToSite: "Назад на сайт",
     questionProgress: (current, total, global) => `Вопрос ${current} из ${total} · Всего ${global} из 98`,
     endModule: "Завершить модуль",
     next: "Далее",
@@ -104,6 +110,8 @@ const satTestCopy: Record<Language, {
     markForReview: "Tekshirish uchun belgilash",
     undo: "Bekor qilish",
     back: "Orqaga",
+    backToIntro: "Boshlanishga qaytish",
+    backToSite: "Saytga qaytish",
     questionProgress: (current, total, global) => `Savol ${current}/${total} · Jami ${global}/98`,
     endModule: "Modulni yakunlash",
     next: "Keyingi",
@@ -239,7 +247,7 @@ function QuestionChart({ chart }: { chart: FullMockChart }) {
 }
 
 export default function SatTestPage() {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const copy = pick(satTestCopy, language);
   const [screen, setScreen] = useState<ScreenState>("intro");
   const [progress, setProgress] = useState<FullMockProgress | null>(null);
@@ -348,6 +356,19 @@ export default function SatTestPage() {
   const moduleInfo = progress ? FULL_MOCK_MODULES[progress.currentModule] : FULL_MOCK_MODULES[1];
   const warning = secondsLeft <= 5 * 60;
 
+  function changeLanguage(next: Language) {
+    setLanguage(next);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", next);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function returnToIntro() {
+    if (progress) setResumeProgress(progress);
+    setScreen("intro");
+  }
+
   function beginFresh() {
     const initial = createInitialProgress();
     safeWriteJson(FULL_MOCK_PROGRESS_KEY, initial);
@@ -445,6 +466,12 @@ export default function SatTestPage() {
             {copy.start} <ArrowRight size={20} />
           </button>
         </section>
+        <SatMockBottomControls
+          activeLanguage={language}
+          backHref="/"
+          backLabel={copy.backToSite}
+          onLanguageChange={changeLanguage}
+        />
       </main>
     );
   }
@@ -483,6 +510,13 @@ export default function SatTestPage() {
             </button>
           </div>
         </section>
+        <SatMockBottomControls
+          activeLanguage={language}
+          backLabel={copy.backToIntro}
+          elevated
+          onBack={returnToIntro}
+          onLanguageChange={changeLanguage}
+        />
       </main>
     );
   }
@@ -560,6 +594,63 @@ export default function SatTestPage() {
           </button>
         </div>
       </footer>
+      <SatMockBottomControls
+        activeLanguage={language}
+        backLabel={copy.backToIntro}
+        elevated
+        onBack={returnToIntro}
+        onLanguageChange={changeLanguage}
+      />
     </main>
+  );
+}
+
+function SatMockBottomControls({
+  activeLanguage,
+  backHref,
+  backLabel,
+  elevated = false,
+  onBack,
+  onLanguageChange,
+}: {
+  activeLanguage: Language;
+  backHref?: string;
+  backLabel: string;
+  elevated?: boolean;
+  onBack?: () => void;
+  onLanguageChange: (language: Language) => void;
+}) {
+  const backClassName = "inline-flex h-11 items-center gap-2 border border-[#071124]/15 bg-white px-4 text-[10px] font-black uppercase tracking-[0.16em] text-[#071124] shadow-[0_14px_40px_rgba(7,17,36,0.10)] transition-colors hover:bg-[#071124] hover:text-white";
+  const languageButtonClassName = (isActive: boolean) => [
+    "flex h-11 min-w-11 items-center justify-center px-3 text-[10px] font-black uppercase tracking-[0.14em] transition-colors",
+    isActive ? "bg-[#071124] text-white" : "bg-white text-[#071124]/55 hover:text-[#071124]"
+  ].join(" ");
+
+  const backControl = backHref ? (
+    <a className={backClassName} href={backHref}>
+      <ArrowLeft size={16} /> {backLabel}
+    </a>
+  ) : (
+    <button className={backClassName} onClick={onBack} type="button">
+      <ArrowLeft size={16} /> {backLabel}
+    </button>
+  );
+
+  return (
+    <div className={["fixed left-4 z-40 flex flex-wrap items-center gap-2", elevated ? "bottom-20" : "bottom-4"].join(" ")} data-sattest-no-translate="true">
+      {backControl}
+      <div className="flex items-center border border-[#071124]/15 bg-white p-1 shadow-[0_14px_40px_rgba(7,17,36,0.10)]" aria-label="SAT mock language selector">
+        {languages.map((item) => (
+          <button
+            className={languageButtonClassName(activeLanguage === item.code)}
+            key={item.code}
+            onClick={() => onLanguageChange(item.code)}
+            type="button"
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

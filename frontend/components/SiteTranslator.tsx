@@ -1138,6 +1138,8 @@ export function SiteTranslator() {
     };
   }, [setLanguage]);
 
+  if (pathname === "/sat-test") return null;
+
   return (
     <div
       className="fixed bottom-4 left-4 z-[999] flex items-center border border-white/12 bg-black/70 p-1 text-white shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-md"
