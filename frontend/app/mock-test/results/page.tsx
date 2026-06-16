@@ -10,7 +10,7 @@ import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-d
 import { useLanguage } from "@/lib/i18n";
 import { notifyDiagnosticResult } from "./actions";
 
-const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
+const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_UZ_bot";
 const telegramBotUrl = `https://t.me/${telegramBotUsername}?start=pro`;
 const paynetQrPayload =
   "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";

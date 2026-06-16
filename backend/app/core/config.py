@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     telegram_bot_token: str | None = None
     telegram_webhook_secret: str | None = None
     telegram_admin_chat_id: str | None = None
+    telegram_channel_id: str | None = None
     admin_chat_id: str | None = None
     payme_qr_url: str = ""
     click_qr_url: str = ""

@@ -1425,6 +1425,10 @@ def _telegram_api(method: str, payload: dict) -> dict:
         return {"ok": False, "error": str(exc)}
 
 
+def telegram_get_me() -> dict:
+    return _telegram_api("getMe", {})
+
+
 def _send_message(chat_id: str, text: str, reply_markup: dict | None = None) -> dict:
     payload: dict = {"chat_id": chat_id, "text": text}
     if reply_markup:

@@ -31,7 +31,7 @@ from app.services.sat_engine import (
     save_answer,
     start_attempt,
 )
-from app.services.telegram_payments import handle_telegram_update, notify_admin_diagnostic_result, notify_admin_full_mock_result, process_subscription_maintenance
+from app.services.telegram_payments import handle_telegram_update, notify_admin_diagnostic_result, notify_admin_full_mock_result, telegram_get_me, process_subscription_maintenance
 
 router = APIRouter(prefix="/api")
 verification_codes: dict[str, dict[str, datetime | str]] = {}
@@ -207,7 +207,7 @@ def payment_config() -> dict:
     return {
         "payme_qr_url": settings.payme_qr_url,
         "click_qr_url": settings.click_qr_url,
-        "telegram_bot_url": "https://t.me/SATTESTUZBot",
+        "telegram_bot_url": "https://t.me/SATTEST_UZ_bot",
         "plans": {
             key: {"amount": value["amount"], "days": value["days"], "label": value["label"]}
             for key, value in PAYMENT_PLANS.items()
@@ -268,10 +268,16 @@ async def telegram_webhook(request: Request) -> dict:
 @router.get("/telegram/status")
 def telegram_status() -> dict:
     settings = get_settings()
+    bot = telegram_get_me() if settings.telegram_bot_token else {"ok": False, "skipped": "telegram_bot_token_missing"}
     return {
         "bot_token_configured": bool(settings.telegram_bot_token),
+        "bot_token_valid": bool(bot.get("ok")),
+        "bot_username": ((bot.get("result") or {}).get("username") if bot.get("ok") else None),
+        "bot_expected_username": "SATTEST_UZ_bot",
+        "bot_username_matches_expected": ((bot.get("result") or {}).get("username") == "SATTEST_UZ_bot" if bot.get("ok") else False),
         "webhook_secret_configured": bool(settings.telegram_webhook_secret),
         "admin_chat_id_configured": bool(settings.telegram_admin_chat_id),
+        "channel_id_configured": bool(settings.telegram_channel_id),
         "database_configured": bool(settings.database_url),
     }
 
@@ -776,7 +782,7 @@ def _owned_payment_order(db: Session, reference: str, user: User) -> PaymentOrde
 
 def _payment_order_payload(order: PaymentOrder, user: User) -> dict:
     settings = get_settings()
-    telegram_url = f"https://t.me/SATTESTUZBot?start={order.reference}"
+    telegram_url = f"https://t.me/SATTEST_UZ_bot?start={order.reference}"
     return {
         "id": order.id,
         "reference": order.reference,
