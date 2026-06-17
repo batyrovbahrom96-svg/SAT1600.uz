@@ -22,6 +22,9 @@ from app.services.telegram_payments import handle_telegram_update, process_subsc
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger("sattest.welcome_bot")
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("telegram").setLevel(logging.WARNING)
+logging.getLogger("telegram.ext").setLevel(logging.INFO)
 
 
 async def handle_update(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
