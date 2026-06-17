@@ -1,1 +1,1 @@
-worker: python backend/bot.py
+worker: python3 backend/bot.py
