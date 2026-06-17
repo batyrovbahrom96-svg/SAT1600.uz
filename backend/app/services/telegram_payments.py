@@ -325,6 +325,7 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
         db.commit()
         _answer_callback(callback_id, "Access activated.")
         if student_chat_id:
+            _send_payment_confirmed_message(student_chat_id, db)
             _send_message(student_chat_id, _receipt_active_message(subscription, user), reply_markup=_receipt_active_keyboard(user))
         _edit_admin_message(callback_query, f"APPROVED\n\n{_subscription_summary(subscription, user)}")
         return {"ok": True, "status": "active"}
@@ -694,6 +695,22 @@ def _notify_admin_unknown_message(message: dict, lead: TelegramAudience | None, 
     _send_message(settings.telegram_admin_chat_id, admin_text)
 
 
+def _send_payment_confirmed_message(chat_id: str, db: Session | None) -> None:
+    language = "uz"
+    if db is not None:
+        lead = (
+            db.execute(
+                select(TelegramAudience).where(
+                    (TelegramAudience.chat_id == str(chat_id)) | (TelegramAudience.telegram_user_id == str(chat_id))
+                )
+            )
+            .scalars()
+            .first()
+        )
+        language = _lead_language(lead) if lead else "uz"
+    _send_message(str(chat_id), _message("payment_confirmed", language))
+
+
 def _handle_payment_order_start(chat_id: str, reference: str, message: dict, db: Session | None) -> dict:
     if db is None:
         _send_message(chat_id, "Ma'lumotlar bazasi vaqtincha ulanmagan. Iltimos, birozdan keyin qayta urinib ko'ring.")
@@ -858,6 +875,7 @@ def _handle_payment_order_callback(callback_query: dict, action: str, reference:
 
     _answer_callback(callback_id, "Pro activated.")
     if order.telegram_chat_id:
+        _send_payment_confirmed_message(order.telegram_chat_id, db)
         _send_message(order.telegram_chat_id, _receipt_active_message(subscription, user), reply_markup=_receipt_active_keyboard(user))
     _edit_admin_message(
         callback_query,

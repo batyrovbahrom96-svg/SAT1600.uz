@@ -345,6 +345,27 @@ Any questions:
 @FounderSATTESTUZ 💪""",
 }
 
+PAYMENT_CONFIRMED = {
+    "uz": """🎉 Tabriklaymiz!
+Pro faollashtirildi! ✅
+
+Men tez orada
+siz bilan bog'lanaman!
+@FounderSATTESTUZ 💪""",
+    "ru": """🎉 Поздравляем!
+Pro активирован! ✅
+
+Я скоро свяжусь
+с вами лично!
+@FounderSATTESTUZ 💪""",
+    "en": """🎉 Congratulations!
+Pro is now active! ✅
+
+I will personally
+reach out to you soon!
+@FounderSATTESTUZ 💪""",
+}
+
 LANGUAGE_SAVED = {
     "uz": """Til saqlandi ✅
 Keyingi xabarlar
@@ -953,6 +974,7 @@ MESSAGES = {
         "en": "🌐 Tilni tanlang /\nВыберите язык /\nChoose language:",
     },
     "language_saved": LANGUAGE_SAVED,
+    "payment_confirmed": PAYMENT_CONFIRMED,
     "quick_menu": QUICK_MENU,
     "faq_price": FAQ_REPLIES["price"],
     "faq_diagnostic": FAQ_REPLIES["diagnostic"],
