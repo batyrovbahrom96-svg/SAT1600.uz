@@ -50,6 +50,25 @@ PAYMENT_WARNING_TEXT = (
     "Ogohlantirish: soxta chek akkaunt bloklanishiga olib keladi. Agar to'lov Paynet/to'lov yozuvlarida topilmasa, Pro kirish darhol bekor qilinishi mumkin."
 )
 
+FAQ_KEYWORDS = {
+    "price": ("narx", "price", "цена", "qancha", "how much", "стоимость"),
+    "diagnostic": ("test", "diagnostic", "диагностика", "sinov", "bepul", "free", "boshlash", "start test"),
+    "webinar": ("vebinar", "webinar", "dars", "lesson", "вебинар", "занятие"),
+    "score": ("ball", "score", "балл", "natija", "result", "результат"),
+    "university": (
+        "university",
+        "universitet",
+        "университет",
+        "america",
+        "amerika",
+        "usa",
+        "abroad",
+        "xorij",
+        "grant",
+        "stipendiya",
+    ),
+}
+
 START_MESSAGE = (
     "EN: To activate SATTEST.UZ Pro, send your payment screenshot or PDF. In the caption, write only these 3 lines:\n"
     "Your full name\n"
@@ -142,6 +161,15 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     if text.startswith("/stats"):
         return _handle_stats_command(chat_id, db)
 
+    if text.startswith("/sendtip"):
+        return _handle_sendtip_command(chat_id, text, db)
+
+    if text.startswith("/webinar_now"):
+        return _handle_webinar_now_command(chat_id, db)
+
+    if text.startswith("/scores"):
+        return _handle_scores_command(chat_id, db)
+
     if text.startswith(("/broadcast_uz", "/broadcast_ru", "/broadcast_en", "/broadcast_all")):
         return _handle_broadcast_command(chat_id, text, db)
 
@@ -154,10 +182,32 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     if text.startswith("/remind"):
         return _handle_remind_command(chat_id, db)
 
+    if text.startswith("/test"):
+        return _handle_simple_command(message, db, "faq_diagnostic", "start_test")
+
+    if text.startswith("/pro"):
+        return _handle_simple_command(message, db, "faq_price", "get_pro")
+
+    if text.startswith("/webinar"):
+        return _handle_webinar_command(message, db)
+
+    if text.startswith("/tips"):
+        return _handle_tips_command(message, db)
+
+    if text.startswith("/score"):
+        return _handle_score_command(message, db)
+
+    if text.startswith("/help"):
+        return _handle_simple_command(message, db, "help_command")
+
+    if text.startswith("/contact"):
+        return _handle_simple_command(message, db, "contact_command")
+
     has_receipt = bool(message.get("photo") or message.get("document"))
     if not has_receipt:
-        _send_message(chat_id, RECEIPT_REQUEST_MESSAGE, reply_markup=_payment_help_keyboard())
-        return {"ok": True}
+        if _looks_like_score(text):
+            return _handle_score_value(message, db)
+        return _handle_faq_or_default(message, db)
 
     if db is not None:
         active_order = _latest_order_for_chat(db, chat_id)
@@ -225,6 +275,12 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
 
     if data.startswith("goal:"):
         return _handle_goal_callback(callback_query, db)
+
+    if data.startswith("webinar:"):
+        return _handle_webinar_callback(callback_query, db)
+
+    if data.startswith("tips:"):
+        return _handle_tips_callback(callback_query, db)
 
     settings = get_settings()
     if settings.telegram_admin_chat_id and admin_chat_id != str(settings.telegram_admin_chat_id):
@@ -434,6 +490,205 @@ def _handle_goal_callback(callback_query: dict, db: Session | None) -> dict:
         reply_markup=_diagnostic_keyboard(language, "start_now", lead),
     )
     return {"ok": True, "goal": goal}
+
+
+def _lead_from_message(message: dict, db: Session | None) -> TelegramAudience | None:
+    if db is None:
+        return None
+    from_user = message.get("from") or {}
+    chat_id = str(message.get("chat", {}).get("id", "") or from_user.get("id", ""))
+    lead = _upsert_telegram_audience(db, from_user, chat_id)
+    lead.last_message_date = datetime.utcnow()
+    db.commit()
+    return lead
+
+
+def _handle_simple_command(message: dict, db: Session | None, message_key: str, button_key: str | None = None) -> dict:
+    chat_id = str(message.get("chat", {}).get("id", ""))
+    lead = _lead_from_message(message, db)
+    language = _lead_language(lead)
+    reply_markup = None
+    if button_key == "start_test":
+        reply_markup = _diagnostic_keyboard(language, "start_test", lead)
+    elif button_key == "get_pro":
+        reply_markup = _pro_only_keyboard(language)
+    _send_message(chat_id, _message(message_key, language), reply_markup=reply_markup)
+    return {"ok": True, "command": message_key}
+
+
+def _handle_webinar_command(message: dict, db: Session | None) -> dict:
+    chat_id = str(message.get("chat", {}).get("id", ""))
+    lead = _lead_from_message(message, db)
+    language = _lead_language(lead)
+    _send_message(chat_id, _message("webinar_command", language), reply_markup=_webinar_keyboard(language))
+    return {"ok": True, "command": "webinar"}
+
+
+def _handle_tips_command(message: dict, db: Session | None) -> dict:
+    chat_id = str(message.get("chat", {}).get("id", ""))
+    lead = _lead_from_message(message, db)
+    language = _lead_language(lead)
+    _send_message(chat_id, _message("tips_command", language), reply_markup=_tips_keyboard(language))
+    return {"ok": True, "command": "tips"}
+
+
+def _handle_score_command(message: dict, db: Session | None) -> dict:
+    chat_id = str(message.get("chat", {}).get("id", ""))
+    lead = _lead_from_message(message, db)
+    language = _lead_language(lead)
+    _send_message(chat_id, _message("score_command", language))
+    return {"ok": True, "command": "score"}
+
+
+def _handle_webinar_callback(callback_query: dict, db: Session | None) -> dict:
+    callback_id = callback_query.get("id")
+    enabled = str(callback_query.get("data") or "").partition(":")[2] == "yes"
+    if db is None:
+        _answer_callback(callback_id, "Database is not connected.")
+        return {"ok": True, "database": False}
+
+    from_user = callback_query.get("from") or {}
+    chat_id = str(callback_query.get("message", {}).get("chat", {}).get("id", "") or from_user.get("id", ""))
+    lead = _upsert_telegram_audience(db, from_user, chat_id)
+    lead.webinar_reminder = enabled
+    lead.updated_at = datetime.utcnow()
+    db.commit()
+    language = _lead_language(lead)
+    _answer_callback(callback_id, "OK")
+    if enabled:
+        _send_message(lead.chat_id, _message("webinar_saved", language))
+    else:
+        _send_message(lead.chat_id, {"uz": "Eslatma o'chirildi ✅", "ru": "Напоминание отключено ✅", "en": "Reminder turned off ✅"}[language])
+    return {"ok": True, "webinar_reminder": enabled}
+
+
+def _handle_tips_callback(callback_query: dict, db: Session | None) -> dict:
+    callback_id = callback_query.get("id")
+    enabled = str(callback_query.get("data") or "").partition(":")[2] == "yes"
+    if db is None:
+        _answer_callback(callback_id, "Database is not connected.")
+        return {"ok": True, "database": False}
+
+    from_user = callback_query.get("from") or {}
+    chat_id = str(callback_query.get("message", {}).get("chat", {}).get("id", "") or from_user.get("id", ""))
+    lead = _upsert_telegram_audience(db, from_user, chat_id)
+    lead.daily_tips = enabled
+    lead.updated_at = datetime.utcnow()
+    db.commit()
+    language = _lead_language(lead)
+    _answer_callback(callback_id, "OK")
+    if enabled:
+        _send_message(lead.chat_id, _message("tips_saved", language))
+    else:
+        _send_message(lead.chat_id, {"uz": "Kunlik maslahatlar o'chirildi ✅", "ru": "Ежедневные советы отключены ✅", "en": "Daily tips turned off ✅"}[language])
+    return {"ok": True, "daily_tips": enabled}
+
+
+def _looks_like_score(text: str) -> bool:
+    stripped = text.strip()
+    return stripped.isdigit() and 400 <= int(stripped) <= 1600
+
+
+def _handle_score_value(message: dict, db: Session | None) -> dict:
+    chat_id = str(message.get("chat", {}).get("id", ""))
+    score = int(str(message.get("text") or message.get("caption") or "").strip())
+    lead = _lead_from_message(message, db)
+    language = _lead_language(lead)
+    if lead is not None and db is not None:
+        lead.current_score = score
+        lead.score_updated_date = datetime.utcnow()
+        lead.updated_at = datetime.utcnow()
+        db.commit()
+    _send_message(chat_id, _score_saved_message(score, language), reply_markup=_diagnostic_keyboard(language, "start_test", lead))
+    return {"ok": True, "score": score}
+
+
+def _score_saved_message(score: int, language: str) -> str:
+    gap = max(0, 1400 - score)
+    if score < 700:
+        detail = {
+            "uz": "Zo'r boshlash!\nAdvanced Math dan boshlang! 💪",
+            "ru": "Отличный старт!\nНачните с Advanced Math! 💪",
+            "en": "Great start!\nBegin with Advanced Math! 💪",
+        }
+    elif score < 1000:
+        detail = {
+            "uz": "Yaxshi daraja!\nReading ni kuchayting! 📖",
+            "ru": "Хороший уровень!\nУсильте Reading! 📖",
+            "en": "Good level!\nStrengthen Reading! 📖",
+        }
+    elif score < 1200:
+        detail = {
+            "uz": "Ajoyib!\nDetalllarga e'tibor bering! 🎯",
+            "ru": "Отлично!\nОбратите внимание на детали! 🎯",
+            "en": "Excellent!\nFocus on details! 🎯",
+        }
+    elif score < 1400:
+        detail = {
+            "uz": "Zo'r! 1400 yaqin!\nMock test topshing! 🏆",
+            "ru": "Круто! 1400 близко!\nПройдите mock test! 🏆",
+            "en": "Great! 1400 is close!\nTake a mock test! 🏆",
+        }
+    else:
+        detail = {
+            "uz": "FANTASTIC!\nTop universitetlar kutmoqda! 🎓",
+            "ru": "FANTASTIC!\nТоп университеты ждут! 🎓",
+            "en": "FANTASTIC!\nTop universities are waiting! 🎓",
+        }
+    return {
+        "uz": f"✅ Ball saqlandi: {score}\n\nMaqsad: 1400+\nFarq: {gap} ball\n\n{detail['uz']}",
+        "ru": f"✅ Балл сохранён: {score}\n\nЦель: 1400+\nРазница: {gap} баллов\n\n{detail['ru']}",
+        "en": f"✅ Score saved: {score}\n\nGoal: 1400+\nGap: {gap} points\n\n{detail['en']}",
+    }[language]
+
+
+def _handle_faq_or_default(message: dict, db: Session | None) -> dict:
+    chat_id = str(message.get("chat", {}).get("id", ""))
+    text = str(message.get("text") or message.get("caption") or "").strip()
+    lead = _lead_from_message(message, db)
+    language = _lead_language(lead)
+    faq_key = _match_faq_key(text)
+    if faq_key:
+        if lead is not None and db is not None:
+            lead.faq_count = (lead.faq_count or 0) + 1
+            lead.updated_at = datetime.utcnow()
+            db.commit()
+        reply_key = f"faq_{faq_key}"
+        markup = _diagnostic_keyboard(language, "start_test", lead) if faq_key in {"diagnostic", "score", "university"} else None
+        if faq_key == "price":
+            markup = _pro_only_keyboard(language)
+        _send_message(chat_id, _message(reply_key, language), reply_markup=markup)
+        return {"ok": True, "faq": faq_key}
+
+    _notify_admin_unknown_message(message, lead, text)
+    _send_message(chat_id, _message("unknown_reply", language))
+    return {"ok": True, "forwarded_to_admin": True}
+
+
+def _match_faq_key(text: str) -> str | None:
+    lowered = text.lower()
+    for key, keywords in FAQ_KEYWORDS.items():
+        if any(keyword in lowered for keyword in keywords):
+            return key
+    return None
+
+
+def _notify_admin_unknown_message(message: dict, lead: TelegramAudience | None, text: str) -> None:
+    settings = get_settings()
+    if not settings.telegram_admin_chat_id:
+        return
+    from_user = message.get("from") or {}
+    username = from_user.get("username") or (lead.username if lead else None)
+    sender_name = clean_first_name(from_user.get("first_name") or (lead.first_name if lead else None))
+    sender_line = sender_name + (f" (@{username})" if username else "")
+    admin_text = (
+        "SATTEST Welcome Bot question needs reply.\n\n"
+        f"User: {sender_line}\n"
+        f"Telegram ID: {from_user.get('id') or (lead.telegram_user_id if lead else 'unknown')}\n"
+        f"Language: {_lead_language(lead).upper()}\n\n"
+        f"Message:\n{text}"
+    )
+    _send_message(settings.telegram_admin_chat_id, admin_text)
 
 
 def _handle_payment_order_start(chat_id: str, reference: str, message: dict, db: Session | None) -> dict:
@@ -710,6 +965,67 @@ def _handle_broadcast_command(chat_id: str, text: str, db: Session | None) -> di
     return {"ok": True, "broadcast": True, "sent": sent}
 
 
+def _handle_sendtip_command(chat_id: str, text: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can send SATTEST.UZ daily tips.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so tips are unavailable.")
+        return {"ok": True, "database": False}
+
+    _, _, tip_text = text.partition(" ")
+    tip_text = tip_text.strip()
+    if not tip_text:
+        _send_message(chat_id, "Use /sendtip [tip text].")
+        return {"ok": True, "sent": 0}
+
+    sent = send_daily_tip_to_subscribers(db, tip_text)
+    _send_message(chat_id, f"Daily tip sent to {sent} subscribers.")
+    return {"ok": True, "sent": sent}
+
+
+def _handle_webinar_now_command(chat_id: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can send webinar reminders.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so webinar reminders are unavailable.")
+        return {"ok": True, "database": False}
+
+    sent = send_webinar_reminders(db)
+    _send_message(chat_id, f"Webinar reminder sent to {sent} subscribers.")
+    return {"ok": True, "sent": sent}
+
+
+def _handle_scores_command(chat_id: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can view SATTEST.UZ scores.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so scores are unavailable.")
+        return {"ok": True, "database": False}
+
+    rows = (
+        db.execute(
+            select(TelegramAudience)
+            .where(TelegramAudience.current_score.is_not(None))
+            .order_by(TelegramAudience.score_updated_date.desc().nullslast())
+            .limit(80)
+        )
+        .scalars()
+        .all()
+    )
+    lines = []
+    for lead in rows:
+        label = f"@{lead.username}" if lead.username else clean_first_name(lead.first_name or lead.telegram_user_id)
+        lines.append(f"{label}: {lead.current_score}")
+    _send_message(chat_id, "📊 USER SCORES:\n" + ("\n".join(lines) if lines else "No scores yet."))
+    return {"ok": True, "scores": len(lines)}
+
+
 def _notify_admin_for_approval(subscription: Subscription, user: User, message: dict) -> None:
     settings = get_settings()
     if not settings.telegram_admin_chat_id:
@@ -946,6 +1262,45 @@ def process_subscription_maintenance(db: Session, *, send_daily_report: bool = F
     return {"reminders_sent": reminders_sent, "expired": expired_count, "welcome_followups": welcome_followups}
 
 
+def send_webinar_reminders(db: Session) -> int:
+    sent = 0
+    leads = (
+        db.execute(
+            select(TelegramAudience).where(
+                TelegramAudience.webinar_reminder.is_(True),
+                TelegramAudience.bot_blocked.is_(False),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for lead in leads:
+        language = _lead_language(lead)
+        response = _send_message(lead.chat_id, _message("webinar_reminder", language))
+        if response.get("ok", True):
+            sent += 1
+    return sent
+
+
+def send_daily_tip_to_subscribers(db: Session, tip_text: str) -> int:
+    sent = 0
+    leads = (
+        db.execute(
+            select(TelegramAudience).where(
+                TelegramAudience.daily_tips.is_(True),
+                TelegramAudience.bot_blocked.is_(False),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for lead in leads:
+        response = _send_message(lead.chat_id, tip_text)
+        if response.get("ok", True):
+            sent += 1
+    return sent
+
+
 def build_daily_pro_report(db: Session) -> str:
     now = datetime.utcnow()
     today_start = datetime(now.year, now.month, now.day)
@@ -1089,28 +1444,34 @@ def build_welcome_bot_stats(db: Session) -> str:
     bot_pro_taken = sum(1 for lead in leads if lead.pro_activated)
     pro_total = max(pro_taken, bot_pro_taken)
     revenue = int(pro_total) * MONTHLY_PRICE
+    webinar_count = sum(1 for lead in leads if lead.webinar_reminder)
+    tips_count = sum(1 for lead in leads if lead.daily_tips)
+    scores_count = sum(1 for lead in leads if lead.current_score is not None)
 
     return (
-        "📊 SATTEST WELCOME BOT\n\n"
-        f"👥 Jami: {total}\n"
-        f"🇺🇿 O'zbek: {language_counts['uz']} ({_percent(language_counts['uz'], total)}%)\n"
-        f"🇷🇺 Русский: {language_counts['ru']} ({_percent(language_counts['ru'], total)}%)\n"
-        f"🇬🇧 English: {language_counts['en']} ({_percent(language_counts['en'], total)}%)\n\n"
+        "📊 BOT STATISTICS\n\n"
+        f"👥 Total users: {total}\n"
+        f"🇺🇿 Uzbek: {language_counts['uz']}\n"
+        f"🇷🇺 Russian: {language_counts['ru']}\n"
+        f"🇬🇧 English: {language_counts['en']}\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         "FUNNEL:\n"
-        f"✅ Xush kelibsiz: {welcome_sent}\n"
-        f"🔗 Link bosdi: {link_clicked} ({_percent(link_clicked, total)}%)\n"
-        f"🧪 Test topshirdi: {tests_taken} ({_percent(tests_taken, total)}%)\n"
-        f"💰 Pro oldi: {pro_total} ({_percent(pro_total, total)}%)\n\n"
+        f"✅ Welcome sent: {welcome_sent}\n"
+        f"🔗 Clicked link: {link_clicked}\n"
+        f"🧪 Took test: {tests_taken}\n"
+        f"💰 Bought Pro: {pro_total}\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        f"📅 Bugun: {today}\n"
-        f"📅 Bu hafta: {week}\n"
-        f"📅 Bu oy: {month}\n\n"
+        "FEATURES:\n"
+        f"🔔 Webinar reminders: {webinar_count}\n"
+        f"💡 Tips subscribers: {tips_count}\n"
+        f"📊 Scores tracked: {scores_count}\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "💵 DAROMAD:\n"
-        f"{pro_total} × 300,000 = {revenue:,} UZS\n\n"
+        f"TODAY: {today}\n"
+        f"THIS WEEK: {week}\n"
+        f"THIS MONTH: {month}\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "Admin: @FounderSATTESTUZ"
+        "💵 REVENUE:\n"
+        f"{pro_total} × 300,000 = {revenue:,} UZS"
     )
 
 
@@ -1254,6 +1615,37 @@ def _pro_reminder_keyboard(language: str) -> dict:
             [
                 {"text": _button("get_pro", language), "url": _pricing_url()},
                 {"text": _button("have_question", language), "url": "https://t.me/FounderSATTESTUZ"},
+            ]
+        ]
+    }
+
+
+def _pro_only_keyboard(language: str) -> dict:
+    return {
+        "inline_keyboard": [
+            [{"text": _button("get_pro", language), "url": _pricing_url()}],
+            [{"text": _button("have_question", language), "url": "https://t.me/FounderSATTESTUZ"}],
+        ]
+    }
+
+
+def _webinar_keyboard(language: str) -> dict:
+    return {
+        "inline_keyboard": [
+            [
+                {"text": _button("webinar_yes", language), "callback_data": "webinar:yes"},
+                {"text": _button("webinar_no", language), "callback_data": "webinar:no"},
+            ]
+        ]
+    }
+
+
+def _tips_keyboard(language: str) -> dict:
+    return {
+        "inline_keyboard": [
+            [
+                {"text": _button("tips_yes", language), "callback_data": "tips:yes"},
+                {"text": _button("tips_no", language), "callback_data": "tips:no"},
             ]
         ]
     }

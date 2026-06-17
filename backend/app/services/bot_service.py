@@ -34,6 +34,12 @@ def ensure_welcome_bot_schema() -> None:
         "pro_activated": "BOOLEAN DEFAULT FALSE",
         "activation_date": "TIMESTAMP",
         "bot_blocked": "BOOLEAN DEFAULT FALSE",
+        "webinar_reminder": "BOOLEAN DEFAULT FALSE",
+        "daily_tips": "BOOLEAN DEFAULT FALSE",
+        "current_score": "INTEGER",
+        "score_updated_date": "TIMESTAMP",
+        "faq_count": "INTEGER DEFAULT 0",
+        "last_message_date": "TIMESTAMP",
     }
     missing = [(name, ddl) for name, ddl in wanted.items() if name not in existing]
     if not missing:

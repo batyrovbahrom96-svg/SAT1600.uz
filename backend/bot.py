@@ -6,6 +6,7 @@ import os
 import sys
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from telegram import BotCommand, Update
 from telegram.ext import Application, ContextTypes, TypeHandler
 
@@ -17,7 +18,7 @@ sys.path.insert(0, REPO_DIR)
 from app.core.config import get_settings
 from app.db.session import get_session_local
 from app.services.bot_service import WELCOME_BOT_USERNAME, ensure_welcome_bot_schema
-from app.services.telegram_payments import handle_telegram_update, process_subscription_maintenance
+from app.services.telegram_payments import handle_telegram_update, process_subscription_maintenance, send_webinar_reminders
 
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
@@ -80,12 +81,30 @@ async def run_maintenance() -> None:
             db.close()
 
 
+async def run_webinar_reminders() -> None:
+    db = None
+    try:
+        db = get_session_local()()
+        sent = await asyncio.to_thread(send_webinar_reminders, db)
+        logger.info("Webinar reminders sent: %s", sent)
+    except Exception:
+        logger.exception("Webinar reminder job failed")
+    finally:
+        if db is not None:
+            db.close()
+
+
 async def post_init(application: Application) -> None:
     await application.bot.set_my_commands(
         [
-            BotCommand("start", "Start SATTEST.UZ Welcome Bot"),
-            BotCommand("stats", "Founder stats"),
-            BotCommand("remind", "Founder manual reminders"),
+            BotCommand("start", "Boshlash / Start"),
+            BotCommand("test", "Bepul diagnostic test"),
+            BotCommand("pro", "Pro obuna ma'lumoti"),
+            BotCommand("webinar", "Vebinar haqida"),
+            BotCommand("tips", "Kunlik SAT maslahatlar"),
+            BotCommand("score", "Balimni yangilash"),
+            BotCommand("help", "Barcha buyruqlar"),
+            BotCommand("contact", "Murojaat"),
         ]
     )
     await application.bot.set_my_name("SATTEST Welcome Bot")
@@ -125,6 +144,12 @@ def main() -> None:
 
     scheduler = AsyncIOScheduler(timezone="Asia/Tashkent")
     scheduler.add_job(run_maintenance, "interval", hours=1, id="welcome_bot_maintenance", replace_existing=True)
+    scheduler.add_job(
+        run_webinar_reminders,
+        CronTrigger(day_of_week="sun", hour=18, minute=0, timezone="Asia/Tashkent"),
+        id="welcome_bot_webinar_reminder",
+        replace_existing=True,
+    )
     scheduler.start()
 
     application.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=False)
