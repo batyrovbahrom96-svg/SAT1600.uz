@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_DAYS
 from app.models import PaymentOrder, Subscription, TelegramAudience, TestAttempt, User
-from app.services.bot_service import WELCOME_BOT_USERNAME, activate_telegram_user, notify_bot_after_test
+from app.services.bot_service import WELCOME_BOT_USERNAME, activate_telegram_user, clean_first_name, notify_bot_after_test
 from app.services.messages import BUTTONS, LANGUAGE_BUTTONS, MESSAGES, SUPPORTED_LANGUAGES
 
 PLAN_ALIASES = {
@@ -371,16 +371,14 @@ def _upsert_telegram_audience(db: Session, telegram_user: dict, chat_id: str) ->
 
 
 def _send_welcome_to_lead(lead: TelegramAudience, db: Session) -> None:
-    first_name = lead.first_name or "friend"
-    languages = _welcome_languages(lead)
+    first_name = clean_first_name(lead.first_name or lead.username)
     delivered = False
-    for language in languages:
-        response = _send_message(
-            lead.chat_id,
-            _message("welcome", language, first_name=first_name),
-            reply_markup=_diagnostic_keyboard(language, "start_test", lead),
-        )
-        delivered = delivered or bool(response.get("ok", True))
+    response = _send_message(
+        lead.chat_id,
+        _message("welcome", "uz", first_name=first_name),
+        reply_markup=_diagnostic_keyboard("uz", "start_test", lead),
+    )
+    delivered = delivered or bool(response.get("ok", True))
     prompt_response = _send_message(lead.chat_id, _message("language_prompt", "en"), reply_markup=_language_keyboard())
     delivered = delivered or bool(prompt_response.get("ok", True))
     if delivered:
@@ -432,7 +430,7 @@ def _handle_goal_callback(callback_query: dict, db: Session | None) -> dict:
     _answer_callback(callback_id, "OK")
     _send_message(
         lead.chat_id,
-        _message("goal_reply", language, first_name=lead.first_name or "friend", goal=goal),
+        _message("goal_reply", language, first_name=clean_first_name(lead.first_name or lead.username), goal=goal),
         reply_markup=_diagnostic_keyboard(language, "start_now", lead),
     )
     return {"ok": True, "goal": goal}
@@ -573,7 +571,7 @@ def _handle_payment_order_callback(callback_query: dict, action: str, reference:
             _send_message(
                 order.telegram_chat_id,
                 "Uzr, to'lovni tasdiqlay olmadik.\n"
-                "Iltimos qayta urinib ko'ring yoki @Bakhrom_Botirov ga murojaat qiling",
+                "Iltimos qayta urinib ko'ring yoki @FounderSATTESTUZ ga murojaat qiling",
             )
         _edit_admin_message(callback_query, f"REJECTED\n\nOrder: {order.reference}\nStudent: {user.full_name}\nEmail: {user.email}")
         return {"ok": True, "status": "rejected"}
@@ -1015,7 +1013,7 @@ def process_welcome_followups(db: Session, *, force: bool = False) -> dict:
         created_at = lead.created_at or now
         age = now - created_at
         language = _lead_language(lead)
-        first_name = lead.first_name or "friend"
+        first_name = clean_first_name(lead.first_name or lead.username)
 
         if (force or age >= timedelta(hours=24)) and not lead.followup_24h_sent_at and not has_taken_action:
             response = _send_message(
@@ -1093,23 +1091,26 @@ def build_welcome_bot_stats(db: Session) -> str:
     revenue = int(pro_total) * MONTHLY_PRICE
 
     return (
-        "📊 SATTEST WELCOME BOT STATS\n\n"
-        f"👥 Total users: {total}\n"
+        "📊 SATTEST WELCOME BOT\n\n"
+        f"👥 Jami: {total}\n"
         f"🇺🇿 O'zbek: {language_counts['uz']} ({_percent(language_counts['uz'], total)}%)\n"
         f"🇷🇺 Русский: {language_counts['ru']} ({_percent(language_counts['ru'], total)}%)\n"
         f"🇬🇧 English: {language_counts['en']} ({_percent(language_counts['en'], total)}%)\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         "FUNNEL:\n"
-        f"✅ Welcome sent: {welcome_sent}\n"
-        f"🔗 Link clicked: {link_clicked} ({_percent(link_clicked, total)}%)\n"
-        f"🧪 Test taken: {tests_taken} ({_percent(tests_taken, total)}%)\n"
-        f"💰 Pro bought: {pro_total} ({_percent(pro_total, total)}%)\n\n"
+        f"✅ Xush kelibsiz: {welcome_sent}\n"
+        f"🔗 Link bosdi: {link_clicked} ({_percent(link_clicked, total)}%)\n"
+        f"🧪 Test topshirdi: {tests_taken} ({_percent(tests_taken, total)}%)\n"
+        f"💰 Pro oldi: {pro_total} ({_percent(pro_total, total)}%)\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        f"TODAY: {today}\n"
-        f"THIS WEEK: {week}\n"
-        f"THIS MONTH: {month}\n\n"
-        "💵 REVENUE:\n"
-        f"{pro_total} × 300,000 = {revenue:,} UZS"
+        f"📅 Bugun: {today}\n"
+        f"📅 Bu hafta: {week}\n"
+        f"📅 Bu oy: {month}\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "💵 DAROMAD:\n"
+        f"{pro_total} × 300,000 = {revenue:,} UZS\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "Admin: @FounderSATTESTUZ"
     )
 
 
@@ -1239,9 +1240,9 @@ def _goal_keyboard() -> dict:
     return {
         "inline_keyboard": [
             [
-                {"text": "1000-1100 🎯", "callback_data": "goal:1000-1100"},
-                {"text": "1200-1300 🎯", "callback_data": "goal:1200-1300"},
-                {"text": "1400+ 🏆", "callback_data": "goal:1400+"},
+                {"text": _button("goal_1000", "uz"), "callback_data": "goal:1000-1100"},
+                {"text": _button("goal_1200", "uz"), "callback_data": "goal:1200-1300"},
+                {"text": _button("goal_1400", "uz"), "callback_data": "goal:1400+"},
             ]
         ]
     }
@@ -1252,7 +1253,7 @@ def _pro_reminder_keyboard(language: str) -> dict:
         "inline_keyboard": [
             [
                 {"text": _button("get_pro", language), "url": _pricing_url()},
-                {"text": _button("have_question", language), "url": "https://t.me/Bakhrom_Botirov"},
+                {"text": _button("have_question", language), "url": "https://t.me/FounderSATTESTUZ"},
             ]
         ]
     }

@@ -1,64 +1,66 @@
-MESSAGES = {
-    "welcome": {
-        "uz": """Salom {first_name}! 👋
+WELCOME_MESSAGE = {
+    "uz": """Salom {first_name}! 👋
 
-SATTEST.UZ ga xush kelibsiz!
+SATTEST.UZ ga 
+xush kelibsiz!
 
-🏆 Botirov Birodarlar 1500+ oldi
-Siz ham shu yo'ldan boring!
+🏆 Botirov Birodarlar 
+1500+ oldi —
+Siz ham qila olasiz!
 
 ━━━━━━━━━━━━━━━━━━━━
 📊 HOZIR BILING:
-Sizning haqiqiy SAT
-ballingiz necha?
+Haqiqiy SAT ballingiz?
 ━━━━━━━━━━━━━━━━━━━━
 
-⚡ 15 daqiqa vaqt ajrating va
-BEPUL Diagnostic Test oling:
+⚡ 15 daqiqa ajrating va
+BEPUL test topshing:
 
 👉 sattest.uz/diagnostic
 
-Bu test sizga ko'rsatadi:
+Bu test ko'rsatadi:
 ✅ Taxminiy ballingiz
 ✅ Zaif mavzularingiz
-✅ 1400+ ga qancha vaqt kerak
+✅ 1400+ ga yo'l
 
 ━━━━━━━━━━━━━━━━━━━━
-Savollar bo'lsa:
-@Bakhrom_Botirov 💪
+Savollar uchun:
+@FounderSATTESTUZ 💪
 ━━━━━━━━━━━━━━━━━━━━""",
-        "ru": """Привет {first_name}! 👋
+    "ru": """Привет {first_name}! 👋
 
-Добро пожаловать в SATTEST.UZ!
+Добро пожаловать 
+в SATTEST.UZ!
 
-🏆 Братья Ботировы набрали 1500+
-Ты тоже можешь это сделать!
+🏆 Братья Ботировы 
+набрали 1500+ —
+Ты тоже можешь!
 
 ━━━━━━━━━━━━━━━━━━━━
 📊 УЗНАЙ ПРЯМО СЕЙЧАС:
-Какой у тебя реальный
-балл SAT?
+Какой твой реальный балл?
 ━━━━━━━━━━━━━━━━━━━━
 
-⚡ Потрать 15 минут и пройди
-БЕСПЛАТНЫЙ Диагностический Тест:
+⚡ Потрать 15 минут и
+пройди БЕСПЛАТНЫЙ тест:
 
 👉 sattest.uz/diagnostic
 
-Тест покажет тебе:
+Тест покажет:
 ✅ Примерный балл
 ✅ Слабые места
-✅ Сколько времени нужно до 1400+
+✅ Путь к 1400+
 
 ━━━━━━━━━━━━━━━━━━━━
-Есть вопросы:
-@Bakhrom_Botirov 💪
+По вопросам:
+@FounderSATTESTUZ 💪
 ━━━━━━━━━━━━━━━━━━━━""",
-        "en": """Hello {first_name}! 👋
+    "en": """Hello {first_name}! 👋
 
 Welcome to SATTEST.UZ!
 
-🏆 Botirov Brothers scored 1500+
+🏆 Botirov Brothers 
+scored 1500+ —
 You can do it too!
 
 ━━━━━━━━━━━━━━━━━━━━
@@ -66,51 +68,75 @@ You can do it too!
 What is your real SAT score?
 ━━━━━━━━━━━━━━━━━━━━
 
-⚡ Spend 15 minutes and take your
-FREE Diagnostic Test:
+⚡ Spend 15 minutes and
+take your FREE test:
 
 👉 sattest.uz/diagnostic
 
-This test will show you:
+This test shows you:
 ✅ Your estimated score
 ✅ Your weak areas
-✅ How long to reach 1400+
+✅ Your path to 1400+
 
 ━━━━━━━━━━━━━━━━━━━━
 Any questions:
-@Bakhrom_Botirov 💪
+@FounderSATTESTUZ 💪
 ━━━━━━━━━━━━━━━━━━━━""",
-    },
-    "followup1": {
-        "uz": """Salom {first_name} 🤔
-SAT da maqsadingiz necha ball?""",
-        "ru": """Привет {first_name} 🤔
-Какой у тебя целевой балл SAT?""",
-        "en": """Hey {first_name} 🤔
-What is your SAT target score?""",
-    },
-    "goal_reply": {
-        "uz": """Zo'r maqsad {first_name}! 💪
-{goal} ga yetish uchun avval
-hozirgi darajangni bilish kerak!
+}
+
+FOLLOWUP_24H = {
+    "uz": """Salom {first_name} 🤔
+
+SAT da maqsadingiz 
+necha ball?""",
+    "ru": """Привет {first_name} 🤔
+
+Какой у тебя 
+целевой балл SAT?""",
+    "en": """Hey {first_name} 🤔
+
+What is your 
+SAT target score?""",
+}
+
+GOAL_RESPONSE = {
+    "uz": """Zo'r maqsad {first_name}! 💪
+
+{goal} ga yetish uchun
+avval hozirgi darajangni
+bilish kerak!
 
 👉 sattest.uz/diagnostic
-BEPUL — faqat 15 daqiqa ⚡""",
-        "ru": """Отличная цель {first_name}! 💪
-Чтобы достичь {goal}, сначала
-нужно узнать свой текущий уровень!
+BEPUL — faqat 15 daqiqa ⚡
+
+Savollar uchun:
+@FounderSATTESTUZ""",
+    "ru": """Отличная цель {first_name}! 💪
+
+Чтобы достичь {goal},
+сначала узнай свой
+текущий уровень!
 
 👉 sattest.uz/diagnostic
-БЕСПЛАТНО — всего 15 минут ⚡""",
-        "en": """Great goal {first_name}! 💪
-To reach {goal}, you first need
-to know your current level!
+БЕСПЛАТНО — 15 минут ⚡
+
+По вопросам:
+@FounderSATTESTUZ""",
+    "en": """Great goal {first_name}! 💪
+
+To reach {goal}, first
+find out your 
+current level!
 
 👉 sattest.uz/diagnostic
-FREE — only 15 minutes ⚡""",
-    },
-    "followup2": {
-        "uz": """Salom {first_name}! ⏰
+FREE — only 15 minutes ⚡
+
+Any questions:
+@FounderSATTESTUZ""",
+}
+
+FOLLOWUP_72H = {
+    "uz": """Salom {first_name}! ⏰
 
 Mana haqiqiy natijalar:
 🏆 Muslima: 900 → 1280
@@ -121,37 +147,53 @@ Ularning hammasi
 DIAGNOSTIC TEST dan boshladi!
 
 Siz qachon boshlanasiz? 🎯
-👉 sattest.uz/diagnostic
-(Bu oxirgi eslatma 😊)""",
-        "ru": """Привет {first_name}! ⏰
 
-Вот реальные результаты:
+👉 sattest.uz/diagnostic
+
+(Bu oxirgi eslatma 😊)
+
+Savollar uchun:
+@FounderSATTESTUZ""",
+    "ru": """Привет {first_name}! ⏰
+
+Реальные результаты:
 🏆 Муслима: 900 → 1280
 🏆 Жасур: 850 → 1190
 🏆 Нодира: 920 → 1350
 
 Все они начали с
-ДИАГНОСТИЧЕСКОГО ТЕСТА!
+диагностического теста!
 
 Когда начнёшь ты? 🎯
-👉 sattest.uz/diagnostic
-(Это последнее напоминание 😊)""",
-        "en": """Hey {first_name}! ⏰
 
-Here are real results:
+👉 sattest.uz/diagnostic
+
+(Последнее напоминание 😊)
+
+По вопросам:
+@FounderSATTESTUZ""",
+    "en": """Hey {first_name}! ⏰
+
+Real student results:
 🏆 Muslima: 900 → 1280
 🏆 Jasur: 850 → 1190
 🏆 Nodira: 920 → 1350
 
-They all started with a
-DIAGNOSTIC TEST!
+They all started with
+a diagnostic test!
 
 When will you start? 🎯
+
 👉 sattest.uz/diagnostic
-(This is the last reminder 😊)""",
-    },
-    "pro_reminder": {
-        "uz": """Salom {first_name}! 🌟
+
+(Last reminder 😊)
+
+Any questions:
+@FounderSATTESTUZ""",
+}
+
+PRO_REMINDER_7DAY = {
+    "uz": """Salom {first_name}! 🌟
 
 7 kun bo'ldi —
 ballingiz oshayaptimi? 📈
@@ -164,22 +206,28 @@ Pro da nimalar bor:
 ✅ Xatolar kuzatuvi
 
 💎 300,000 UZS/oy
-👉 sattest.uz/pro""",
-        "ru": """Привет {first_name}! 🌟
+👉 sattest.uz/pro
+
+Savollar uchun:
+@FounderSATTESTUZ 💪""",
+    "ru": """Привет {first_name}! 🌟
 
 Прошло 7 дней —
 твой балл растёт? 📈
 
 Что входит в Pro:
-✅ Mock Test из 98 вопросов
+✅ Mock Test 98 вопросов
 ✅ Анализ слабых мест
-✅ Личный план на 30 дней
+✅ Личный план 30 дней
 ✅ Безлимитные практики
 ✅ Отслеживание ошибок
 
 💎 300,000 UZS/месяц
-👉 sattest.uz/pro""",
-        "en": """Hey {first_name}! 🌟
+👉 sattest.uz/pro
+
+По вопросам:
+@FounderSATTESTUZ 💪""",
+    "en": """Hey {first_name}! 🌟
 
 7 days in —
 is your score improving? 📈
@@ -192,24 +240,16 @@ What Pro includes:
 ✅ Mistake tracking
 
 💎 300,000 UZS/month
-👉 sattest.uz/pro""",
-    },
-    "language_prompt": {
-        "uz": "🌐 Tilni tanlang / Выберите язык / Choose language:",
-        "ru": "🌐 Tilni tanlang / Выберите язык / Choose language:",
-        "en": "🌐 Tilni tanlang / Выберите язык / Choose language:",
-    },
-    "language_saved": {
-        "uz": "Til saqlandi ✅ Keyingi xabarlar O'zbek tilida keladi.",
-        "ru": "Язык сохранён ✅ Следующие сообщения будут на русском.",
-        "en": "Language saved ✅ Future messages will be in English.",
-    },
+👉 sattest.uz/pro
+
+Any questions:
+@FounderSATTESTUZ 💪""",
 }
 
-TEST_COMPLETE_MESSAGE = {
+TEST_COMPLETE = {
     "uz": """🎯 Diagnostic test tugadi!
 
-Sizning natijangiz:
+{first_name}, natijangiz:
 📊 Ball: ≈{score}
 ⚠️ Zaif tomonlar: {weak_areas}
 
@@ -220,10 +260,10 @@ tayyor — hozir oching:
 300,000 UZS/oy
 
 Savollar uchun:
-@Bakhrom_Botirov 💪""",
+@FounderSATTESTUZ 💪""",
     "ru": """🎯 Диагностика завершена!
 
-Ваш результат:
+{first_name}, ваш результат:
 📊 Балл: ≈{score}
 ⚠️ Слабые места: {weak_areas}
 
@@ -234,10 +274,10 @@ Savollar uchun:
 300,000 UZS/месяц
 
 По вопросам:
-@Bakhrom_Botirov 💪""",
+@FounderSATTESTUZ 💪""",
     "en": """🎯 Diagnostic complete!
 
-Your result:
+{first_name}, your result:
 📊 Score: ≈{score}
 ⚠️ Weak areas: {weak_areas}
 
@@ -248,32 +288,97 @@ is ready — unlock now:
 300,000 UZS/month
 
 Any questions:
-@Bakhrom_Botirov 💪""",
+@FounderSATTESTUZ 💪""",
 }
 
-ACTIVATION_MESSAGE = {
-    "uz": """✅ Pro faollashtirildi!
+PRO_ACTIVATED = {
+    "uz": """🎉 Tabriklaymiz {first_name}!
 
-SATTEST.UZ platformasiga qayting va to'liq mock test, zaif mavzular tahlili, My 1400+ route va cheksiz practice ni oching.
+Pro obunangiz 
+faollashtirildi! ✅
 
-🔗 sattest.uz/dashboard""",
-    "ru": """✅ Pro активирован!
+Endi sizda bor:
+✅ 98 savol Mock Test
+✅ 30 kunlik shaxsiy reja
+✅ Zaif mavzular tahlili
+✅ Cheksiz mashq
+✅ Xatolar kuzatuvi
 
-Вернитесь на SATTEST.UZ и откройте полный mock test, анализ слабых мест, My 1400+ route и безлимитную практику.
+Hozir boshlang:
+👉 sattest.uz/pro
 
-🔗 sattest.uz/dashboard""",
-    "en": """✅ Pro activated!
+Savollar uchun:
+@FounderSATTESTUZ 💪""",
+    "ru": """🎉 Поздравляем {first_name}!
 
-Return to SATTEST.UZ to open the full mock test, weak-area analysis, My 1400+ route, and unlimited practice.
+Ваша подписка Pro
+активирована! ✅
 
-🔗 sattest.uz/dashboard""",
+Теперь у вас есть:
+✅ Mock Test 98 вопросов
+✅ Личный план 30 дней
+✅ Анализ слабых мест
+✅ Безлимитные практики
+✅ Отслеживание ошибок
+
+Начните прямо сейчас:
+👉 sattest.uz/pro
+
+По вопросам:
+@FounderSATTESTUZ 💪""",
+    "en": """🎉 Congratulations {first_name}!
+
+Your Pro subscription
+is now active! ✅
+
+You now have access to:
+✅ Full 98-question Mock Test
+✅ Personal 30-day plan
+✅ Weak area analysis
+✅ Unlimited practice
+✅ Mistake tracking
+
+Start right now:
+👉 sattest.uz/pro
+
+Any questions:
+@FounderSATTESTUZ 💪""",
 }
+
+LANGUAGE_SAVED = {
+    "uz": """Til saqlandi ✅
+Keyingi xabarlar
+O'zbek tilida keladi 🇺🇿""",
+    "ru": """Язык сохранён ✅
+Следующие сообщения
+будут на русском 🇷🇺""",
+    "en": """Language saved ✅
+Next messages will
+be in English 🇬🇧""",
+}
+
+MESSAGES = {
+    "welcome": WELCOME_MESSAGE,
+    "followup1": FOLLOWUP_24H,
+    "goal_reply": GOAL_RESPONSE,
+    "followup2": FOLLOWUP_72H,
+    "pro_reminder": PRO_REMINDER_7DAY,
+    "language_prompt": {
+        "uz": "🌐 Tilni tanlang /\nВыберите язык /\nChoose language:",
+        "ru": "🌐 Tilni tanlang /\nВыберите язык /\nChoose language:",
+        "en": "🌐 Tilni tanlang /\nВыберите язык /\nChoose language:",
+    },
+    "language_saved": LANGUAGE_SAVED,
+}
+
+TEST_COMPLETE_MESSAGE = TEST_COMPLETE
+ACTIVATION_MESSAGE = PRO_ACTIVATED
 
 BUTTONS = {
     "start_test": {
-        "uz": "🎯 Diagnostic Testni Boshlash →",
-        "ru": "🎯 Начать Диагностический Тест →",
-        "en": "🎯 Start Diagnostic Test →",
+        "uz": "🎯 Testni Boshlash →",
+        "ru": "🎯 Начать Тест →",
+        "en": "🎯 Start Test →",
     },
     "start_now": {
         "uz": "⚡ Hozir Boshlash →",
@@ -282,7 +387,7 @@ BUTTONS = {
     },
     "start_now_free": {
         "uz": "🚀 Hozir Boshlash — BEPUL",
-        "ru": "🚀 Начать Сейчас — БЕСПЛАТНО",
+        "ru": "🚀 Начать — БЕСПЛАТНО",
         "en": "🚀 Start Now — FREE",
     },
     "get_pro": {
@@ -294,6 +399,21 @@ BUTTONS = {
         "uz": "❓ Savolim bor",
         "ru": "❓ Есть вопрос",
         "en": "❓ I have a question",
+    },
+    "goal_1000": {
+        "uz": "1000-1100 🎯",
+        "ru": "1000-1100 🎯",
+        "en": "1000-1100 🎯",
+    },
+    "goal_1200": {
+        "uz": "1200-1300 🎯",
+        "ru": "1200-1300 🎯",
+        "en": "1200-1300 🎯",
+    },
+    "goal_1400": {
+        "uz": "1400+ 🏆",
+        "ru": "1400+ 🏆",
+        "en": "1400+ 🏆",
     },
 }
 

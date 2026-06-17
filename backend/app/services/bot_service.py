@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.db.session import Base, get_engine
 from app.models import TelegramAudience
-from app.services.messages import ACTIVATION_MESSAGE, SUPPORTED_LANGUAGES, TEST_COMPLETE_MESSAGE
+from app.services.messages import ACTIVATION_MESSAGE, TEST_COMPLETE_MESSAGE
 
 
 WELCOME_BOT_USERNAME = "SATTEST_Welcome_Bot"
@@ -61,7 +61,17 @@ def normalize_language(language: str | None) -> str:
     return "en"
 
 
-def get_test_complete_message(*, score: int, weak_areas: list[str], language: str) -> str:
+def clean_first_name(value: str | None) -> str:
+    if not value:
+        return "O'quvchi"
+    cleaned = value.strip()
+    for prefix in ("mr. ", "mr.", "mrs. ", "mrs.", "sir ", "sir"):
+        if cleaned.lower().startswith(prefix):
+            cleaned = cleaned[len(prefix):].strip()
+    return cleaned or "O'quvchi"
+
+
+def get_test_complete_message(*, score: int, weak_areas: list[str], language: str, first_name: str | None = None) -> str:
     normalized_language = normalize_language(language)
     cleaned_weak_areas = [area.strip() for area in weak_areas if area.strip()]
     weak_area_line = ", ".join(cleaned_weak_areas) if cleaned_weak_areas else {
@@ -69,7 +79,11 @@ def get_test_complete_message(*, score: int, weak_areas: list[str], language: st
         "ru": "Не обнаружены",
         "en": "None detected",
     }[normalized_language]
-    return TEST_COMPLETE_MESSAGE[normalized_language].format(score=score, weak_areas=weak_area_line)
+    return TEST_COMPLETE_MESSAGE[normalized_language].format(
+        first_name=clean_first_name(first_name),
+        score=score,
+        weak_areas=weak_area_line,
+    )
 
 
 async def notify_bot_after_test(
@@ -88,7 +102,13 @@ async def notify_bot_after_test(
         return {"ok": False, "skipped": "telegram_bot_token_missing"}
 
     normalized_language = normalize_language(language)
-    message = get_test_complete_message(score=score, weak_areas=weak_areas, language=normalized_language)
+    lead = None
+    if db is not None:
+        lead = db.execute(
+            select(TelegramAudience).where(TelegramAudience.telegram_user_id == str(user_telegram_id))
+        ).scalar_one_or_none()
+    first_name = clean_first_name(lead.first_name if lead else None)
+    message = get_test_complete_message(score=score, weak_areas=weak_areas, language=normalized_language, first_name=first_name)
     response = send_telegram_message(
         bot_token=settings.telegram_bot_token,
         chat_id=user_telegram_id,
@@ -96,21 +116,17 @@ async def notify_bot_after_test(
         reply_markup={
             "inline_keyboard": [
                 [{"text": _pro_button_text(normalized_language), "url": "https://www.sattest.uz/pro"}],
-                [{"text": _support_button_text(normalized_language), "url": "https://t.me/Bakhrom_Botirov"}],
+                [{"text": _support_button_text(normalized_language), "url": "https://t.me/FounderSATTESTUZ"}],
             ]
         },
     )
 
-    if db is not None:
-        lead = db.execute(
-            select(TelegramAudience).where(TelegramAudience.telegram_user_id == str(user_telegram_id))
-        ).scalar_one_or_none()
-        if lead:
-            lead.test_completed = True
-            lead.test_score = score
-            lead.test_weak_areas = json.dumps(weak_areas, ensure_ascii=False)
-            lead.updated_at = datetime.utcnow()
-            db.commit()
+    if db is not None and lead:
+        lead.test_completed = True
+        lead.test_score = score
+        lead.test_weak_areas = json.dumps(weak_areas, ensure_ascii=False)
+        lead.updated_at = datetime.utcnow()
+        db.commit()
 
     return response
 
@@ -132,10 +148,11 @@ def activate_telegram_user(db: Session, user_id: str) -> tuple[bool, str]:
     lead.updated_at = now
     db.commit()
 
+    first_name = clean_first_name(lead.first_name or lead.username)
     send_telegram_message(
         bot_token=get_settings().telegram_bot_token or "",
         chat_id=lead.chat_id,
-        message=ACTIVATION_MESSAGE[language],
+        message=ACTIVATION_MESSAGE[language].format(first_name=first_name),
         reply_markup={
             "inline_keyboard": [
                 [{"text": "Open SATTEST.UZ", "url": "https://www.sattest.uz/dashboard"}],

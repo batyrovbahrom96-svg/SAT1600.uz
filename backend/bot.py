@@ -27,11 +27,39 @@ logging.getLogger("telegram").setLevel(logging.WARNING)
 logging.getLogger("telegram.ext").setLevel(logging.INFO)
 
 
+def get_first_name(update: Update) -> str:
+    """
+    Safely get user first name.
+    Never adds honorific titles.
+    Never returns empty string.
+    """
+    user = update.effective_user
+    if user and user.first_name:
+        return _clean_first_name(user.first_name)
+    if user and user.username:
+        return _clean_first_name(user.username)
+    return "O'quvchi"
+
+
+def _clean_first_name(value: str | None) -> str:
+    if not value:
+        return "O'quvchi"
+    cleaned = value.strip()
+    for prefix in ("mr. ", "mr.", "mrs. ", "mrs.", "sir ", "sir"):
+        if cleaned.lower().startswith(prefix):
+            cleaned = cleaned[len(prefix):].strip()
+    return cleaned or "O'quvchi"
+
+
 async def handle_update(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     db = None
     try:
+        payload = update.to_dict()
+        from_user = payload.get("message", {}).get("from") or payload.get("callback_query", {}).get("from")
+        if from_user is not None:
+            from_user["first_name"] = get_first_name(update)
         db = get_session_local()()
-        await asyncio.to_thread(handle_telegram_update, update.to_dict(), db)
+        await asyncio.to_thread(handle_telegram_update, payload, db)
     except Exception:
         logger.exception("Failed to process Telegram update")
     finally:
@@ -59,6 +87,21 @@ async def post_init(application: Application) -> None:
             BotCommand("stats", "Founder stats"),
             BotCommand("remind", "Founder manual reminders"),
         ]
+    )
+    await application.bot.set_my_name("SATTEST Welcome Bot")
+    await application.bot.set_my_description(
+        "SATTEST.UZ rasmiy boti 🎯\n"
+        "SAT da 1400+ ga yo'lingiz!\n\n"
+        "Bepul diagnostic test:\n"
+        "👉 sattest.uz/diagnostic\n\n"
+        "Savol uchun: \n"
+        "@FounderSATTESTUZ"
+    )
+    await application.bot.set_my_short_description(
+        "SATTEST.UZ —\n"
+        "Practice • Improve • Achieve\n\n"
+        "Founder: @FounderSATTESTUZ\n"
+        "Platform: sattest.uz"
     )
     logger.info("SATTEST.UZ Welcome Bot is live as @%s", WELCOME_BOT_USERNAME)
 
