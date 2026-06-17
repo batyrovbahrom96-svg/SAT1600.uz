@@ -355,7 +355,7 @@ The diagnostic results page now sends students to `/payment`. The flow is:
 1. Student sees Uzbek Pro payment page with estimated score, weak areas, `300,000 UZS / month`, `900,000 UZS / 3 months`, Payme QR, and Click QR.
 2. Student pays and clicks `To'lovni tasdiqlash`.
 3. Backend creates an order reference like `SAT-123456`.
-4. Student lands on `/payment/confirm?ref=SAT-123456` and opens `@SATTESTUZBot`.
+4. Student lands on `/payment/confirm?ref=SAT-123456` and opens `@SATTEST_Welcome_Bot`.
 5. Bot receives the payment screenshot and forwards it to the Founder/admin with `✅ Tasdiqlash` and `❌ Rad etish`.
 6. Approval creates an active Pro subscription and sends the student a result/pro access link.
 7. `/admin` shows pending payment orders, activated orders, rejected orders, and total revenue.
@@ -379,7 +379,7 @@ How to get a Telegram bot token:
 1. Open Telegram and message `@BotFather`.
 2. Send `/newbot`.
 3. Choose name: `SATTEST.UZ Bot`.
-4. Choose username: `SATTESTUZBot`.
+4. Choose username: `SATTEST_Welcome_Bot`.
 5. Copy the token into `TELEGRAM_BOT_TOKEN`.
 
 How to set `TELEGRAM_ADMIN_CHAT_ID`:

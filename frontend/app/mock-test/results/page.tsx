@@ -10,13 +10,14 @@ import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-d
 import { useLanguage } from "@/lib/i18n";
 import { notifyDiagnosticResult } from "./actions";
 
-const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
+const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_Welcome_Bot";
 const telegramBotUrl = `https://t.me/${telegramBotUsername}?start=pro`;
 const paynetQrPayload =
   "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
 const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(paynetQrPayload)}`;
 const diagnosticPaywallCountdownKey = "sattest_diagnostic_paywall_countdown_end";
 const diagnosticPaywallDurationMs = 24 * 60 * 60 * 1000;
+const telegramDiagnosticUserKey = "sattest_telegram_diagnostic_user_id";
 
 const resultCopy = {
   en: {
@@ -317,6 +318,7 @@ export default function FreeDiagnosticResultsPage() {
       estimatedScore: result.estimatedTotal,
       weakAreas: result.weakAreas.slice(0, 3),
       language: language.toUpperCase() as "EN" | "RU" | "UZ",
+      userTelegramId: window.localStorage.getItem(telegramDiagnosticUserKey),
     })
       .then((response) => {
         if (response?.ok) {

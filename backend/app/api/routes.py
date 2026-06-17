@@ -32,7 +32,15 @@ from app.services.sat_engine import (
     save_answer,
     start_attempt,
 )
-from app.services.telegram_payments import handle_telegram_update, notify_admin_diagnostic_result, notify_admin_full_mock_result, telegram_get_me, process_subscription_maintenance
+from app.services.bot_service import WELCOME_BOT_USERNAME
+from app.services.telegram_payments import (
+    handle_telegram_update,
+    notify_admin_diagnostic_result,
+    notify_admin_full_mock_result,
+    notify_diagnostic_user_result,
+    process_subscription_maintenance,
+    telegram_get_me,
+)
 
 router = APIRouter(prefix="/api")
 verification_codes: dict[str, dict[str, datetime | str]] = {}
@@ -43,6 +51,7 @@ class DiagnosticResultNotification(BaseModel):
     estimated_score: int = Field(ge=400, le=1600)
     weak_areas: list[str] = Field(default_factory=list, max_length=5)
     language: str = Field(pattern="^(EN|RU|UZ|en|ru|uz)$")
+    user_telegram_id: str | None = None
 
 
 class FullMockResultNotification(BaseModel):
@@ -208,7 +217,7 @@ def payment_config() -> dict:
     return {
         "payme_qr_url": settings.payme_qr_url,
         "click_qr_url": settings.click_qr_url,
-        "telegram_bot_url": "https://t.me/SATTESTUZBot",
+        "telegram_bot_url": f"https://t.me/{WELCOME_BOT_USERNAME}",
         "plans": {
             key: {"amount": value["amount"], "days": value["days"], "label": value["label"]}
             for key, value in PAYMENT_PLANS.items()
@@ -274,8 +283,8 @@ def telegram_status() -> dict:
         "bot_token_configured": bool(settings.telegram_bot_token),
         "bot_token_valid": bool(bot.get("ok")),
         "bot_username": ((bot.get("result") or {}).get("username") if bot.get("ok") else None),
-        "bot_expected_username": "SATTESTUZBot",
-        "bot_username_matches_expected": ((bot.get("result") or {}).get("username") == "SATTESTUZBot" if bot.get("ok") else False),
+        "bot_expected_username": WELCOME_BOT_USERNAME,
+        "bot_username_matches_expected": ((bot.get("result") or {}).get("username") == WELCOME_BOT_USERNAME if bot.get("ok") else False),
         "webhook_secret_configured": bool(settings.telegram_webhook_secret),
         "admin_chat_id_configured": bool(settings.telegram_admin_chat_id),
         "channel_id_configured": bool(settings.telegram_channel_id),
@@ -294,19 +303,34 @@ def telegram_daily_report(request: Request, db: Session = Depends(get_db)) -> di
 
 
 @router.post("/telegram/diagnostic-result")
-async def telegram_diagnostic_result(request: Request, payload: DiagnosticResultNotification) -> dict:
+async def telegram_diagnostic_result(
+    request: Request,
+    payload: DiagnosticResultNotification,
+    db: Session = Depends(get_db),
+) -> dict:
     settings = get_settings()
     if settings.telegram_webhook_secret:
         secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
         if secret != settings.telegram_webhook_secret:
             raise HTTPException(status_code=403, detail="Invalid Telegram diagnostic secret")
 
-    return notify_admin_diagnostic_result(
+    admin_result = notify_admin_diagnostic_result(
         timestamp=payload.timestamp,
         estimated_score=payload.estimated_score,
         weak_areas=payload.weak_areas,
         language=payload.language.upper(),
     )
+    user_result = {"ok": False, "skipped": "user_telegram_id_missing"}
+    if payload.user_telegram_id:
+        user_result = await notify_diagnostic_user_result(
+            user_telegram_id=payload.user_telegram_id,
+            estimated_score=payload.estimated_score,
+            weak_areas=payload.weak_areas,
+            language=payload.language,
+            db=db,
+        )
+
+    return {"ok": bool(admin_result.get("ok") or user_result.get("ok")), "admin": admin_result, "user": user_result}
 
 
 @router.post("/telegram/full-mock-result")
@@ -783,7 +807,7 @@ def _owned_payment_order(db: Session, reference: str, user: User) -> PaymentOrde
 
 def _payment_order_payload(order: PaymentOrder, user: User) -> dict:
     settings = get_settings()
-    telegram_url = f"https://t.me/SATTESTUZBot?start={order.reference}"
+    telegram_url = f"https://t.me/{WELCOME_BOT_USERNAME}?start={order.reference}"
     return {
         "id": order.id,
         "reference": order.reference,

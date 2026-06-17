@@ -4,7 +4,7 @@ import { ArrowRight, Clock, Copy, Send } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { getPaymentOrder, type PaymentOrder } from "@/lib/api";
 
-const fallbackBotUrl = "https://t.me/SATTESTUZBot";
+const fallbackBotUrl = "https://t.me/SATTEST_Welcome_Bot";
 
 export default function PaymentConfirmPage() {
   const [reference, setReference] = useState("");
@@ -40,7 +40,7 @@ export default function PaymentConfirmPage() {
           <h1 className="mt-5 text-5xl font-black leading-tight">Deyarli bo'ldi! 🎉</h1>
           <div className="mx-auto mt-8 max-w-xl text-left text-lg font-semibold leading-9 text-white/78">
             <p>1. Quyidagi tugmani bosing</p>
-            <p>2. Telegramda @SATTESTUZBot ga o'ting</p>
+            <p>2. Telegramda @SATTEST_Welcome_Bot ga o'ting</p>
             <p>3. To'lov skrinshotini yuboring</p>
             <p>4. 5 daqiqa ichida Pro faollashtiriladi ✅</p>
           </div>

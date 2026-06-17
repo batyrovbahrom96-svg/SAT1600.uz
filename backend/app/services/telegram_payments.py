@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_DAYS
 from app.models import PaymentOrder, Subscription, TelegramAudience, TestAttempt, User
+from app.services.bot_service import WELCOME_BOT_USERNAME, activate_telegram_user, notify_bot_after_test
 from app.services.messages import BUTTONS, LANGUAGE_BUTTONS, MESSAGES, SUPPORTED_LANGUAGES
 
 PLAN_ALIASES = {
@@ -146,6 +147,12 @@ def _handle_message(message: dict, db: Session | None) -> dict:
 
     if text.startswith(("/pro_report", "/report")):
         return _handle_admin_report_command(chat_id, db)
+
+    if text.startswith("/activate"):
+        return _handle_activate_command(chat_id, text, db)
+
+    if text.startswith("/remind"):
+        return _handle_remind_command(chat_id, db)
 
     has_receipt = bool(message.get("photo") or message.get("document"))
     if not has_receipt:
@@ -371,7 +378,7 @@ def _send_welcome_to_lead(lead: TelegramAudience, db: Session) -> None:
         response = _send_message(
             lead.chat_id,
             _message("welcome", language, first_name=first_name),
-            reply_markup=_diagnostic_keyboard(language, "start_test"),
+            reply_markup=_diagnostic_keyboard(language, "start_test", lead),
         )
         delivered = delivered or bool(response.get("ok", True))
     prompt_response = _send_message(lead.chat_id, _message("language_prompt", "en"), reply_markup=_language_keyboard())
@@ -401,7 +408,7 @@ def _handle_language_callback(callback_query: dict, db: Session | None) -> dict:
     lead.updated_at = now
     db.commit()
     _answer_callback(callback_id, _message("language_saved", language))
-    _send_message(lead.chat_id, _message("language_saved", language), reply_markup=_diagnostic_keyboard(language, "start_test"))
+    _send_message(lead.chat_id, _message("language_saved", language), reply_markup=_diagnostic_keyboard(language, "start_test", lead))
     return {"ok": True, "language": language}
 
 
@@ -426,7 +433,7 @@ def _handle_goal_callback(callback_query: dict, db: Session | None) -> dict:
     _send_message(
         lead.chat_id,
         _message("goal_reply", language, first_name=lead.first_name or "friend", goal=goal),
-        reply_markup=_diagnostic_keyboard(language, "start_now"),
+        reply_markup=_diagnostic_keyboard(language, "start_now", lead),
     )
     return {"ok": True, "goal": goal}
 
@@ -621,6 +628,46 @@ def _handle_admin_report_command(chat_id: str, db: Session | None) -> dict:
     return {"ok": True, "report": True}
 
 
+def _handle_activate_command(chat_id: str, text: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can activate SATTEST.UZ Pro.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so activation is unavailable.")
+        return {"ok": True, "database": False}
+
+    _, _, raw_user_id = text.partition(" ")
+    user_id = raw_user_id.strip()
+    if not user_id:
+        _send_message(chat_id, "Use /activate [telegram_user_id].")
+        return {"ok": True, "activated": False}
+
+    ok, message = activate_telegram_user(db, user_id)
+    _send_message(chat_id, message)
+    return {"ok": True, "activated": ok}
+
+
+def _handle_remind_command(chat_id: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can trigger SATTEST.UZ reminders.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so reminders are unavailable.")
+        return {"ok": True, "database": False}
+
+    result = process_welcome_followups(db, force=True)
+    _send_message(
+        chat_id,
+        "Manual reminders sent:\n"
+        f"24h: {result['followup1']}\n"
+        f"72h: {result['followup2']}\n"
+        f"7day Pro: {result['pro_reminder']}",
+    )
+    return {"ok": True, "reminders": result}
+
+
 def _handle_stats_command(chat_id: str, db: Session | None) -> dict:
     settings = get_settings()
     if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
@@ -650,7 +697,7 @@ def _handle_broadcast_command(chat_id: str, text: str, db: Session | None) -> di
         if not versions:
             _send_message(
                 chat_id,
-                "Use:\n/broadcast_all\nUZ: Uzbek message\nRU: Russian message\nEN: English message",
+                "Use:\n/broadcast_all Uzbek message | Russian message | English message",
             )
             return {"ok": True, "broadcast": False}
         sent = _broadcast_all_languages(db, versions)
@@ -776,6 +823,23 @@ def notify_admin_diagnostic_result(
     )
     response = _send_message(settings.telegram_admin_chat_id, text)
     return {"ok": bool(response.get("ok", True)), "telegram": response}
+
+
+async def notify_diagnostic_user_result(
+    *,
+    user_telegram_id: str,
+    estimated_score: int,
+    weak_areas: list[str],
+    language: str,
+    db: Session | None = None,
+) -> dict:
+    return await notify_bot_after_test(
+        user_telegram_id=user_telegram_id,
+        score=estimated_score,
+        weak_areas=weak_areas,
+        language=language,
+        db=db,
+    )
 
 
 def notify_admin_full_mock_result(
@@ -940,18 +1004,20 @@ def build_daily_pro_report(db: Session) -> str:
     )
 
 
-def process_welcome_followups(db: Session) -> dict:
+def process_welcome_followups(db: Session, *, force: bool = False) -> dict:
     now = datetime.utcnow()
     leads = db.execute(select(TelegramAudience)).scalars().all()
     sent = {"followup1": 0, "followup2": 0, "pro_reminder": 0}
 
     for lead in leads:
+        has_taken_action = bool(lead.link_clicked_at or lead.test_completed)
+        has_pro = bool(lead.pro_activated or _lead_has_active_pro(db, lead))
         created_at = lead.created_at or now
         age = now - created_at
         language = _lead_language(lead)
         first_name = lead.first_name or "friend"
 
-        if age >= timedelta(hours=24) and not lead.followup_24h_sent_at:
+        if (force or age >= timedelta(hours=24)) and not lead.followup_24h_sent_at and not has_taken_action:
             response = _send_message(
                 lead.chat_id,
                 _message("followup1", language, first_name=first_name),
@@ -961,17 +1027,17 @@ def process_welcome_followups(db: Session) -> dict:
                 lead.followup_24h_sent_at = now
                 sent["followup1"] += 1
 
-        if age >= timedelta(hours=72) and not lead.followup_72h_sent_at:
+        if (force or age >= timedelta(hours=72)) and not lead.followup_72h_sent_at and not has_taken_action:
             response = _send_message(
                 lead.chat_id,
                 _message("followup2", language, first_name=first_name),
-                reply_markup=_diagnostic_keyboard(language, "start_now_free"),
+                reply_markup=_diagnostic_keyboard(language, "start_now_free", lead),
             )
             if response.get("ok", True):
                 lead.followup_72h_sent_at = now
                 sent["followup2"] += 1
 
-        if age >= timedelta(days=7) and not lead.pro_reminder_sent_at:
+        if (force or age >= timedelta(days=7)) and not lead.pro_reminder_sent_at and not has_pro:
             response = _send_message(
                 lead.chat_id,
                 _message("pro_reminder", language, first_name=first_name),
@@ -983,6 +1049,18 @@ def process_welcome_followups(db: Session) -> dict:
 
     db.commit()
     return sent
+
+
+def _lead_has_active_pro(db: Session, lead: TelegramAudience) -> bool:
+    now = datetime.utcnow()
+    return bool(
+        db.execute(
+            select(Subscription.id)
+            .where(Subscription.provider_customer_id == lead.chat_id)
+            .where(Subscription.status == "active")
+            .where(or_(Subscription.current_period_end.is_(None), Subscription.current_period_end > now))
+        ).first()
+    )
 
 
 def build_welcome_bot_stats(db: Session) -> str:
@@ -1001,28 +1079,37 @@ def build_welcome_bot_stats(db: Session) -> str:
     today = sum(1 for lead in leads if lead.created_at and lead.created_at >= today_start)
     week = sum(1 for lead in leads if lead.created_at and lead.created_at >= week_start)
     month = sum(1 for lead in leads if lead.created_at and lead.created_at >= month_start)
-    tests_taken = db.execute(select(func.count(TestAttempt.id)).where(TestAttempt.completed_at.is_not(None))).scalar_one()
+    tests_taken = sum(1 for lead in leads if lead.test_completed) or db.execute(
+        select(func.count(TestAttempt.id)).where(TestAttempt.completed_at.is_not(None))
+    ).scalar_one()
     pro_taken = db.execute(
         select(func.count(Subscription.id)).where(
             Subscription.status == "active",
             or_(Subscription.current_period_end.is_(None), Subscription.current_period_end > now),
         )
     ).scalar_one()
+    bot_pro_taken = sum(1 for lead in leads if lead.pro_activated)
+    pro_total = max(pro_taken, bot_pro_taken)
+    revenue = int(pro_total) * MONTHLY_PRICE
 
     return (
-        "📊 SATTEST BOT STATISTIKA\n\n"
-        f"👥 Jami foydalanuvchilar: {total}\n\n"
-        "🌐 TIL BO'YICHA:\n"
+        "📊 SATTEST WELCOME BOT STATS\n\n"
+        f"👥 Total users: {total}\n"
         f"🇺🇿 O'zbek: {language_counts['uz']} ({_percent(language_counts['uz'], total)}%)\n"
         f"🇷🇺 Русский: {language_counts['ru']} ({_percent(language_counts['ru'], total)}%)\n"
         f"🇬🇧 English: {language_counts['en']} ({_percent(language_counts['en'], total)}%)\n\n"
-        f"✅ Xush kelibsiz xabari: {welcome_sent}\n"
-        f"🔗 Link bosganlar: {link_clicked} ({_percent(link_clicked, total)}%)\n"
-        f"🧪 Test topshirganlar: {tests_taken} ({_percent(tests_taken, total)}%)\n"
-        f"💰 Pro olganlar: {pro_taken} ({_percent(pro_taken, total)}%)\n\n"
-        f"📅 Bugun: {today}\n"
-        f"📅 Bu hafta: {week}\n"
-        f"📅 Bu oy: {month}"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "FUNNEL:\n"
+        f"✅ Welcome sent: {welcome_sent}\n"
+        f"🔗 Link clicked: {link_clicked} ({_percent(link_clicked, total)}%)\n"
+        f"🧪 Test taken: {tests_taken} ({_percent(tests_taken, total)}%)\n"
+        f"💰 Pro bought: {pro_total} ({_percent(pro_total, total)}%)\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"TODAY: {today}\n"
+        f"THIS WEEK: {week}\n"
+        f"THIS MONTH: {month}\n\n"
+        "💵 REVENUE:\n"
+        f"{pro_total} × 300,000 = {revenue:,} UZS"
     )
 
 
@@ -1046,6 +1133,11 @@ def _broadcast_all_languages(db: Session, versions: dict[str, str]) -> int:
 
 
 def _parse_broadcast_versions(text: str) -> dict[str, str] | None:
+    if "|" in text:
+        parts = [part.strip() for part in text.split("|", 2)]
+        if len(parts) == 3 and all(parts):
+            return {"uz": parts[0], "ru": parts[1], "en": parts[2]}
+
     matches = list(re.finditer(r"(?im)^\s*(UZ|RU|EN)\s*:\s*", text))
     if len(matches) < 3:
         return None
@@ -1112,18 +1204,21 @@ def _percent(part: int | float, total: int | float) -> int:
     return round((float(part) / float(total)) * 100) if total else 0
 
 
-def _diagnostic_url() -> str:
-    return _public_link("/mock-test/diagnostic")
+def _diagnostic_url(lead: TelegramAudience | None = None) -> str:
+    query = "utm_source=bot"
+    if lead and lead.telegram_user_id:
+        query += f"&tg={parse.quote(lead.telegram_user_id)}"
+    return _public_link(f"/diagnostic?{query}")
 
 
 def _pricing_url() -> str:
-    return _public_link("/pricing?plan=pro")
+    return _public_link("/pro")
 
 
-def _diagnostic_keyboard(language: str, button_key: str) -> dict:
+def _diagnostic_keyboard(language: str, button_key: str, lead: TelegramAudience | None = None) -> dict:
     return {
         "inline_keyboard": [
-            [{"text": _button(button_key, language), "url": _diagnostic_url()}],
+            [{"text": _button(button_key, language), "url": _diagnostic_url(lead)}],
         ]
     }
 

@@ -206,6 +206,69 @@ What Pro includes:
     },
 }
 
+TEST_COMPLETE_MESSAGE = {
+    "uz": """🎯 Diagnostic test tugadi!
+
+Sizning natijangiz:
+📊 Ball: ≈{score}
+⚠️ Zaif tomonlar: {weak_areas}
+
+30 kunlik shaxsiy rejangiz
+tayyor — hozir oching:
+
+🔑 sattest.uz/pro
+300,000 UZS/oy
+
+Savollar uchun:
+@Bakhrom_Botirov 💪""",
+    "ru": """🎯 Диагностика завершена!
+
+Ваш результат:
+📊 Балл: ≈{score}
+⚠️ Слабые места: {weak_areas}
+
+Ваш личный 30-дневный план
+готов — откройте сейчас:
+
+🔑 sattest.uz/pro
+300,000 UZS/месяц
+
+По вопросам:
+@Bakhrom_Botirov 💪""",
+    "en": """🎯 Diagnostic complete!
+
+Your result:
+📊 Score: ≈{score}
+⚠️ Weak areas: {weak_areas}
+
+Your personal 30-day plan
+is ready — unlock now:
+
+🔑 sattest.uz/pro
+300,000 UZS/month
+
+Any questions:
+@Bakhrom_Botirov 💪""",
+}
+
+ACTIVATION_MESSAGE = {
+    "uz": """✅ Pro faollashtirildi!
+
+SATTEST.UZ platformasiga qayting va to'liq mock test, zaif mavzular tahlili, My 1400+ route va cheksiz practice ni oching.
+
+🔗 sattest.uz/dashboard""",
+    "ru": """✅ Pro активирован!
+
+Вернитесь на SATTEST.UZ и откройте полный mock test, анализ слабых мест, My 1400+ route и безлимитную практику.
+
+🔗 sattest.uz/dashboard""",
+    "en": """✅ Pro activated!
+
+Return to SATTEST.UZ to open the full mock test, weak-area analysis, My 1400+ route, and unlimited practice.
+
+🔗 sattest.uz/dashboard""",
+}
+
 BUTTONS = {
     "start_test": {
         "uz": "🎯 Diagnostic Testni Boshlash →",

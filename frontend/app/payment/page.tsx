@@ -13,7 +13,7 @@ type Plan = "monthly" | "three_month";
 const fallbackConfig: PaymentConfig = {
   payme_qr_url: "",
   click_qr_url: "",
-  telegram_bot_url: "https://t.me/SATTESTUZBot",
+  telegram_bot_url: "https://t.me/SATTEST_Welcome_Bot",
   plans: {
     monthly: { amount: MONTHLY_PRICE, days: 30, label: "1 month" },
     three_month: { amount: THREE_MONTH_PRICE, days: 90, label: "3 months" },

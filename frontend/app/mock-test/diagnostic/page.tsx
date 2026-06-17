@@ -71,6 +71,8 @@ const pageCopy = {
   }
 };
 
+const TELEGRAM_DIAGNOSTIC_USER_KEY = "sattest_telegram_diagnostic_user_id";
+
 export default function FreeDiagnosticPage() {
   const router = useRouter();
   const { language } = useLanguage();
@@ -92,6 +94,13 @@ export default function FreeDiagnosticPage() {
     const timeout = window.setTimeout(() => setQuestionVisible(true), 80);
     return () => window.clearTimeout(timeout);
   }, [currentIndex]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const telegramUserId = new URLSearchParams(window.location.search).get("tg");
+    if (!telegramUserId || typeof window === "undefined") return;
+    window.localStorage.setItem(TELEGRAM_DIAGNOSTIC_USER_KEY, telegramUserId);
+  }, []);
 
   function chooseAnswer(choice: string) {
     if (!currentQuestion) return;

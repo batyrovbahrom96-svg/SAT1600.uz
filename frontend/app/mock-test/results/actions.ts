@@ -7,6 +7,7 @@ type DiagnosticNotificationPayload = {
   estimatedScore: number;
   weakAreas: string[];
   language: DiagnosticLanguage;
+  userTelegramId?: string | null;
 };
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "https://api.sattest.uz").replace(/\/$/, "");
@@ -37,6 +38,7 @@ export async function notifyDiagnosticResult(payload: DiagnosticNotificationPayl
       estimated_score: estimatedScore,
       weak_areas: payload.weakAreas.slice(0, 5),
       language: payload.language,
+      user_telegram_id: payload.userTelegramId || undefined,
     }),
     cache: "no-store",
   });
