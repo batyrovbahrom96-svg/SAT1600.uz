@@ -1577,7 +1577,7 @@ def _diagnostic_url(lead: TelegramAudience | None = None) -> str:
 
 
 def _pricing_url() -> str:
-    return _public_link("/pro")
+    return "https://www.sattest.uz/pricing?lang=en"
 
 
 def _diagnostic_keyboard(language: str, button_key: str, lead: TelegramAudience | None = None) -> dict:

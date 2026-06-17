@@ -206,7 +206,7 @@ Pro da nimalar bor:
 ✅ Xatolar kuzatuvi
 
 💎 300,000 UZS/oy
-👉 sattest.uz/pro
+👉 sattest.uz/pricing?lang=en
 
 Savollar uchun:
 @FounderSATTESTUZ 💪""",
@@ -223,7 +223,7 @@ Savollar uchun:
 ✅ Отслеживание ошибок
 
 💎 300,000 UZS/месяц
-👉 sattest.uz/pro
+👉 sattest.uz/pricing?lang=en
 
 По вопросам:
 @FounderSATTESTUZ 💪""",
@@ -240,7 +240,7 @@ What Pro includes:
 ✅ Mistake tracking
 
 💎 300,000 UZS/month
-👉 sattest.uz/pro
+👉 sattest.uz/pricing?lang=en
 
 Any questions:
 @FounderSATTESTUZ 💪""",
@@ -256,7 +256,7 @@ TEST_COMPLETE = {
 30 kunlik shaxsiy rejangiz
 tayyor — hozir oching:
 
-🔑 sattest.uz/pro
+🔑 sattest.uz/pricing?lang=en
 300,000 UZS/oy
 
 Savollar uchun:
@@ -270,7 +270,7 @@ Savollar uchun:
 Ваш личный 30-дневный план
 готов — откройте сейчас:
 
-🔑 sattest.uz/pro
+🔑 sattest.uz/pricing?lang=en
 300,000 UZS/месяц
 
 По вопросам:
@@ -284,7 +284,7 @@ Savollar uchun:
 Your personal 30-day plan
 is ready — unlock now:
 
-🔑 sattest.uz/pro
+🔑 sattest.uz/pricing?lang=en
 300,000 UZS/month
 
 Any questions:
@@ -305,7 +305,7 @@ Endi sizda bor:
 ✅ Xatolar kuzatuvi
 
 Hozir boshlang:
-👉 sattest.uz/pro
+👉 sattest.uz/pricing?lang=en
 
 Savollar uchun:
 @FounderSATTESTUZ 💪""",
@@ -322,7 +322,7 @@ Savollar uchun:
 ✅ Отслеживание ошибок
 
 Начните прямо сейчас:
-👉 sattest.uz/pro
+👉 sattest.uz/pricing?lang=en
 
 По вопросам:
 @FounderSATTESTUZ 💪""",
@@ -339,7 +339,7 @@ You now have access to:
 ✅ Mistake tracking
 
 Start right now:
-👉 sattest.uz/pro
+👉 sattest.uz/pricing?lang=en
 
 Any questions:
 @FounderSATTESTUZ 💪""",
@@ -417,7 +417,7 @@ Pro da nimalar bor:
 ✅ Xatolar kuzatuvi
 
 Hozir olish uchun:
-👉 sattest.uz/pro
+👉 sattest.uz/pricing?lang=en
 
 Savollar: @FounderSATTESTUZ""",
         "ru": """💎 SATTEST Pro:
@@ -433,7 +433,7 @@ Savollar: @FounderSATTESTUZ""",
 ✅ Отслеживание ошибок
 
 Получить сейчас:
-👉 sattest.uz/pro
+👉 sattest.uz/pricing?lang=en
 
 Вопросы: @FounderSATTESTUZ""",
         "en": """💎 SATTEST Pro:
@@ -449,7 +449,7 @@ Pro includes:
 ✅ Mistake tracking
 
 Get it now:
-👉 sattest.uz/pro
+👉 sattest.uz/pricing?lang=en
 
 Questions: @FounderSATTESTUZ""",
     },

@@ -121,7 +121,7 @@ async def notify_bot_after_test(
         message=message,
         reply_markup={
             "inline_keyboard": [
-                [{"text": _pro_button_text(normalized_language), "url": "https://www.sattest.uz/pro"}],
+                [{"text": _pro_button_text(normalized_language), "url": "https://www.sattest.uz/pricing?lang=en"}],
                 [{"text": _support_button_text(normalized_language), "url": "https://t.me/FounderSATTESTUZ"}],
             ]
         },
