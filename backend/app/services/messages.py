@@ -357,6 +357,51 @@ Next messages will
 be in English 🇬🇧""",
 }
 
+QUICK_MENU = {
+    "uz": """⚡ TEZKOR MENYU
+
+Yangi imkoniyatlar ishlayapti:
+
+/test — Bepul diagnostic test
+/pro — Pro narxi va imkoniyatlar
+/webinar — Yakshanba vebinari
+/tips — Kunlik SAT maslahatlar
+/score — Ballingizni saqlash
+/help — Barcha buyruqlar
+/contact — Founder bilan aloqa
+
+Savol yozsangiz, bot avtomatik javob beradi.
+Masalan: narx, test, webinar, ball""",
+    "ru": """⚡ БЫСТРОЕ МЕНЮ
+
+Новые функции уже работают:
+
+/test — Бесплатный diagnostic test
+/pro — Цена и возможности Pro
+/webinar — Воскресный вебинар
+/tips — Ежедневные SAT советы
+/score — Сохранить ваш балл
+/help — Все команды
+/contact — Связаться с Founder
+
+Напишите вопрос, бот ответит автоматически.
+Например: цена, test, webinar, балл""",
+    "en": """⚡ QUICK MENU
+
+New features are live:
+
+/test — Free diagnostic test
+/pro — Pro price and benefits
+/webinar — Sunday webinar
+/tips — Daily SAT tips
+/score — Save your score
+/help — All commands
+/contact — Contact Founder
+
+Send a question and the bot auto-replies.
+Example: price, test, webinar, score""",
+}
+
 FAQ_REPLIES = {
     "price": {
         "uz": """💎 SATTEST Pro:
@@ -908,6 +953,7 @@ MESSAGES = {
         "en": "🌐 Tilni tanlang /\nВыберите язык /\nChoose language:",
     },
     "language_saved": LANGUAGE_SAVED,
+    "quick_menu": QUICK_MENU,
     "faq_price": FAQ_REPLIES["price"],
     "faq_diagnostic": FAQ_REPLIES["diagnostic"],
     "faq_webinar": FAQ_REPLIES["webinar"],

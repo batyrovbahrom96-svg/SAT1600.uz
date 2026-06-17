@@ -437,6 +437,8 @@ def _send_welcome_to_lead(lead: TelegramAudience, db: Session) -> None:
     delivered = delivered or bool(response.get("ok", True))
     prompt_response = _send_message(lead.chat_id, _message("language_prompt", "en"), reply_markup=_language_keyboard())
     delivered = delivered or bool(prompt_response.get("ok", True))
+    menu_response = _send_message(lead.chat_id, _message("quick_menu", "uz"), reply_markup=_quick_menu_keyboard("uz", lead))
+    delivered = delivered or bool(menu_response.get("ok", True))
     if delivered:
         lead.welcome_sent_at = lead.welcome_sent_at or datetime.utcnow()
         db.commit()
@@ -463,6 +465,7 @@ def _handle_language_callback(callback_query: dict, db: Session | None) -> dict:
     db.commit()
     _answer_callback(callback_id, _message("language_saved", language))
     _send_message(lead.chat_id, _message("language_saved", language), reply_markup=_diagnostic_keyboard(language, "start_test", lead))
+    _send_message(lead.chat_id, _message("quick_menu", language), reply_markup=_quick_menu_keyboard(language, lead))
     return {"ok": True, "language": language}
 
 
@@ -1647,6 +1650,24 @@ def _tips_keyboard(language: str) -> dict:
                 {"text": _button("tips_yes", language), "callback_data": "tips:yes"},
                 {"text": _button("tips_no", language), "callback_data": "tips:no"},
             ]
+        ]
+    }
+
+
+def _quick_menu_keyboard(language: str, lead: TelegramAudience | None = None) -> dict:
+    return {
+        "inline_keyboard": [
+            [
+                {"text": _button("start_test", language), "url": _diagnostic_url(lead)},
+                {"text": _button("get_pro", language), "url": _pricing_url()},
+            ],
+            [
+                {"text": "📅 Webinar", "callback_data": "webinar:yes"},
+                {"text": "💡 SAT Tips", "callback_data": "tips:yes"},
+            ],
+            [
+                {"text": _button("have_question", language), "url": "https://t.me/FounderSATTESTUZ"},
+            ],
         ]
     }
 
