@@ -827,6 +827,83 @@ def _normalize_wrong_map(value: object, correct: str, fallback: str) -> dict[str
 
 
 IMPORTANT_VOCABULARY: dict[str, dict[str, str]] = {
+    "ameliorate": {
+        "definition_en": "to make a bad or unpleasant situation better",
+        "definition_ru": "улучшать плохую или неприятную ситуацию",
+        "definition_uz": "yomon yoki noqulay vaziyatni yaxshilamoq",
+        "in_context_en": "Recruiting subjects from diverse backgrounds would improve the problem of unrepresentative subject pools.",
+        "in_context_ru": "Привлечение испытуемых из разных групп улучшило бы проблему нерепрезентативной выборки.",
+        "in_context_uz": "Turli kelib chiqishdagi ishtirokchilarni jalb qilish noreprezentativ guruh muammosini yaxshilaydi.",
+        "memory_trick_en": "Ameliorate = make better.",
+        "memory_trick_ru": "Ameliorate = сделать лучше.",
+        "memory_trick_uz": "Ameliorate = yaxshiroq qilmoq.",
+    },
+    "sanction": {
+        "definition_en": "to officially approve or allow something",
+        "definition_ru": "официально одобрять или разрешать что-либо",
+        "definition_uz": "biror narsani rasmiy ma'qullamoq yoki ruxsat bermoq",
+        "in_context_en": "The sentence is not about approving the situation; it is about fixing it.",
+        "in_context_ru": "Предложение не об одобрении ситуации, а о её исправлении.",
+        "in_context_uz": "Gap vaziyatni ma'qullash haqida emas, uni tuzatish haqida.",
+        "memory_trick_en": "A sanction can be official approval or a penalty; use context carefully.",
+        "memory_trick_ru": "Sanction может значить одобрение или наказание; контекст решает.",
+        "memory_trick_uz": "Sanction ruxsat yoki jazo bo'lishi mumkin; kontekstga qarang.",
+    },
+    "rationalize": {
+        "definition_en": "to try to find reasons to explain or justify behavior, especially when the reasons are not the real ones",
+        "definition_ru": "пытаться объяснить или оправдать поведение, часто не настоящими причинами",
+        "definition_uz": "xatti-harakatni tushuntirish yoki oqlashga urinish, ko'pincha haqiqiy sabablar bilan emas",
+        "in_context_en": "The passage proposes an action to improve research samples, not an excuse for the problem.",
+        "in_context_ru": "Текст предлагает действие для улучшения выборки, а не оправдание проблемы.",
+        "in_context_uz": "Matn muammoni oqlashni emas, tadqiqot tanlovini yaxshilash harakatini taklif qiladi.",
+        "memory_trick_en": "Rationalize = make excuses sound rational.",
+        "memory_trick_ru": "Rationalize = представить оправдание как разумное.",
+        "memory_trick_uz": "Rationalize = bahonani mantiqli qilib ko'rsatmoq.",
+    },
+    "postulate": {
+        "definition_en": "to suggest or accept that something is true as the basis for reasoning",
+        "definition_ru": "предполагать или принимать что-либо как основу рассуждения",
+        "definition_uz": "biror narsani fikrlash asosi sifatida taxmin qilmoq yoki qabul qilmoq",
+        "in_context_en": "The passage is not asking researchers to assume a theory; it asks them to improve recruitment.",
+        "in_context_ru": "Текст не просит исследователей выдвинуть предположение; он просит улучшить набор участников.",
+        "in_context_uz": "Matn nazariya taxmin qilishni emas, ishtirokchilarni jalb qilishni yaxshilashni so'raydi.",
+        "memory_trick_en": "Postulate = put forward an idea.",
+        "memory_trick_ru": "Postulate = выдвинуть идею.",
+        "memory_trick_uz": "Postulate = g'oyani ilgari surmoq.",
+    },
+    "unrepresentative": {
+        "definition_en": "not typical of a larger group and therefore not showing what that group is really like",
+        "definition_ru": "нерепрезентативный; не отражающий настоящие свойства большей группы",
+        "definition_uz": "noreprezentativ; katta guruhni to'g'ri aks ettirmaydigan",
+        "in_context_en": "College students alone do not represent all human behavior.",
+        "in_context_ru": "Одни студенты колледжей не представляют всё человеческое поведение.",
+        "in_context_uz": "Faqat kollej talabalari butun inson xulq-atvorini aks ettirmaydi.",
+        "memory_trick_en": "Representative = shows the group; unrepresentative = does not.",
+        "memory_trick_ru": "Representative отражает группу; unrepresentative — нет.",
+        "memory_trick_uz": "Representative guruhni aks ettiradi; unrepresentative esa yo'q.",
+    },
+    "subject pools": {
+        "definition_en": "groups of people available to participate in a research study",
+        "definition_ru": "группы людей, доступных для участия в исследовании",
+        "definition_uz": "tadqiqotda qatnashishi mumkin bo'lgan odamlar guruhlari",
+        "in_context_en": "The subject pools are mostly students from the researchers' own colleges and universities.",
+        "in_context_ru": "Группы испытуемых в основном состоят из студентов тех вузов, где работают исследователи.",
+        "in_context_uz": "Ishtirokchi guruhlari asosan tadqiqotchilar ishlaydigan kollej va universitet talabalari.",
+        "memory_trick_en": "Subject = participant; pool = available group.",
+        "memory_trick_ru": "Subject = участник; pool = доступная группа.",
+        "memory_trick_uz": "Subject = ishtirokchi; pool = mavjud guruh.",
+    },
+    "diverse": {
+        "definition_en": "including many different types of people or things",
+        "definition_ru": "разнообразный; включающий разные типы людей или вещей",
+        "definition_uz": "xilma-xil; turli odamlar yoki narsalarni o'z ichiga olgan",
+        "in_context_en": "Researchers should recruit people from varied backgrounds and locations.",
+        "in_context_ru": "Исследователям нужно привлекать людей из разных групп и мест.",
+        "in_context_uz": "Tadqiqotchilar turli kelib chiqish va joylardan odamlarni jalb qilishi kerak.",
+        "memory_trick_en": "Diverse = different.",
+        "memory_trick_ru": "Diverse = разный.",
+        "memory_trick_uz": "Diverse = xilma-xil.",
+    },
     "antecedent": {
         "definition_en": "something that happened or existed before another thing",
         "definition_ru": "то, что произошло или существовало раньше другого события",
@@ -912,37 +989,16 @@ def _fallback_analysis(text: str) -> dict:
     solved_question = _solve_completion_question(text, options)
     difficult_words = _fallback_vocabulary(text, options)
     preview = text[:220] + ("..." if len(text) > 220 else "")
+    main_idea = _fallback_main_idea(text, preview)
+    tone_purpose = _fallback_tone_purpose(text)
     return {
         "extracted_text": text,
         "full_translation": _fallback_translation(text),
-        "main_idea": {
-            "one_sentence": "The passage explains a scientific indicator that appears before a solar flare.",
-            "one_sentence_en": "The passage explains a scientific indicator that appears before a solar flare.",
-            "one_sentence_ru": "Отрывок объясняет научный признак, который появляется перед солнечной вспышкой.",
-            "one_sentence_uz": "Matn quyosh chaqnashidan oldin paydo bo'ladigan ilmiy belgini tushuntiradi.",
-            "detailed_uz": f"Matn quyosh flare larini oldindan ko'rsatadigan korona yorqinlashuvi haqida. Asosiy mantiq: korona flare dan oldin yorqinlashadi, shuning uchun bo'sh joyga 'tez orada sodir bo'ladigan' degan ma'no kerak. Matn: {preview}",
-            "detailed_ru": f"Отрывок говорит о том, что яркость короны может заранее указывать на солнечную вспышку. Логика: корона становится ярче перед вспышкой, поэтому нужен смысл 'скоро произойдёт'. Текст: {preview}",
-            "detailed_en": f"The passage explains that increased brightness in the corona can provide advance indication of a solar flare. The blank needs a word meaning the flare is about to happen. Text: {preview}",
-            "sat_connection": "This is a Words in Context / logical completion question.",
-        },
+        "main_idea": main_idea,
         "vocabulary": difficult_words,
         "difficult_words": difficult_words,
-        "tone": {
-            "primary": "Informative",
-            "type": "Informative",
-            "percentage": 75,
-            "explanation_uz": "Ohang tushuntiruvchi va akademik.",
-            "explanation_ru": "Тон объяснительный и академический.",
-            "explanation_en": "The tone is explanatory and academic.",
-        },
-        "purpose": {
-            "primary": "To inform",
-            "type": "To inform",
-            "percentage": 65,
-            "explanation_uz": "Muallif mavzuni tushuntirish va asosiy fikrni yetkazishni maqsad qiladi.",
-            "explanation_ru": "Автор стремится объяснить тему и передать главную мысль.",
-            "explanation_en": "The author aims to explain the topic and communicate a main idea.",
-        },
+        "tone": tone_purpose["tone"],
+        "purpose": tone_purpose["purpose"],
         "author_perspective": {
             "uz": "Muallif mavzuga tushuntiruvchi va dalilga asoslangan pozitsiyada qaraydi.",
             "ru": "Автор рассматривает тему объяснительно и опирается на доказательства.",
@@ -989,6 +1045,21 @@ def _extract_options(text: str) -> dict[str, str]:
     options: dict[str, str] = {}
     for match in re.finditer(r"(?im)^\s*([A-D])\s*[\).]\s+(.+?)\s*$", text):
         options[match.group(1).upper()] = match.group(2).strip()
+    if len(options) >= 4:
+        return options
+
+    start = re.search(r"\bA\s*[\).]\s*", text)
+    if not start:
+        return options
+
+    tail = text[start.start() :]
+    inline_options: dict[str, str] = {}
+    for match in re.finditer(r"(?is)\b([A-D])\s*[\).]\s*(.*?)(?=\s+\b[A-D]\s*[\).]|\s*$)", tail):
+        value = " ".join(match.group(2).split()).strip(" ;,")
+        if value:
+            inline_options[match.group(1).upper()] = value
+    if len(inline_options) >= len(options):
+        options.update(inline_options)
     return options
 
 
@@ -1009,7 +1080,60 @@ def _solve_completion_question(text: str, options: dict[str, str]) -> dict:
     if "preceding a flare" in lowered and "where the flare is" in lowered:
         correct = next((letter for letter, value in options.items() if value.lower() == "impending"), "B")
         return _solved_impending_question(question_text, options, correct)
+    if "unrepresentative subject pools" in lowered and "diverse backgrounds" in lowered:
+        correct = next((letter for letter, value in options.items() if value.lower() == "ameliorate"), "B")
+        return _solved_ameliorate_question(question_text, options, correct)
     return _generic_solved_question(question_text, options, correct)
+
+
+def _solved_ameliorate_question(question_text: str, options: dict[str, str], correct: str) -> dict:
+    return {
+        "question_number": 1,
+        "question_text": question_text,
+        "question_text_ru": "Какой вариант завершает текст самым логичным и точным словом или выражением?",
+        "question_text_uz": "Qaysi javob matnni eng mantiqiy va aniq so'z yoki ibora bilan to'ldiradi?",
+        "options": _complete_options(options),
+        "options_ru": {
+            "A": "официально одобрить / разрешить",
+            "B": "улучшить плохую ситуацию",
+            "C": "оправдать или рационализировать",
+            "D": "предположить / выдвинуть как идею",
+        },
+        "options_uz": {
+            "A": "rasmiy ma'qullamoq / ruxsat bermoq",
+            "B": "yomon vaziyatni yaxshilamoq",
+            "C": "oqlamoq yoki mantiqli qilib ko'rsatmoq",
+            "D": "taxmin qilmoq / g'oya sifatida ilgari surmoq",
+        },
+        "correct_answer": correct,
+        "thinking_process_en": "First identify the problem: many behavioral psychology studies use highly unrepresentative subject pools. Then read the proposed solution: actively recruit subjects from diverse backgrounds and locations. That action would make the bad situation better, so the blank needs the verb 'ameliorate.'",
+        "thinking_process_ru": "Сначала найдите проблему: многие исследования поведенческой психологии используют крайне нерепрезентативные группы испытуемых. Затем посмотрите на решение: активно привлекать участников из разных слоёв и мест. Такое действие улучшает плохую ситуацию, поэтому нужно слово 'ameliorate'.",
+        "thinking_process_uz": "Avval muammoni toping: ko'plab behavioral psychology tadqiqotlari juda noreprezentativ ishtirokchi guruhlaridan foydalanadi. Keyin yechimga qarang: turli kelib chiqish va hududlardan ishtirokchilarni faol jalb qilish. Bu harakat yomon vaziyatni yaxshilaydi, shuning uchun kerakli so'z 'ameliorate'.",
+        "why_correct_en": "B is correct because 'ameliorate' means to make a bad situation better. Recruiting a more diverse subject pool would improve the problem of unrepresentative samples.",
+        "why_correct_ru": "B правильно, потому что 'ameliorate' означает улучшить плохую ситуацию. Более разнообразный набор участников исправляет проблему нерепрезентативной выборки.",
+        "why_correct_uz": "B to'g'ri, chunki 'ameliorate' yomon vaziyatni yaxshilash degani. Turli ishtirokchilarni jalb qilish noreprezentativ tanlov muammosini tuzatadi.",
+        "why_wrong_en": {
+            "A": "Sanction means officially approve or allow. The sentence is not saying researchers should approve the situation.",
+            "C": "Rationalize means justify or explain away. The sentence gives a practical fix, not an excuse.",
+            "D": "Postulate means propose or assume an idea. The sentence calls for action, not a theoretical assumption.",
+        },
+        "why_wrong_ru": {
+            "A": "Sanction значит официально одобрить или разрешить. В предложении не говорится, что ситуацию нужно одобрить.",
+            "C": "Rationalize значит оправдать или объяснить. Здесь нужен практический способ исправить проблему, а не оправдание.",
+            "D": "Postulate значит предположить или выдвинуть идею. В предложении нужно действие, а не теоретическое предположение.",
+        },
+        "why_wrong_uz": {
+            "A": "Sanction rasmiy ma'qullash yoki ruxsat berish degani. Gap vaziyatni ma'qullash haqida emas.",
+            "C": "Rationalize oqlash yoki tushuntirib berish degani. Bu yerda bahona emas, muammoni tuzatadigan amaliy harakat kerak.",
+            "D": "Postulate taxmin qilish yoki g'oya ilgari surish degani. Gap nazariya emas, harakat haqida.",
+        },
+        "evidence_line": "highly unrepresentative subject pools ... actively recruit subjects from diverse backgrounds and locations",
+        "question_type": "Logical Completion",
+        "difficulty": "Medium",
+        "tip_en": "For logical completion questions, label the problem and the proposed fix before checking the answer choices.",
+        "tip_ru": "В logical completion сначала определите проблему и предлагаемое исправление, потом смотрите варианты.",
+        "tip_uz": "Logical completion savollarida avval muammo va taklif qilingan yechimni belgilang, keyin variantlarni tekshiring.",
+    }
 
 
 def _solved_impending_question(question_text: str, options: dict[str, str], correct: str) -> dict:
@@ -1127,9 +1251,25 @@ def _fallback_vocabulary(text: str, options: dict[str, str]) -> list[dict[str, s
     found: list[str] = []
     searchable = f"{text} {' '.join(options.values())}".lower()
     for word in IMPORTANT_VOCABULARY:
-        if re.search(rf"\b{re.escape(word)}\b", searchable):
+        pattern = r"\b" + re.escape(word).replace(r"\ ", r"\s+") + r"s?\b"
+        if re.search(pattern, searchable):
             found.append(word)
-    priority = ["impending", "antecedent", "innocuous", "perpetual", "corona", "emanate", "photosphere"]
+    priority = [
+        "ameliorate",
+        "unrepresentative",
+        "subject pools",
+        "diverse",
+        "sanction",
+        "rationalize",
+        "postulate",
+        "impending",
+        "antecedent",
+        "innocuous",
+        "perpetual",
+        "corona",
+        "emanate",
+        "photosphere",
+    ]
     ordered = [word for word in priority if word in found] + [word for word in found if word not in priority]
     return [
         {
@@ -1144,6 +1284,11 @@ def _fallback_vocabulary(text: str, options: dict[str, str]) -> list[dict[str, s
 
 
 def _fallback_translation(text: str) -> dict[str, str]:
+    if "unrepresentative subject pools" in text and "diverse backgrounds" in text:
+        return {
+            "russian": "Несмотря на обобщения о человеческом поведении, которые они дали, многие исследования поведенческой психологии использовали крайне нерепрезентативные группы испытуемых: студентов тех колледжей и университетов, где работают исследователи. Чтобы улучшить эту ситуацию, необходимо активно привлекать испытуемых из разных слоёв общества и из разных мест.",
+            "uzbek": "Inson xulq-atvori haqida umumiy xulosalar berganiga qaramay, xulq-atvor psixologiyasidagi ko'plab tadqiqotlar juda noreprezentativ ishtirokchi guruhlaridan foydalangan: tadqiqotchilar ishlaydigan kollej va universitetlarning talabalaridan. Bu vaziyatni yaxshilash uchun turli kelib chiqish va hududlardan ishtirokchilarni faol jalb qilish zarur.",
+        }
     if "K.D. Leka" in text and "solar flares" in text:
         return {
             "russian": "К. Д. Лека и коллеги обнаружили, что корона Солнца заранее указывает на солнечные вспышки — интенсивные выбросы электромагнитного излучения, исходящие из активных областей фотосферы Солнца и способные нарушать телекоммуникации на Земле. Перед вспышкой корона временно становится ярче над областью, где вспышка скоро произойдёт.",
@@ -1152,6 +1297,81 @@ def _fallback_translation(text: str) -> dict[str, str]:
     return {
         "russian": "Автоматический перевод недоступен для этого fallback-анализа. Повторите анализ, чтобы получить полный перевод.",
         "uzbek": "Bu fallback tahlil uchun avtomatik tarjima mavjud emas. To'liq tarjima olish uchun qayta tahlil qiling.",
+    }
+
+
+def _fallback_main_idea(text: str, preview: str) -> dict[str, str]:
+    if "unrepresentative subject pools" in text and "diverse backgrounds" in text:
+        return {
+            "one_sentence": "The passage says behavioral psychology studies often use unrepresentative student samples and should recruit more diverse participants.",
+            "one_sentence_en": "The passage says behavioral psychology studies often use unrepresentative student samples and should recruit more diverse participants.",
+            "one_sentence_ru": "Отрывок говорит, что исследования поведенческой психологии часто используют нерепрезентативные студенческие выборки и должны привлекать более разнообразных участников.",
+            "one_sentence_uz": "Matn behavioral psychology tadqiqotlari ko'pincha noreprezentativ talaba tanlovlaridan foydalanishini va turliroq ishtirokchilarni jalb qilishi kerakligini aytadi.",
+            "detailed_uz": f"Asosiy muammo: tadqiqotlar inson xulq-atvori haqida umumiy xulosa chiqaradi, lekin ishtirokchilar ko'pincha faqat tadqiqotchilar ishlaydigan universitet talabalari. Shuning uchun yechim — turli kelib chiqish va joylardan ishtirokchilarni jalb qilib, vaziyatni yaxshilash. Matn: {preview}",
+            "detailed_ru": f"Главная проблема: исследования делают обобщения о человеческом поведении, но участники часто являются только студентами вузов, где работают исследователи. Поэтому решение — улучшить ситуацию, привлекая участников из разных групп и мест. Текст: {preview}",
+            "detailed_en": f"The main problem is that studies generalize about human behavior while using narrow participant samples from researchers' own colleges. The proposed fix is to improve the situation by recruiting subjects from diverse backgrounds and locations. Text: {preview}",
+            "sat_connection": "This is a Logical Completion question: identify the problem, then choose the word that matches the proposed fix.",
+        }
+    if "K.D. Leka" in text and "solar flares" in text:
+        return {
+            "one_sentence": "The passage explains a scientific indicator that appears before a solar flare.",
+            "one_sentence_en": "The passage explains a scientific indicator that appears before a solar flare.",
+            "one_sentence_ru": "Отрывок объясняет научный признак, который появляется перед солнечной вспышкой.",
+            "one_sentence_uz": "Matn quyosh chaqnashidan oldin paydo bo'ladigan ilmiy belgini tushuntiradi.",
+            "detailed_uz": f"Matn quyosh flare larini oldindan ko'rsatadigan korona yorqinlashuvi haqida. Asosiy mantiq: korona flare dan oldin yorqinlashadi, shuning uchun bo'sh joyga 'tez orada sodir bo'ladigan' degan ma'no kerak. Matn: {preview}",
+            "detailed_ru": f"Отрывок говорит о том, что яркость короны может заранее указывать на солнечную вспышку. Логика: корона становится ярче перед вспышкой, поэтому нужен смысл 'скоро произойдёт'. Текст: {preview}",
+            "detailed_en": f"The passage explains that increased brightness in the corona can provide advance indication of a solar flare. The blank needs a word meaning the flare is about to happen. Text: {preview}",
+            "sat_connection": "This is a Words in Context / logical completion question.",
+        }
+    return {
+        "one_sentence": "The passage presents a central idea and asks for the most logical completion.",
+        "one_sentence_en": "The passage presents a central idea and asks for the most logical completion.",
+        "one_sentence_ru": "Отрывок представляет главную мысль и просит выбрать самое логичное завершение.",
+        "one_sentence_uz": "Matn asosiy fikrni beradi va eng mantiqiy yakunni tanlashni so'raydi.",
+        "detailed_uz": f"Matnning mantiqini kuzating va bo'sh joy atrofidagi dalillarga qarab javob tanlang. Matn: {preview}",
+        "detailed_ru": f"Следите за логикой текста и выбирайте ответ по доказательствам вокруг пропуска. Текст: {preview}",
+        "detailed_en": f"Track the passage logic and choose the answer supported by the evidence around the blank. Text: {preview}",
+        "sat_connection": "This is a logical completion question.",
+    }
+
+
+def _fallback_tone_purpose(text: str) -> dict[str, dict[str, object]]:
+    if "unrepresentative subject pools" in text and "diverse backgrounds" in text:
+        return {
+            "tone": {
+                "primary": "Analytical",
+                "type": "Analytical",
+                "percentage": 78,
+                "explanation_uz": "Ohang akademik va muammoni tahlil qiluvchi.",
+                "explanation_ru": "Тон академический и аналитический: автор описывает проблему исследования.",
+                "explanation_en": "The tone is academic and analytical because the author identifies a research problem.",
+            },
+            "purpose": {
+                "primary": "To explain a problem and solution",
+                "type": "To explain a problem and solution",
+                "percentage": 72,
+                "explanation_uz": "Muallif noreprezentativ tanlov muammosini va uni yaxshilash yo'lini tushuntiradi.",
+                "explanation_ru": "Автор объясняет проблему нерепрезентативной выборки и способ её улучшить.",
+                "explanation_en": "The author explains a sampling problem and the action needed to improve it.",
+            },
+        }
+    return {
+        "tone": {
+            "primary": "Informative",
+            "type": "Informative",
+            "percentage": 75,
+            "explanation_uz": "Ohang tushuntiruvchi va akademik.",
+            "explanation_ru": "Тон объяснительный и академический.",
+            "explanation_en": "The tone is explanatory and academic.",
+        },
+        "purpose": {
+            "primary": "To inform",
+            "type": "To inform",
+            "percentage": 65,
+            "explanation_uz": "Muallif mavzuni tushuntirish va asosiy fikrni yetkazishni maqsad qiladi.",
+            "explanation_ru": "Автор стремится объяснить тему и передать главную мысль.",
+            "explanation_en": "The author aims to explain the topic and communicate a main idea.",
+        },
     }
 
 
