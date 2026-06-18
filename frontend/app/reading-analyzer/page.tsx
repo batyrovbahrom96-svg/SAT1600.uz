@@ -207,7 +207,7 @@ export default function ReadingAnalyzerPage() {
     setIsLoading(true);
     try {
       const result = inputMode === "image" && imageFile
-        ? await analyzePassageImage({ file: imageFile, language })
+        ? await analyzePassageImage({ file: await normalizeImageForClaude(imageFile), language })
         : await analyzePassage({ text, language });
       setRemaining(result.remaining_free ?? null);
       saveResult(result);
@@ -364,4 +364,50 @@ function errorMessage(error: ApiError, copy: Record<string, unknown>) {
   if (message.includes("invalid_file_type")) return copy.invalid_file_type as string;
   if (message.includes("text_too_short")) return copy.short as string;
   return message;
+}
+
+async function normalizeImageForClaude(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  try {
+    const dataUrl = await readFileAsDataUrl(file);
+    const image = await loadImage(dataUrl);
+    const maxWidth = 1800;
+    const maxHeight = 2400;
+    const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(image, 0, 0, width, height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+    if (!blob) return file;
+    return new File([blob], "sattest-reading-screenshot.jpg", { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Could not read image"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new window.Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not load image"));
+    image.src = src;
+  });
 }

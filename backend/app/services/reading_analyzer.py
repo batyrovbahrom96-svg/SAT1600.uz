@@ -269,8 +269,7 @@ def extract_text_from_reading_image(image_data: bytes, image_type: str) -> str |
     if not settings.anthropic_api_key:
         return None
     image_base64 = base64.standard_b64encode(image_data).decode("utf-8")
-    payload = {
-        "model": settings.anthropic_model,
+    base_payload = {
         "max_tokens": 2000,
         "messages": [
             {
@@ -288,27 +287,16 @@ def extract_text_from_reading_image(image_data: bytes, image_type: str) -> str |
             }
         ],
     }
-    api_request = request.Request(
-        "https://api.anthropic.com/v1/messages",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "x-api-key": settings.anthropic_api_key,
-            "anthropic-version": "2023-06-01",
-            "User-Agent": "SATTEST.UZ-ReadingAnalyzer/1.0",
-        },
-        method="POST",
-    )
-    try:
-        with request.urlopen(api_request, timeout=35) as response:
-            raw = json.loads(response.read().decode("utf-8"))
-    except (OSError, error.HTTPError, json.JSONDecodeError):
-        return None
-    text = ""
-    for block in raw.get("content") or []:
-        if isinstance(block, dict) and block.get("type") == "text":
-            text += str(block.get("text") or "")
-    return text.strip() or None
+    for model in _model_candidates(settings.anthropic_model):
+        raw = _send_anthropic_payload({"model": model, **base_payload}, timeout=35)
+        if raw:
+            text = ""
+            for block in raw.get("content") or []:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    text += str(block.get("text") or "")
+            if text.strip():
+                return text.strip()
+    return None
 
 
 def _finish_analysis(db: Session, user: User, source_text: str, language: str, is_pro: bool, analysis: dict, input_type: str) -> dict:
@@ -398,8 +386,7 @@ def _call_claude_text(text: str, language: str) -> dict | None:
     if not settings.anthropic_api_key:
         return None
 
-    payload = {
-        "model": settings.anthropic_model,
+    base_payload = {
         "max_tokens": 3000,
         "system": SYSTEM_PROMPT,
         "messages": [
@@ -414,29 +401,12 @@ def _call_claude_text(text: str, language: str) -> dict | None:
             }
         ],
     }
-    api_request = request.Request(
-        "https://api.anthropic.com/v1/messages",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "x-api-key": settings.anthropic_api_key,
-            "anthropic-version": "2023-06-01",
-            "User-Agent": "SATTEST.UZ-ReadingAnalyzer/1.0",
-        },
-        method="POST",
-    )
-    try:
-        with request.urlopen(api_request, timeout=35) as response:
-            raw = json.loads(response.read().decode("utf-8"))
-    except (OSError, error.HTTPError, json.JSONDecodeError):
-        return None
-
-    content = raw.get("content") or []
-    text_block = ""
-    for block in content:
-        if isinstance(block, dict) and block.get("type") == "text":
-            text_block += str(block.get("text") or "")
-    return _parse_json_text(text_block)
+    for model in _model_candidates(settings.anthropic_model):
+        payload = {"model": model, **base_payload}
+        raw = _send_anthropic_payload(payload, timeout=35)
+        if raw:
+            return _parse_message_json(raw)
+    return None
 
 
 def _call_claude_image(image_data: bytes, image_type: str, language: str) -> dict | None:
@@ -445,8 +415,7 @@ def _call_claude_image(image_data: bytes, image_type: str, language: str) -> dic
         return None
 
     image_base64 = base64.standard_b64encode(image_data).decode("utf-8")
-    payload = {
-        "model": settings.anthropic_model,
+    base_payload = {
         "max_tokens": 4000,
         "system": SYSTEM_PROMPT,
         "messages": [
@@ -469,6 +438,25 @@ def _call_claude_image(image_data: bytes, image_type: str, language: str) -> dic
             }
         ],
     }
+    for model in _model_candidates(settings.anthropic_model):
+        payload = {"model": model, **base_payload}
+        raw = _send_anthropic_payload(payload, timeout=45)
+        if raw:
+            return _parse_message_json(raw)
+    return None
+
+
+def _model_candidates(configured_model: str | None) -> list[str]:
+    candidates = [
+        configured_model or "",
+        "claude-sonnet-4-6",
+        "claude-haiku-4-5",
+    ]
+    return [model for index, model in enumerate(candidates) if model and model not in candidates[:index]]
+
+
+def _send_anthropic_payload(payload: dict, timeout: int) -> dict | None:
+    settings = get_settings()
     api_request = request.Request(
         "https://api.anthropic.com/v1/messages",
         data=json.dumps(payload).encode("utf-8"),
@@ -481,11 +469,13 @@ def _call_claude_image(image_data: bytes, image_type: str, language: str) -> dic
         method="POST",
     )
     try:
-        with request.urlopen(api_request, timeout=45) as response:
-            raw = json.loads(response.read().decode("utf-8"))
+        with request.urlopen(api_request, timeout=timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
     except (OSError, error.HTTPError, json.JSONDecodeError):
         return None
 
+
+def _parse_message_json(raw: dict) -> dict | None:
     content = raw.get("content") or []
     text_block = ""
     for block in content:
