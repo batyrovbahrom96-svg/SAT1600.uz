@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from datetime import datetime, time
 
@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models import ReadingAnalysis, User
-from app.services.reading_analyzer import analyze_reading_passage, public_shared_analysis, user_has_active_pro
+from app.services.reading_analyzer import analyze_reading_image, analyze_reading_passage, public_shared_analysis, user_has_active_pro
 
 router = APIRouter(prefix="/api", tags=["reading-analyzer"])
 
@@ -31,7 +31,34 @@ async def analyze_passage(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if result.get("limit_reached"):
-        raise HTTPException(status_code=403, detail=result["message"])
+        raise HTTPException(status_code=403, detail={"error": result["message"]})
+    return result
+
+
+@router.post("/reading-analyzer/analyze")
+async def analyze_text_alias(
+    payload: PassageInput,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    return await analyze_passage(payload, db, current_user)
+
+
+@router.post("/reading-analyzer/analyze-image")
+async def analyze_image(
+    file: UploadFile = File(...),
+    language: str = Form("uz"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    contents = await file.read()
+    try:
+        result = analyze_reading_image(db, current_user, contents, file.content_type or "", language)
+    except ValueError as exc:
+        error_key = str(exc)
+        raise HTTPException(status_code=400, detail={"error": error_key}) from exc
+    if result.get("limit_reached"):
+        raise HTTPException(status_code=403, detail={"error": result["message"]})
     return result
 
 
@@ -61,6 +88,7 @@ def reading_analyzer_history(
             "is_pro": row.is_pro_snapshot,
             "passage_type": (row.analysis or {}).get("passage_type", "SAT Passage"),
             "difficulty": (row.analysis or {}).get("difficulty", "Medium"),
+            "input_type": row.input_type,
         }
         for row in rows
     ]

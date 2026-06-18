@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS reading_analyses (
   share_id VARCHAR(32) NOT NULL UNIQUE,
   language VARCHAR(16) NOT NULL DEFAULT 'uz',
   source_text TEXT NOT NULL,
+  input_type VARCHAR(16) NOT NULL DEFAULT 'text',
   analysis JSONB NOT NULL DEFAULT '{}',
   is_pro_snapshot BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -19,3 +20,6 @@ CREATE INDEX IF NOT EXISTS ix_reading_analyses_user_created
 
 CREATE INDEX IF NOT EXISTS ix_reading_analyses_share_id
   ON reading_analyses(share_id);
+
+ALTER TABLE reading_analyses
+  ADD COLUMN IF NOT EXISTS input_type VARCHAR(16) NOT NULL DEFAULT 'text';

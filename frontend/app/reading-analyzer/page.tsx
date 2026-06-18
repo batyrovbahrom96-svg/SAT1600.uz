@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Clipboard, Loader2, Search, Sparkles, Star, Zap } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { ApiError, analyzePassage, getReadingAnalyzerStats, getToken, type ReadingAnalysisResponse } from "@/lib/api";
+import { ApiError, analyzePassage, analyzePassageImage, getReadingAnalyzerStats, getToken, type ReadingAnalysisResponse } from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
 
 const TRANSLATIONS = {
@@ -19,6 +20,10 @@ const TRANSLATIONS = {
     char_count: "characters",
     min_hint: "Min 50 characters",
     paste: "Paste",
+    text_tab: "📝 Text",
+    photo_tab: "📸 Photo",
+    image_title: "Upload screenshot of passage",
+    image_cta: "🔍 Analyze This Image",
     examples: ["📚 Literature Example", "🔬 Science Example", "📜 History Example"],
     trust: ["🔒 Your text is not stored", "⚡ Results in 3 seconds", "🤖 Powered by Claude AI"],
     features: ["Claude AI", "3 Languages", "SAT-specific", "Instant"],
@@ -27,8 +32,16 @@ const TRANSLATIONS = {
     loading_2: "Finding key vocabulary...",
     loading_3: "Generating questions...",
     loading_4: "Almost ready...",
+    image_loading_1: "Extracting text from image...",
+    image_loading_2: "Reading the passage...",
+    image_loading_3: "Analyzing content...",
+    image_loading_4: "Almost ready...",
     short: "Please paste at least 50 characters.",
     limit: "Free limit reached. Upgrade to Pro for unlimited analyses.",
+    image_required: "Please upload or paste a screenshot first.",
+    no_text_found: "Could not read text from this image. Please try a clearer screenshot or paste the text directly.",
+    image_too_large: "Image too large. Please use image under 10MB.",
+    invalid_file_type: "Please upload JPG, PNG or WEBP image.",
     social_today: "passages analyzed today",
     social_rating: "rating from students",
     social_students: "Used by 500+ SAT students",
@@ -44,6 +57,10 @@ const TRANSLATIONS = {
     char_count: "символов",
     min_hint: "Минимум 50 символов",
     paste: "Вставить",
+    text_tab: "📝 Текст",
+    photo_tab: "📸 Фото",
+    image_title: "Загрузите скриншот текста",
+    image_cta: "🔍 Анализировать изображение",
     examples: ["📚 Пример литературы", "🔬 Пример науки", "📜 Пример истории"],
     trust: ["🔒 Текст не сохраняется публично", "⚡ Результат за 3 секунды", "🤖 Анализ от Claude AI"],
     features: ["Claude AI", "3 языка", "Для SAT", "Мгновенно"],
@@ -52,8 +69,16 @@ const TRANSLATIONS = {
     loading_2: "Ищем ключевые слова...",
     loading_3: "Генерируем вопросы...",
     loading_4: "Почти готово...",
+    image_loading_1: "Извлекаем текст из изображения...",
+    image_loading_2: "Читаем текст...",
+    image_loading_3: "Анализируем содержание...",
+    image_loading_4: "Почти готово...",
     short: "Вставьте минимум 50 символов.",
     limit: "Бесплатный лимит исчерпан. Получите Pro для безлимита.",
+    image_required: "Сначала загрузите или вставьте скриншот.",
+    no_text_found: "Не удалось прочитать текст. Попробуйте более чёткий скриншот.",
+    image_too_large: "Файл слишком большой. Используйте до 10МБ.",
+    invalid_file_type: "Загрузите JPG, PNG или WEBP.",
     social_today: "текстов проанализировано сегодня",
     social_rating: "оценка студентов",
     social_students: "Используют 500+ SAT студентов",
@@ -69,6 +94,10 @@ const TRANSLATIONS = {
     char_count: "belgi",
     min_hint: "Kamida 50 belgi",
     paste: "Joylash",
+    text_tab: "📝 Matn",
+    photo_tab: "📸 Rasm",
+    image_title: "Passage screenshotini yuklang",
+    image_cta: "🔍 Bu rasmni tahlil qilish",
     examples: ["📚 Adabiyot misoli", "🔬 Fan misoli", "📜 Tarix misoli"],
     trust: ["🔒 Matningiz ommaviy saqlanmaydi", "⚡ Natija 3 soniyada", "🤖 Claude AI bilan"],
     features: ["Claude AI", "3 Til", "SAT uchun", "Darhol"],
@@ -77,8 +106,16 @@ const TRANSLATIONS = {
     loading_2: "Muhim so'zlar aniqlanmoqda...",
     loading_3: "Savollar tayyorlanmoqda...",
     loading_4: "Deyarli tayyor...",
+    image_loading_1: "Rasmdan matn olinmoqda...",
+    image_loading_2: "Matn o'qilmoqda...",
+    image_loading_3: "Mazmun tahlil qilinmoqda...",
+    image_loading_4: "Deyarli tayyor...",
     short: "Kamida 50 belgi joylashtiring.",
     limit: "Bepul limit tugadi. Cheksiz tahlil uchun Pro oling.",
+    image_required: "Avval screenshot yuklang yoki joylashtiring.",
+    no_text_found: "Rasmdan matn o'qib bo'lmadi. Aniqroq screenshot yuboring.",
+    image_too_large: "Rasm juda katta. 10MB gacha yuklang.",
+    invalid_file_type: "JPG, PNG yoki WEBP yuklang.",
     social_today: "matn bugun tahlil qilindi",
     social_rating: "o'quvchilar bahosi",
     social_students: "500+ SAT o'quvchi ishlatadi",
@@ -96,14 +133,20 @@ export default function ReadingAnalyzerPage() {
   const { language } = useLanguage();
   const copy = TRANSLATIONS[language];
   const [text, setText] = useState("");
+  const [inputMode, setInputMode] = useState<"text" | "image">("text");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(0);
   const [error, setError] = useState("");
   const [remaining, setRemaining] = useState<number | null>(3);
   const [stats, setStats] = useState({ today: 127, rating: 4.9, total: 500 });
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const loadingMessages = useMemo(() => [copy.loading_1, copy.loading_2, copy.loading_3, copy.loading_4] as string[], [copy]);
+  const loadingMessages = useMemo(() => {
+    if (inputMode === "image") return [copy.image_loading_1, copy.image_loading_2, copy.image_loading_3, copy.image_loading_4] as string[];
+    return [copy.loading_1, copy.loading_2, copy.loading_3, copy.loading_4] as string[];
+  }, [copy, inputMode]);
   const ready = text.trim().length >= 50;
+  const canAnalyze = inputMode === "text" ? ready : Boolean(imageFile);
 
   useEffect(() => {
     getReadingAnalyzerStats().then(setStats).catch(() => undefined);
@@ -121,19 +164,25 @@ export default function ReadingAnalyzerPage() {
       router.push(`/login?next=/reading-analyzer?lang=${language}`);
       return;
     }
-    if (!ready) {
+    if (inputMode === "text" && !ready) {
       setError(copy.short as string);
+      return;
+    }
+    if (inputMode === "image" && !imageFile) {
+      setError(copy.image_required as string);
       return;
     }
     setIsLoading(true);
     try {
-      const result = await analyzePassage({ text, language });
+      const result = inputMode === "image" && imageFile
+        ? await analyzePassageImage({ file: imageFile, language })
+        : await analyzePassage({ text, language });
       setRemaining(result.remaining_free ?? null);
       saveResult(result);
       router.push(`/reading-analyzer/result?lang=${language}`);
     } catch (caught) {
-      if (caught instanceof ApiError && caught.status === 403) {
-        setError(copy.limit as string);
+      if (caught instanceof ApiError) {
+        setError(errorMessage(caught, copy));
       } else {
         setError(caught instanceof Error ? caught.message : "Unable to analyze this passage.");
       }
@@ -194,25 +243,43 @@ export default function ReadingAnalyzerPage() {
             ))}
           </div>
 
-          <div className="relative mt-5">
-            <textarea
-              className="min-h-[240px] w-full resize-y border border-white/10 bg-black/35 p-4 pb-12 text-base font-light leading-7 text-white outline-none transition-colors placeholder:text-white/28 focus:border-[#FFD700]/70 sm:min-h-[300px]"
-              maxLength={9000}
-              onChange={(event) => setText(event.target.value)}
-              placeholder={copy.input_placeholder as string}
-              ref={textareaRef}
-              value={text}
-            />
-            <div className="absolute bottom-3 left-4 text-xs font-semibold text-white/35">{copy.min_hint as string}</div>
-            <div className="absolute bottom-3 right-4 text-xs text-white/35">{text.length}/9000 {copy.char_count as string}</div>
+          <div className="mt-5 grid grid-cols-2 overflow-hidden border border-white/10">
+            <button className={["min-h-12 text-sm font-black uppercase tracking-[0.12em] transition", inputMode === "text" ? "bg-[#FFD700] text-black" : "bg-black/20 text-white/55 hover:text-white"].join(" ")} onClick={() => setInputMode("text")} type="button">
+              {copy.text_tab as string}
+            </button>
+            <button className={["min-h-12 text-sm font-black uppercase tracking-[0.12em] transition", inputMode === "image" ? "bg-[#FFD700] text-black" : "bg-black/20 text-white/55 hover:text-white"].join(" ")} onClick={() => setInputMode("image")} type="button">
+              {copy.photo_tab as string}
+            </button>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <button className="inline-flex min-h-11 items-center gap-2 border border-white/10 bg-black/20 px-4 text-sm font-bold text-white/62 hover:border-white/30 hover:text-white" onClick={pasteFromClipboard} type="button">
-              <Clipboard size={16} /> {copy.paste as string}
-            </button>
-            <div className="text-sm font-semibold text-[#FFD700]">{(copy.remaining as (count: number | null) => string)(remaining)}</div>
-          </div>
+          {inputMode === "text" ? (
+            <>
+              <div className="relative mt-5">
+                <textarea
+                  className="min-h-[240px] w-full resize-y border border-white/10 bg-black/35 p-4 pb-12 text-base font-light leading-7 text-white outline-none transition-colors placeholder:text-white/28 focus:border-[#FFD700]/70 sm:min-h-[300px]"
+                  maxLength={9000}
+                  onChange={(event) => setText(event.target.value)}
+                  placeholder={copy.input_placeholder as string}
+                  ref={textareaRef}
+                  value={text}
+                />
+                <div className="absolute bottom-3 left-4 text-xs font-semibold text-white/35">{copy.min_hint as string}</div>
+                <div className="absolute bottom-3 right-4 text-xs text-white/35">{text.length}/9000 {copy.char_count as string}</div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <button className="inline-flex min-h-11 items-center gap-2 border border-white/10 bg-black/20 px-4 text-sm font-bold text-white/62 hover:border-white/30 hover:text-white" onClick={pasteFromClipboard} type="button">
+                  <Clipboard size={16} /> {copy.paste as string}
+                </button>
+                <div className="text-sm font-semibold text-[#FFD700]">{(copy.remaining as (count: number | null) => string)(remaining)}</div>
+              </div>
+            </>
+          ) : (
+            <div className="mt-5">
+              <p className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-white/45">{copy.image_title as string}</p>
+              <ImageUpload lang={language} onImageSelect={setImageFile} />
+              <div className="mt-3 text-sm font-semibold text-[#FFD700]">{(copy.remaining as (count: number | null) => string)(remaining)}</div>
+            </div>
+          )}
 
           <div className="mt-4 grid gap-2 text-sm text-white/50 sm:grid-cols-3">
             {(copy.trust as string[]).map((item) => <span className="border border-white/10 bg-black/20 px-3 py-2" key={item}>{item}</span>)}
@@ -227,11 +294,11 @@ export default function ReadingAnalyzerPage() {
             </div>
           ) : (
             <button
-              className={["mt-5 flex min-h-14 w-full items-center justify-center gap-3 border border-[#FFD700] bg-[#FFD700] px-5 text-sm font-black uppercase tracking-[0.16em] text-black transition hover:bg-transparent hover:text-[#FFD700]", ready ? "animate-pulse" : "opacity-60"].join(" ")}
+              className={["mt-5 flex min-h-14 w-full items-center justify-center gap-3 border border-[#FFD700] bg-[#FFD700] px-5 text-sm font-black uppercase tracking-[0.16em] text-black transition hover:bg-transparent hover:text-[#FFD700]", canAnalyze ? "animate-pulse" : "opacity-60"].join(" ")}
               onClick={submit}
               type="button"
             >
-              {copy.analyze_button as string} <ArrowRight size={18} />
+              {(inputMode === "image" ? copy.image_cta : copy.analyze_button) as string} <ArrowRight size={18} />
             </button>
           )}
         </article>
@@ -253,4 +320,15 @@ function saveResult(result: ReadingAnalysisResponse) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem("sattest_reading_analysis_latest", JSON.stringify(result));
   window.localStorage.setItem("sattest_reading_analysis_expiry", String(Date.now() + 24 * 60 * 60 * 1000));
+}
+
+function errorMessage(error: ApiError, copy: Record<string, unknown>) {
+  const message = error.message || "";
+  if (error.status === 403) return copy.limit as string;
+  if (message.includes("limit_reached")) return copy.limit as string;
+  if (message.includes("no_text_found")) return copy.no_text_found as string;
+  if (message.includes("image_too_large")) return copy.image_too_large as string;
+  if (message.includes("invalid_file_type")) return copy.invalid_file_type as string;
+  if (message.includes("text_too_short")) return copy.short as string;
+  return message;
 }

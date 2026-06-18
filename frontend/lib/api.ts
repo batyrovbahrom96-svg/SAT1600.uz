@@ -77,10 +77,16 @@ export type PaymentOrder = {
 export type ReadingAnalysis = {
   main_idea: {
     one_sentence?: string;
+    one_sentence_en?: string;
+    one_sentence_ru?: string;
+    one_sentence_uz?: string;
     detailed_uz?: string;
     detailed_ru?: string;
     detailed_en?: string;
     sat_connection?: string;
+    sat_connection_en?: string;
+    sat_connection_ru?: string;
+    sat_connection_uz?: string;
     uzbek?: string;
     russian?: string;
     english?: string;
@@ -91,7 +97,13 @@ export type ReadingAnalysis = {
     definition_ru?: string;
     definition_en?: string;
     in_context?: string;
+    in_context_en?: string;
+    in_context_ru?: string;
+    in_context_uz?: string;
     memory_trick?: string;
+    memory_trick_en?: string;
+    memory_trick_ru?: string;
+    memory_trick_uz?: string;
     sat_frequency?: string;
     example?: string;
   }>;
@@ -102,11 +114,20 @@ export type ReadingAnalysis = {
     definition_en?: string;
     example?: string;
     in_context?: string;
+    in_context_en?: string;
+    in_context_ru?: string;
+    in_context_uz?: string;
     memory_trick?: string;
+    memory_trick_en?: string;
+    memory_trick_ru?: string;
+    memory_trick_uz?: string;
     sat_frequency?: string;
   }>;
   tone: {
     primary?: string;
+    primary_en?: string;
+    primary_ru?: string;
+    primary_uz?: string;
     percentage?: number;
     type?: string;
     explanation_uz?: string;
@@ -115,6 +136,9 @@ export type ReadingAnalysis = {
   };
   purpose: {
     primary?: string;
+    primary_en?: string;
+    primary_ru?: string;
+    primary_uz?: string;
     percentage?: number;
     type?: string;
     explanation_uz?: string;
@@ -166,6 +190,9 @@ export type ReadingAnalysis = {
     week3_ru?: string;
     week3_en?: string;
     predicted_improvement?: string;
+    predicted_improvement_en?: string;
+    predicted_improvement_ru?: string;
+    predicted_improvement_uz?: string;
   };
   difficulty?: string;
   passage_type?: string;
@@ -180,6 +207,7 @@ export type ReadingAnalysisResponse = {
   remaining_free?: number | null;
   analysis: ReadingAnalysis;
   source_text: string;
+  input_type?: "text" | "image";
   created_at: string;
 };
 
@@ -236,12 +264,13 @@ function formatApiErrorDetail(detail: unknown) {
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const hasBody = options.body !== undefined;
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...options,
       headers: {
-        ...(hasBody ? { "Content-Type": "application/json" } : {}),
+        ...(hasBody && !isFormData ? { "Content-Type": "application/json" } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers
       }
@@ -286,9 +315,19 @@ export async function getPaymentOrder(reference: string) {
 }
 
 export async function analyzePassage(payload: { text: string; language: "uz" | "ru" | "en" }) {
-  return api<ReadingAnalysisResponse>("/api/analyze-passage", {
+  return api<ReadingAnalysisResponse>("/api/reading-analyzer/analyze", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+}
+
+export async function analyzePassageImage(payload: { file: File; language: "uz" | "ru" | "en" }) {
+  const formData = new FormData();
+  formData.append("file", payload.file);
+  formData.append("language", payload.language);
+  return api<ReadingAnalysisResponse>("/api/reading-analyzer/analyze-image", {
+    method: "POST",
+    body: formData,
   });
 }
 

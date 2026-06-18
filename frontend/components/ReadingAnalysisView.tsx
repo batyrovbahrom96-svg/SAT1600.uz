@@ -217,7 +217,7 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
         <TopBar analysis={analysis} copy={copy} />
         <AnalysisCard icon={<Lightbulb size={22} />} title={copy.main_idea}>
           <p className="text-base font-light leading-7 text-white/72">{mainDetailed(analysis, language)}</p>
-          <p className="mt-4 border-t border-white/10 pt-4 text-lg font-semibold text-white">{analysis.main_idea.one_sentence}</p>
+          <p className="mt-4 border-t border-white/10 pt-4 text-lg font-semibold text-white">{oneSentence(analysis, language)}</p>
         </AnalysisCard>
         <div className="border border-[#FFD700]/25 bg-[#FFD700]/10 p-6 text-center">
           <p className="text-xl font-semibold text-white">{copy.full_analysis}</p>
@@ -263,10 +263,10 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
         <p className="text-base font-light leading-7 text-white/75">{mainDetailed(analysis, language)}</p>
         <div className="mt-5 border-t border-white/10 pt-5">
           <p className="text-sm font-black uppercase tracking-[0.2em] text-white/35">{copy.one_sentence}</p>
-          <p className="mt-2 text-xl font-semibold leading-8 text-white">"{analysis.main_idea.one_sentence}"</p>
+          <p className="mt-2 text-xl font-semibold leading-8 text-white">"{oneSentence(analysis, language)}"</p>
         </div>
         <div className="mt-5 border border-[#FFD700]/20 bg-[#FFD700]/10 p-4 text-sm leading-6 text-white/70">
-          <span className="font-bold text-[#FFD700]">{copy.sat_connection}:</span> {analysis.main_idea.sat_connection}
+          <span className="font-bold text-[#FFD700]">{copy.sat_connection}:</span> {satConnection(analysis, language)}
         </div>
       </AnalysisCard>
 
@@ -276,8 +276,8 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
             <div className="border border-white/10 bg-black/20 p-4" key={`${item.word}-${item.in_context || item.example}`}>
               <p className="text-xl font-semibold text-white">WORD: "{item.word}"</p>
               <p className="mt-3 text-sm leading-6 text-white/64">📖 <b>{copy.definition}:</b> {wordDefinition(item, language)}</p>
-              <p className="mt-2 text-sm leading-6 text-white/56">💬 <b>{copy.in_context}:</b> {item.in_context || item.example}</p>
-              <p className="mt-2 text-sm leading-6 text-white/56">🧠 <b>{copy.memory}:</b> {item.memory_trick}</p>
+              <p className="mt-2 text-sm leading-6 text-white/56">💬 <b>{copy.in_context}:</b> {wordContext(item, language)}</p>
+              <p className="mt-2 text-sm leading-6 text-white/56">🧠 <b>{copy.memory}:</b> {wordMemory(item, language)}</p>
               <p className="mt-2 text-sm font-semibold text-[#FFD700]">⭐ {copy.frequency}: {translateFrequency(item.sat_frequency, copy)}</p>
             </div>
           )) : <p className="text-white/55">{copy.no_vocabulary}</p>}
@@ -286,8 +286,8 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
 
       <AnalysisCard icon={<Theater size={22} />} title={copy.tone_purpose}>
         <div className="grid gap-4 md:grid-cols-2">
-          <Meter label={copy.tone} value={analysis.tone.primary || analysis.tone.type || "Informative"} percent={analysis.tone.percentage || 75} body={localizedExplanation(analysis.tone, language)} />
-          <Meter label={copy.purpose} value={analysis.purpose.primary || analysis.purpose.type || "To inform"} percent={analysis.purpose.percentage || 65} body={localizedExplanation(analysis.purpose, language)} />
+          <Meter label={copy.tone} value={localizedPrimary(analysis.tone, language, "Informative")} percent={analysis.tone.percentage || 75} body={localizedExplanation(analysis.tone, language)} />
+          <Meter label={copy.purpose} value={localizedPrimary(analysis.purpose, language, "To inform")} percent={analysis.purpose.percentage || 65} body={localizedExplanation(analysis.purpose, language)} />
         </div>
         <div className="mt-4 border border-white/10 bg-black/20 p-4">
           <p className="text-sm font-black uppercase tracking-[0.2em] text-white/35">{copy.author_view}</p>
@@ -341,7 +341,7 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
             <InfoPill label={copy.week1} value={planWeek(analysis, language, 1)} />
             <InfoPill label={copy.week2} value={planWeek(analysis, language, 2)} />
             <InfoPill label={copy.week3} value={planWeek(analysis, language, 3)} />
-            <InfoPill label={copy.score_impact} value={analysis.improvement_plan?.predicted_improvement || "+30 points"} />
+            <InfoPill label={copy.score_impact} value={planImpact(analysis, language)} />
           </div>
         ) : (
           <LockedBlock copy={{ ...copy, locked_questions: copy.locked_plan }} />
@@ -408,16 +408,46 @@ function mainDetailed(analysis: ReadingAnalysis, language: Language) {
   return analysis.main_idea.detailed_uz || analysis.main_idea.uzbek || analysis.main_idea.english || "";
 }
 
+function oneSentence(analysis: ReadingAnalysis, language: Language) {
+  if (language === "ru") return analysis.main_idea.one_sentence_ru || analysis.main_idea.one_sentence || analysis.main_idea.detailed_ru || "";
+  if (language === "en") return analysis.main_idea.one_sentence_en || analysis.main_idea.one_sentence || analysis.main_idea.detailed_en || "";
+  return analysis.main_idea.one_sentence_uz || analysis.main_idea.one_sentence || analysis.main_idea.detailed_uz || "";
+}
+
+function satConnection(analysis: ReadingAnalysis, language: Language) {
+  if (language === "ru") return analysis.main_idea.sat_connection_ru || analysis.main_idea.sat_connection || "";
+  if (language === "en") return analysis.main_idea.sat_connection_en || analysis.main_idea.sat_connection || "";
+  return analysis.main_idea.sat_connection_uz || analysis.main_idea.sat_connection || "";
+}
+
 function localizedExplanation(value: ReadingAnalysis["tone"] | ReadingAnalysis["purpose"], language: Language) {
   if (language === "ru") return value?.explanation_ru || value?.explanation_en || value?.explanation_uz || "";
   if (language === "en") return value?.explanation_en || value?.explanation_uz || value?.explanation_ru || "";
   return value?.explanation_uz || value?.explanation_en || value?.explanation_ru || "";
 }
 
+function localizedPrimary(value: ReadingAnalysis["tone"] | ReadingAnalysis["purpose"], language: Language, fallback: string) {
+  if (language === "ru") return value?.primary_ru || value?.primary_en || value?.primary || value?.type || fallback;
+  if (language === "en") return value?.primary_en || value?.primary || value?.type || fallback;
+  return value?.primary_uz || value?.primary_en || value?.primary || value?.type || fallback;
+}
+
 function wordDefinition(item: NonNullable<ReadingAnalysis["vocabulary"]>[number], language: Language) {
   if (language === "ru") return item.definition_ru || item.definition_en || item.definition_uz || "";
   if (language === "en") return item.definition_en || item.definition_uz || item.definition_ru || "";
   return item.definition_uz || item.definition_en || item.definition_ru || "";
+}
+
+function wordContext(item: NonNullable<ReadingAnalysis["vocabulary"]>[number], language: Language) {
+  if (language === "ru") return item.in_context_ru || item.in_context_en || item.in_context || item.example || "";
+  if (language === "en") return item.in_context_en || item.in_context || item.example || "";
+  return item.in_context_uz || item.in_context_en || item.in_context || item.example || "";
+}
+
+function wordMemory(item: NonNullable<ReadingAnalysis["vocabulary"]>[number], language: Language) {
+  if (language === "ru") return item.memory_trick_ru || item.memory_trick_en || item.memory_trick || "";
+  if (language === "en") return item.memory_trick_en || item.memory_trick || "";
+  return item.memory_trick_uz || item.memory_trick_en || item.memory_trick || "";
 }
 
 function strategyDo(analysis: ReadingAnalysis, language: Language) {
@@ -442,6 +472,12 @@ function planWeek(analysis: ReadingAnalysis, language: Language, week: 1 | 2 | 3
   const key = `week${week}_${language}` as keyof NonNullable<ReadingAnalysis["improvement_plan"]>;
   const fallback = `week${week}_en` as keyof NonNullable<ReadingAnalysis["improvement_plan"]>;
   return String(analysis.improvement_plan?.[key] || analysis.improvement_plan?.[fallback] || "");
+}
+
+function planImpact(analysis: ReadingAnalysis, language: Language) {
+  if (language === "ru") return analysis.improvement_plan?.predicted_improvement_ru || analysis.improvement_plan?.predicted_improvement_en || analysis.improvement_plan?.predicted_improvement || "+30 баллов";
+  if (language === "en") return analysis.improvement_plan?.predicted_improvement_en || analysis.improvement_plan?.predicted_improvement || "+30 points";
+  return analysis.improvement_plan?.predicted_improvement_uz || analysis.improvement_plan?.predicted_improvement_en || analysis.improvement_plan?.predicted_improvement || "+30 ball";
 }
 
 function translateDifficulty(value: string | undefined, copy: Record<string, string>) {

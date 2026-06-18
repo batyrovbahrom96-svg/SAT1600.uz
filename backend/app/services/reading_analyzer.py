@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from datetime import datetime, timezone
 import json
 import re
@@ -14,6 +15,8 @@ from app.models import ReadingAnalysis, Subscription, User
 
 FREE_DAILY_ANALYSES = 3
 MAX_INPUT_CHARS = 9000
+MAX_IMAGE_BYTES = 10 * 1024 * 1024
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 
 SYSTEM_PROMPT = """
 You are an expert SAT Reading tutor with SAT score 1540.
@@ -25,12 +28,19 @@ Return ONLY valid JSON with this EXACT structure:
   "passage_type": "Literature/Science/History/Social Science",
   "difficulty": "Easy/Medium/Hard",
   "reading_time": "X minutes",
+  "word_count": 150,
   "main_idea": {
     "one_sentence": "One clear sentence summary",
+    "one_sentence_en": "One clear sentence summary in English",
+    "one_sentence_ru": "One clear sentence summary in Russian",
+    "one_sentence_uz": "One clear sentence summary in Uzbek",
     "detailed_uz": "Detailed in Uzbek",
     "detailed_ru": "Detailed in Russian",
     "detailed_en": "Detailed in English",
-    "sat_connection": "How many times this appears on SAT"
+    "sat_connection": "How many times this appears on SAT",
+    "sat_connection_en": "SAT relevance in English",
+    "sat_connection_ru": "SAT relevance in Russian",
+    "sat_connection_uz": "SAT relevance in Uzbek"
   },
   "vocabulary": [
     {
@@ -39,12 +49,21 @@ Return ONLY valid JSON with this EXACT structure:
       "definition_ru": "definition",
       "definition_en": "definition",
       "in_context": "how used here",
+      "in_context_en": "how used in passage",
+      "in_context_ru": "how used in Russian",
+      "in_context_uz": "how used in Uzbek",
       "memory_trick": "remember trick",
+      "memory_trick_en": "trick to remember",
+      "memory_trick_ru": "trick in Russian",
+      "memory_trick_uz": "trick in Uzbek",
       "sat_frequency": "High/Medium/Low"
     }
   ],
   "tone": {
     "primary": "Formal/Informal/Persuasive/Informative",
+    "primary_en": "Formal",
+    "primary_ru": "Formal in Russian",
+    "primary_uz": "Formal in Uzbek",
     "percentage": 75,
     "explanation_uz": "...",
     "explanation_ru": "...",
@@ -52,6 +71,9 @@ Return ONLY valid JSON with this EXACT structure:
   },
   "purpose": {
     "primary": "To inform/persuade/entertain/describe",
+    "primary_en": "To inform",
+    "primary_ru": "To inform in Russian",
+    "primary_uz": "To inform in Uzbek",
     "percentage": 65,
     "explanation_uz": "...",
     "explanation_ru": "...",
@@ -96,7 +118,8 @@ Return ONLY valid JSON with this EXACT structure:
     "week3_ru": "Week 3 task in Russian",
     "week3_en": "Week 3 task in English",
     "predicted_improvement": "+X points"
-  }
+  },
+  "extracted_text": "Full text extracted from image if image input"
 }
 
 Be thorough, specific, and helpful for SAT preparation. All explanations must be genuinely useful.
@@ -141,8 +164,8 @@ def reset_all_daily_analysis_limits(db: Session) -> int:
 
 def analyze_reading_passage(db: Session, user: User, text: str, language: str) -> dict:
     clean_text = " ".join(text.strip().split())
-    if len(clean_text) < 20:
-        raise ValueError("Passage is too short. Paste at least one full SAT sentence.")
+    if len(clean_text) < 50:
+        raise ValueError("text_too_short")
     if len(clean_text) > MAX_INPUT_CHARS:
         raise ValueError("Passage is too long. Please paste a shorter passage.")
 
@@ -157,12 +180,44 @@ def analyze_reading_passage(db: Session, user: User, text: str, language: str) -
             "is_pro": False,
         }
 
-    analysis = _call_claude(clean_text, normalized_language) or _fallback_analysis(clean_text)
+    analysis = _call_claude_text(clean_text, normalized_language) or _fallback_analysis(clean_text)
+    return _finish_analysis(db, user, clean_text, normalized_language, is_pro, analysis, "text")
+
+
+def analyze_reading_image(db: Session, user: User, image_data: bytes, image_type: str, language: str) -> dict:
+    normalized_type = (image_type or "").lower()
+    if normalized_type not in ALLOWED_IMAGE_TYPES:
+        raise ValueError("invalid_file_type")
+    if len(image_data) > MAX_IMAGE_BYTES:
+        raise ValueError("image_too_large")
+
+    normalized_language = normalize_language(language)
+    is_pro = user_has_active_pro(db, user)
+    reset_user_daily_counter_if_needed(user)
+    if not is_pro and (user.daily_analyses or 0) >= FREE_DAILY_ANALYSES:
+        return {
+            "limit_reached": True,
+            "message": "limit_reached",
+            "remaining_free": 0,
+            "is_pro": False,
+        }
+
+    analysis = _call_claude_image(image_data, normalized_type, normalized_language)
+    if not analysis or analysis.get("error") == "no_text_found":
+        raise ValueError("no_text_found")
+    extracted_text = str(analysis.get("extracted_text") or "").strip()
+    source_text = extracted_text or "Image passage"
+    return _finish_analysis(db, user, source_text, normalized_language, is_pro, analysis, "image")
+
+
+def _finish_analysis(db: Session, user: User, source_text: str, language: str, is_pro: bool, analysis: dict, input_type: str) -> dict:
     analysis = _normalize_analysis(analysis)
     if not is_pro:
         analysis["vocabulary"] = analysis["vocabulary"][:3]
         analysis["difficult_words"] = analysis["vocabulary"]
+        analysis["vocabulary_locked"] = True
         analysis["practice_questions"] = "LOCKED"
+        analysis["improvement_plan_locked"] = True
 
     user.daily_analyses = (user.daily_analyses or 0) + (0 if is_pro else 1)
     user.last_analysis_date = datetime.utcnow()
@@ -172,8 +227,9 @@ def analyze_reading_passage(db: Session, user: User, text: str, language: str) -
     row = ReadingAnalysis(
         user_id=user.id,
         share_id=share_id,
-        language=normalized_language,
-        source_text=clean_text,
+        language=language,
+        source_text=source_text,
+        input_type=input_type,
         analysis=analysis,
         is_pro_snapshot=is_pro,
     )
@@ -188,7 +244,8 @@ def analyze_reading_passage(db: Session, user: User, text: str, language: str) -
         "is_pro": is_pro,
         "remaining_free": None if is_pro else max(0, FREE_DAILY_ANALYSES - (user.daily_analyses or 0)),
         "analysis": analysis,
-        "source_text": clean_text,
+        "source_text": source_text,
+        "input_type": input_type,
         "created_at": row.created_at.isoformat(),
     }
 
@@ -207,17 +264,18 @@ def public_shared_analysis(db: Session, share_id: str) -> dict | None:
         "source_text": row.source_text,
         "created_at": row.created_at.isoformat(),
         "is_pro": row.is_pro_snapshot,
+        "input_type": row.input_type,
     }
 
 
-def _call_claude(text: str, language: str) -> dict | None:
+def _call_claude_text(text: str, language: str) -> dict | None:
     settings = get_settings()
     if not settings.anthropic_api_key:
         return None
 
     payload = {
         "model": settings.anthropic_model,
-        "max_tokens": 2200,
+        "max_tokens": 3000,
         "system": SYSTEM_PROMPT,
         "messages": [
             {
@@ -256,6 +314,66 @@ def _call_claude(text: str, language: str) -> dict | None:
     return _parse_json_text(text_block)
 
 
+def _call_claude_image(image_data: bytes, image_type: str, language: str) -> dict | None:
+    settings = get_settings()
+    if not settings.anthropic_api_key:
+        return None
+
+    image_base64 = base64.standard_b64encode(image_data).decode("utf-8")
+    payload = {
+        "model": settings.anthropic_model,
+        "max_tokens": 3000,
+        "system": SYSTEM_PROMPT,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": image_type,
+                            "data": image_base64,
+                        },
+                    },
+                    {
+                        "type": "text",
+                        "text": (
+                            "This image contains a SAT reading passage or text. "
+                            "Extract and read all visible text carefully, analyze it as SAT Reading, "
+                            f"use language preference {language}, and return complete JSON. "
+                            "If the image does not contain readable text, return {\"error\":\"no_text_found\"}."
+                        ),
+                    },
+                ],
+            }
+        ],
+    }
+    api_request = request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": settings.anthropic_api_key,
+            "anthropic-version": "2023-06-01",
+            "User-Agent": "SATTEST.UZ-ReadingAnalyzer/1.0",
+        },
+        method="POST",
+    )
+    try:
+        with request.urlopen(api_request, timeout=45) as response:
+            raw = json.loads(response.read().decode("utf-8"))
+    except (OSError, error.HTTPError, json.JSONDecodeError):
+        return None
+
+    content = raw.get("content") or []
+    text_block = ""
+    for block in content:
+        if isinstance(block, dict) and block.get("type") == "text":
+            text_block += str(block.get("text") or "")
+    return _parse_json_text(text_block)
+
+
 def _parse_json_text(value: str) -> dict | None:
     clean = value.strip()
     if clean.startswith("```"):
@@ -278,11 +396,17 @@ def _normalize_analysis(analysis: dict) -> dict:
     legacy_uz = legacy_main.get("uzbek") or legacy_main.get("detailed_uz")
     legacy_ru = legacy_main.get("russian") or legacy_main.get("detailed_ru")
     legacy_en = legacy_main.get("english") or legacy_main.get("detailed_en")
-    legacy_main.setdefault("one_sentence", legacy_en or legacy_uz or "The passage develops a central SAT idea.")
+    legacy_main.setdefault("one_sentence", legacy_main.get("one_sentence_en") or legacy_en or legacy_uz or "The passage develops a central SAT idea.")
+    legacy_main.setdefault("one_sentence_en", legacy_main.get("one_sentence") or legacy_en or "The passage develops a central SAT idea.")
+    legacy_main.setdefault("one_sentence_ru", legacy_main.get("one_sentence") or legacy_ru or "Отрывок развивает главную мысль.")
+    legacy_main.setdefault("one_sentence_uz", legacy_main.get("one_sentence") or legacy_uz or "Matn asosiy fikrni rivojlantiradi.")
     legacy_main.setdefault("detailed_uz", legacy_uz or "Passage asosiy fikrni tushuntiradi va muallifning markaziy da'vosini ko'rsatadi.")
     legacy_main.setdefault("detailed_ru", legacy_ru or "Отрывок объясняет главную мысль и центральную позицию автора.")
     legacy_main.setdefault("detailed_en", legacy_en or "The passage explains the central idea and the author's main point.")
     legacy_main.setdefault("sat_connection", "This passage type appears regularly on SAT Reading and Writing questions.")
+    legacy_main.setdefault("sat_connection_en", legacy_main.get("sat_connection"))
+    legacy_main.setdefault("sat_connection_ru", legacy_main.get("sat_connection"))
+    legacy_main.setdefault("sat_connection_uz", legacy_main.get("sat_connection"))
     legacy_main["uzbek"] = legacy_main["detailed_uz"]
     legacy_main["russian"] = legacy_main["detailed_ru"]
     legacy_main["english"] = legacy_main["detailed_en"]
@@ -291,14 +415,23 @@ def _normalize_analysis(analysis: dict) -> dict:
     for item in vocabulary if isinstance(vocabulary, list) else []:
         if not isinstance(item, dict):
             continue
-        item.setdefault("in_context", item.get("example") or "Use the surrounding sentence to confirm meaning.")
-        item.setdefault("memory_trick", "Connect this word to the author's purpose.")
+        item.setdefault("in_context", item.get("in_context_en") or item.get("example") or "Use the surrounding sentence to confirm meaning.")
+        item.setdefault("in_context_en", item.get("in_context") or item.get("example") or "Use the surrounding sentence to confirm meaning.")
+        item.setdefault("in_context_ru", item.get("in_context") or item.get("example") or "Проверьте значение по соседним словам.")
+        item.setdefault("in_context_uz", item.get("in_context") or item.get("example") or "Ma'noni atrofdagi so'zlardan tekshiring.")
+        item.setdefault("memory_trick", item.get("memory_trick_en") or "Connect this word to the author's purpose.")
+        item.setdefault("memory_trick_en", item.get("memory_trick"))
+        item.setdefault("memory_trick_ru", item.get("memory_trick"))
+        item.setdefault("memory_trick_uz", item.get("memory_trick"))
         item.setdefault("sat_frequency", "Medium")
         normalized_vocabulary.append(item)
     analysis["vocabulary"] = normalized_vocabulary
     analysis["difficult_words"] = normalized_vocabulary
     analysis.setdefault("tone", {})
     analysis["tone"].setdefault("primary", analysis["tone"].get("type") or "Informative")
+    analysis["tone"].setdefault("primary_en", analysis["tone"].get("primary") or "Informative")
+    analysis["tone"].setdefault("primary_ru", analysis["tone"].get("primary") or "Информативный")
+    analysis["tone"].setdefault("primary_uz", analysis["tone"].get("primary") or "Ma'lumot beruvchi")
     analysis["tone"].setdefault("type", analysis["tone"].get("primary") or "Informative")
     analysis["tone"].setdefault("percentage", 75)
     analysis["tone"].setdefault("explanation_uz", "Matn rasmiy va tushuntiruvchi ohangda yozilgan.")
@@ -306,6 +439,9 @@ def _normalize_analysis(analysis: dict) -> dict:
     analysis["tone"].setdefault("explanation_en", "The text uses a formal, explanatory tone.")
     analysis.setdefault("purpose", {})
     analysis["purpose"].setdefault("primary", analysis["purpose"].get("type") or "To inform")
+    analysis["purpose"].setdefault("primary_en", analysis["purpose"].get("primary") or "To inform")
+    analysis["purpose"].setdefault("primary_ru", analysis["purpose"].get("primary") or "Информировать")
+    analysis["purpose"].setdefault("primary_uz", analysis["purpose"].get("primary") or "Ma'lumot berish")
     analysis["purpose"].setdefault("type", analysis["purpose"].get("primary") or "To inform")
     analysis["purpose"].setdefault("percentage", 65)
     analysis["purpose"].setdefault("explanation_uz", "Maqsad o'quvchiga g'oya yoki dalilni tushuntirish.")
@@ -350,6 +486,9 @@ def _normalize_analysis(analysis: dict) -> dict:
     analysis["improvement_plan"].setdefault("week3_ru", "Увеличьте скорость через timed mini-tests.")
     analysis["improvement_plan"].setdefault("week3_en", "Improve speed with timed mini-tests.")
     analysis["improvement_plan"].setdefault("predicted_improvement", "+30 points")
+    analysis["improvement_plan"].setdefault("predicted_improvement_en", analysis["improvement_plan"].get("predicted_improvement") or "+30 points")
+    analysis["improvement_plan"].setdefault("predicted_improvement_ru", analysis["improvement_plan"].get("predicted_improvement") or "+30 баллов")
+    analysis["improvement_plan"].setdefault("predicted_improvement_uz", analysis["improvement_plan"].get("predicted_improvement") or "+30 ball")
     analysis.setdefault("difficulty", "Medium")
     analysis.setdefault("passage_type", "Social Science")
     analysis.setdefault("reading_time", "2 minutes")
