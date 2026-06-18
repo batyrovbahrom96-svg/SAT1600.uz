@@ -10,7 +10,13 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models import ReadingAnalysis, User
-from app.services.reading_analyzer import analyze_reading_image, analyze_reading_passage, public_shared_analysis, user_has_active_pro
+from app.services.reading_analyzer import (
+    analyze_reading_image,
+    analyze_reading_passage,
+    extract_text_from_reading_image,
+    public_shared_analysis,
+    user_has_active_pro,
+)
 
 router = APIRouter(prefix="/api", tags=["reading-analyzer"])
 
@@ -60,6 +66,21 @@ async def analyze_image(
     if result.get("limit_reached"):
         raise HTTPException(status_code=403, detail={"error": result["message"]})
     return result
+
+
+@router.post("/reading-analyzer/test-image-reading")
+async def test_image_reading(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    contents = await file.read()
+    try:
+        extracted_text = extract_text_from_reading_image(contents, file.content_type or "")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail={"error": str(exc)}) from exc
+    if not extracted_text:
+        raise HTTPException(status_code=400, detail={"error": "image_error"})
+    return {"extracted_text": extracted_text}
 
 
 @router.get("/reading-analyzer/history")

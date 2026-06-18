@@ -16,7 +16,7 @@ from app.models import ReadingAnalysis, Subscription, User
 FREE_DAILY_ANALYSES = 3
 MAX_INPUT_CHARS = 9000
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
-ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
 
 SYSTEM_PROMPT = """
 You are an expert SAT Reading tutor with SAT score 1540. You have 10 years of teaching experience.
@@ -228,11 +228,11 @@ def analyze_reading_passage(db: Session, user: User, text: str, language: str) -
 
 
 def analyze_reading_image(db: Session, user: User, image_data: bytes, image_type: str, language: str) -> dict:
-    normalized_type = (image_type or "").lower()
-    if normalized_type not in ALLOWED_IMAGE_TYPES:
-        raise ValueError("invalid_file_type")
     if len(image_data) > MAX_IMAGE_BYTES:
         raise ValueError("image_too_large")
+    normalized_type = _detect_image_type(image_data, image_type)
+    if normalized_type not in ALLOWED_IMAGE_TYPES:
+        raise ValueError("invalid_file_type")
 
     normalized_language = normalize_language(language)
     is_pro = user_has_active_pro(db, user)
@@ -246,11 +246,64 @@ def analyze_reading_image(db: Session, user: User, image_data: bytes, image_type
         }
 
     analysis = _call_claude_image(image_data, normalized_type, normalized_language)
-    if not analysis or analysis.get("error") == "no_text_found":
-        raise ValueError("no_text_found")
+    if not analysis or not analysis.get("main_idea"):
+        raise ValueError("image_error")
     extracted_text = str(analysis.get("extracted_text") or "").strip()
     source_text = extracted_text or "Image passage"
     return _finish_analysis(db, user, source_text, normalized_language, is_pro, analysis, "image")
+
+
+def extract_text_from_reading_image(image_data: bytes, image_type: str) -> str | None:
+    if len(image_data) > MAX_IMAGE_BYTES:
+        raise ValueError("image_too_large")
+    normalized_type = _detect_image_type(image_data, image_type)
+    if normalized_type not in ALLOWED_IMAGE_TYPES:
+        raise ValueError("invalid_file_type")
+
+    settings = get_settings()
+    if not settings.anthropic_api_key:
+        return None
+    image_base64 = base64.standard_b64encode(image_data).decode("utf-8")
+    payload = {
+        "model": settings.anthropic_model,
+        "max_tokens": 1200,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {"type": "base64", "media_type": normalized_type, "data": image_base64},
+                    },
+                    {
+                        "type": "text",
+                        "text": "Please read and return ALL text visible in this image. Return just the text, nothing else.",
+                    },
+                ],
+            }
+        ],
+    }
+    api_request = request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": settings.anthropic_api_key,
+            "anthropic-version": "2023-06-01",
+            "User-Agent": "SATTEST.UZ-ReadingAnalyzer/1.0",
+        },
+        method="POST",
+    )
+    try:
+        with request.urlopen(api_request, timeout=35) as response:
+            raw = json.loads(response.read().decode("utf-8"))
+    except (OSError, error.HTTPError, json.JSONDecodeError):
+        return None
+    text = ""
+    for block in raw.get("content") or []:
+        if isinstance(block, dict) and block.get("type") == "text":
+            text += str(block.get("text") or "")
+    return text.strip() or None
 
 
 def _finish_analysis(db: Session, user: User, source_text: str, language: str, is_pro: bool, analysis: dict, input_type: str) -> dict:
@@ -318,6 +371,23 @@ def public_shared_analysis(db: Session, share_id: str) -> dict | None:
     }
 
 
+def _detect_image_type(image_data: bytes, image_type: str | None) -> str:
+    content_type = (image_type or "").split(";")[0].strip().lower()
+    if content_type == "image/jpg":
+        content_type = "image/jpeg"
+    if content_type in ALLOWED_IMAGE_TYPES:
+        return content_type
+    if image_data.startswith(b"\xff\xd8"):
+        return "image/jpeg"
+    if image_data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if image_data.startswith(b"RIFF") and image_data[8:12] == b"WEBP":
+        return "image/webp"
+    if image_data.startswith(b"GIF87a") or image_data.startswith(b"GIF89a"):
+        return "image/gif"
+    return content_type or "image/jpeg"
+
+
 def _call_claude_text(text: str, language: str) -> dict | None:
     settings = get_settings()
     if not settings.anthropic_api_key:
@@ -372,7 +442,7 @@ def _call_claude_image(image_data: bytes, image_type: str, language: str) -> dic
     image_base64 = base64.standard_b64encode(image_data).decode("utf-8")
     payload = {
         "model": settings.anthropic_model,
-        "max_tokens": 3000,
+        "max_tokens": 4000,
         "system": SYSTEM_PROMPT,
         "messages": [
             {
@@ -388,12 +458,7 @@ def _call_claude_image(image_data: bytes, image_type: str, language: str) -> dic
                     },
                     {
                         "type": "text",
-                        "text": (
-                            "This image contains a SAT reading passage or text. "
-                            "Extract and read all visible text carefully, analyze it as SAT Reading, "
-                            f"use language preference {language}, and return complete JSON. "
-                            "If the image does not contain readable text, return {\"error\":\"no_text_found\"}."
-                        ),
+                        "text": _image_analysis_prompt(language),
                     },
                 ],
             }
@@ -424,20 +489,119 @@ def _call_claude_image(image_data: bytes, image_type: str, language: str) -> dic
     return _parse_json_text(text_block)
 
 
+def _image_analysis_prompt(language: str) -> str:
+    return f"""
+Please look at this image carefully.
+
+This image contains a SAT Reading passage and/or questions.
+
+YOUR TASK:
+1. Read ALL text visible in the image.
+2. Extract EVERY word accurately.
+3. Analyze it as SAT content.
+4. Solve every visible question.
+5. If a vocabulary question asks about "trace", remember that in the phrase "no trace of their passing to be left", the best meaning is evidence.
+
+IMPORTANT:
+- Read the text even if it is small.
+- Include the passage text in extracted_text.
+- Include any questions shown.
+- Include any answer choices shown.
+- If the image is difficult, extract the readable parts and continue with the analysis.
+
+Language preference: {language}
+
+Return ONLY valid JSON matching the system prompt schema. Include:
+- extracted_text
+- full_translation in Uzbek and Russian
+- main_idea in English, Russian, Uzbek
+- vocabulary
+- tone and purpose
+- how_to_approach
+- questions_solved with correct_answer, thinking_process, why_correct, why_wrong, evidence_line, and tips
+- sat_strategy
+- improvement_plan
+"""
+
+
 def _parse_json_text(value: str) -> dict | None:
-    clean = value.strip()
-    if clean.startswith("```"):
-        clean = re.sub(r"^```(?:json)?\s*", "", clean)
-        clean = re.sub(r"\s*```$", "", clean)
-    start = clean.find("{")
-    end = clean.rfind("}")
+    original = value.strip()
+    for candidate in _json_candidates(original):
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            continue
+    repaired = _repair_json_with_claude(original)
+    if repaired:
+        return repaired
+    return None
+
+
+def _json_candidates(value: str) -> list[str]:
+    candidates = [value]
+    if "```json" in value:
+        start = value.find("```json") + len("```json")
+        end = value.rfind("```")
+        if end > start:
+            candidates.append(value[start:end].strip())
+    if "```" in value:
+        fenced = re.sub(r"^```(?:json)?\s*", "", value.strip())
+        fenced = re.sub(r"\s*```$", "", fenced)
+        candidates.append(fenced.strip())
+    start = value.find("{")
+    end = value.rfind("}")
     if start >= 0 and end > start:
-        clean = clean[start : end + 1]
-    try:
-        parsed = json.loads(clean)
-        return parsed if isinstance(parsed, dict) else None
-    except json.JSONDecodeError:
+        candidates.append(value[start : end + 1])
+    return [candidate for index, candidate in enumerate(candidates) if candidate and candidate not in candidates[:index]]
+
+
+def _repair_json_with_claude(value: str) -> dict | None:
+    settings = get_settings()
+    if not settings.anthropic_api_key or not value:
         return None
+    payload = {
+        "model": settings.anthropic_model,
+        "max_tokens": 4000,
+        "messages": [
+            {
+                "role": "user",
+                "content": (
+                    "This JSON is malformed. Fix it and return ONLY valid JSON. "
+                    "No explanation needed.\n\n"
+                    f"{value[:3000]}"
+                ),
+            }
+        ],
+    }
+    api_request = request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": settings.anthropic_api_key,
+            "anthropic-version": "2023-06-01",
+            "User-Agent": "SATTEST.UZ-ReadingAnalyzer/1.0",
+        },
+        method="POST",
+    )
+    try:
+        with request.urlopen(api_request, timeout=35) as response:
+            raw = json.loads(response.read().decode("utf-8"))
+    except (OSError, error.HTTPError, json.JSONDecodeError):
+        return None
+    text_block = ""
+    for block in raw.get("content") or []:
+        if isinstance(block, dict) and block.get("type") == "text":
+            text_block += str(block.get("text") or "")
+    for candidate in _json_candidates(text_block):
+        try:
+            parsed = json.loads(candidate)
+            return parsed if isinstance(parsed, dict) else None
+        except json.JSONDecodeError:
+            continue
+    return None
 
 
 def _normalize_analysis(analysis: dict) -> dict:

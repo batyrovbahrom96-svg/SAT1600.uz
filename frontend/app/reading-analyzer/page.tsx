@@ -39,7 +39,8 @@ const TRANSLATIONS = {
     short: "Please paste at least 50 characters.",
     limit: "Free limit reached. Upgrade to Pro for unlimited analyses.",
     image_required: "Please upload or paste a screenshot first.",
-    no_text_found: "Could not read text from this image. Please try a clearer screenshot or paste the text directly.",
+    no_text_found: "Could not read this image. Please try: 1) Take a clearer screenshot 2) Make sure text is visible 3) Or paste the text directly",
+    image_error: "Could not read this image. Please try: 1) Take a clearer screenshot 2) Make sure text is visible 3) Or paste the text directly",
     image_too_large: "Image too large. Please use image under 10MB.",
     invalid_file_type: "Please upload JPG, PNG or WEBP image.",
     social_today: "passages analyzed today",
@@ -76,7 +77,8 @@ const TRANSLATIONS = {
     short: "Вставьте минимум 50 символов.",
     limit: "Бесплатный лимит исчерпан. Получите Pro для безлимита.",
     image_required: "Сначала загрузите или вставьте скриншот.",
-    no_text_found: "Не удалось прочитать текст. Попробуйте более чёткий скриншот.",
+    no_text_found: "Не удалось прочитать изображение. Попробуйте: 1) Более чёткий скриншот 2) Убедитесь что текст виден 3) Или вставьте текст напрямую",
+    image_error: "Не удалось прочитать изображение. Попробуйте: 1) Более чёткий скриншот 2) Убедитесь что текст виден 3) Или вставьте текст напрямую",
     image_too_large: "Файл слишком большой. Используйте до 10МБ.",
     invalid_file_type: "Загрузите JPG, PNG или WEBP.",
     social_today: "текстов проанализировано сегодня",
@@ -113,7 +115,8 @@ const TRANSLATIONS = {
     short: "Kamida 50 belgi joylashtiring.",
     limit: "Bepul limit tugadi. Cheksiz tahlil uchun Pro oling.",
     image_required: "Avval screenshot yuklang yoki joylashtiring.",
-    no_text_found: "Rasmdan matn o'qib bo'lmadi. Aniqroq screenshot yuboring.",
+    no_text_found: "Rasmni o'qib bo'lmadi. Sinab ko'ring: 1) Aniqroq screenshot 2) Matn ko'rinishini tekshiring 3) Yoki matnni to'g'ridan joylashtiring",
+    image_error: "Rasmni o'qib bo'lmadi. Sinab ko'ring: 1) Aniqroq screenshot 2) Matn ko'rinishini tekshiring 3) Yoki matnni to'g'ridan joylashtiring",
     image_too_large: "Rasm juda katta. 10MB gacha yuklang.",
     invalid_file_type: "JPG, PNG yoki WEBP yuklang.",
     social_today: "matn bugun tahlil qilindi",
@@ -355,6 +358,7 @@ function errorMessage(error: ApiError, copy: Record<string, unknown>) {
   const message = error.message || "";
   if (error.status === 403) return copy.limit as string;
   if (message.includes("limit_reached")) return copy.limit as string;
+  if (message.includes("image_error")) return copy.image_error as string;
   if (message.includes("no_text_found")) return copy.no_text_found as string;
   if (message.includes("image_too_large")) return copy.image_too_large as string;
   if (message.includes("invalid_file_type")) return copy.invalid_file_type as string;
