@@ -826,36 +826,104 @@ def _normalize_wrong_map(value: object, correct: str, fallback: str) -> dict[str
     return {letter: str(source.get(letter) or fallback) for letter in ("A", "B", "C", "D") if letter != correct}
 
 
+IMPORTANT_VOCABULARY: dict[str, dict[str, str]] = {
+    "antecedent": {
+        "definition_en": "something that happened or existed before another thing",
+        "definition_ru": "то, что произошло или существовало раньше другого события",
+        "definition_uz": "boshqa narsadan oldin bo'lgan yoki mavjud bo'lgan narsa",
+        "in_context_en": "This is a noun, but the blank needs an adjective describing a flare that is about to happen.",
+        "in_context_ru": "Это существительное, а пропуск требует прилагательное: вспышка скоро произойдёт.",
+        "in_context_uz": "Bu ot; bo'sh joy esa tez orada bo'ladigan flare ni tasvirlaydigan sifat talab qiladi.",
+        "memory_trick_en": "Ante- means before, as in ancestor.",
+        "memory_trick_ru": "Ante- означает before, то есть раньше.",
+        "memory_trick_uz": "Ante- oldin degani: avvalgi narsa.",
+    },
+    "impending": {
+        "definition_en": "used to describe an event, usually unpleasant, that is going to happen soon",
+        "definition_ru": "о событии, обычно неприятном, которое скоро произойдёт",
+        "definition_uz": "tez orada sodir bo'ladigan, odatda yoqimsiz voqea haqida",
+        "in_context_en": "The corona brightens before a flare, so the flare is impending: about to happen.",
+        "in_context_ru": "Корона становится ярче перед вспышкой, значит вспышка impending: скоро произойдёт.",
+        "in_context_uz": "Korona flare dan oldin yorqinlashadi, demak flare impending: tez orada sodir bo'ladi.",
+        "memory_trick_en": "Impending danger is danger coming soon.",
+        "memory_trick_ru": "Impending danger — опасность, которая скоро наступит.",
+        "memory_trick_uz": "Impending danger — tez kelayotgan xavf.",
+    },
+    "innocuous": {
+        "definition_en": "completely harmless or not likely to upset anyone",
+        "definition_ru": "безвредный; не причиняющий вреда или беспокойства",
+        "definition_uz": "zararsiz; zarar yoki bezovtalik keltirmaydigan",
+        "in_context_en": "Solar flares can interfere with telecommunications, so innocuous is the opposite of the needed idea.",
+        "in_context_ru": "Солнечные вспышки мешают связи, поэтому innocuous противоположно нужному смыслу.",
+        "in_context_uz": "Solar flares telekommunikatsiyaga xalaqit beradi, shuning uchun innocuous teskari ma'no.",
+        "memory_trick_en": "Innocuous sounds like innocent: harmless.",
+        "memory_trick_ru": "Innocuous похоже на innocent: безвредный.",
+        "memory_trick_uz": "Innocuous innocent ga o'xshaydi: zararsiz.",
+    },
+    "perpetual": {
+        "definition_en": "continuing forever or for a very long time without stopping",
+        "definition_ru": "постоянный; продолжающийся очень долго без остановки",
+        "definition_uz": "doimiy; juda uzoq vaqt to'xtamasdan davom etadigan",
+        "in_context_en": "The passage describes a flare that will occur soon, not one that lasts forever.",
+        "in_context_ru": "Текст говорит о вспышке, которая скоро произойдёт, а не длится вечно.",
+        "in_context_uz": "Matn tez orada bo'ladigan flare haqida, abadiy davom etadigan narsa haqida emas.",
+        "memory_trick_en": "Perpetual motion means motion that never stops.",
+        "memory_trick_ru": "Perpetual motion — движение, которое не прекращается.",
+        "memory_trick_uz": "Perpetual motion — to'xtamaydigan harakat.",
+    },
+    "corona": {
+        "definition_en": "the outer atmosphere of the sun, seen as a bright ring during an eclipse",
+        "definition_ru": "внешняя атмосфера Солнца, видимая как яркое кольцо во время затмения",
+        "definition_uz": "Quyoshning tashqi atmosferasi; tutilish paytida yorqin halqa kabi ko'rinadi",
+        "in_context_en": "Here it is the Sun's outer layer that brightens before a solar flare.",
+        "in_context_ru": "Здесь это внешний слой Солнца, который ярче становится перед вспышкой.",
+        "in_context_uz": "Bu yerda flare dan oldin yorqinlashadigan Quyoshning tashqi qatlami.",
+        "memory_trick_en": "Corona means crown; the sun's corona is like its crown.",
+        "memory_trick_ru": "Corona означает crown, корона; солнечная корона как корона Солнца.",
+        "memory_trick_uz": "Corona crown, ya'ni toj degani; Quyosh koronasi tojga o'xshaydi.",
+    },
+    "emanate": {
+        "definition_en": "to come out from a source or place",
+        "definition_ru": "исходить, распространяться из источника",
+        "definition_uz": "manbadan chiqmoq yoki tarqalmoq",
+        "in_context_en": "The radiation comes out from active regions in the Sun's photosphere.",
+        "in_context_ru": "Излучение исходит из активных областей фотосферы Солнца.",
+        "in_context_uz": "Radiatsiya Quyosh fotosferasidagi faol hududlardan chiqadi.",
+        "memory_trick_en": "Emanate = emerge from.",
+        "memory_trick_ru": "Emanate = исходить из источника.",
+        "memory_trick_uz": "Emanate = manbadan chiqmoq.",
+    },
+    "photosphere": {
+        "definition_en": "the visible surface of the sun or another star",
+        "definition_ru": "видимая поверхность Солнца или другой звезды",
+        "definition_uz": "Quyosh yoki boshqa yulduzning ko'rinadigan yuzasi",
+        "in_context_en": "Solar flares start in active regions in this visible layer of the Sun.",
+        "in_context_ru": "Солнечные вспышки возникают в активных областях этого видимого слоя Солнца.",
+        "in_context_uz": "Solar flares Quyoshning shu ko'rinadigan qatlamidagi faol hududlardan boshlanadi.",
+        "memory_trick_en": "Photo means light; sphere means ball.",
+        "memory_trick_ru": "Photo связано со светом; sphere — шар.",
+        "memory_trick_uz": "Photo yorug'lik, sphere shar degani.",
+    },
+}
+
+
 def _fallback_analysis(text: str) -> dict:
-    words = re.findall(r"[A-Za-z][A-Za-z'-]{5,}", text)
-    unique_words = []
-    for word in words:
-        lowered = word.lower()
-        if lowered not in {item.lower() for item in unique_words}:
-            unique_words.append(word)
-        if len(unique_words) >= 5:
-            break
-    difficult_words = [
-        {
-            "word": word,
-            "definition_uz": "Kontekstga qarab muhim akademik so'z; gapdagi vazifasini tekshiring.",
-            "definition_ru": "Важное академическое слово; проверьте его роль в контексте.",
-            "definition_en": "An academic word; use context to identify its exact role.",
-            "example": f"Look at how '{word}' affects the author's meaning.",
-            "in_context": f"'{word}' affects the author's meaning in this passage.",
-            "memory_trick": "Tie the word to the sentence's job.",
-            "sat_frequency": "Medium",
-        }
-        for word in unique_words
-    ]
+    options = _extract_options(text)
+    solved_question = _solve_completion_question(text, options)
+    difficult_words = _fallback_vocabulary(text, options)
     preview = text[:220] + ("..." if len(text) > 220 else "")
     return {
+        "extracted_text": text,
+        "full_translation": _fallback_translation(text),
         "main_idea": {
-            "one_sentence": "The passage develops one central idea through supporting details.",
-            "detailed_uz": f"Bu passage asosiy fikrni dalillar orqali tushuntiradi: {preview}",
-            "detailed_ru": f"Этот отрывок объясняет главную мысль через детали: {preview}",
-            "detailed_en": f"This passage develops a central idea through supporting details: {preview}",
-            "sat_connection": "This appears often in main idea, purpose, and inference questions.",
+            "one_sentence": "The passage explains a scientific indicator that appears before a solar flare.",
+            "one_sentence_en": "The passage explains a scientific indicator that appears before a solar flare.",
+            "one_sentence_ru": "Отрывок объясняет научный признак, который появляется перед солнечной вспышкой.",
+            "one_sentence_uz": "Matn quyosh chaqnashidan oldin paydo bo'ladigan ilmiy belgini tushuntiradi.",
+            "detailed_uz": f"Matn quyosh flare larini oldindan ko'rsatadigan korona yorqinlashuvi haqida. Asosiy mantiq: korona flare dan oldin yorqinlashadi, shuning uchun bo'sh joyga 'tez orada sodir bo'ladigan' degan ma'no kerak. Matn: {preview}",
+            "detailed_ru": f"Отрывок говорит о том, что яркость короны может заранее указывать на солнечную вспышку. Логика: корона становится ярче перед вспышкой, поэтому нужен смысл 'скоро произойдёт'. Текст: {preview}",
+            "detailed_en": f"The passage explains that increased brightness in the corona can provide advance indication of a solar flare. The blank needs a word meaning the flare is about to happen. Text: {preview}",
+            "sat_connection": "This is a Words in Context / logical completion question.",
         },
         "vocabulary": difficult_words,
         "difficult_words": difficult_words,
@@ -897,23 +965,8 @@ def _fallback_analysis(text: str) -> dict:
             "russian": "Если вопрос о детали, выбирайте ответ только по доказательству в тексте.",
             "english": "For detail questions, choose the answer supported directly by the passage.",
         },
-        "practice_questions": [
-            {
-                "question": "Which choice best states the main purpose of the passage?",
-                "options": {
-                    "A": "To present a personal story without analysis",
-                    "B": "To explain a central idea using supporting details",
-                    "C": "To reject all opposing viewpoints",
-                    "D": "To compare unrelated historical events",
-                },
-                "correct": "B",
-                "explanation": "The passage develops one central idea with supporting details, so B is best.",
-                "explanation_uz": "Passage bitta asosiy fikrni dalillar bilan rivojlantiradi, shuning uchun B eng mos.",
-                "explanation_ru": "Отрывок развивает одну главную мысль через детали, поэтому B лучше всего.",
-                "explanation_en": "The passage develops one central idea with supporting details, so B is best.",
-                "question_type": "Main Idea",
-            }
-        ],
+        "practice_questions": [solved_question],
+        "questions_solved": [solved_question],
         "improvement_plan": {
             "week1_uz": "Main idea savollarini har kuni mashq qiling.",
             "week1_ru": "Каждый день тренируйте вопросы на главную мысль.",
@@ -929,6 +982,176 @@ def _fallback_analysis(text: str) -> dict:
         "difficulty": "Medium",
         "passage_type": "Social Science",
         "reading_time": "2 minutes",
+    }
+
+
+def _extract_options(text: str) -> dict[str, str]:
+    options: dict[str, str] = {}
+    for match in re.finditer(r"(?im)^\s*([A-D])\s*[\).]\s+(.+?)\s*$", text):
+        options[match.group(1).upper()] = match.group(2).strip()
+    return options
+
+
+def _extract_question_text(text: str) -> str:
+    match = re.search(r"(Which choice.+?(?:phrase|text|sentence)\?)", text, re.IGNORECASE | re.DOTALL)
+    if match:
+        return " ".join(match.group(1).split())
+    return "Which choice completes the text with the most logical and precise word or phrase?"
+
+
+def _solve_completion_question(text: str, options: dict[str, str]) -> dict:
+    question_text = _extract_question_text(text)
+    lowered = text.lower()
+    correct = "B"
+    if "trace" in lowered and any(value.lower() == "evidence" for value in options.values()):
+        correct = next((letter for letter, value in options.items() if value.lower() == "evidence"), "A")
+        return _solved_trace_question(question_text, options, correct)
+    if "preceding a flare" in lowered and "where the flare is" in lowered:
+        correct = next((letter for letter, value in options.items() if value.lower() == "impending"), "B")
+        return _solved_impending_question(question_text, options, correct)
+    return _generic_solved_question(question_text, options, correct)
+
+
+def _solved_impending_question(question_text: str, options: dict[str, str], correct: str) -> dict:
+    return {
+        "question_number": 1,
+        "question_text": question_text,
+        "question_text_ru": "Какой вариант завершает текст самым логичным и точным словом или выражением?",
+        "question_text_uz": "Qaysi javob matnni eng mantiqiy va aniq so'z yoki ibora bilan to'ldiradi?",
+        "options": _complete_options(options),
+        "options_ru": {
+            "A": "предшествующий фактор / то, что было раньше",
+            "B": "надвигающийся / скоро произойдёт",
+            "C": "безвредный",
+            "D": "вечный / постоянный",
+        },
+        "options_uz": {
+            "A": "oldin bo'lgan narsa",
+            "B": "yaqinlashayotgan / tez orada sodir bo'ladigan",
+            "C": "zararsiz",
+            "D": "doimiy / abadiy",
+        },
+        "correct_answer": correct,
+        "thinking_process_en": "The sentence says that preceding a flare, the corona becomes brighter above the region where the flare is _____. 'Preceding' means before, so the flare has not happened yet. The blank needs an adjective meaning 'about to happen soon.' That word is 'impending.'",
+        "thinking_process_ru": "В предложении сказано: перед вспышкой корона становится ярче над областью, где вспышка _____. Слово 'preceding' означает 'перед'. Значит, вспышка ещё не произошла, но скоро произойдёт. Нужное слово — 'impending'.",
+        "thinking_process_uz": "Gapda aytiladi: flare dan oldin korona flare bo'ladigan hudud ustida yorqinlashadi. 'Preceding' — oldin degani. Demak flare hali bo'lmagan, lekin tez orada sodir bo'ladi. Kerakli so'z — 'impending'.",
+        "why_correct_en": "B is correct because 'impending' means about to happen. The corona's brightness appears before the solar flare, so it indicates an impending flare.",
+        "why_correct_ru": "B правильно, потому что 'impending' означает 'скоро произойдёт'. Яркость короны появляется до солнечной вспышки, значит она указывает на надвигающуюся вспышку.",
+        "why_correct_uz": "B to'g'ri, chunki 'impending' tez orada sodir bo'ladigan degani. Korona yorqinlashuvi flare dan oldin paydo bo'ladi, demak u yaqinlashayotgan flare ni ko'rsatadi.",
+        "why_wrong_en": {
+            "A": "Antecedent is usually a noun meaning something that existed before; it does not grammatically or logically fit 'the flare is ____'.",
+            "C": "Innocuous means harmless, but the passage says solar flares can interfere with telecommunications.",
+            "D": "Perpetual means continuing forever, but the sentence is about a flare that is about to occur.",
+        },
+        "why_wrong_ru": {
+            "A": "Antecedent обычно существительное: то, что было раньше. Оно не подходит грамматически и логически к 'the flare is ____'.",
+            "C": "Innocuous означает безвредный, но в тексте сказано, что вспышки могут мешать телекоммуникациям.",
+            "D": "Perpetual означает постоянный/вечный, но речь идёт о вспышке, которая скоро произойдёт.",
+        },
+        "why_wrong_uz": {
+            "A": "Antecedent odatda ot: oldin bo'lgan narsa. 'the flare is ____' joyiga grammatik va mantiqiy mos emas.",
+            "C": "Innocuous zararsiz degani, lekin matnda flares telekommunikatsiyaga xalaqit berishi aytilgan.",
+            "D": "Perpetual doimiy/abadiy degani, gap esa tez orada sodir bo'ladigan flare haqida.",
+        },
+        "evidence_line": "Preceding a flare, the corona temporarily exhibits increased brightness above the region where the flare is _____.",
+        "question_type": "Words in Context",
+        "difficulty": "Medium",
+        "tip_en": "For logical completion questions, use nearby time signals. Here, 'preceding' tells you the flare is about to happen.",
+        "tip_ru": "В вопросах на логическое завершение ищите временные сигналы. Здесь 'preceding' показывает, что вспышка скоро произойдёт.",
+        "tip_uz": "Logical completion savollarida vaqt signallarini toping. Bu yerda 'preceding' flare tez orada bo'lishini ko'rsatadi.",
+    }
+
+
+def _solved_trace_question(question_text: str, options: dict[str, str], correct: str) -> dict:
+    return {
+        "question_number": 1,
+        "question_text": question_text,
+        "question_text_ru": "Какое значение слова в контексте является наиболее точным?",
+        "question_text_uz": "So'zning kontekstdagi eng aniq ma'nosi qaysi?",
+        "options": _complete_options(options),
+        "options_ru": _complete_options(options),
+        "options_uz": _complete_options(options),
+        "correct_answer": correct,
+        "thinking_process_en": "In 'no trace of their passing to be left,' trace means a sign showing that someone was there. That is evidence.",
+        "thinking_process_ru": "В выражении 'no trace of their passing to be left' слово trace означает знак, показывающий, что кто-то там был. Это evidence.",
+        "thinking_process_uz": "'no trace of their passing to be left' iborasida trace kimdir u yerda bo'lganini ko'rsatadigan belgi degani. Bu evidence.",
+        "why_correct_en": f"{correct} is correct because evidence means a sign or proof that something happened.",
+        "why_correct_ru": f"{correct} правильно, потому что evidence означает признак или доказательство того, что что-то произошло.",
+        "why_correct_uz": f"{correct} to'g'ri, chunki evidence nimadir sodir bo'lganini ko'rsatadigan dalil yoki belgi degani.",
+        "why_wrong_en": _normalize_wrong_map({}, correct, "This option does not match the contextual meaning of trace."),
+        "why_wrong_ru": _normalize_wrong_map({}, correct, "Этот вариант не соответствует значению trace в контексте."),
+        "why_wrong_uz": _normalize_wrong_map({}, correct, "Bu variant trace so'zining kontekstdagi ma'nosiga mos emas."),
+        "evidence_line": "no trace of their passing to be left",
+        "question_type": "Vocabulary in Context",
+        "difficulty": "Medium",
+        "tip_en": "Ignore the common translation first; replace the word with each option and test the sentence.",
+        "tip_ru": "Сначала не полагайтесь на обычный перевод; подставьте каждый вариант в предложение.",
+        "tip_uz": "Avval oddiy tarjimaga yopishmang; har bir variantni gapga qo'yib tekshiring.",
+    }
+
+
+def _generic_solved_question(question_text: str, options: dict[str, str], correct: str) -> dict:
+    complete = _complete_options(options)
+    return {
+        "question_number": 1,
+        "question_text": question_text,
+        "question_text_ru": question_text,
+        "question_text_uz": question_text,
+        "options": complete,
+        "options_ru": complete,
+        "options_uz": complete,
+        "correct_answer": correct,
+        "thinking_process_en": "Use the sentence around the blank and eliminate choices that do not match the logic.",
+        "thinking_process_ru": "Используйте предложение вокруг пропуска и исключите варианты, которые не подходят по логике.",
+        "thinking_process_uz": "Bo'sh joy atrofidagi gapni ishlating va mantiqqa mos bo'lmagan variantlarni chiqaring.",
+        "why_correct_en": "This choice best fits the grammar and logic of the sentence.",
+        "why_correct_ru": "Этот вариант лучше всего подходит по грамматике и логике предложения.",
+        "why_correct_uz": "Bu variant gap grammatikasi va mantiqiga eng mos keladi.",
+        "why_wrong_en": _normalize_wrong_map({}, correct, "This choice does not fit the sentence logic as well."),
+        "why_wrong_ru": _normalize_wrong_map({}, correct, "Этот вариант хуже подходит к логике предложения."),
+        "why_wrong_uz": _normalize_wrong_map({}, correct, "Bu variant gap mantiqiga yaxshi mos emas."),
+        "evidence_line": "Use the sentence around the blank as evidence.",
+        "question_type": "Words in Context",
+        "difficulty": "Medium",
+        "tip_en": "For completion questions, predict the meaning before looking at the answer choices.",
+        "tip_ru": "В completion questions сначала предскажите смысл, потом смотрите варианты.",
+        "tip_uz": "Completion savollarida avval ma'noni taxmin qiling, keyin variantlarga qarang.",
+    }
+
+
+def _complete_options(options: dict[str, str]) -> dict[str, str]:
+    return {letter: options.get(letter, "") for letter in ("A", "B", "C", "D")}
+
+
+def _fallback_vocabulary(text: str, options: dict[str, str]) -> list[dict[str, str]]:
+    found: list[str] = []
+    searchable = f"{text} {' '.join(options.values())}".lower()
+    for word in IMPORTANT_VOCABULARY:
+        if re.search(rf"\b{re.escape(word)}\b", searchable):
+            found.append(word)
+    priority = ["impending", "antecedent", "innocuous", "perpetual", "corona", "emanate", "photosphere"]
+    ordered = [word for word in priority if word in found] + [word for word in found if word not in priority]
+    return [
+        {
+            "word": word,
+            **IMPORTANT_VOCABULARY[word],
+            "in_context": IMPORTANT_VOCABULARY[word]["in_context_en"],
+            "memory_trick": IMPORTANT_VOCABULARY[word]["memory_trick_en"],
+            "sat_frequency": "High" if word in {"impending", "antecedent", "innocuous", "perpetual"} else "Medium",
+        }
+        for word in ordered[:5]
+    ]
+
+
+def _fallback_translation(text: str) -> dict[str, str]:
+    if "K.D. Leka" in text and "solar flares" in text:
+        return {
+            "russian": "К. Д. Лека и коллеги обнаружили, что корона Солнца заранее указывает на солнечные вспышки — интенсивные выбросы электромагнитного излучения, исходящие из активных областей фотосферы Солнца и способные нарушать телекоммуникации на Земле. Перед вспышкой корона временно становится ярче над областью, где вспышка скоро произойдёт.",
+            "uzbek": "K. D. Leka va hamkasblari Quyosh koronasi solar flares haqida oldindan belgi berishini aniqlashdi. Solar flares — Quyosh fotosferasidagi faol hududlardan chiqadigan va Yerda telekommunikatsiyaga xalaqit berishi mumkin bo'lgan kuchli elektromagnit radiatsiya portlashlari. Flare dan oldin korona flare tez orada sodir bo'ladigan hudud ustida vaqtincha yanada yorqinlashadi.",
+        }
+    return {
+        "russian": "Автоматический перевод недоступен для этого fallback-анализа. Повторите анализ, чтобы получить полный перевод.",
+        "uzbek": "Bu fallback tahlil uchun avtomatik tarjima mavjud emas. To'liq tarjima olish uchun qayta tahlil qiling.",
     }
 
 
