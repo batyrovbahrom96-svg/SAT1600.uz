@@ -19,6 +19,7 @@ export function LuxuryNavbar() {
       { label: "Free Diagnostic", href: "/mock-test/diagnostic" },
       { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
       { label: "Practice", href: "/practice" },
+      { label: "Reading Analyzer 🔍", href: "/reading-analyzer" },
       { label: "Demo Report", href: "/results/demo" },
       { label: "My 1400+", href: "/my-1400" },
       { label: "Pricing & Pay", href: "/pricing" }
@@ -28,6 +29,7 @@ export function LuxuryNavbar() {
       { label: "Бесплатная диагностика", href: "/mock-test/diagnostic" },
       { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
       { label: "Практика", href: "/practice" },
+      { label: "Reading Analyzer 🔍", href: "/reading-analyzer" },
       { label: "Демо отчет", href: "/results/demo" },
       { label: "Мой 1400+", href: "/my-1400" },
       { label: "Цены и оплата", href: "/pricing" }
@@ -37,6 +39,7 @@ export function LuxuryNavbar() {
       { label: "Bepul diagnostika", href: "/mock-test/diagnostic" },
       { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
       { label: "Mashqlar", href: "/practice" },
+      { label: "Reading Analyzer 🔍", href: "/reading-analyzer" },
       { label: "Demo hisobot", href: "/results/demo" },
       { label: "Mening 1400+", href: "/my-1400" },
       { label: "Narx va to'lov", href: "/pricing" }

@@ -49,9 +49,13 @@ class User(Base):
     chosen_language: Mapped[str | None] = mapped_column(String(16))
     language_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
     language_set_date: Mapped[datetime | None] = mapped_column(DateTime)
+    daily_analyses: Mapped[int] = mapped_column(Integer, default=0)
+    last_analysis_date: Mapped[datetime | None] = mapped_column(DateTime)
+    total_analyses: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     attempts: Mapped[list["TestAttempt"]] = relationship(back_populates="user")
+    reading_analyses: Mapped[list["ReadingAnalysis"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Test(Base):
@@ -294,6 +298,21 @@ class PaymentOrder(Base):
     rejection_reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ReadingAnalysis(Base):
+    __tablename__ = "reading_analyses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    share_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    language: Mapped[str] = mapped_column(String(16), default="uz")
+    source_text: Mapped[str] = mapped_column(Text)
+    analysis: Mapped[dict] = mapped_column(JSON, default=dict)
+    is_pro_snapshot: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="reading_analyses")
 
 
 class TelegramAudience(Base):

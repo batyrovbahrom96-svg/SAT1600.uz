@@ -74,6 +74,59 @@ export type PaymentOrder = {
   expiry_date: string | null;
 };
 
+export type ReadingAnalysis = {
+  main_idea: {
+    uzbek?: string;
+    russian?: string;
+    english?: string;
+  };
+  difficult_words: Array<{
+    word: string;
+    definition_uz?: string;
+    definition_ru?: string;
+    definition_en?: string;
+    example?: string;
+  }>;
+  tone: {
+    type?: string;
+    explanation_uz?: string;
+    explanation_ru?: string;
+    explanation_en?: string;
+  };
+  purpose: {
+    type?: string;
+    explanation_uz?: string;
+    explanation_ru?: string;
+    explanation_en?: string;
+  };
+  sat_tip: {
+    uzbek?: string;
+    russian?: string;
+    english?: string;
+  };
+  practice_questions:
+    | "LOCKED"
+    | Array<{
+        question: string;
+        options: Record<"A" | "B" | "C" | "D", string>;
+        correct: string;
+        explanation: string;
+      }>;
+  difficulty?: string;
+  passage_type?: string;
+};
+
+export type ReadingAnalysisResponse = {
+  id?: string;
+  share_id: string;
+  share_url?: string;
+  is_pro?: boolean;
+  remaining_free?: number | null;
+  analysis: ReadingAnalysis;
+  source_text: string;
+  created_at: string;
+};
+
 function getSafeStorage() {
   if (typeof window === "undefined") return null;
   try {
@@ -174,6 +227,17 @@ export async function createPaymentOrder(payload: {
 
 export async function getPaymentOrder(reference: string) {
   return api<PaymentOrder>(`/api/payment/orders/${encodeURIComponent(reference)}`);
+}
+
+export async function analyzePassage(payload: { text: string; language: "uz" | "ru" | "en" }) {
+  return api<ReadingAnalysisResponse>("/api/analyze-passage", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getSharedReadingAnalysis(shareId: string) {
+  return api<ReadingAnalysisResponse>(`/api/shared/${encodeURIComponent(shareId)}`);
 }
 
 export function saveAuth(token: string, fullName?: string | null) {

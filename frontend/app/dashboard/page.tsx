@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpenCheck, CalendarDays, CheckCircle2, Clock3, Crown, LineChart, Target, TrendingUp, XCircle } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CalendarDays, CheckCircle2, Clock3, Crown, LineChart, Search, Target, TrendingUp, XCircle } from "lucide-react";
 import { CurriculumPrompt } from "@/components/CurriculumPrompt";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { ApiError, api, getSubscriptionStatus, getToken } from "@/lib/api";
@@ -361,7 +361,7 @@ export default function DashboardPage() {
             </section>
           ) : null}
 
-          <section className="grid gap-5 lg:grid-cols-3">
+          <section className="grid gap-5 lg:grid-cols-4">
             <article className="border border-white/10 bg-white/[0.03] p-6">
               <div className="flex items-center gap-3 text-white/70">
                 <LineChart size={20} />
@@ -409,6 +409,23 @@ export default function DashboardPage() {
               <div className="mt-6 border border-white/10 bg-black/20 p-4 text-sm font-light text-white/45">
                 {diagnosticSummary?.weaknesses.slice(0, 3).join(", ") || "Waiting for first diagnostic result."}
               </div>
+            </article>
+
+            <article className="border border-[#FFD700]/25 bg-[#FFD700]/[0.06] p-6">
+              <div className="flex items-center gap-3 text-[#FFD700]">
+                <Search size={20} />
+                <h3 className="text-lg font-light text-white">Reading Analyzer</h3>
+              </div>
+              <p className="mt-4 text-sm font-light leading-6 text-white/58">
+                Analyze any SAT passage with AI: main idea, difficult words, tone, purpose, and SAT strategy.
+              </p>
+              <button
+                className="mt-5 flex h-11 items-center justify-center gap-3 border border-[#FFD700] bg-[#FFD700] px-5 text-xs font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-[#FFD700]"
+                onClick={() => router.push("/reading-analyzer")}
+                type="button"
+              >
+                Try Now <ArrowRight size={16} />
+              </button>
             </article>
           </section>
 
