@@ -8,6 +8,7 @@ import sys
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from telegram import BotCommand, Update
+from telegram.error import RetryAfter, TelegramError
 from telegram.ext import Application, ContextTypes, TypeHandler
 
 BACKEND_DIR = os.path.dirname(__file__)
@@ -95,33 +96,41 @@ async def run_webinar_reminders() -> None:
 
 
 async def post_init(application: Application) -> None:
-    await application.bot.set_my_commands(
-        [
-            BotCommand("start", "Boshlash / Start"),
-            BotCommand("test", "Bepul diagnostic test"),
-            BotCommand("pro", "Pro obuna ma'lumoti"),
-            BotCommand("webinar", "Vebinar haqida"),
-            BotCommand("tips", "Kunlik SAT maslahatlar"),
-            BotCommand("score", "Balimni yangilash"),
-            BotCommand("help", "Barcha buyruqlar"),
-            BotCommand("contact", "Murojaat"),
-        ]
-    )
-    await application.bot.set_my_name("SATTEST Welcome Bot")
-    await application.bot.set_my_description(
-        "SATTEST.UZ rasmiy boti 🎯\n"
-        "SAT da 1400+ ga yo'lingiz!\n\n"
-        "Bepul diagnostic test:\n"
-        "👉 sattest.uz/diagnostic\n\n"
-        "Savol uchun: \n"
-        "@FounderSATTESTUZ"
-    )
-    await application.bot.set_my_short_description(
-        "SATTEST.UZ —\n"
-        "Practice • Improve • Achieve\n\n"
-        "Founder: @FounderSATTESTUZ\n"
-        "Platform: sattest.uz"
-    )
+    try:
+        await application.bot.set_my_commands(
+            [
+                BotCommand("start", "Boshlash / Start"),
+                BotCommand("test", "Bepul diagnostic test"),
+                BotCommand("pro", "Pro obuna ma'lumoti"),
+                BotCommand("webinar", "Vebinar haqida"),
+                BotCommand("tips", "Kunlik SAT maslahatlar"),
+                BotCommand("score", "Balimni yangilash"),
+                BotCommand("help", "Barcha buyruqlar"),
+                BotCommand("contact", "Murojaat"),
+            ]
+        )
+        await application.bot.set_my_name("SATTEST Welcome Bot")
+        await application.bot.set_my_description(
+            "SATTEST.UZ rasmiy boti 🎯\n"
+            "SAT da 1400+ ga yo'lingiz!\n\n"
+            "Bepul diagnostic test:\n"
+            "👉 sattest.uz/diagnostic\n\n"
+            "Savol uchun: \n"
+            "@FounderSATTESTUZ"
+        )
+        await application.bot.set_my_short_description(
+            "SATTEST.UZ —\n"
+            "Practice • Improve • Achieve\n\n"
+            "Founder: @FounderSATTESTUZ\n"
+            "Platform: sattest.uz"
+        )
+    except RetryAfter as exc:
+        logger.warning(
+            "Telegram flood control blocked bot profile setup; startup will continue. retry_after=%s",
+            exc.retry_after,
+        )
+    except TelegramError:
+        logger.exception("Telegram rejected bot profile setup; startup will continue.")
     logger.info("SATTEST.UZ Welcome Bot is live as @%s", WELCOME_BOT_USERNAME)
 
 
