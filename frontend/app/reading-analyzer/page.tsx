@@ -206,9 +206,7 @@ export default function ReadingAnalyzerPage() {
     }
     setIsLoading(true);
     try {
-      const result = inputMode === "image" && imageFile
-        ? await analyzePassageImage({ file: await normalizeImageForClaude(imageFile), language })
-        : await analyzePassage({ text, language });
+      const result = inputMode === "image" && imageFile ? await analyzeImageWithFallback(imageFile, language) : await analyzePassage({ text, language });
       setRemaining(result.remaining_free ?? null);
       saveResult(result);
       router.push(`/reading-analyzer/result?lang=${language}`);
@@ -364,6 +362,33 @@ function errorMessage(error: ApiError, copy: Record<string, unknown>) {
   if (message.includes("invalid_file_type")) return copy.invalid_file_type as string;
   if (message.includes("text_too_short")) return copy.short as string;
   return message;
+}
+
+async function analyzeImageWithFallback(file: File, language: Language): Promise<ReadingAnalysisResponse> {
+  const normalizedFile = await normalizeImageForClaude(file);
+  try {
+    return await analyzePassageImage({ file: normalizedFile, language });
+  } catch (error) {
+    if (!(error instanceof ApiError) || !isImageReadError(error)) {
+      throw error;
+    }
+    const extractedText = await extractTextWithBrowserOcr(normalizedFile);
+    if (extractedText.trim().length < 50) {
+      throw error;
+    }
+    return analyzePassage({ text: extractedText.slice(0, 9000), language });
+  }
+}
+
+function isImageReadError(error: ApiError) {
+  const message = error.message.toLowerCase();
+  return message.includes("image_error") || message.includes("no_text_found") || message.includes("could not read");
+}
+
+async function extractTextWithBrowserOcr(file: File): Promise<string> {
+  const { recognize } = await import("tesseract.js");
+  const result = await recognize(file, "eng");
+  return result.data.text || "";
 }
 
 async function normalizeImageForClaude(file: File): Promise<File> {
