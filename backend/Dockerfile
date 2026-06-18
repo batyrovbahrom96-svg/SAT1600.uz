@@ -14,7 +14,8 @@ RUN if [ -f backend/requirements.txt ]; then cp backend/requirements.txt /tmp/re
 RUN if [ -d backend/app ]; then cp -a backend/app /app/app; fi \
     && if [ -d backend/scripts ]; then cp -a backend/scripts /app/scripts; fi \
     && if [ -f backend/start.sh ]; then cp backend/start.sh /app/start.sh; fi \
+    && if [ -f backend/start_all.sh ]; then cp backend/start_all.sh /app/start_all.sh; fi \
     && mkdir -p static/graphs \
-    && chmod +x start.sh
+    && chmod +x start.sh start_all.sh
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://0.0.0.0:{os.environ.get(\"PORT\", \"8080\")}/api/health', timeout=3)"
-CMD ["./start.sh"]
+CMD ["./start_all.sh"]

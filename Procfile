@@ -1,1 +1,1 @@
-worker: python backend/bot.py
+web: ./start_all.sh
