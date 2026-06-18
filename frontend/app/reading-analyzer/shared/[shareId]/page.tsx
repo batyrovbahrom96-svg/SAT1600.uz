@@ -35,7 +35,7 @@ export default function SharedReadingAnalysisPage({ params }: { params: Promise<
         </Link>
         <div className="mt-6 border-b border-white/10 pb-8">
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#FFD700]/75">Shared SATTEST.UZ analysis</p>
-          <h1 className="mt-4 text-4xl font-light leading-tight text-white md:text-6xl">AI Reading result</h1>
+          <h1 className="mt-4 text-4xl font-light leading-tight text-white md:text-6xl">AI Reading preview</h1>
         </div>
         <div className="mt-8">
           {result ? (

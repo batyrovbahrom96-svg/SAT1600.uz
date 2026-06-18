@@ -76,28 +76,67 @@ export type PaymentOrder = {
 
 export type ReadingAnalysis = {
   main_idea: {
+    one_sentence?: string;
+    detailed_uz?: string;
+    detailed_ru?: string;
+    detailed_en?: string;
+    sat_connection?: string;
     uzbek?: string;
     russian?: string;
     english?: string;
   };
+  vocabulary?: Array<{
+    word: string;
+    definition_uz?: string;
+    definition_ru?: string;
+    definition_en?: string;
+    in_context?: string;
+    memory_trick?: string;
+    sat_frequency?: string;
+    example?: string;
+  }>;
   difficult_words: Array<{
     word: string;
     definition_uz?: string;
     definition_ru?: string;
     definition_en?: string;
     example?: string;
+    in_context?: string;
+    memory_trick?: string;
+    sat_frequency?: string;
   }>;
   tone: {
+    primary?: string;
+    percentage?: number;
     type?: string;
     explanation_uz?: string;
     explanation_ru?: string;
     explanation_en?: string;
   };
   purpose: {
+    primary?: string;
+    percentage?: number;
     type?: string;
     explanation_uz?: string;
     explanation_ru?: string;
     explanation_en?: string;
+  };
+  author_perspective?: {
+    uz?: string;
+    ru?: string;
+    en?: string;
+  };
+  sat_strategy?: {
+    do_uz?: string[];
+    do_ru?: string[];
+    do_en?: string[];
+    avoid_uz?: string[];
+    avoid_ru?: string[];
+    avoid_en?: string[];
+    time_tip_uz?: string;
+    time_tip_ru?: string;
+    time_tip_en?: string;
+    score_impact?: string;
   };
   sat_tip: {
     uzbek?: string;
@@ -111,9 +150,26 @@ export type ReadingAnalysis = {
         options: Record<"A" | "B" | "C" | "D", string>;
         correct: string;
         explanation: string;
+        explanation_uz?: string;
+        explanation_ru?: string;
+        explanation_en?: string;
+        question_type?: string;
       }>;
+  improvement_plan?: {
+    week1_uz?: string;
+    week1_ru?: string;
+    week1_en?: string;
+    week2_uz?: string;
+    week2_ru?: string;
+    week2_en?: string;
+    week3_uz?: string;
+    week3_ru?: string;
+    week3_en?: string;
+    predicted_improvement?: string;
+  };
   difficulty?: string;
   passage_type?: string;
+  reading_time?: string;
 };
 
 export type ReadingAnalysisResponse = {
@@ -238,6 +294,22 @@ export async function analyzePassage(payload: { text: string; language: "uz" | "
 
 export async function getSharedReadingAnalysis(shareId: string) {
   return api<ReadingAnalysisResponse>(`/api/shared/${encodeURIComponent(shareId)}`);
+}
+
+export async function getReadingAnalyzerHistory() {
+  return api<Array<{
+    id: string;
+    share_id: string;
+    language: string;
+    created_at: string;
+    source_preview: string;
+    passage_type: string;
+    difficulty: string;
+  }>>("/api/reading-analyzer/history");
+}
+
+export async function getReadingAnalyzerStats() {
+  return api<{ today: number; total: number; rating: number }>("/api/reading-analyzer/stats");
 }
 
 export function saveAuth(token: string, fullName?: string | null) {

@@ -16,59 +16,90 @@ FREE_DAILY_ANALYSES = 3
 MAX_INPUT_CHARS = 9000
 
 SYSTEM_PROMPT = """
-You are an expert SAT Reading tutor with score 1540.
+You are an expert SAT Reading tutor with SAT score 1540.
 
-Analyze the given SAT reading passage or sentence.
+Analyze the given SAT reading passage deeply and thoroughly.
 
-Return ONLY valid JSON:
+Return ONLY valid JSON with this EXACT structure:
 {
+  "passage_type": "Literature/Science/History/Social Science",
+  "difficulty": "Easy/Medium/Hard",
+  "reading_time": "X minutes",
   "main_idea": {
-    "uzbek": "Simple explanation in Uzbek",
-    "russian": "Simple explanation in Russian",
-    "english": "Simple explanation in English"
+    "one_sentence": "One clear sentence summary",
+    "detailed_uz": "Detailed in Uzbek",
+    "detailed_ru": "Detailed in Russian",
+    "detailed_en": "Detailed in English",
+    "sat_connection": "How many times this appears on SAT"
   },
-  "difficult_words": [
+  "vocabulary": [
     {
-      "word": "word here",
-      "definition_uz": "...",
-      "definition_ru": "...",
-      "definition_en": "...",
-      "example": "..."
+      "word": "word",
+      "definition_uz": "definition",
+      "definition_ru": "definition",
+      "definition_en": "definition",
+      "in_context": "how used here",
+      "memory_trick": "remember trick",
+      "sat_frequency": "High/Medium/Low"
     }
   ],
   "tone": {
-    "type": "Formal/Informal/Persuasive/Informative",
+    "primary": "Formal/Informal/Persuasive/Informative",
+    "percentage": 75,
     "explanation_uz": "...",
     "explanation_ru": "...",
     "explanation_en": "..."
   },
   "purpose": {
-    "type": "To inform/persuade/entertain/describe",
+    "primary": "To inform/persuade/entertain/describe",
+    "percentage": 65,
     "explanation_uz": "...",
     "explanation_ru": "...",
     "explanation_en": "..."
   },
-  "sat_tip": {
-    "uzbek": "Specific SAT strategy tip",
-    "russian": "Specific SAT strategy tip",
-    "english": "Specific SAT strategy tip"
+  "author_perspective": {
+    "uz": "Author viewpoint in Uzbek",
+    "ru": "Author viewpoint in Russian",
+    "en": "Author viewpoint in English"
+  },
+  "sat_strategy": {
+    "do_uz": ["tip1", "tip2"],
+    "do_ru": ["tip1", "tip2"],
+    "do_en": ["tip1", "tip2"],
+    "avoid_uz": ["mistake1", "mistake2"],
+    "avoid_ru": ["mistake1", "mistake2"],
+    "avoid_en": ["mistake1", "mistake2"],
+    "time_tip_uz": "time advice",
+    "time_tip_ru": "time advice",
+    "time_tip_en": "time advice",
+    "score_impact": "+X points"
   },
   "practice_questions": [
     {
-      "question": "SAT style question",
-      "options": {
-        "A": "...",
-        "B": "...",
-        "C": "...",
-        "D": "..."
-      },
+      "question": "SAT-style question",
+      "options": {"A": "option", "B": "option", "C": "option", "D": "option"},
       "correct": "B",
-      "explanation": "Why B is correct"
+      "explanation_uz": "Why B in Uzbek",
+      "explanation_ru": "Why B in Russian",
+      "explanation_en": "Why B in English",
+      "question_type": "Main Idea/Detail/Inference/Vocabulary"
     }
   ],
-  "difficulty": "Easy/Medium/Hard",
-  "passage_type": "Literature/Science/History/Social Science"
+  "improvement_plan": {
+    "week1_uz": "Week 1 task in Uzbek",
+    "week1_ru": "Week 1 task in Russian",
+    "week1_en": "Week 1 task in English",
+    "week2_uz": "Week 2 task in Uzbek",
+    "week2_ru": "Week 2 task in Russian",
+    "week2_en": "Week 2 task in English",
+    "week3_uz": "Week 3 task in Uzbek",
+    "week3_ru": "Week 3 task in Russian",
+    "week3_en": "Week 3 task in English",
+    "predicted_improvement": "+X points"
+  }
 }
+
+Be thorough, specific, and helpful for SAT preparation. All explanations must be genuinely useful.
 """
 
 
@@ -129,7 +160,8 @@ def analyze_reading_passage(db: Session, user: User, text: str, language: str) -
     analysis = _call_claude(clean_text, normalized_language) or _fallback_analysis(clean_text)
     analysis = _normalize_analysis(analysis)
     if not is_pro:
-        analysis["difficult_words"] = analysis["difficult_words"][:3]
+        analysis["vocabulary"] = analysis["vocabulary"][:3]
+        analysis["difficult_words"] = analysis["vocabulary"]
         analysis["practice_questions"] = "LOCKED"
 
     user.daily_analyses = (user.daily_analyses or 0) + (0 if is_pro else 1)
@@ -152,7 +184,7 @@ def analyze_reading_passage(db: Session, user: User, text: str, language: str) -
     return {
         "id": str(row.id),
         "share_id": row.share_id,
-        "share_url": f"https://www.sattest.uz/shared/{row.share_id}",
+        "share_url": f"https://www.sattest.uz/reading-analyzer/shared/{row.share_id}",
         "is_pro": is_pro,
         "remaining_free": None if is_pro else max(0, FREE_DAILY_ANALYSES - (user.daily_analyses or 0)),
         "analysis": analysis,
@@ -242,27 +274,85 @@ def _parse_json_text(value: str) -> dict | None:
 
 def _normalize_analysis(analysis: dict) -> dict:
     analysis.setdefault("main_idea", {})
-    analysis["main_idea"].setdefault("uzbek", "Passage asosiy fikrni tushuntiradi va muallifning markaziy da'vosini ko'rsatadi.")
-    analysis["main_idea"].setdefault("russian", "Отрывок объясняет главную мысль и центральную позицию автора.")
-    analysis["main_idea"].setdefault("english", "The passage explains the central idea and the author's main point.")
-    analysis.setdefault("difficult_words", [])
+    legacy_main = analysis["main_idea"]
+    legacy_uz = legacy_main.get("uzbek") or legacy_main.get("detailed_uz")
+    legacy_ru = legacy_main.get("russian") or legacy_main.get("detailed_ru")
+    legacy_en = legacy_main.get("english") or legacy_main.get("detailed_en")
+    legacy_main.setdefault("one_sentence", legacy_en or legacy_uz or "The passage develops a central SAT idea.")
+    legacy_main.setdefault("detailed_uz", legacy_uz or "Passage asosiy fikrni tushuntiradi va muallifning markaziy da'vosini ko'rsatadi.")
+    legacy_main.setdefault("detailed_ru", legacy_ru or "Отрывок объясняет главную мысль и центральную позицию автора.")
+    legacy_main.setdefault("detailed_en", legacy_en or "The passage explains the central idea and the author's main point.")
+    legacy_main.setdefault("sat_connection", "This passage type appears regularly on SAT Reading and Writing questions.")
+    legacy_main["uzbek"] = legacy_main["detailed_uz"]
+    legacy_main["russian"] = legacy_main["detailed_ru"]
+    legacy_main["english"] = legacy_main["detailed_en"]
+    vocabulary = analysis.get("vocabulary") or analysis.get("difficult_words") or []
+    normalized_vocabulary = []
+    for item in vocabulary if isinstance(vocabulary, list) else []:
+        if not isinstance(item, dict):
+            continue
+        item.setdefault("in_context", item.get("example") or "Use the surrounding sentence to confirm meaning.")
+        item.setdefault("memory_trick", "Connect this word to the author's purpose.")
+        item.setdefault("sat_frequency", "Medium")
+        normalized_vocabulary.append(item)
+    analysis["vocabulary"] = normalized_vocabulary
+    analysis["difficult_words"] = normalized_vocabulary
     analysis.setdefault("tone", {})
-    analysis["tone"].setdefault("type", "Informative")
+    analysis["tone"].setdefault("primary", analysis["tone"].get("type") or "Informative")
+    analysis["tone"].setdefault("type", analysis["tone"].get("primary") or "Informative")
+    analysis["tone"].setdefault("percentage", 75)
     analysis["tone"].setdefault("explanation_uz", "Matn rasmiy va tushuntiruvchi ohangda yozilgan.")
     analysis["tone"].setdefault("explanation_ru", "Текст написан в формальном и объяснительном тоне.")
     analysis["tone"].setdefault("explanation_en", "The text uses a formal, explanatory tone.")
     analysis.setdefault("purpose", {})
-    analysis["purpose"].setdefault("type", "To inform")
+    analysis["purpose"].setdefault("primary", analysis["purpose"].get("type") or "To inform")
+    analysis["purpose"].setdefault("type", analysis["purpose"].get("primary") or "To inform")
+    analysis["purpose"].setdefault("percentage", 65)
     analysis["purpose"].setdefault("explanation_uz", "Maqsad o'quvchiga g'oya yoki dalilni tushuntirish.")
     analysis["purpose"].setdefault("explanation_ru", "Цель — объяснить читателю идею или аргумент.")
     analysis["purpose"].setdefault("explanation_en", "The purpose is to explain an idea or argument to the reader.")
+    analysis.setdefault("author_perspective", {})
+    analysis["author_perspective"].setdefault("uz", "Muallif mavzuni tushuntiruvchi va dalilga tayangan pozitsiyada beradi.")
+    analysis["author_perspective"].setdefault("ru", "Автор объясняет тему с опорой на доказательства.")
+    analysis["author_perspective"].setdefault("en", "The author presents the topic through evidence-based explanation.")
+    analysis.setdefault("sat_strategy", {})
+    analysis["sat_strategy"].setdefault("do_uz", ["Avval asosiy da'voni belgilang.", "Har bir detal da'voga qanday xizmat qilishini tekshiring."])
+    analysis["sat_strategy"].setdefault("do_ru", ["Сначала найдите главную мысль.", "Проверьте, как детали поддерживают её."])
+    analysis["sat_strategy"].setdefault("do_en", ["Find the main claim first.", "Check how each detail supports that claim."])
+    analysis["sat_strategy"].setdefault("avoid_uz", ["Kontekstsiz javob tanlamang.", "Bitta kuchli so'zga aldanmang."])
+    analysis["sat_strategy"].setdefault("avoid_ru", ["Не выбирайте ответ без контекста.", "Не ведитесь на одно сильное слово."])
+    analysis["sat_strategy"].setdefault("avoid_en", ["Do not choose without context.", "Do not fall for one attractive word."])
+    analysis["sat_strategy"].setdefault("time_tip_uz", "Bu turdagi matnga 1-2 daqiqa sarflang.")
+    analysis["sat_strategy"].setdefault("time_tip_ru", "Тратьте 1-2 минуты на такой текст.")
+    analysis["sat_strategy"].setdefault("time_tip_en", "Spend 1-2 minutes on this type.")
+    analysis["sat_strategy"].setdefault("score_impact", "+20-40 points")
     analysis.setdefault("sat_tip", {})
-    analysis["sat_tip"].setdefault("uzbek", "SAT Readingda avval asosiy da'voni toping, keyin har bir detal shu da'voga qanday xizmat qilishini tekshiring.")
-    analysis["sat_tip"].setdefault("russian", "В SAT Reading сначала найдите главную мысль, затем проверьте, как детали поддерживают её.")
-    analysis["sat_tip"].setdefault("english", "On SAT Reading, find the main claim first, then check how each detail supports it.")
+    analysis["sat_tip"].setdefault("uzbek", analysis["sat_strategy"].get("time_tip_uz"))
+    analysis["sat_tip"].setdefault("russian", analysis["sat_strategy"].get("time_tip_ru"))
+    analysis["sat_tip"].setdefault("english", analysis["sat_strategy"].get("time_tip_en"))
     analysis.setdefault("practice_questions", [])
+    if isinstance(analysis["practice_questions"], list):
+        for question in analysis["practice_questions"]:
+            if isinstance(question, dict):
+                legacy = question.get("explanation") or "The correct answer is supported by the passage."
+                question.setdefault("explanation_uz", legacy)
+                question.setdefault("explanation_ru", legacy)
+                question.setdefault("explanation_en", legacy)
+                question.setdefault("question_type", "Main Idea")
+    analysis.setdefault("improvement_plan", {})
+    analysis["improvement_plan"].setdefault("week1_uz", "Har kuni 2 ta main idea savolini tahlil qiling.")
+    analysis["improvement_plan"].setdefault("week1_ru", "Каждый день разбирайте 2 вопроса на главную мысль.")
+    analysis["improvement_plan"].setdefault("week1_en", "Review 2 main idea questions daily.")
+    analysis["improvement_plan"].setdefault("week2_uz", "Vocabulary-in-context savollarini mashq qiling.")
+    analysis["improvement_plan"].setdefault("week2_ru", "Практикуйте vocabulary-in-context вопросы.")
+    analysis["improvement_plan"].setdefault("week2_en", "Practice vocabulary-in-context questions.")
+    analysis["improvement_plan"].setdefault("week3_uz", "Timed mini-testlar bilan tezlikni oshiring.")
+    analysis["improvement_plan"].setdefault("week3_ru", "Увеличьте скорость через timed mini-tests.")
+    analysis["improvement_plan"].setdefault("week3_en", "Improve speed with timed mini-tests.")
+    analysis["improvement_plan"].setdefault("predicted_improvement", "+30 points")
     analysis.setdefault("difficulty", "Medium")
     analysis.setdefault("passage_type", "Social Science")
+    analysis.setdefault("reading_time", "2 minutes")
     return analysis
 
 
@@ -282,28 +372,55 @@ def _fallback_analysis(text: str) -> dict:
             "definition_ru": "Важное академическое слово; проверьте его роль в контексте.",
             "definition_en": "An academic word; use context to identify its exact role.",
             "example": f"Look at how '{word}' affects the author's meaning.",
+            "in_context": f"'{word}' affects the author's meaning in this passage.",
+            "memory_trick": "Tie the word to the sentence's job.",
+            "sat_frequency": "Medium",
         }
         for word in unique_words
     ]
     preview = text[:220] + ("..." if len(text) > 220 else "")
     return {
         "main_idea": {
-            "uzbek": f"Bu passage asosiy fikrni dalillar orqali tushuntiradi: {preview}",
-            "russian": f"Этот отрывок объясняет главную мысль через детали: {preview}",
-            "english": f"This passage develops a central idea through supporting details: {preview}",
+            "one_sentence": "The passage develops one central idea through supporting details.",
+            "detailed_uz": f"Bu passage asosiy fikrni dalillar orqali tushuntiradi: {preview}",
+            "detailed_ru": f"Этот отрывок объясняет главную мысль через детали: {preview}",
+            "detailed_en": f"This passage develops a central idea through supporting details: {preview}",
+            "sat_connection": "This appears often in main idea, purpose, and inference questions.",
         },
+        "vocabulary": difficult_words,
         "difficult_words": difficult_words,
         "tone": {
+            "primary": "Informative",
             "type": "Informative",
+            "percentage": 75,
             "explanation_uz": "Ohang tushuntiruvchi va akademik.",
             "explanation_ru": "Тон объяснительный и академический.",
             "explanation_en": "The tone is explanatory and academic.",
         },
         "purpose": {
+            "primary": "To inform",
             "type": "To inform",
+            "percentage": 65,
             "explanation_uz": "Muallif mavzuni tushuntirish va asosiy fikrni yetkazishni maqsad qiladi.",
             "explanation_ru": "Автор стремится объяснить тему и передать главную мысль.",
             "explanation_en": "The author aims to explain the topic and communicate a main idea.",
+        },
+        "author_perspective": {
+            "uz": "Muallif mavzuga tushuntiruvchi va dalilga asoslangan pozitsiyada qaraydi.",
+            "ru": "Автор рассматривает тему объяснительно и опирается на доказательства.",
+            "en": "The author approaches the topic in an explanatory, evidence-based way.",
+        },
+        "sat_strategy": {
+            "do_uz": ["Asosiy da'voni bir jumlada yozing.", "Har bir detalni shu da'vo bilan bog'lang."],
+            "do_ru": ["Запишите главную мысль в одном предложении.", "Свяжите каждую деталь с этой мыслью."],
+            "do_en": ["State the main claim in one sentence.", "Connect each detail back to that claim."],
+            "avoid_uz": ["Juda keng javoblarni tanlamang.", "Passageda yo'q xulosani qo'shmang."],
+            "avoid_ru": ["Не выбирайте слишком широкий ответ.", "Не добавляйте вывод без доказательства."],
+            "avoid_en": ["Avoid answers that are too broad.", "Do not add conclusions without evidence."],
+            "time_tip_uz": "Bunday matnga 1-2 daqiqa ajrating.",
+            "time_tip_ru": "На такой текст выделяйте 1-2 минуты.",
+            "time_tip_en": "Spend 1-2 minutes on this type.",
+            "score_impact": "+20-40 points",
         },
         "sat_tip": {
             "uzbek": "Savolda detail so'ralsa, javobni faqat passage ichidagi dalil bilan tanlang.",
@@ -321,10 +438,27 @@ def _fallback_analysis(text: str) -> dict:
                 },
                 "correct": "B",
                 "explanation": "The passage develops one central idea with supporting details, so B is best.",
+                "explanation_uz": "Passage bitta asosiy fikrni dalillar bilan rivojlantiradi, shuning uchun B eng mos.",
+                "explanation_ru": "Отрывок развивает одну главную мысль через детали, поэтому B лучше всего.",
+                "explanation_en": "The passage develops one central idea with supporting details, so B is best.",
+                "question_type": "Main Idea",
             }
         ],
+        "improvement_plan": {
+            "week1_uz": "Main idea savollarini har kuni mashq qiling.",
+            "week1_ru": "Каждый день тренируйте вопросы на главную мысль.",
+            "week1_en": "Practice main idea questions daily.",
+            "week2_uz": "Tone va purpose savollariga o'ting.",
+            "week2_ru": "Перейдите к вопросам tone and purpose.",
+            "week2_en": "Move to tone and purpose questions.",
+            "week3_uz": "Timed mini-mock bilan natijani tekshiring.",
+            "week3_ru": "Проверьте результат через timed mini-mock.",
+            "week3_en": "Check progress with timed mini-mocks.",
+            "predicted_improvement": "+30 points",
+        },
         "difficulty": "Medium",
         "passage_type": "Social Science",
+        "reading_time": "2 minutes",
     }
 
 

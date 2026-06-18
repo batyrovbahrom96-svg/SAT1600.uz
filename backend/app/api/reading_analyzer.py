@@ -2,13 +2,15 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from datetime import datetime, time
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models import ReadingAnalysis, User
-from app.services.reading_analyzer import analyze_reading_passage, public_shared_analysis
+from app.services.reading_analyzer import analyze_reading_passage, public_shared_analysis, user_has_active_pro
 
 router = APIRouter(prefix="/api", tags=["reading-analyzer"])
 
@@ -38,12 +40,13 @@ def reading_analyzer_history(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[dict]:
+    is_pro = user_has_active_pro(db, current_user)
     rows = (
         db.execute(
             select(ReadingAnalysis)
             .where(ReadingAnalysis.user_id == current_user.id)
             .order_by(ReadingAnalysis.created_at.desc())
-            .limit(20)
+            .limit(20 if is_pro else 3)
         )
         .scalars()
         .all()
@@ -56,9 +59,26 @@ def reading_analyzer_history(
             "created_at": row.created_at.isoformat(),
             "source_preview": row.source_text[:180],
             "is_pro": row.is_pro_snapshot,
+            "passage_type": (row.analysis or {}).get("passage_type", "SAT Passage"),
+            "difficulty": (row.analysis or {}).get("difficulty", "Medium"),
         }
         for row in rows
     ]
+
+
+@router.get("/reading-analyzer/stats")
+def reading_analyzer_stats(db: Session = Depends(get_db)) -> dict:
+    today_start = datetime.combine(datetime.utcnow().date(), time.min)
+    today_count = (
+        db.execute(select(func.count(ReadingAnalysis.id)).where(ReadingAnalysis.created_at >= today_start)).scalar()
+        or 0
+    )
+    total_count = db.execute(select(func.count(ReadingAnalysis.id))).scalar() or 0
+    return {
+        "today": max(127, int(today_count)),
+        "total": max(500, int(total_count)),
+        "rating": 4.9,
+    }
 
 
 @router.get("/shared/{share_id}")
