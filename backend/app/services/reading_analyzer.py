@@ -246,8 +246,13 @@ def analyze_reading_image(db: Session, user: User, image_data: bytes, image_type
         }
 
     analysis = _call_claude_image(image_data, normalized_type, normalized_language)
+    extracted_text = str((analysis or {}).get("extracted_text") or "").strip()
     if not analysis or not analysis.get("main_idea"):
-        raise ValueError("image_error")
+        extracted_text = extracted_text or (extract_text_from_reading_image(image_data, normalized_type) or "").strip()
+        if len(extracted_text) < 20:
+            raise ValueError("image_error")
+        analysis = _call_claude_text(extracted_text, normalized_language) or _fallback_analysis(extracted_text)
+        analysis["extracted_text"] = extracted_text
     extracted_text = str(analysis.get("extracted_text") or "").strip()
     source_text = extracted_text or "Image passage"
     return _finish_analysis(db, user, source_text, normalized_language, is_pro, analysis, "image")
@@ -266,7 +271,7 @@ def extract_text_from_reading_image(image_data: bytes, image_type: str) -> str |
     image_base64 = base64.standard_b64encode(image_data).decode("utf-8")
     payload = {
         "model": settings.anthropic_model,
-        "max_tokens": 1200,
+        "max_tokens": 2000,
         "messages": [
             {
                 "role": "user",
