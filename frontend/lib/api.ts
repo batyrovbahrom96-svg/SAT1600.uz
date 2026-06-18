@@ -75,6 +75,10 @@ export type PaymentOrder = {
 };
 
 export type ReadingAnalysis = {
+  full_translation?: {
+    uzbek?: string;
+    russian?: string;
+  };
   main_idea: {
     one_sentence?: string;
     one_sentence_en?: string;
@@ -162,6 +166,46 @@ export type ReadingAnalysis = {
     time_tip_en?: string;
     score_impact?: string;
   };
+  how_to_approach?: {
+    steps_en?: string[];
+    steps_ru?: string[];
+    steps_uz?: string[];
+    time_management_en?: string;
+    time_management_ru?: string;
+    time_management_uz?: string;
+    common_traps_en?: string[];
+    common_traps_ru?: string[];
+    common_traps_uz?: string[];
+  };
+  questions_solved?: Array<{
+    question_number?: number;
+    question_text?: string;
+    question_text_ru?: string;
+    question_text_uz?: string;
+    options?: Record<"A" | "B" | "C" | "D", string>;
+    options_ru?: Record<"A" | "B" | "C" | "D", string>;
+    options_uz?: Record<"A" | "B" | "C" | "D", string>;
+    correct_answer?: string;
+    thinking_process_en?: string;
+    thinking_process_ru?: string;
+    thinking_process_uz?: string;
+    why_correct_en?: string;
+    why_correct_ru?: string;
+    why_correct_uz?: string;
+    why_wrong_en?: Partial<Record<"A" | "B" | "C" | "D", string>>;
+    why_wrong_ru?: Partial<Record<"A" | "B" | "C" | "D", string>>;
+    why_wrong_uz?: Partial<Record<"A" | "B" | "C" | "D", string>>;
+    evidence_line?: string;
+    question_type?: string;
+    difficulty?: string;
+    tip_en?: string;
+    tip_ru?: string;
+    tip_uz?: string;
+  }>;
+  questions_solved_locked?: number;
+  translation_locked?: boolean;
+  vocabulary_locked?: boolean;
+  improvement_plan_locked?: boolean;
   sat_tip: {
     uzbek?: string;
     russian?: string;

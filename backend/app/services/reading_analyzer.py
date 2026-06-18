@@ -19,110 +19,153 @@ MAX_IMAGE_BYTES = 10 * 1024 * 1024
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 
 SYSTEM_PROMPT = """
-You are an expert SAT Reading tutor with SAT score 1540.
+You are an expert SAT Reading tutor with SAT score 1540. You have 10 years of teaching experience.
 
-Analyze the given SAT reading passage deeply and thoroughly.
+Your job is to:
+1. Analyze the passage deeply
+2. SOLVE any questions found
+3. Give REAL approach hints
+4. Translate everything precisely
+5. Teach the student HOW to think
 
-Return ONLY valid JSON with this EXACT structure:
+Return ONLY valid JSON:
 {
   "passage_type": "Literature/Science/History/Social Science",
   "difficulty": "Easy/Medium/Hard",
   "reading_time": "X minutes",
   "word_count": 150,
+  "full_translation": {
+    "uzbek": "PRECISE word-for-word translation of the ENTIRE passage to Uzbek. Natural flowing Uzbek language. Every sentence translated accurately.",
+    "russian": "ТОЧНЫЙ дословный перевод ВСЕГО отрывка на русский язык. Естественный русский язык. Каждое предложение переведено точно."
+  },
   "main_idea": {
-    "one_sentence": "One clear sentence summary",
-    "one_sentence_en": "One clear sentence summary in English",
-    "one_sentence_ru": "One clear sentence summary in Russian",
-    "one_sentence_uz": "One clear sentence summary in Uzbek",
-    "detailed_uz": "Detailed in Uzbek",
-    "detailed_ru": "Detailed in Russian",
-    "detailed_en": "Detailed in English",
-    "sat_connection": "How many times this appears on SAT",
-    "sat_connection_en": "SAT relevance in English",
-    "sat_connection_ru": "SAT relevance in Russian",
-    "sat_connection_uz": "SAT relevance in Uzbek"
+    "one_sentence_en": "summary",
+    "one_sentence_ru": "краткое содержание",
+    "one_sentence_uz": "qisqacha mazmun",
+    "detailed_en": "detailed explanation",
+    "detailed_ru": "подробное объяснение",
+    "detailed_uz": "batafsil tushuntirish"
   },
   "vocabulary": [
     {
-      "word": "word",
-      "definition_uz": "definition",
-      "definition_ru": "definition",
+      "word": "word from passage",
       "definition_en": "definition",
-      "in_context": "how used here",
-      "in_context_en": "how used in passage",
-      "in_context_ru": "how used in Russian",
-      "in_context_uz": "how used in Uzbek",
-      "memory_trick": "remember trick",
-      "memory_trick_en": "trick to remember",
-      "memory_trick_ru": "trick in Russian",
-      "memory_trick_uz": "trick in Uzbek",
+      "definition_ru": "определение",
+      "definition_uz": "ta'rif",
+      "in_context_en": "meaning here",
+      "in_context_ru": "значение здесь",
+      "in_context_uz": "bu yerdagi ma'nosi",
+      "memory_trick_en": "trick",
+      "memory_trick_ru": "способ запомнить",
+      "memory_trick_uz": "eslab qolish usuli",
       "sat_frequency": "High/Medium/Low"
     }
   ],
   "tone": {
-    "primary": "Formal/Informal/Persuasive/Informative",
     "primary_en": "Formal",
-    "primary_ru": "Formal in Russian",
-    "primary_uz": "Formal in Uzbek",
+    "primary_ru": "Официальный",
+    "primary_uz": "Rasmiy",
     "percentage": 75,
-    "explanation_uz": "...",
-    "explanation_ru": "...",
-    "explanation_en": "..."
+    "explanation_en": "why this tone",
+    "explanation_ru": "почему этот тон",
+    "explanation_uz": "nega bu ton"
   },
   "purpose": {
-    "primary": "To inform/persuade/entertain/describe",
     "primary_en": "To inform",
-    "primary_ru": "To inform in Russian",
-    "primary_uz": "To inform in Uzbek",
+    "primary_ru": "Информировать",
+    "primary_uz": "Ma'lumot berish",
     "percentage": 65,
-    "explanation_uz": "...",
-    "explanation_ru": "...",
-    "explanation_en": "..."
+    "explanation_en": "explanation",
+    "explanation_ru": "объяснение",
+    "explanation_uz": "tushuntirish"
   },
-  "author_perspective": {
-    "uz": "Author viewpoint in Uzbek",
-    "ru": "Author viewpoint in Russian",
-    "en": "Author viewpoint in English"
+  "how_to_approach": {
+    "steps_en": [
+      "STEP 1: Read the title/author note first — this gives context",
+      "STEP 2: Read first and last paragraph — understand structure",
+      "STEP 3: Look for transition words — they signal key ideas",
+      "STEP 4: Circle opinion words — shows author's stance",
+      "STEP 5: For each question — find evidence in text first"
+    ],
+    "steps_ru": [
+      "ШАГ 1: Сначала прочитайте название — это даёт контекст",
+      "ШАГ 2: Прочитайте первый и последний абзац",
+      "ШАГ 3: Ищите слова-переходы — они указывают на ключевые идеи",
+      "ШАГ 4: Отмечайте слова-мнения — показывает позицию автора",
+      "ШАГ 5: Для каждого вопроса — сначала найдите доказательство"
+    ],
+    "steps_uz": [
+      "QADAM 1: Avval sarlavha/muallif izohini o'qing",
+      "QADAM 2: Birinchi va oxirgi paragrafni o'qing",
+      "QADAM 3: O'tish so'zlarini toping — ular asosiy g'oyani ko'rsatadi",
+      "QADAM 4: Fikr so'zlarini belgilang — muallif pozitsiyasini ko'rsatadi",
+      "QADAM 5: Har bir savol uchun — avval matnda dalil toping"
+    ],
+    "time_management_en": "Spend 4-5 minutes reading, 1 minute per question",
+    "time_management_ru": "4-5 минут на чтение, 1 минута на вопрос",
+    "time_management_uz": "O'qishga 4-5 daqiqa, har savolga 1 daqiqa",
+    "common_traps_en": ["Too extreme answers (always/never)", "Out of scope — not mentioned in passage", "Opposite meaning trap", "Partially correct answers"],
+    "common_traps_ru": ["Слишком категоричные ответы (всегда/никогда)", "Вне контекста — не упомянуто в тексте", "Ловушка противоположного значения", "Частично правильные ответы"],
+    "common_traps_uz": ["Juda keskin javoblar (doim/hech qachon)", "Mavzudan tashqari — matnda aytilmagan", "Teskari ma'no tuzoq", "Qisman to'g'ri javoblar"]
   },
-  "sat_strategy": {
-    "do_uz": ["tip1", "tip2"],
-    "do_ru": ["tip1", "tip2"],
-    "do_en": ["tip1", "tip2"],
-    "avoid_uz": ["mistake1", "mistake2"],
-    "avoid_ru": ["mistake1", "mistake2"],
-    "avoid_en": ["mistake1", "mistake2"],
-    "time_tip_uz": "time advice",
-    "time_tip_ru": "time advice",
-    "time_tip_en": "time advice",
-    "score_impact": "+X points"
-  },
-  "practice_questions": [
+  "questions_solved": [
     {
-      "question": "SAT-style question",
-      "options": {"A": "option", "B": "option", "C": "option", "D": "option"},
-      "correct": "B",
-      "explanation_uz": "Why B in Uzbek",
-      "explanation_ru": "Why B in Russian",
-      "explanation_en": "Why B in English",
-      "question_type": "Main Idea/Detail/Inference/Vocabulary"
+      "question_number": 1,
+      "question_text": "exact question",
+      "question_text_ru": "точный вопрос",
+      "question_text_uz": "aniq savol",
+      "options": {"A": "option text", "B": "option text", "C": "option text", "D": "option text"},
+      "options_ru": {"A": "вариант на русском", "B": "вариант на русском", "C": "вариант на русском", "D": "вариант на русском"},
+      "options_uz": {"A": "o'zbek tilida variant", "B": "o'zbek tilida variant", "C": "o'zbek tilida variant", "D": "o'zbek tilida variant"},
+      "correct_answer": "B",
+      "thinking_process_en": "Here is HOW to think through this: First, the question asks about... Look at line X where the author says... This tells us... Therefore B is correct because...",
+      "thinking_process_ru": "Вот КАК думать: Вопрос спрашивает... Посмотрите на строку X... Это говорит нам... Поэтому B правильно потому что...",
+      "thinking_process_uz": "QANDAY o'ylash kerak: Savol so'rayapti... X qatorga qarang... Bu bizga aytadi... Shuning uchun B to'g'ri chunki...",
+      "why_correct_en": "B is correct because [specific evidence from text]",
+      "why_correct_ru": "B правильно потому что [конкретное доказательство]",
+      "why_correct_uz": "B to'g'ri chunki [matndan aniq dalil]",
+      "why_wrong_en": {"A": "A is wrong because...", "C": "C is wrong because...", "D": "D is wrong because..."},
+      "why_wrong_ru": {"A": "A неверно потому что...", "C": "C неверно потому что...", "D": "D неверно потому что..."},
+      "why_wrong_uz": {"A": "A noto'g'ri chunki...", "C": "C noto'g'ri chunki...", "D": "D noto'g'ri chunki..."},
+      "evidence_line": "Quote from passage that proves answer",
+      "question_type": "Main Idea/Detail/Inference/Vocabulary/Tone/Purpose/Evidence",
+      "difficulty": "Easy/Medium/Hard",
+      "tip_en": "For this question TYPE always...",
+      "tip_ru": "Для этого ТИПА вопроса всегда...",
+      "tip_uz": "Bu TUR savol uchun doim..."
     }
   ],
+  "sat_strategy": {
+    "do_en": ["tip1", "tip2"],
+    "do_ru": ["совет1", "совет2"],
+    "do_uz": ["maslahat1", "maslahat2"],
+    "avoid_en": ["mistake1", "mistake2"],
+    "avoid_ru": ["ошибка1", "ошибка2"],
+    "avoid_uz": ["xato1", "xato2"],
+    "score_impact": "+30-50 points"
+  },
   "improvement_plan": {
-    "week1_uz": "Week 1 task in Uzbek",
-    "week1_ru": "Week 1 task in Russian",
-    "week1_en": "Week 1 task in English",
-    "week2_uz": "Week 2 task in Uzbek",
-    "week2_ru": "Week 2 task in Russian",
-    "week2_en": "Week 2 task in English",
-    "week3_uz": "Week 3 task in Uzbek",
-    "week3_ru": "Week 3 task in Russian",
-    "week3_en": "Week 3 task in English",
+    "week1_en": "Week 1 task",
+    "week1_ru": "Задание неделя 1",
+    "week1_uz": "1-hafta vazifasi",
+    "week2_en": "Week 2 task",
+    "week2_ru": "Задание неделя 2",
+    "week2_uz": "2-hafta vazifasi",
+    "week3_en": "Week 3 task",
+    "week3_ru": "Задание неделя 3",
+    "week3_uz": "3-hafta vazifasi",
     "predicted_improvement": "+X points"
   },
   "extracted_text": "Full text extracted from image if image input"
 }
 
-Be thorough, specific, and helpful for SAT preparation. All explanations must be genuinely useful.
+IMPORTANT RULES:
+1. If passage has questions, solve ALL of them.
+2. Translation must be PRECISE and natural.
+3. Thinking process must be a REAL explanation.
+4. Evidence must be QUOTED from passage.
+5. Wrong answers must explain WHY wrong.
+6. All three languages must be present for every explanation field.
 """
 
 
@@ -213,9 +256,13 @@ def analyze_reading_image(db: Session, user: User, image_data: bytes, image_type
 def _finish_analysis(db: Session, user: User, source_text: str, language: str, is_pro: bool, analysis: dict, input_type: str) -> dict:
     analysis = _normalize_analysis(analysis)
     if not is_pro:
+        original_question_count = len(analysis.get("questions_solved") or [])
         analysis["vocabulary"] = analysis["vocabulary"][:3]
         analysis["difficult_words"] = analysis["vocabulary"]
         analysis["vocabulary_locked"] = True
+        analysis["translation_locked"] = True
+        analysis["questions_solved_locked"] = max(0, original_question_count - 1)
+        analysis["questions_solved"] = (analysis.get("questions_solved") or [])[:1]
         analysis["practice_questions"] = "LOCKED"
         analysis["improvement_plan_locked"] = True
 
@@ -257,6 +304,9 @@ def public_shared_analysis(db: Session, share_id: str) -> dict | None:
     public_analysis = dict(row.analysis or {})
     if not row.is_pro_snapshot:
         public_analysis["practice_questions"] = "LOCKED"
+        public_analysis["translation_locked"] = True
+        public_analysis["questions_solved"] = (public_analysis.get("questions_solved") or [])[:1]
+        public_analysis["questions_solved_locked"] = max(1, int(public_analysis.get("questions_solved_locked") or 1))
     return {
         "share_id": row.share_id,
         "language": row.language,
@@ -466,6 +516,59 @@ def _normalize_analysis(analysis: dict) -> dict:
     analysis["sat_tip"].setdefault("uzbek", analysis["sat_strategy"].get("time_tip_uz"))
     analysis["sat_tip"].setdefault("russian", analysis["sat_strategy"].get("time_tip_ru"))
     analysis["sat_tip"].setdefault("english", analysis["sat_strategy"].get("time_tip_en"))
+
+    analysis.setdefault("full_translation", {})
+    analysis["full_translation"].setdefault(
+        "uzbek",
+        "To'liq tarjima tayyorlanmadi. Matnni qayta tahlil qiling yoki aniqroq screenshot yuboring.",
+    )
+    analysis["full_translation"].setdefault(
+        "russian",
+        "Полный перевод не был подготовлен. Повторите анализ или загрузите более чёткий скриншот.",
+    )
+
+    analysis.setdefault("how_to_approach", {})
+    approach = analysis["how_to_approach"]
+    approach.setdefault(
+        "steps_en",
+        [
+            "STEP 1: Identify what the passage is mainly doing.",
+            "STEP 2: Mark transition words because they show shifts in logic.",
+            "STEP 3: For every question, find text evidence before choosing.",
+        ],
+    )
+    approach.setdefault(
+        "steps_ru",
+        [
+            "ШАГ 1: Определите, что в основном делает текст.",
+            "ШАГ 2: Отмечайте слова-переходы, потому что они показывают логику.",
+            "ШАГ 3: Для каждого вопроса сначала найдите доказательство в тексте.",
+        ],
+    )
+    approach.setdefault(
+        "steps_uz",
+        [
+            "QADAM 1: Matn asosan nima qilayotganini aniqlang.",
+            "QADAM 2: O'tish so'zlarini belgilang, ular mantiq o'zgarishini ko'rsatadi.",
+            "QADAM 3: Har bir savolda avval matndan dalil toping.",
+        ],
+    )
+    approach.setdefault("time_management_en", analysis["sat_strategy"].get("time_tip_en") or "Spend 4-5 minutes reading and about 1 minute per question.")
+    approach.setdefault("time_management_ru", analysis["sat_strategy"].get("time_tip_ru") or "Тратьте 4-5 минут на чтение и около 1 минуты на вопрос.")
+    approach.setdefault("time_management_uz", analysis["sat_strategy"].get("time_tip_uz") or "O'qishga 4-5 daqiqa va har savolga taxminan 1 daqiqa ajrating.")
+    approach.setdefault(
+        "common_traps_en",
+        ["Extreme wording", "Answer not mentioned in the passage", "Opposite meaning", "Partly true but incomplete"],
+    )
+    approach.setdefault(
+        "common_traps_ru",
+        ["Слишком категоричная формулировка", "Ответ не упомянут в тексте", "Противоположный смысл", "Частично верно, но неполно"],
+    )
+    approach.setdefault(
+        "common_traps_uz",
+        ["Juda keskin so'zlar", "Matnda aytilmagan javob", "Teskari ma'no", "Qisman to'g'ri, lekin to'liq emas"],
+    )
+
     analysis.setdefault("practice_questions", [])
     if isinstance(analysis["practice_questions"], list):
         for question in analysis["practice_questions"]:
@@ -475,6 +578,7 @@ def _normalize_analysis(analysis: dict) -> dict:
                 question.setdefault("explanation_ru", legacy)
                 question.setdefault("explanation_en", legacy)
                 question.setdefault("question_type", "Main Idea")
+    analysis["questions_solved"] = _normalize_questions_solved(analysis)
     analysis.setdefault("improvement_plan", {})
     analysis["improvement_plan"].setdefault("week1_uz", "Har kuni 2 ta main idea savolini tahlil qiling.")
     analysis["improvement_plan"].setdefault("week1_ru", "Каждый день разбирайте 2 вопроса на главную мысль.")
@@ -493,6 +597,74 @@ def _normalize_analysis(analysis: dict) -> dict:
     analysis.setdefault("passage_type", "Social Science")
     analysis.setdefault("reading_time", "2 minutes")
     return analysis
+
+
+def _normalize_questions_solved(analysis: dict) -> list[dict]:
+    raw_questions = analysis.get("questions_solved")
+    if not isinstance(raw_questions, list) or not raw_questions:
+        raw_questions = analysis.get("practice_questions") if isinstance(analysis.get("practice_questions"), list) else []
+
+    normalized: list[dict] = []
+    for index, item in enumerate(raw_questions if isinstance(raw_questions, list) else [], start=1):
+        if not isinstance(item, dict):
+            continue
+        options = item.get("options") if isinstance(item.get("options"), dict) else {}
+        options = {letter: str(options.get(letter) or "") for letter in ("A", "B", "C", "D")}
+        correct = str(item.get("correct_answer") or item.get("correct") or "B").strip().upper()[:1] or "B"
+        evidence = str(item.get("evidence_line") or item.get("evidence") or "Use the sentence in the passage that directly supports the answer.")
+        explanation_en = str(item.get("why_correct_en") or item.get("explanation_en") or item.get("explanation") or f"{correct} is correct because it is supported by the passage.")
+        explanation_ru = str(item.get("why_correct_ru") or item.get("explanation_ru") or explanation_en)
+        explanation_uz = str(item.get("why_correct_uz") or item.get("explanation_uz") or explanation_en)
+        question_text = str(item.get("question_text") or item.get("question") or "Which choice is best supported by the passage?")
+        question_type = str(item.get("question_type") or "Main Idea")
+
+        normalized.append(
+            {
+                "question_number": int(item.get("question_number") or index),
+                "question_text": question_text,
+                "question_text_ru": str(item.get("question_text_ru") or question_text),
+                "question_text_uz": str(item.get("question_text_uz") or question_text),
+                "options": options,
+                "options_ru": _normalize_option_map(item.get("options_ru"), options),
+                "options_uz": _normalize_option_map(item.get("options_uz"), options),
+                "correct_answer": correct,
+                "thinking_process_en": str(
+                    item.get("thinking_process_en")
+                    or f"First identify what the question asks. Then locate the evidence in the passage. The quoted evidence points to {correct}, so that answer is the safest SAT choice."
+                ),
+                "thinking_process_ru": str(
+                    item.get("thinking_process_ru")
+                    or f"Сначала определите, что спрашивает вопрос. Затем найдите доказательство в тексте. Цитата указывает на {correct}, поэтому это самый безопасный выбор."
+                ),
+                "thinking_process_uz": str(
+                    item.get("thinking_process_uz")
+                    or f"Avval savol nimani so'rayotganini aniqlang. Keyin matndan dalil toping. Dalil {correct} javobini ko'rsatadi, shuning uchun bu eng xavfsiz SAT tanlovi."
+                ),
+                "why_correct_en": explanation_en,
+                "why_correct_ru": explanation_ru,
+                "why_correct_uz": explanation_uz,
+                "why_wrong_en": _normalize_wrong_map(item.get("why_wrong_en"), correct, "This choice is not directly supported by the evidence."),
+                "why_wrong_ru": _normalize_wrong_map(item.get("why_wrong_ru"), correct, "Этот вариант не подтверждается прямо текстом."),
+                "why_wrong_uz": _normalize_wrong_map(item.get("why_wrong_uz"), correct, "Bu variant matndagi dalil bilan bevosita tasdiqlanmaydi."),
+                "evidence_line": evidence,
+                "question_type": question_type,
+                "difficulty": str(item.get("difficulty") or analysis.get("difficulty") or "Medium"),
+                "tip_en": str(item.get("tip_en") or f"For {question_type} questions, prove the answer with one exact phrase from the passage."),
+                "tip_ru": str(item.get("tip_ru") or f"Для вопросов типа {question_type} подтверждайте ответ точной фразой из текста."),
+                "tip_uz": str(item.get("tip_uz") or f"{question_type} savollarida javobni matndagi aniq ibora bilan isbotlang."),
+            }
+        )
+    return normalized
+
+
+def _normalize_option_map(value: object, fallback: dict[str, str]) -> dict[str, str]:
+    source = value if isinstance(value, dict) else fallback
+    return {letter: str(source.get(letter) or fallback.get(letter) or "") for letter in ("A", "B", "C", "D")}
+
+
+def _normalize_wrong_map(value: object, correct: str, fallback: str) -> dict[str, str]:
+    source = value if isinstance(value, dict) else {}
+    return {letter: str(source.get(letter) or fallback) for letter in ("A", "B", "C", "D") if letter != correct}
 
 
 def _fallback_analysis(text: str) -> dict:

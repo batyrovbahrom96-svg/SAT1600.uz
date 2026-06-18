@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ArrowRight, BookOpen, CheckCircle, Clock, Eye, Lightbulb, Lock, Share2, Sparkles, Target, Theater, XCircle } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { ArrowRight, BookOpen, CheckCircle, ChevronDown, ChevronUp, Clock, Compass, Eye, Globe2, Lightbulb, Lock, Share2, Sparkles, Target, Theater, XCircle } from "lucide-react";
 import type { ReadingAnalysis, ReadingAnalysisResponse } from "@/lib/api";
 import type { Language } from "@/lib/i18n";
 
@@ -41,6 +41,25 @@ const T = {
     time_tip: "Time tip",
     score_impact: "Score impact",
     practice: "📝 Practice Questions",
+    full_translation: "🌐 Full Translation",
+    translation_tip: "Use this to fully understand difficult passages",
+    show_russian: "🇷🇺 Russian",
+    show_uzbek: "🇺🇿 Uzbek",
+    first_sentences: "First 3 sentences",
+    unlock_full: "Unlock full translation",
+    how_to_approach: "🧭 How To Approach",
+    time_plan: "⏱️ Time Management",
+    common_traps: "⚠️ Common Traps to Avoid",
+    questions_solved: "✅ Questions Solved",
+    how_to_think: "🧠 How To Think",
+    why_correct: "✅ Why This Is Correct",
+    evidence: "📍 Evidence From Text",
+    why_wrong: "❌ Why Others Are Wrong",
+    tip_for_type: "💡 Tip For This Question Type",
+    show_thinking: "Show thinking process",
+    hide_thinking: "Hide thinking process",
+    question_locked: "Questions 2+ available in Pro",
+    see_all_questions: "See all questions solved",
     locked_questions: "3 SAT-style questions with full explanations available in Pro",
     improvement: "📈 Your Reading Improvement Plan",
     locked_plan: "Your 3-week plan is available in Pro.",
@@ -48,6 +67,7 @@ const T = {
     week2: "Week 2",
     week3: "Week 3",
     upgrade: "🔑 Upgrade to Pro →",
+    pro_price: "300,000 UZS / month",
     analyze_again: "🔍 Analyze Another Passage",
     share: "📤 Share Results",
     copied: "Copied",
@@ -93,6 +113,25 @@ const T = {
     time_tip: "Совет по времени",
     score_impact: "Влияние на балл",
     practice: "📝 Практические Вопросы",
+    full_translation: "🌐 Полный перевод",
+    translation_tip: "Используйте для полного понимания текста",
+    show_russian: "🇷🇺 Русский",
+    show_uzbek: "🇺🇿 Узбекский",
+    first_sentences: "Первые 3 предложения",
+    unlock_full: "Разблокировать полный перевод",
+    how_to_approach: "🧭 Как подходить к тексту",
+    time_plan: "⏱️ Управление временем",
+    common_traps: "⚠️ Типичные ловушки",
+    questions_solved: "✅ Решённые вопросы",
+    how_to_think: "🧠 Как думать",
+    why_correct: "✅ Почему это правильно",
+    evidence: "📍 Доказательство из текста",
+    why_wrong: "❌ Почему другие неверны",
+    tip_for_type: "💡 Совет для этого типа",
+    show_thinking: "Показать процесс мышления",
+    hide_thinking: "Скрыть процесс мышления",
+    question_locked: "Вопросы 2+ доступны в Pro",
+    see_all_questions: "Смотреть все решённые вопросы",
     locked_questions: "3 SAT-вопроса с полными объяснениями доступны в Pro",
     improvement: "📈 Ваш план улучшения Reading",
     locked_plan: "Ваш 3-недельный план доступен в Pro.",
@@ -100,6 +139,7 @@ const T = {
     week2: "Неделя 2",
     week3: "Неделя 3",
     upgrade: "🔑 Получить Pro →",
+    pro_price: "300,000 UZS / месяц",
     analyze_again: "🔍 Анализировать другой текст",
     share: "📤 Поделиться",
     copied: "Скопировано",
@@ -145,6 +185,25 @@ const T = {
     time_tip: "Vaqt maslahati",
     score_impact: "Ballga ta'siri",
     practice: "📝 Mashq Savollari",
+    full_translation: "🌐 To'liq Tarjima",
+    translation_tip: "Qiyin matnlarni to'liq tushunish uchun foydalaning",
+    show_russian: "🇷🇺 Ruscha",
+    show_uzbek: "🇺🇿 O'zbekcha",
+    first_sentences: "Birinchi 3 jumla",
+    unlock_full: "To'liq tarjimani ochish",
+    how_to_approach: "🧭 Qanday Yondashish Kerak",
+    time_plan: "⏱️ Vaqt Boshqaruvi",
+    common_traps: "⚠️ Keng Tarqalgan Tuzoklar",
+    questions_solved: "✅ Yechilgan Savollar",
+    how_to_think: "🧠 Qanday O'ylash Kerak",
+    why_correct: "✅ Nima Uchun Bu To'g'ri",
+    evidence: "📍 Matndan Dalil",
+    why_wrong: "❌ Nima Uchun Boshqalar Xato",
+    tip_for_type: "💡 Bu Turdagi Savol Uchun Maslahat",
+    show_thinking: "O'ylash jarayonini ko'rsatish",
+    hide_thinking: "O'ylash jarayonini yashirish",
+    question_locked: "2+ savollar Pro da mavjud",
+    see_all_questions: "Barcha yechilgan savollarni ko'rish",
     locked_questions: "3 ta SAT uslubidagi savol va to'liq izohlar Pro da mavjud",
     improvement: "📈 Reading rivojlanish rejangiz",
     locked_plan: "3 haftalik rejangiz Pro da mavjud.",
@@ -152,6 +211,7 @@ const T = {
     week2: "2-hafta",
     week3: "3-hafta",
     upgrade: "🔑 Pro Olish →",
+    pro_price: "300,000 UZS / oy",
     analyze_again: "🔍 Boshqa matn tahlil qilish",
     share: "📤 Ulashish",
     copied: "Nusxalandi",
@@ -181,9 +241,15 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
   const words = (analysis.vocabulary?.length ? analysis.vocabulary : analysis.difficult_words) || [];
   const shareUrl = result.share_url || `https://www.sattest.uz/reading-analyzer/shared/${result.share_id}`;
   const [copied, setCopied] = useState(false);
-  const [showAnswers, setShowAnswers] = useState<Record<number, boolean>>({});
+  const [showThinking, setShowThinking] = useState<Record<number, boolean>>({});
+  const [translationLanguage, setTranslationLanguage] = useState<"ru" | "uz">(language === "ru" ? "ru" : "uz");
   const [remaining, setRemaining] = useState("23:59:59");
   const isPro = Boolean(result.is_pro);
+
+  useEffect(() => {
+    if (language === "ru") setTranslationLanguage("ru");
+    if (language === "uz") setTranslationLanguage("uz");
+  }, [language]);
 
   useEffect(() => {
     const key = `sattest_reading_analysis_expiry_${result.share_id}`;
@@ -259,6 +325,22 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
         </section>
       ) : null}
 
+      <AnalysisCard icon={<Globe2 size={22} />} title={copy.full_translation}>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <button className={["min-h-10 border px-4 text-xs font-black uppercase tracking-[0.12em]", translationLanguage === "ru" ? "border-[#FFD700] bg-[#FFD700] text-black" : "border-white/10 bg-black/20 text-white/60"].join(" ")} onClick={() => setTranslationLanguage("ru")} type="button">{copy.show_russian}</button>
+          <button className={["min-h-10 border px-4 text-xs font-black uppercase tracking-[0.12em]", translationLanguage === "uz" ? "border-[#FFD700] bg-[#FFD700] text-black" : "border-white/10 bg-black/20 text-white/60"].join(" ")} onClick={() => setTranslationLanguage("uz")} type="button">{copy.show_uzbek}</button>
+        </div>
+        <div className="border border-white/10 bg-black/20 p-5">
+          <p className="whitespace-pre-line text-base font-light leading-8 text-white/75">{translationText(analysis, translationLanguage, isPro)}</p>
+        </div>
+        {!isPro ? (
+          <div className="mt-4">
+            <LockedBlock copy={{ ...copy, locked_questions: `${copy.unlock_full} · ${copy.first_sentences}` }} />
+          </div>
+        ) : null}
+        <p className="mt-4 text-sm font-semibold text-[#FFD700]">💡 {copy.translation_tip}</p>
+      </AnalysisCard>
+
       <AnalysisCard icon={<Lightbulb size={22} />} title={copy.main_idea}>
         <p className="text-base font-light leading-7 text-white/75">{mainDetailed(analysis, language)}</p>
         <div className="mt-5 border-t border-white/10 pt-5">
@@ -296,6 +378,34 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
         </div>
       </AnalysisCard>
 
+      <AnalysisCard icon={<Compass size={22} />} title={copy.how_to_approach}>
+        <div className="grid gap-3">
+          {approachSteps(analysis, language).map((step) => (
+            <div className="border border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/68" key={step}>✅ {step}</div>
+          ))}
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <InfoPill label={copy.time_plan} value={approachTime(analysis, language)} />
+          <div className="border border-red-300/15 bg-red-950/15 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-red-200">{copy.common_traps}</p>
+            <div className="mt-3 grid gap-2">
+              {approachTraps(analysis, language).map((trap) => <p className="text-sm leading-6 text-white/64" key={trap}>❌ {trap}</p>)}
+            </div>
+          </div>
+        </div>
+      </AnalysisCard>
+
+      <AnalysisCard icon={<Eye size={22} />} title={copy.questions_solved}>
+        <SolvedQuestions
+          analysis={analysis}
+          copy={copy}
+          isPro={isPro}
+          language={language}
+          showThinking={showThinking}
+          toggleThinking={(index) => setShowThinking((state) => ({ ...state, [index]: !state[index] }))}
+        />
+      </AnalysisCard>
+
       <AnalysisCard icon={<Target size={22} />} title={copy.strategy}>
         <p className="text-sm font-black uppercase tracking-[0.2em] text-white/35">{copy.for_type}</p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -306,33 +416,6 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
           <InfoPill label={`⏱️ ${copy.time_tip}`} value={strategyTime(analysis, language)} />
           <InfoPill label={`🏆 ${copy.score_impact}`} value={analysis.sat_strategy?.score_impact || "+20 points"} />
         </div>
-      </AnalysisCard>
-
-      <AnalysisCard icon={<Eye size={22} />} title={copy.practice}>
-        {analysis.practice_questions === "LOCKED" ? (
-          <LockedBlock copy={copy} />
-        ) : (
-          <div className="grid gap-4">
-            {analysis.practice_questions.map((question, index) => (
-              <div className="border border-white/10 bg-black/20 p-5" key={`${question.question}-${index}`}>
-                <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">Q{index + 1} • {question.question_type}</p>
-                <p className="mt-2 text-lg font-semibold leading-7 text-white">{question.question}</p>
-                <div className="mt-4 grid gap-2">
-                  {(["A", "B", "C", "D"] as const).map((option) => (
-                    <div className="border border-white/10 px-4 py-3 text-sm text-white/62" key={option}><span className="font-black text-white">{option}.</span> {question.options?.[option]}</div>
-                  ))}
-                </div>
-                <button className="mt-4 min-h-11 border border-[#FFD700]/40 px-4 text-sm font-bold text-[#FFD700]" onClick={() => setShowAnswers((state) => ({ ...state, [index]: !state[index] }))} type="button">{copy.show_answer}</button>
-                {showAnswers[index] ? (
-                  <div className="mt-4 border border-[#FFD700]/20 bg-[#FFD700]/10 p-4">
-                    <p className="text-sm font-semibold text-[#FFD700]">✅ {copy.answer}: {question.correct}</p>
-                    <p className="mt-2 text-sm font-light leading-6 text-white/65">{questionExplanation(question, language)}</p>
-                  </div>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        )}
       </AnalysisCard>
 
       <AnalysisCard icon={<Sparkles size={22} />} title={`${copy.improvement}${isPro ? "" : " 🔒"}`}>
@@ -356,7 +439,7 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
         </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <Link className="inline-flex min-h-14 items-center justify-center gap-2 border border-[#FFD700] bg-[#FFD700] px-5 text-sm font-black uppercase tracking-[0.14em] text-black" href={`/pricing?lang=${language}`}>
-            {copy.upgrade} <ArrowRight size={16} />
+            {copy.upgrade} · {copy.pro_price} <ArrowRight size={16} />
           </Link>
           <Link className="inline-flex min-h-14 items-center justify-center gap-2 border border-white/15 bg-black/20 px-5 text-sm font-black uppercase tracking-[0.14em] text-white/75" href={`/reading-analyzer?lang=${language}`}>
             {copy.analyze_again}
@@ -373,6 +456,82 @@ function TopBar({ analysis, copy }: { analysis: ReadingAnalysis; copy: Record<st
       <Metric label={copy.passage_type} value={translatePassageType(analysis.passage_type, copy)} />
       <Metric label={copy.difficulty} value={`⭐⭐⭐ ${translateDifficulty(analysis.difficulty, copy)}`} />
       <Metric label={copy.reading_time} value={`~${analysis.reading_time || "2 minutes"}`} />
+    </div>
+  );
+}
+
+function SolvedQuestions({
+  analysis,
+  copy,
+  isPro,
+  language,
+  showThinking,
+  toggleThinking,
+}: {
+  analysis: ReadingAnalysis;
+  copy: Record<string, string>;
+  isPro: boolean;
+  language: Language;
+  showThinking: Record<number, boolean>;
+  toggleThinking: (index: number) => void;
+}) {
+  const questions = analysis.questions_solved || [];
+  if (!questions.length) {
+    return <LockedBlock copy={{ ...copy, locked_questions: copy.locked_questions }} />;
+  }
+  const lockedCount = !isPro ? Math.max(Number(analysis.questions_solved_locked || 0), questions.length > 1 ? questions.length - 1 : 1) : 0;
+  return (
+    <div className="grid gap-5">
+      {questions.map((question, index) => {
+        const correct = (question.correct_answer || "B").toUpperCase();
+        const options = questionOptions(question, language);
+        return (
+          <div className="border border-white/10 bg-black/20 p-5" key={`${question.question_number || index}-${question.question_text}`}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">Q{question.question_number || index + 1} • {question.question_type || "SAT Reading"}</p>
+              <span className="border border-white/10 px-3 py-1 text-xs font-bold text-white/55">{translateDifficulty(question.difficulty, copy)}</span>
+            </div>
+            <p className="mt-3 text-lg font-semibold leading-8 text-white">{questionText(question, language)}</p>
+            <div className="mt-4 grid gap-2">
+              {(["A", "B", "C", "D"] as const).map((option) => (
+                <div className={["border px-4 py-3 text-sm", option === correct ? "border-emerald-300/35 bg-emerald-400/10 text-emerald-100" : "border-white/10 text-white/62"].join(" ")} key={option}>
+                  <span className="font-black text-white">{option}.</span> {options[option]} {option === correct ? <span className="ml-2 font-black text-emerald-300">← ✅</span> : null}
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 rounded-none border border-emerald-300/25 bg-emerald-500/10 p-4">
+              <p className="text-sm font-black text-emerald-200">✅ {copy.answer}: {correct}</p>
+              <p className="mt-2 text-sm leading-6 text-white/70"><b>{copy.why_correct}:</b> {whyCorrect(question, language)}</p>
+            </div>
+            <button className="mt-4 flex min-h-11 w-full items-center justify-between border border-[#FFD700]/30 bg-[#FFD700]/10 px-4 text-left text-sm font-bold text-[#FFD700]" onClick={() => toggleThinking(index)} type="button">
+              {showThinking[index] ? copy.hide_thinking : copy.show_thinking}
+              {showThinking[index] ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+            </button>
+            {showThinking[index] ? (
+              <div className="mt-4 border border-white/10 bg-black/30 p-4">
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-white/35">{copy.how_to_think}</p>
+                <p className="mt-2 text-sm font-light leading-7 text-white/70">{thinkingProcess(question, language)}</p>
+              </div>
+            ) : null}
+            <blockquote className="mt-4 border-l-4 border-[#FFD700] bg-[#FFD700]/10 p-4 text-sm italic leading-7 text-white/72">
+              <p className="font-black not-italic text-[#FFD700]">{copy.evidence}</p>
+              "{question.evidence_line || "Find the exact sentence in the passage that proves the answer."}"
+            </blockquote>
+            <div className="mt-4 border border-red-300/15 bg-red-950/15 p-4">
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-red-200">{copy.why_wrong}</p>
+              <div className="mt-3 grid gap-2">
+                {Object.entries(whyWrong(question, language)).map(([letter, reason]) => (
+                  <p className="text-sm leading-6 text-white/64" key={letter}>❌ {letter} — {reason}</p>
+                ))}
+              </div>
+            </div>
+            <p className="mt-4 border border-[#FFD700]/20 bg-[#FFD700]/10 p-4 text-sm font-semibold leading-6 text-[#FFD700]">{copy.tip_for_type}: {questionTip(question, language)}</p>
+          </div>
+        );
+      })}
+      {lockedCount > 0 ? (
+        <LockedBlock copy={{ ...copy, locked_questions: `${copy.question_locked}. ${copy.see_all_questions}.` }} />
+      ) : null}
     </div>
   );
 }
@@ -399,7 +558,7 @@ function InfoPill({ label, value }: { label: string; value: string }) {
 }
 
 function LockedBlock({ copy }: { copy: Record<string, string> }) {
-  return <div className="border border-[#FFD700]/25 bg-[#FFD700]/10 p-5 text-center"><div className="mx-auto h-20 max-w-md space-y-2 overflow-hidden blur-sm"><p className="h-3 bg-white/30" /><p className="h-3 bg-white/20" /><p className="h-3 bg-white/15" /></div><Lock className="mx-auto mt-4 text-[#FFD700]" size={30} /><p className="mt-3 text-lg font-semibold text-white">{copy.locked_questions}</p><Link className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 border border-[#FFD700] bg-[#FFD700] px-6 text-sm font-black uppercase tracking-[0.14em] text-black" href="/pricing">{copy.upgrade}<ArrowRight size={16} /></Link></div>;
+  return <div className="border border-[#FFD700]/25 bg-[#FFD700]/10 p-5 text-center"><div className="mx-auto h-20 max-w-md space-y-2 overflow-hidden blur-sm"><p className="h-3 bg-white/30" /><p className="h-3 bg-white/20" /><p className="h-3 bg-white/15" /></div><Lock className="mx-auto mt-4 text-[#FFD700]" size={30} /><p className="mt-3 text-lg font-semibold text-white">{copy.locked_questions}</p><p className="mt-2 text-sm font-bold text-[#FFD700]">{copy.pro_price}</p><Link className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 border border-[#FFD700] bg-[#FFD700] px-6 text-sm font-black uppercase tracking-[0.14em] text-black" href="/pricing">{copy.upgrade}<ArrowRight size={16} /></Link></div>;
 }
 
 function mainDetailed(analysis: ReadingAnalysis, language: Language) {
@@ -462,10 +621,76 @@ function strategyTime(analysis: ReadingAnalysis, language: Language) {
   return analysis.sat_strategy?.[`time_tip_${language}` as "time_tip_uz"] || analysis.sat_strategy?.time_tip_en || "";
 }
 
-function questionExplanation(question: Exclude<ReadingAnalysis["practice_questions"], "LOCKED">[number], language: Language) {
-  if (language === "ru") return question.explanation_ru || question.explanation_en || question.explanation;
-  if (language === "en") return question.explanation_en || question.explanation;
-  return question.explanation_uz || question.explanation_en || question.explanation;
+function translationText(analysis: ReadingAnalysis, translationLanguage: "ru" | "uz", isPro: boolean) {
+  const value = translationLanguage === "ru" ? analysis.full_translation?.russian : analysis.full_translation?.uzbek;
+  const text = value || "";
+  if (isPro) return text;
+  return firstSentences(text, 3);
+}
+
+function firstSentences(value: string, limit: number) {
+  const sentences = value.match(/[^.!?。！？]+[.!?。！？]+|[^.!?。！？]+$/g) || [];
+  return sentences.slice(0, limit).join(" ").trim() || value;
+}
+
+function approachSteps(analysis: ReadingAnalysis, language: Language) {
+  if (language === "ru") return analysis.how_to_approach?.steps_ru || analysis.how_to_approach?.steps_en || [];
+  if (language === "en") return analysis.how_to_approach?.steps_en || [];
+  return analysis.how_to_approach?.steps_uz || analysis.how_to_approach?.steps_en || [];
+}
+
+function approachTime(analysis: ReadingAnalysis, language: Language) {
+  if (language === "ru") return analysis.how_to_approach?.time_management_ru || analysis.how_to_approach?.time_management_en || "";
+  if (language === "en") return analysis.how_to_approach?.time_management_en || "";
+  return analysis.how_to_approach?.time_management_uz || analysis.how_to_approach?.time_management_en || "";
+}
+
+function approachTraps(analysis: ReadingAnalysis, language: Language) {
+  if (language === "ru") return analysis.how_to_approach?.common_traps_ru || analysis.how_to_approach?.common_traps_en || [];
+  if (language === "en") return analysis.how_to_approach?.common_traps_en || [];
+  return analysis.how_to_approach?.common_traps_uz || analysis.how_to_approach?.common_traps_en || [];
+}
+
+type SolvedQuestion = NonNullable<ReadingAnalysis["questions_solved"]>[number];
+
+function questionText(question: SolvedQuestion, language: Language) {
+  if (language === "ru") return question.question_text_ru || question.question_text || "";
+  if (language === "en") return question.question_text || question.question_text_ru || question.question_text_uz || "";
+  return question.question_text_uz || question.question_text || "";
+}
+
+function questionOptions(question: SolvedQuestion, language: Language) {
+  if (language === "ru") return question.options_ru || question.options || emptyOptions();
+  if (language === "uz") return question.options_uz || question.options || emptyOptions();
+  return question.options || emptyOptions();
+}
+
+function thinkingProcess(question: SolvedQuestion, language: Language) {
+  if (language === "ru") return question.thinking_process_ru || question.thinking_process_en || "";
+  if (language === "en") return question.thinking_process_en || "";
+  return question.thinking_process_uz || question.thinking_process_en || "";
+}
+
+function whyCorrect(question: SolvedQuestion, language: Language) {
+  if (language === "ru") return question.why_correct_ru || question.why_correct_en || "";
+  if (language === "en") return question.why_correct_en || "";
+  return question.why_correct_uz || question.why_correct_en || "";
+}
+
+function whyWrong(question: SolvedQuestion, language: Language) {
+  if (language === "ru") return question.why_wrong_ru || question.why_wrong_en || {};
+  if (language === "en") return question.why_wrong_en || {};
+  return question.why_wrong_uz || question.why_wrong_en || {};
+}
+
+function questionTip(question: SolvedQuestion, language: Language) {
+  if (language === "ru") return question.tip_ru || question.tip_en || "";
+  if (language === "en") return question.tip_en || "";
+  return question.tip_uz || question.tip_en || "";
+}
+
+function emptyOptions(): Record<"A" | "B" | "C" | "D", string> {
+  return { A: "", B: "", C: "", D: "" };
 }
 
 function planWeek(analysis: ReadingAnalysis, language: Language, week: 1 | 2 | 3) {

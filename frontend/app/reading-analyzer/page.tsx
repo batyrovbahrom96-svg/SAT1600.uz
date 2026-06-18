@@ -123,9 +123,38 @@ const TRANSLATIONS = {
 } satisfies Record<Language, Record<string, unknown>>;
 
 const examples = {
-  literature: "The old house stood at the edge of the field, its windows reflecting the pale morning light. Although Mara had passed it many times, today it seemed less abandoned than expectant, as if it had been waiting for her to notice the faint music drifting from within.",
-  science: "Researchers studying coral reefs have found that some species can adapt to warmer waters faster than previously expected. However, the scientists caution that adaptation alone cannot offset the combined pressures of pollution, acidification, and habitat loss.",
-  history: "During the late nineteenth century, urban reformers argued that public parks were not luxuries but necessities. They believed green spaces could improve public health, encourage civic pride, and offer working families relief from crowded industrial neighborhoods.",
+  literature: `The following passage is adapted from a novel published in 1890.
+
+Sarah walked slowly through the garden, each step heavy with memory. The roses, once vibrant and full of life, now drooped sadly in the autumn rain. She had planted them with her mother twenty years ago, and now the garden seemed to hold both the warmth of that afternoon and the silence that followed her mother's absence.
+
+Questions:
+1. The main purpose of this passage is to:
+A) Describe a garden
+B) Show Sarah's emotional state
+C) Explain rose cultivation
+D) Compare past and present weather
+
+2. The word "vibrant" in line 2 most nearly means:
+A) Dark
+B) Full of energy
+C) Artificial
+D) Faded`,
+  science: `Recent studies have shown that photosynthesis, the process by which plants convert sunlight into energy, is more complex than previously thought. Scientists have discovered that plants can adjust the efficiency of this process depending on temperature, water availability, and the amount of light they receive. This flexibility may help some species survive in changing climates, although it cannot protect plants from every environmental stress.
+
+Questions:
+1. According to the passage, photosynthesis:
+A) Was recently discovered
+B) Is simpler than thought
+C) Is more complex than thought
+D) Converts energy into sunlight`,
+  history: `The Industrial Revolution, which began in Britain in the late 18th century, fundamentally transformed society. Factories replaced many traditional workshops, cities expanded rapidly, and new forms of transportation connected markets more efficiently. Although these changes increased production, they also created difficult working conditions and forced governments to reconsider their role in protecting citizens.
+
+Questions:
+1. The author's primary purpose is to:
+A) Criticize the Industrial Revolution
+B) Explain its historical significance
+C) Compare it to modern industry
+D) Describe specific inventions`,
 };
 
 export default function ReadingAnalyzerPage() {
