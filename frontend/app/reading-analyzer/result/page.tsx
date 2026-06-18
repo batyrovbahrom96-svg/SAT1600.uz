@@ -18,6 +18,7 @@ const T = {
     start_btn: "Start Analyzer",
     get: ["💡 Main idea simplified", "📚 Vocabulary explained", "🎭 Tone & purpose", "🎯 SAT strategy tips", "📝 Practice questions (Pro)"],
     example: "Example results",
+    example_preview: "💡 Main idea → 📚 Key vocabulary → 🎯 SAT strategy → 📝 Pro questions",
     history: "📊 Your Analysis History",
     empty_history: "Your last analyses will appear here.",
   },
@@ -30,6 +31,7 @@ const T = {
     start_btn: "Начать анализ",
     get: ["💡 Главная идея простыми словами", "📚 Объяснение слов", "🎭 Тон и цель", "🎯 SAT стратегия", "📝 Вопросы для практики (Pro)"],
     example: "Пример результата",
+    example_preview: "💡 Главная идея → 📚 Ключевые слова → 🎯 SAT стратегия → 📝 Pro вопросы",
     history: "📊 История анализов",
     empty_history: "Ваши последние анализы появятся здесь.",
   },
@@ -42,6 +44,7 @@ const T = {
     start_btn: "Tahlilni Boshlash",
     get: ["💡 Asosiy g'oya sodda tushuntiriladi", "📚 So'zlar izohlanadi", "🎭 Ton va maqsad", "🎯 SAT strategiyasi", "📝 Mashq savollari (Pro)"],
     example: "Namuna natija",
+    example_preview: "💡 Asosiy g'oya → 📚 Muhim so'zlar → 🎯 SAT strategiyasi → 📝 Pro savollar",
     history: "📊 Tahlil tarixingiz",
     empty_history: "Oxirgi tahlillaringiz shu yerda chiqadi.",
   },
@@ -96,7 +99,7 @@ export default function ReadingAnalyzerResultPage() {
               </Link>
               <div className="mx-auto mt-7 max-w-md border border-white/10 bg-black/20 p-4 text-left">
                 <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">{copy.example as string}</p>
-                <p className="mt-3 text-sm leading-6 text-white/62">💡 Main idea → 📚 Key vocabulary → 🎯 SAT strategy → 📝 Pro questions</p>
+                <p className="mt-3 text-sm leading-6 text-white/62">{copy.example_preview as string}</p>
               </div>
             </div>
           )}
@@ -111,7 +114,7 @@ export default function ReadingAnalyzerResultPage() {
             {history.length ? history.map((item) => (
               <Link className="border border-white/10 bg-black/20 p-4 transition hover:border-[#FFD700]/40" href={`/reading-analyzer/shared/${item.share_id}?lang=${language}`} key={item.share_id}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-semibold text-white">{item.passage_type} • {item.difficulty}</p>
+                  <p className="font-semibold text-white">{translatePassageType(item.passage_type, language)} • {translateDifficulty(item.difficulty, language)}</p>
                   <p className="text-xs text-white/38">{new Date(item.created_at).toLocaleDateString()}</p>
                 </div>
                 <p className="mt-2 line-clamp-2 text-sm text-white/45">{item.source_preview}</p>
@@ -122,4 +125,35 @@ export default function ReadingAnalyzerResultPage() {
       </section>
     </main>
   );
+}
+
+function translateDifficulty(value: string | undefined, language: Language) {
+  const normalized = (value || "Medium").toLowerCase();
+  if (language === "ru") {
+    if (normalized.includes("easy")) return "Лёгкий";
+    if (normalized.includes("hard")) return "Сложный";
+    return "Средний";
+  }
+  if (language === "uz") {
+    if (normalized.includes("easy")) return "Oson";
+    if (normalized.includes("hard")) return "Qiyin";
+    return "O'rtacha";
+  }
+  if (normalized.includes("easy")) return "Easy";
+  if (normalized.includes("hard")) return "Hard";
+  return "Medium";
+}
+
+function translatePassageType(value: string | undefined, language: Language) {
+  const normalized = (value || "").toLowerCase();
+  const map = {
+    en: { literature: "Literature", science: "Science", history: "History", social: "Social Science", fallback: "SAT Passage" },
+    ru: { literature: "Литература", science: "Наука", history: "История", social: "Социальные науки", fallback: "Текст SAT" },
+    uz: { literature: "Adabiyot", science: "Fan", history: "Tarix", social: "Ijtimoiy fan", fallback: "SAT matni" },
+  }[language];
+  if (normalized.includes("literature")) return map.literature;
+  if (normalized.includes("science") && !normalized.includes("social")) return map.science;
+  if (normalized.includes("history")) return map.history;
+  if (normalized.includes("social")) return map.social;
+  return map.fallback;
 }

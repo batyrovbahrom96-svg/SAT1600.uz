@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Brain, Clipboard, Loader2, Lock, Search, Sparkles, Star, Zap } from "lucide-react";
+import { ArrowRight, Clipboard, Loader2, Search, Sparkles, Star, Zap } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { ApiError, analyzePassage, getReadingAnalyzerStats, getToken, type ReadingAnalysisResponse } from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
@@ -11,6 +11,7 @@ const TRANSLATIONS = {
   en: {
     page_title: "Reading made clear.",
     page_subtitle: "Paste any SAT Reading passage and get instant AI analysis",
+    analyzer_title: "AI Reading Analyzer",
     input_placeholder: "Paste your SAT reading passage here...",
     analyze_button: "🔍 Analyze Passage",
     free_limit: "FREE: 3 analyses/day",
@@ -35,6 +36,7 @@ const TRANSLATIONS = {
   ru: {
     page_title: "Понимай тексты легко.",
     page_subtitle: "Вставь любой отрывок SAT и получи мгновенный AI анализ",
+    analyzer_title: "AI Анализатор Чтения",
     input_placeholder: "Вставьте отрывок SAT для чтения сюда...",
     analyze_button: "🔍 Анализировать",
     free_limit: "БЕСПЛАТНО: 3 анализа/день",
@@ -42,8 +44,8 @@ const TRANSLATIONS = {
     char_count: "символов",
     min_hint: "Минимум 50 символов",
     paste: "Вставить",
-    examples: ["📚 Пример Literature", "🔬 Пример Science", "📜 Пример History"],
-    trust: ["🔒 Текст не сохраняется публично", "⚡ Результат за 3 секунды", "🤖 Работает на Claude AI"],
+    examples: ["📚 Пример литературы", "🔬 Пример науки", "📜 Пример истории"],
+    trust: ["🔒 Текст не сохраняется публично", "⚡ Результат за 3 секунды", "🤖 Анализ от Claude AI"],
     features: ["Claude AI", "3 языка", "Для SAT", "Мгновенно"],
     remaining: (count: number | null) => count === null ? "♾️ Безлимит — Pro активен" : `✅ Осталось ${count} бесплатных анализа сегодня`,
     loading_1: "AI анализирует текст...",
@@ -59,6 +61,7 @@ const TRANSLATIONS = {
   uz: {
     page_title: "Matnlarni oson tushuning.",
     page_subtitle: "Istalgan SAT matnini joylashtiring va darhol AI tahlil oling",
+    analyzer_title: "AI Reading Tahlilchi",
     input_placeholder: "SAT Reading matnini bu yerga joylashtiring...",
     analyze_button: "🔍 Tahlil Qilish",
     free_limit: "BEPUL: Kuniga 3 ta",
@@ -66,7 +69,7 @@ const TRANSLATIONS = {
     char_count: "belgi",
     min_hint: "Kamida 50 belgi",
     paste: "Joylash",
-    examples: ["📚 Literature misol", "🔬 Science misol", "📜 History misol"],
+    examples: ["📚 Adabiyot misoli", "🔬 Fan misoli", "📜 Tarix misoli"],
     trust: ["🔒 Matningiz ommaviy saqlanmaydi", "⚡ Natija 3 soniyada", "🤖 Claude AI bilan"],
     features: ["Claude AI", "3 Til", "SAT uchun", "Darhol"],
     remaining: (count: number | null) => count === null ? "♾️ Cheksiz — Pro faol" : `✅ Bugun ${count} ta bepul tahlil qoldi`,
@@ -178,7 +181,7 @@ export default function ReadingAnalyzerPage() {
               <Search size={22} />
             </div>
             <div>
-              <h2 className="text-2xl font-light text-white">🔍 AI Reading Analyzer</h2>
+              <h2 className="text-2xl font-light text-white">🔍 {copy.analyzer_title as string}</h2>
               <p className="mt-1 text-sm text-white/50">{copy.free_limit as string}<span className="mx-2 text-white/20">•</span>{copy.pro_limit as string}</p>
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ArrowRight, BookOpen, CheckCircle, Clock, Copy, Eye, Lightbulb, Lock, Share2, Sparkles, Target, Theater, XCircle } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle, Clock, Eye, Lightbulb, Lock, Share2, Sparkles, Target, Theater, XCircle } from "lucide-react";
 import type { ReadingAnalysis, ReadingAnalysisResponse } from "@/lib/api";
 import type { Language } from "@/lib/i18n";
 
@@ -60,6 +60,12 @@ const T = {
     sign_up: "Start your own analysis",
     show_answer: "Show answer",
     answer: "Answer",
+    analyzer_label: "AI Reading Analyzer",
+    no_vocabulary: "No vocabulary detected.",
+    default_passage: "SAT Passage",
+    easy: "Easy",
+    medium: "Medium",
+    hard: "Hard",
   },
   ru: {
     result_title: "Ваш AI Анализ",
@@ -106,6 +112,12 @@ const T = {
     sign_up: "Начать свой анализ",
     show_answer: "Показать ответ",
     answer: "Ответ",
+    analyzer_label: "AI Анализатор Чтения",
+    no_vocabulary: "Ключевые слова не найдены.",
+    default_passage: "Текст SAT",
+    easy: "Лёгкий",
+    medium: "Средний",
+    hard: "Сложный",
   },
   uz: {
     result_title: "Sizning AI Tahliliz",
@@ -152,6 +164,12 @@ const T = {
     sign_up: "O'z tahlilingizni boshlang",
     show_answer: "Javobni ko'rsatish",
     answer: "Javob",
+    analyzer_label: "AI Reading Tahlilchi",
+    no_vocabulary: "Muhim so'zlar topilmadi.",
+    default_passage: "SAT matni",
+    easy: "Oson",
+    medium: "O'rtacha",
+    hard: "Qiyin",
   },
 } satisfies Record<Language, Record<string, string>>;
 
@@ -215,7 +233,7 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3 border border-white/10 bg-white/[0.04] p-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.32em] text-[#FFD700]/75">AI Reading Analyzer</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.32em] text-[#FFD700]/75">{copy.analyzer_label}</p>
           <h2 className="mt-2 text-2xl font-light text-white">{copy.result_title}</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -260,9 +278,9 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
               <p className="mt-3 text-sm leading-6 text-white/64">📖 <b>{copy.definition}:</b> {wordDefinition(item, language)}</p>
               <p className="mt-2 text-sm leading-6 text-white/56">💬 <b>{copy.in_context}:</b> {item.in_context || item.example}</p>
               <p className="mt-2 text-sm leading-6 text-white/56">🧠 <b>{copy.memory}:</b> {item.memory_trick}</p>
-              <p className="mt-2 text-sm font-semibold text-[#FFD700]">⭐ {copy.frequency}: {item.sat_frequency || "Medium"}</p>
+              <p className="mt-2 text-sm font-semibold text-[#FFD700]">⭐ {copy.frequency}: {translateFrequency(item.sat_frequency, copy)}</p>
             </div>
-          )) : <p className="text-white/55">No vocabulary detected.</p>}
+          )) : <p className="text-white/55">{copy.no_vocabulary}</p>}
         </div>
       </AnalysisCard>
 
@@ -352,8 +370,8 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
 function TopBar({ analysis, copy }: { analysis: ReadingAnalysis; copy: Record<string, string> }) {
   return (
     <div className="grid gap-3 border border-white/10 bg-white/[0.04] p-5 sm:grid-cols-3">
-      <Metric label={copy.passage_type} value={analysis.passage_type || "SAT Passage"} />
-      <Metric label={copy.difficulty} value={`⭐⭐⭐ ${analysis.difficulty || "Medium"}`} />
+      <Metric label={copy.passage_type} value={translatePassageType(analysis.passage_type, copy)} />
+      <Metric label={copy.difficulty} value={`⭐⭐⭐ ${translateDifficulty(analysis.difficulty, copy)}`} />
       <Metric label={copy.reading_time} value={`~${analysis.reading_time || "2 minutes"}`} />
     </div>
   );
@@ -424,4 +442,54 @@ function planWeek(analysis: ReadingAnalysis, language: Language, week: 1 | 2 | 3
   const key = `week${week}_${language}` as keyof NonNullable<ReadingAnalysis["improvement_plan"]>;
   const fallback = `week${week}_en` as keyof NonNullable<ReadingAnalysis["improvement_plan"]>;
   return String(analysis.improvement_plan?.[key] || analysis.improvement_plan?.[fallback] || "");
+}
+
+function translateDifficulty(value: string | undefined, copy: Record<string, string>) {
+  const normalized = (value || "Medium").toLowerCase();
+  if (normalized.includes("easy")) return copy.easy;
+  if (normalized.includes("hard")) return copy.hard;
+  return copy.medium;
+}
+
+function translatePassageType(value: string | undefined, copy: Record<string, string>) {
+  const normalized = (value || "").toLowerCase();
+  if (!normalized) return copy.default_passage;
+  if (normalized.includes("literature")) {
+    if (copy.default_passage === "Текст SAT") return "Литература";
+    if (copy.default_passage === "SAT matni") return "Adabiyot";
+    return "Literature";
+  }
+  if (normalized.includes("science") && !normalized.includes("social")) {
+    if (copy.default_passage === "Текст SAT") return "Наука";
+    if (copy.default_passage === "SAT matni") return "Fan";
+    return "Science";
+  }
+  if (normalized.includes("history")) {
+    if (copy.default_passage === "Текст SAT") return "История";
+    if (copy.default_passage === "SAT matni") return "Tarix";
+    return "History";
+  }
+  if (normalized.includes("social")) {
+    if (copy.default_passage === "Текст SAT") return "Социальные науки";
+    if (copy.default_passage === "SAT matni") return "Ijtimoiy fan";
+    return "Social Science";
+  }
+  return value || copy.default_passage;
+}
+
+function translateFrequency(value: string | undefined, copy: Record<string, string>) {
+  const normalized = (value || "Medium").toLowerCase();
+  if (normalized.includes("high")) {
+    if (copy.default_passage === "Текст SAT") return "Высокая";
+    if (copy.default_passage === "SAT matni") return "Yuqori";
+    return "High";
+  }
+  if (normalized.includes("low")) {
+    if (copy.default_passage === "Текст SAT") return "Низкая";
+    if (copy.default_passage === "SAT matni") return "Past";
+    return "Low";
+  }
+  if (copy.default_passage === "Текст SAT") return "Средняя";
+  if (copy.default_passage === "SAT matni") return "O'rtacha";
+  return "Medium";
 }
