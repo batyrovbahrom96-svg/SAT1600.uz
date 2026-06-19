@@ -25,21 +25,27 @@ const languageNames: Record<Language, string> = {
   en: "English"
 };
 
-const welcomeCopy: Record<Language, { headline: string; start: string; login: string }> = {
+const welcomeCopy: Record<Language, { headline: string; start: string; login: string; continuePath: string; accountNote: string }> = {
   uz: {
     headline: "SAT'ga BEPUL va samarali tayyorlaning!",
     start: "BOSHLASH",
-    login: "MENDA ALLAQACHON HISOB BOR"
+    login: "MENDA ALLAQACHON HISOB BOR",
+    continuePath: "YO'LIMNI DAVOM ETTIRISH",
+    accountNote: "Akkauntingiz topildi. Davom etish uchun tugmani bosing."
   },
   ru: {
     headline: "Готовьтесь к SAT бесплатно и эффективно!",
     start: "НАЧАТЬ",
-    login: "У МЕНЯ УЖЕ ЕСТЬ АККАУНТ"
+    login: "У МЕНЯ УЖЕ ЕСТЬ АККАУНТ",
+    continuePath: "ПРОДОЛЖИТЬ МОЙ ПУТЬ",
+    accountNote: "Аккаунт найден. Нажмите кнопку, чтобы продолжить."
   },
   en: {
     headline: "Prepare for the SAT for free and effectively!",
     start: "START",
-    login: "I ALREADY HAVE AN ACCOUNT"
+    login: "I ALREADY HAVE AN ACCOUNT",
+    continuePath: "CONTINUE MY PATH",
+    accountNote: "Account found. Press the button to continue."
   }
 };
 
@@ -118,10 +124,11 @@ export default function WelcomePage() {
   });
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [codeMessage, setCodeMessage] = useState("");
+  const [hasExistingAccount, setHasExistingAccount] = useState(false);
 
   useEffect(() => {
-    if (getToken()) router.replace(`/reading-path?lang=${language}`);
-  }, [language, router]);
+    setHasExistingAccount(Boolean(getToken()));
+  }, []);
 
   function update<K extends keyof SignupData>(key: K, value: SignupData[K]) {
     setData((current) => ({ ...current, [key]: value }));
@@ -318,8 +325,13 @@ export default function WelcomePage() {
             {welcomeCopy[language].headline}
           </h1>
           <div className="mt-10 grid gap-4">
-            <button className="flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-[#FFD700] px-5 text-base font-black text-black transition hover:bg-white" onClick={() => setMode("signup")} type="button">
-              {welcomeCopy[language].start}
+            {hasExistingAccount ? (
+              <p className="rounded-xl border border-[#FFD700]/25 bg-[#FFD700]/10 px-4 py-3 text-sm font-bold leading-6 text-[#FFD700]">
+                {welcomeCopy[language].accountNote}
+              </p>
+            ) : null}
+            <button className="flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-[#FFD700] px-5 text-base font-black text-black transition hover:bg-white" onClick={() => (hasExistingAccount ? router.push(`/reading-path?lang=${language}`) : setMode("signup"))} type="button">
+              {hasExistingAccount ? welcomeCopy[language].continuePath : welcomeCopy[language].start}
               <ArrowRight size={20} />
             </button>
             <Link className="flex min-h-14 w-full items-center justify-center rounded-xl border border-[#FFD700]/45 px-5 text-center text-base font-black text-[#FFD700] transition hover:bg-[#FFD700] hover:text-black" href={`/login?lang=${language}&next=/reading-path?lang=${language}`}>
