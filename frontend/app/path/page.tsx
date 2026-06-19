@@ -75,6 +75,7 @@ const defaultProgress: Progress = {
 const copy = {
   nav: {
     learn: { en: "Learn", ru: "Учиться", uz: "O'qish" },
+    roadmap: { en: "Study Roadmap", ru: "Дорожная карта", uz: "Yo'l xaritasi" },
     leaderboard: { en: "Leaderboard", ru: "Рейтинг", uz: "Reyting" },
     bank: { en: "Practice Bank", ru: "Банк практики", uz: "Mashq banki" },
     profile: { en: "Profile", ru: "Профиль", uz: "Profil" },
@@ -493,6 +494,7 @@ export default function PathPage() {
 
           <nav className="mt-8 grid gap-2">
             <SideLink active icon={<BookOpen size={18} />} label={pick(copy.nav.learn, language)} />
+            <SideLink icon={<Map size={18} />} label={pick(copy.nav.roadmap, language)} href="/roadmap" />
             <SideLink icon={<Trophy size={18} />} label={pick(copy.nav.leaderboard, language)} href="#leaderboard" />
             <SideLink icon={<Zap size={18} />} label={pick(copy.nav.bank, language)} href="/practice" />
             <SideLink icon={<User size={18} />} label={pick(copy.nav.profile, language)} href="#profile" />

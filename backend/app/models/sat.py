@@ -249,6 +249,21 @@ class Analytics(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class RoadmapNode(Base):
+    __tablename__ = "roadmap_nodes"
+    __table_args__ = (UniqueConstraint("user_id", "topic_key", "order_index", name="uq_roadmap_user_topic_order"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    node_type: Mapped[str] = mapped_column(String(40), index=True)
+    topic_key: Mapped[str] = mapped_column(String(120), index=True)
+    order_index: Mapped[int] = mapped_column(Integer, index=True)
+    status: Mapped[str] = mapped_column(String(24), default="locked", index=True)
+    icon_key: Mapped[str] = mapped_column(String(40), default="topic")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
 class GraphAsset(Base):
     __tablename__ = "graph_assets"
 

@@ -18,7 +18,7 @@ from app.core.config import get_settings
 from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_DAYS, THREE_MONTH_PRICE
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db, get_engine
-from app.models import PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, Subscription, Test, TestAttempt, TestTelemetrySummary, User
+from app.models import PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, RoadmapNode, Subscription, Test, TestAttempt, TestTelemetrySummary, User
 from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, ResultsOut, TokenResponse, VerificationCodeRequest
 from app.services.graph_engine import generate_linear_graph, generate_sat_graph_set
 from app.services.sat_engine import (
@@ -34,6 +34,7 @@ from app.services.sat_engine import (
 )
 from app.services.bot_service import WELCOME_BOT_USERNAME
 from app.services.reading_analyzer import attach_reading_analyzer_limit_signup, mark_analyzer_limit_followup_sent
+from app.services.roadmap import generate_roadmap_for_attempt
 from app.services.telegram_payments import (
     handle_telegram_update,
     notify_admin_diagnostic_result,
@@ -620,6 +621,7 @@ def start_module_2(attempt_id: UUID, db: Session = Depends(get_db), user: User =
 def submit_attempt(attempt_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
     attempt = _owned_attempt(db, attempt_id, user)
     finalize_attempt(db, attempt)
+    generate_roadmap_for_attempt(db, user.id, attempt)
     return {"status": attempt.status, "score_total": attempt.score_total, "final_score": attempt.final_score}
 
 
@@ -627,6 +629,30 @@ def submit_attempt(attempt_id: UUID, db: Session = Depends(get_db), user: User =
 def get_results(attempt_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
     attempt = _owned_attempt(db, attempt_id, user)
     return results_payload(db, attempt)
+
+
+@router.get("/roadmap/me")
+def my_roadmap(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    nodes = (
+        db.execute(select(RoadmapNode).where(RoadmapNode.user_id == user.id).order_by(RoadmapNode.order_index))
+        .scalars()
+        .all()
+    )
+    return {
+        "nodes": [
+            {
+                "id": str(node.id),
+                "node_type": node.node_type,
+                "topic_key": node.topic_key,
+                "order_index": node.order_index,
+                "status": node.status,
+                "icon_key": node.icon_key,
+                "created_at": node.created_at.isoformat(),
+                "completed_at": node.completed_at.isoformat() if node.completed_at else None,
+            }
+            for node in nodes
+        ]
+    }
 
 
 @router.get("/analytics/me")
