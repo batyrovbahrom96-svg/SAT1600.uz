@@ -38,6 +38,12 @@ const TRANSLATIONS = {
     image_loading_4: "Almost ready...",
     short: "Please paste at least 50 characters.",
     limit: "Free limit reached. Upgrade to Pro for unlimited analyses.",
+    limit_title: "Today's free analyses are complete.",
+    limit_used: (used: number) => `${used}/3 free analyses used today`,
+    limit_value: "You already received real SAT value: main idea simplified, key vocabulary explained, tone and purpose identified, and SAT strategy generated.",
+    limit_cta: "Upgrade to Pro to continue without stopping:",
+    limit_benefits: ["Unlimited text and image analyses", "Full Uzbek/Russian translation", "All questions solved with full explanations"],
+    upgrade_button: "🔑 Upgrade to Pro → 300,000 UZS/month",
     image_required: "Please upload or paste a screenshot first.",
     no_text_found: "Could not read this image. Please try: 1) Take a clearer screenshot 2) Make sure text is visible 3) Or paste the text directly",
     image_error: "Could not read this image. Please try: 1) Take a clearer screenshot 2) Make sure text is visible 3) Or paste the text directly",
@@ -76,6 +82,12 @@ const TRANSLATIONS = {
     image_loading_4: "Почти готово...",
     short: "Вставьте минимум 50 символов.",
     limit: "Бесплатный лимит исчерпан. Получите Pro для безлимита.",
+    limit_title: "Бесплатные анализы на сегодня закончились.",
+    limit_used: (used: number) => `${used}/3 бесплатных анализа использовано сегодня`,
+    limit_value: "Вы уже получили реальную пользу для SAT: главную идею, ключевые слова, тон и цель, а также стратегию решения.",
+    limit_cta: "Перейдите на Pro, чтобы продолжить без остановки:",
+    limit_benefits: ["Безлимитный анализ текста и фото", "Полный перевод на русский/узбекский", "Все вопросы решены с подробными объяснениями"],
+    upgrade_button: "🔑 Получить Pro → 300,000 UZS/месяц",
     image_required: "Сначала загрузите или вставьте скриншот.",
     no_text_found: "Не удалось прочитать изображение. Попробуйте: 1) Более чёткий скриншот 2) Убедитесь что текст виден 3) Или вставьте текст напрямую",
     image_error: "Не удалось прочитать изображение. Попробуйте: 1) Более чёткий скриншот 2) Убедитесь что текст виден 3) Или вставьте текст напрямую",
@@ -114,6 +126,12 @@ const TRANSLATIONS = {
     image_loading_4: "Deyarli tayyor...",
     short: "Kamida 50 belgi joylashtiring.",
     limit: "Bepul limit tugadi. Cheksiz tahlil uchun Pro oling.",
+    limit_title: "Bugungi bepul tahlillar tugadi.",
+    limit_used: (used: number) => `Bugun ${used}/3 bepul tahlil ishlatildi`,
+    limit_value: "Siz allaqachon haqiqiy SAT qiymatini oldingiz: asosiy g'oya, muhim so'zlar, ton va maqsad, hamda SAT strategiyasi.",
+    limit_cta: "To'xtamasdan davom etish uchun Pro oling:",
+    limit_benefits: ["Cheksiz matn va rasm tahlili", "To'liq Uzbek/Russian tarjima", "Barcha savollar to'liq yechim va izoh bilan"],
+    upgrade_button: "🔑 Pro Olish → 300,000 UZS/oy",
     image_required: "Avval screenshot yuklang yoki joylashtiring.",
     no_text_found: "Rasmni o'qib bo'lmadi. Sinab ko'ring: 1) Aniqroq screenshot 2) Matn ko'rinishini tekshiring 3) Yoki matnni to'g'ridan joylashtiring",
     image_error: "Rasmni o'qib bo'lmadi. Sinab ko'ring: 1) Aniqroq screenshot 2) Matn ko'rinishini tekshiring 3) Yoki matnni to'g'ridan joylashtiring",
@@ -170,6 +188,7 @@ export default function ReadingAnalyzerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(0);
   const [error, setError] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(3);
   const [stats, setStats] = useState({ today: 127, rating: 4.9, total: 500 });
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -179,6 +198,7 @@ export default function ReadingAnalyzerPage() {
   }, [copy, inputMode]);
   const ready = text.trim().length >= 50;
   const canAnalyze = inputMode === "text" ? ready : Boolean(imageFile);
+  const usedToday = remaining === null ? 0 : Math.max(0, 3 - remaining);
 
   useEffect(() => {
     getReadingAnalyzerStats().then(setStats).catch(() => undefined);
@@ -192,6 +212,7 @@ export default function ReadingAnalyzerPage() {
 
   async function submit() {
     setError("");
+    setLimitReached(false);
     if (!getToken()) {
       router.push(`/login?next=/reading-analyzer?lang=${language}`);
       return;
@@ -208,10 +229,17 @@ export default function ReadingAnalyzerPage() {
     try {
       const result = inputMode === "image" && imageFile ? await analyzeImageWithFallback(imageFile, language) : await analyzePassage({ text, language });
       setRemaining(result.remaining_free ?? null);
+      setLimitReached(false);
       saveResult(result);
       router.push(`/reading-analyzer/result?lang=${language}`);
     } catch (caught) {
       if (caught instanceof ApiError) {
+        if (isLimitError(caught)) {
+          setRemaining(0);
+          setLimitReached(true);
+          setError("");
+          return;
+        }
         setError(errorMessage(caught, copy));
       } else {
         setError(caught instanceof Error ? caught.message : "Unable to analyze this passage.");
@@ -315,6 +343,14 @@ export default function ReadingAnalyzerPage() {
             {(copy.trust as string[]).map((item) => <span className="border border-white/10 bg-black/20 px-3 py-2" key={item}>{item}</span>)}
           </div>
 
+          {limitReached ? (
+            <LimitReachedCard
+              copy={copy}
+              onUpgrade={() => router.push(`/pricing?lang=${language}`)}
+              used={Math.max(3, usedToday)}
+            />
+          ) : null}
+
           {error ? <div className="mt-4 border border-red-300/25 bg-red-950/25 p-4 text-sm text-red-100">{error}</div> : null}
 
           {isLoading ? (
@@ -346,6 +382,44 @@ function Proof({ icon, value, label }: { icon: React.ReactNode; value: string; l
   );
 }
 
+function LimitReachedCard({ copy, used, onUpgrade }: { copy: Record<string, unknown>; used: number; onUpgrade: () => void }) {
+  const benefits = copy.limit_benefits as string[];
+  return (
+    <div className="mt-4 border border-[#FFD700]/35 bg-[#1d1908] p-5 shadow-[0_18px_60px_rgba(255,215,0,0.08)]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#FFD700]/80">
+            {(copy.limit_used as (used: number) => string)(used)}
+          </p>
+          <h3 className="mt-2 text-2xl font-semibold text-white">{copy.limit_title as string}</h3>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/72">{copy.limit_value as string}</p>
+        </div>
+        <Sparkles className="shrink-0 text-[#FFD700]" size={28} />
+      </div>
+
+      <div className="mt-4 border border-white/10 bg-black/25 p-4">
+        <p className="text-sm font-semibold text-white">{copy.limit_cta as string}</p>
+        <ul className="mt-3 grid gap-2 text-sm text-white/72">
+          {benefits.map((benefit) => (
+            <li className="flex gap-2" key={benefit}>
+              <span className="text-[#FFD700]">✓</span>
+              <span>{benefit}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <button
+        className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 border border-[#FFD700] bg-[#FFD700] px-4 text-sm font-black uppercase tracking-[0.12em] text-black transition hover:bg-transparent hover:text-[#FFD700]"
+        onClick={onUpgrade}
+        type="button"
+      >
+        {copy.upgrade_button as string} <ArrowRight size={17} />
+      </button>
+    </div>
+  );
+}
+
 function saveResult(result: ReadingAnalysisResponse) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem("sattest_reading_analysis_latest", JSON.stringify(result));
@@ -362,6 +436,11 @@ function errorMessage(error: ApiError, copy: Record<string, unknown>) {
   if (message.includes("invalid_file_type")) return copy.invalid_file_type as string;
   if (message.includes("text_too_short")) return copy.short as string;
   return message;
+}
+
+function isLimitError(error: ApiError) {
+  const message = error.message || "";
+  return error.status === 403 || message.includes("limit_reached");
 }
 
 async function analyzeImageWithFallback(file: File, language: Language): Promise<ReadingAnalysisResponse> {
