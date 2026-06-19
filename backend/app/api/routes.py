@@ -171,6 +171,10 @@ def request_verification_code(payload: VerificationCodeRequest, db: Session = De
     except HTTPException:
         verification_codes.pop(email, None)
         raise
+    except Exception as exc:
+        verification_codes.pop(email, None)
+        print(f"Verification email failed unexpectedly for {email}: {exc}")
+        raise HTTPException(status_code=502, detail="Unable to send verification email") from exc
     response = {"sent": True, "expires_in_minutes": 10}
     if dev_code:
         response["dev_code"] = code
