@@ -197,6 +197,11 @@ export type ReadingAnalysis = {
     why_wrong_uz?: Partial<Record<"A" | "B" | "C" | "D", string>>;
     evidence_line?: string;
     question_type?: string;
+    question_type_ru?: string;
+    question_type_uz?: string;
+    question_type_strategy_en?: string;
+    question_type_strategy_ru?: string;
+    question_type_strategy_uz?: string;
     difficulty?: string;
     tip_en?: string;
     tip_ru?: string;

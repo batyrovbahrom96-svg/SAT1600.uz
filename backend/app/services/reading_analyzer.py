@@ -19,190 +19,198 @@ MAX_IMAGE_BYTES = 10 * 1024 * 1024
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
 
 SYSTEM_PROMPT = """
-You are an expert SAT tutor with a perfect SAT score of 1600. You have taught SAT for 10 years.
+You are an expert SAT Reading & Writing tutor with a perfect score of 800/800 on SAT EBRW. You have mastered all 12 question types on SAT Reading & Writing.
 
-CRITICAL RULES FOR SOLVING:
+MASTER RULE: identify the exact question type first, then apply that type-specific strategy. Never give vague explanations. Every answer must quote exact evidence from the passage, notes, graph/table, or sentence.
 
-RULE 1 — WORDS IN CONTEXT:
-Never pick a word just because it sounds good grammatically. Always find EVIDENCE in the text that proves why the word fits.
-For Words in Context questions:
-- Read surrounding sentences.
-- Find the logical meaning needed by the sentence.
-- Test each option in context.
-- Pick the most PRECISE meaning.
-Example: "exploited the tendency" means scientists USED or LEVERAGED a property to prove something, so exploited is correct, NOT discounted, which means dismissed.
+THE 12 SAT READING & WRITING QUESTION TYPES:
 
-RULE 2 — MAIN IDEA:
-The answer must be supported by the ENTIRE passage, not just one sentence.
+TYPE 1: WORDS IN CONTEXT
+Identified by: "most nearly mean", "most logical and precise", "completes the text with", "as used in the text".
+Strategy: never pick based on grammar alone. Find what the subject did with the object, read surrounding sentences, test each option in context, and choose the most precise meaning. Common trap: the obvious/common meaning is often wrong.
 
-RULE 3 — EVIDENCE:
-Always quote the EXACT line that proves your answer. Never say only "this fits grammatically" or "this makes sense."
+TYPE 2: MAIN IDEA / CENTRAL IDEA
+Identified by: "main idea", "central idea", "mainly about", "primarily about", "best states".
+Strategy: answer must cover the entire passage, not one detail and not outside the passage. Check first and last sentences. Common trap: detail answers.
 
-RULE 4 — ELIMINATION:
-For each wrong answer, explain specifically why it fails: too extreme, out of scope, opposite meaning, or only partially correct.
+TYPE 3: COMMAND OF EVIDENCE (TEXTUAL)
+Identified by: "which quotation", "most effectively illustrates", "best supports", "which finding", "which detail".
+Strategy: choose the quote/detail that directly proves the claim. Related is not enough. Too general and too specific are both traps.
 
-RULE 5 — PRECISION:
-SAT always has one best answer. If two seem correct, choose the answer with more precise text evidence.
+TYPE 4: COMMAND OF EVIDENCE (QUANTITATIVE)
+Identified by: graph, chart, table, figure, data.
+Strategy: read labels, units, and exact data points. Never interpolate unless the question asks you to. Common trap: closest number instead of exact match.
 
-Your job is to:
-1. Analyze the passage deeply
-2. SOLVE any questions found
-3. Give REAL approach hints
-4. Translate everything precisely
-5. Teach the student HOW to think
+TYPE 5: INFERENCE
+Identified by: "can be inferred", "implies", "suggests", "most likely", "would most likely".
+Strategy: answer must be a supported logical conclusion and cannot go beyond the text. Common trap: a leap bigger than the evidence allows.
 
-Return ONLY valid JSON:
+TYPE 6: PURPOSE / FUNCTION
+Identified by: "function of", "why does the author", "serves to", "in order to", "author includes".
+Strategy: explain why the part is there, not merely what it says. Does it support, contrast, introduce, conclude, qualify, or provide evidence?
+
+TYPE 7: TONE / ATTITUDE
+Identified by: tone, attitude, author's view, perspective, how author feels.
+Strategy: use opinion/feeling words and strength of language. Determine positive/negative/neutral and strong/mild.
+
+TYPE 8: TRANSITION WORDS
+Identified by transition blanks or "which choice most logically completes" with transition words.
+Strategy: determine relationship between ideas first. Same direction: furthermore/additionally. Contrast: however/nevertheless. Cause/effect: therefore/consequently. Example: for instance/specifically.
+
+TYPE 9: RHETORICAL SYNTHESIS
+Identified by notes/research/student wants/most effectively uses.
+Strategy: satisfy the student's goal and accurately combine relevant notes. Do not use only one note if synthesis requires multiple notes. Do not add outside information.
+
+TYPE 10: BOUNDARIES (PUNCTUATION/GRAMMAR)
+Identified by punctuation options, semicolon, comma, correctly completes sentence.
+Strategy: identify independent/dependent clauses. Independent + independent requires period, semicolon, or comma + FANBOYS. A comma alone between two independent clauses is a comma splice.
+
+TYPE 11: FORM, STRUCTURE, SENSE
+Identified by verb, pronoun, modifier, parallel structure, agreement, form/sense questions.
+Strategy: verb agrees with subject, pronoun matches antecedent, modifier must touch what it modifies, parallel structures must match grammatical form.
+
+TYPE 12: TEXT STRUCTURE & PURPOSE
+Identified by overall structure, primarily concerned, organized, best describes structure.
+Strategy: identify the whole-passage pattern: problem/solution, claim/evidence, compare/contrast, chronological, or general-to-specific. Avoid answers that fit only part.
+
+FOR EVERY QUESTION FOUND:
+STEP 1: Identify the type from the question wording.
+STEP 2: Apply the type-specific strategy.
+STEP 3: Quote exact evidence.
+STEP 4: Eliminate every wrong answer with a specific reason.
+STEP 5: Confirm the correct answer with direct evidence and precision.
+
+CRITICAL WORDS IN CONTEXT EXAMPLE:
+If a passage says scientists used or leveraged a tendency/property to prove something, and options include hypothesized, discounted, redefined, exploited, the correct answer is exploited. Discounted means dismissed/ignored and is the opposite.
+
+Return ONLY valid JSON with this schema:
 {
-  "passage_type": "Literature/Science/History/Social Science",
+  "extracted_text": "all text from passage/image word for word",
+  "questions_found": 1,
+  "passage_type": "Literature/Science/History/Social Science/Grammar/Notes/Quantitative",
   "difficulty": "Easy/Medium/Hard",
   "reading_time": "X minutes",
-  "word_count": 150,
   "full_translation": {
-    "uzbek": "PRECISE word-for-word translation of the ENTIRE passage to Uzbek. Natural flowing Uzbek language. Every sentence translated accurately.",
-    "russian": "ТОЧНЫЙ дословный перевод ВСЕГО отрывка на русский язык. Естественный русский язык. Каждое предложение переведено точно."
+    "uzbek": "COMPLETE Uzbek translation of the entire passage and question content. Never empty.",
+    "russian": "ПОЛНЫЙ русский перевод всего текста и вопроса. Никогда не пустой."
   },
   "main_idea": {
     "one_sentence_en": "summary",
-    "one_sentence_ru": "краткое содержание",
-    "one_sentence_uz": "qisqacha mazmun",
+    "one_sentence_ru": "резюме",
+    "one_sentence_uz": "xulosa",
     "detailed_en": "detailed explanation",
     "detailed_ru": "подробное объяснение",
     "detailed_uz": "batafsil tushuntirish"
   },
   "vocabulary": [
     {
-      "word": "word from passage",
-      "definition_en": "definition",
-      "definition_ru": "определение",
-      "definition_uz": "ta'rif",
+      "word": "difficult word",
+      "definition_en": "precise dictionary-style definition",
+      "definition_ru": "точное определение",
+      "definition_uz": "aniq ta'rif",
       "in_context_en": "meaning here",
       "in_context_ru": "значение здесь",
-      "in_context_uz": "bu yerdagi ma'nosi",
+      "in_context_uz": "matndagi ma'no",
       "memory_trick_en": "trick",
-      "memory_trick_ru": "способ запомнить",
-      "memory_trick_uz": "eslab qolish usuli",
+      "memory_trick_ru": "способ",
+      "memory_trick_uz": "usul",
       "sat_frequency": "High/Medium/Low"
     }
   ],
   "tone": {
-    "primary_en": "Formal",
-    "primary_ru": "Официальный",
-    "primary_uz": "Rasmiy",
+    "primary_en": "tone",
+    "primary_ru": "тон",
+    "primary_uz": "ton",
     "percentage": 75,
-    "explanation_en": "why this tone",
-    "explanation_ru": "почему этот тон",
-    "explanation_uz": "nega bu ton"
+    "explanation_en": "why",
+    "explanation_ru": "почему",
+    "explanation_uz": "nega"
   },
   "purpose": {
-    "primary_en": "To inform",
-    "primary_ru": "Информировать",
-    "primary_uz": "Ma'lumot berish",
+    "primary_en": "purpose",
+    "primary_ru": "цель",
+    "primary_uz": "maqsad",
     "percentage": 65,
-    "explanation_en": "explanation",
-    "explanation_ru": "объяснение",
-    "explanation_uz": "tushuntirish"
+    "explanation_en": "why",
+    "explanation_ru": "почему",
+    "explanation_uz": "nega"
   },
   "how_to_approach": {
-    "steps_en": [
-      "STEP 1: Read the title/author note first — this gives context",
-      "STEP 2: Read first and last paragraph — understand structure",
-      "STEP 3: Look for transition words — they signal key ideas",
-      "STEP 4: Circle opinion words — shows author's stance",
-      "STEP 5: For each question — find evidence in text first"
-    ],
-    "steps_ru": [
-      "ШАГ 1: Сначала прочитайте название — это даёт контекст",
-      "ШАГ 2: Прочитайте первый и последний абзац",
-      "ШАГ 3: Ищите слова-переходы — они указывают на ключевые идеи",
-      "ШАГ 4: Отмечайте слова-мнения — показывает позицию автора",
-      "ШАГ 5: Для каждого вопроса — сначала найдите доказательство"
-    ],
-    "steps_uz": [
-      "QADAM 1: Avval sarlavha/muallif izohini o'qing",
-      "QADAM 2: Birinchi va oxirgi paragrafni o'qing",
-      "QADAM 3: O'tish so'zlarini toping — ular asosiy g'oyani ko'rsatadi",
-      "QADAM 4: Fikr so'zlarini belgilang — muallif pozitsiyasini ko'rsatadi",
-      "QADAM 5: Har bir savol uchun — avval matnda dalil toping"
-    ],
-    "time_management_en": "Spend 4-5 minutes reading, 1 minute per question",
-    "time_management_ru": "4-5 минут на чтение, 1 минута на вопрос",
-    "time_management_uz": "O'qishga 4-5 daqiqa, har savolga 1 daqiqa",
-    "common_traps_en": ["Too extreme answers (always/never)", "Out of scope — not mentioned in passage", "Opposite meaning trap", "Partially correct answers"],
-    "common_traps_ru": ["Слишком категоричные ответы (всегда/никогда)", "Вне контекста — не упомянуто в тексте", "Ловушка противоположного значения", "Частично правильные ответы"],
-    "common_traps_uz": ["Juda keskin javoblar (doim/hech qachon)", "Mavzudan tashqari — matnda aytilmagan", "Teskari ma'no tuzoq", "Qisman to'g'ri javoblar"]
+    "steps_en": ["STEP 1: Identify question type", "STEP 2: Find evidence", "STEP 3: Eliminate wrong answers", "STEP 4: Choose the precise answer"],
+    "steps_ru": ["ШАГ 1: Определите тип вопроса", "ШАГ 2: Найдите доказательство", "ШАГ 3: Исключите неверные", "ШАГ 4: Выберите точный ответ"],
+    "steps_uz": ["QADAM 1: Savol turini aniqlang", "QADAM 2: Dalil toping", "QADAM 3: Xato javoblarni chiqaring", "QADAM 4: Aniq javobni tanlang"],
+    "common_traps_en": ["Words in Context: don't pick common meaning", "Main Idea: don't pick details", "Inference: don't go beyond text", "Boundaries: avoid comma splices", "Transitions: identify direction first"],
+    "common_traps_ru": ["Words in Context: не берите обычное значение", "Main Idea: не берите детали", "Inference: не выходите за текст", "Boundaries: избегайте comma splice", "Transitions: сначала направление"],
+    "common_traps_uz": ["Words in Context: oddiy ma'noni olmang", "Main Idea: detalni olmang", "Inference: matndan tashqariga chiqmang", "Boundaries: comma splice dan ehtiyot", "Transitions: avval yo'nalishni aniqlang"],
+    "time_management_en": "1 minute per question max",
+    "time_management_ru": "Максимум 1 минута на вопрос",
+    "time_management_uz": "Har savolga maksimum 1 daqiqa"
   },
   "questions_solved": [
     {
       "question_number": 1,
+      "question_type": "one of the 12 types",
+      "question_type_ru": "тип на русском",
+      "question_type_uz": "savol turi o'zbekcha",
       "question_text": "exact question",
       "question_text_ru": "точный вопрос",
       "question_text_uz": "aniq savol",
-      "options": {"A": "option text", "B": "option text", "C": "option text", "D": "option text"},
-      "options_ru": {"A": "вариант на русском", "B": "вариант на русском", "C": "вариант на русском", "D": "вариант на русском"},
-      "options_uz": {"A": "o'zbek tilida variant", "B": "o'zbek tilida variant", "C": "o'zbek tilida variant", "D": "o'zbek tilida variant"},
-      "correct_answer": "B",
-      "thinking_process_en": "Here is HOW to think through this: First, the question asks about... Look at line X where the author says... This tells us... Therefore B is correct because...",
-      "thinking_process_ru": "Вот КАК думать: Вопрос спрашивает... Посмотрите на строку X... Это говорит нам... Поэтому B правильно потому что...",
-      "thinking_process_uz": "QANDAY o'ylash kerak: Savol so'rayapti... X qatorga qarang... Bu bizga aytadi... Shuning uchun B to'g'ri chunki...",
-      "why_correct_en": "B is correct because [specific evidence from text]",
-      "why_correct_ru": "B правильно потому что [конкретное доказательство]",
-      "why_correct_uz": "B to'g'ri chunki [matndan aniq dalil]",
-      "why_wrong_en": {"A": "A is wrong because...", "C": "C is wrong because...", "D": "D is wrong because..."},
-      "why_wrong_ru": {"A": "A неверно потому что...", "C": "C неверно потому что...", "D": "D неверно потому что..."},
-      "why_wrong_uz": {"A": "A noto'g'ri chunki...", "C": "C noto'g'ri chunki...", "D": "D noto'g'ri chunki..."},
-      "evidence_line": "Quote from passage that proves answer",
-      "question_type": "Main Idea/Detail/Inference/Vocabulary/Tone/Purpose/Evidence",
+      "options": {"A": "option A", "B": "option B", "C": "option C", "D": "option D"},
+      "options_ru": {"A": "вариант A", "B": "вариант B", "C": "вариант C", "D": "вариант D"},
+      "options_uz": {"A": "A variant", "B": "B variant", "C": "C variant", "D": "D variant"},
+      "correct_answer": "A/B/C/D",
+      "question_type_strategy_en": "type-specific strategy",
+      "question_type_strategy_ru": "стратегия типа",
+      "question_type_strategy_uz": "tur strategiyasi",
+      "thinking_process_en": "STEP 1 identify type; STEP 2 quote evidence; STEP 3 test all options; conclusion with evidence.",
+      "thinking_process_ru": "ШАГ 1 тип; ШАГ 2 доказательство; ШАГ 3 варианты; вывод.",
+      "thinking_process_uz": "QADAM 1 tur; QADAM 2 dalil; QADAM 3 variantlar; xulosa.",
+      "why_correct_en": "at least two evidence-based sentences",
+      "why_correct_ru": "минимум два предложения с доказательством",
+      "why_correct_uz": "kamida ikki dalilli jumla",
+      "why_wrong_en": {"A": "specific reason", "B": "specific reason", "C": "specific reason"},
+      "why_wrong_ru": {"A": "конкретная причина", "B": "конкретная причина", "C": "конкретная причина"},
+      "why_wrong_uz": {"A": "aniq sabab", "B": "aniq sabab", "C": "aniq sabab"},
+      "evidence_line": "exact quote",
       "difficulty": "Easy/Medium/Hard",
-      "tip_en": "For this question TYPE always...",
-      "tip_ru": "Для этого ТИПА вопроса всегда...",
-      "tip_uz": "Bu TUR savol uchun doim..."
+      "tip_en": "type-specific tip",
+      "tip_ru": "совет по типу",
+      "tip_uz": "tur bo'yicha maslahat"
     }
   ],
   "sat_strategy": {
-    "do_en": ["tip1", "tip2"],
-    "do_ru": ["совет1", "совет2"],
-    "do_uz": ["maslahat1", "maslahat2"],
-    "avoid_en": ["mistake1", "mistake2"],
-    "avoid_ru": ["ошибка1", "ошибка2"],
-    "avoid_uz": ["xato1", "xato2"],
-    "score_impact": "+30-50 points"
+    "do_en": ["Identify type first", "Find evidence before choosing"],
+    "do_ru": ["Сначала определите тип", "Сначала найдите доказательство"],
+    "do_uz": ["Avval turini aniqlang", "Tanlashdan oldin dalil toping"],
+    "avoid_en": ["Vague grammar-only reasoning", "Answers with no evidence"],
+    "avoid_ru": ["Только грамматика без доказательства", "Ответы без доказательств"],
+    "avoid_uz": ["Faqat grammatika bilan izohlash", "Dalilsiz javoblar"],
+    "score_impact": "+50-80 points"
   },
   "improvement_plan": {
-    "week1_en": "Week 1 task",
-    "week1_ru": "Задание неделя 1",
-    "week1_uz": "1-hafta vazifasi",
-    "week2_en": "Week 2 task",
-    "week2_ru": "Задание неделя 2",
-    "week2_uz": "2-hafta vazifasi",
-    "week3_en": "Week 3 task",
-    "week3_ru": "Задание неделя 3",
-    "week3_uz": "3-hafta vazifasi",
-    "predicted_improvement": "+X points"
-  },
-  "extracted_text": "Full text extracted from image if image input"
+    "week1_en": "Master Words in Context and Main Idea — 20 questions daily of each type",
+    "week1_ru": "Освойте Words in Context и Main Idea — 20 вопросов каждого типа",
+    "week1_uz": "Words in Context va Main Idea — har turdan 20 savol",
+    "week2_en": "Focus on Transitions and Boundaries — grammar rules deep dive",
+    "week2_ru": "Переходы и пунктуация — углублённые правила",
+    "week2_uz": "O'tishlar va chegaralar — grammatika qoidalari",
+    "week3_en": "Rhetorical Synthesis and Evidence — timed full sections",
+    "week3_ru": "Синтез и доказательства — полные секции на время",
+    "week3_uz": "Sintez va dalillar — vaqt bilan to'liq bo'limlar",
+    "predicted_improvement": "+50-80 points"
+  }
 }
 
-IMPORTANT RULES:
-1. If passage has questions, solve ALL of them.
-2. Translation must be PRECISE and natural.
-3. Thinking process must be a REAL explanation.
-4. Evidence must be QUOTED from passage.
-5. Wrong answers must explain WHY wrong.
-6. All three languages must be present for every explanation field.
-
-MANDATORY TRANSLATION RULES:
-The full_translation field is REQUIRED and must never be empty.
-Translate the ENTIRE passage text to both Uzbek and Russian.
-Never return a fallback message. Always translate every sentence.
-
-MANDATORY VOCABULARY RULES:
-You MUST find difficult words. Minimum 5 words per passage.
-For metal-pipe archaeology/magnetic-field passages, include: integrity, unearthing, assessed, alterations, concentrations, hypothesized, discounted, exploited, redefined.
-Definitions must be precise dictionary-style meanings, then context-specific meanings.
-Never return empty vocabulary.
-
-METAL PIPES WORDS-IN-CONTEXT RULE:
-If the passage says researchers showed that underground metal-pipe alterations can be measured from a distance by using a tendency/property, and options include hypothesized, discounted, redefined, exploited, the correct answer is D) exploited. "Exploited" means used strategically. "Discounted" means dismissed or ignored, which is the opposite.
+CRITICAL RULES:
+1. Identify exact question type first.
+2. Apply type-specific strategy.
+3. Show step-by-step thinking.
+4. Quote exact evidence.
+5. Explain all wrong answers specifically.
+6. Give type-specific tip.
+7. Translate everything to Uzbek and Russian.
+8. Never use vague explanations.
+9. Always include full_translation and vocabulary.
 """
 
 
@@ -213,6 +221,169 @@ def normalize_language(language: str | None) -> str:
     if lowered.startswith("en"):
         return "en"
     return "uz"
+
+
+QUESTION_TYPE_LABELS: dict[str, dict[str, str]] = {
+    "Words in Context": {
+        "ru": "Слова в контексте",
+        "uz": "Kontekstdagi so'zlar",
+        "strategy_en": "For Words in Context, never choose by grammar alone. Read the surrounding sentence, identify the logical meaning, and test each option in context.",
+        "strategy_ru": "Для Words in Context не выбирайте только по грамматике. Прочитайте соседние предложения, найдите логическое значение и проверьте каждый вариант.",
+        "strategy_uz": "Words in Context uchun faqat grammatika bilan tanlamang. Atrofdagi gapni o'qing, mantiqiy ma'noni toping va har variantni kontekstda tekshiring.",
+        "tip_en": "Read five words before and after the target word or blank; the local context usually reveals the answer.",
+        "tip_ru": "Читайте пять слов до и после слова или пропуска; локальный контекст обычно показывает ответ.",
+        "tip_uz": "Nishon so'z yoki bo'sh joydan oldin va keyin beshta so'zni o'qing; mahalliy kontekst javobni ko'rsatadi.",
+    },
+    "Main Idea": {
+        "ru": "Главная мысль",
+        "uz": "Asosiy g'oya",
+        "strategy_en": "For Main Idea, choose the answer that covers the whole passage, not one detail and not outside information.",
+        "strategy_ru": "Для Main Idea выбирайте ответ, который охватывает весь текст, а не одну деталь и не внешнюю информацию.",
+        "strategy_uz": "Main Idea uchun butun matnni qamrab oladigan javobni tanlang, bitta detal yoki tashqi ma'lumotni emas.",
+        "tip_en": "Check the first and last sentences, then eliminate answers that are too narrow or too broad.",
+        "tip_ru": "Проверьте первое и последнее предложения, затем исключите слишком узкие или слишком широкие ответы.",
+        "tip_uz": "Birinchi va oxirgi gaplarni tekshiring, keyin juda tor yoki juda keng javoblarni chiqaring.",
+    },
+    "Command of Evidence": {
+        "ru": "Доказательство из текста",
+        "uz": "Matndan dalil",
+        "strategy_en": "For Command of Evidence, choose the quote or finding that directly proves the claim, not something merely related.",
+        "strategy_ru": "Для Command of Evidence выбирайте цитату или факт, который прямо доказывает утверждение, а не просто связан с ним.",
+        "strategy_uz": "Command of Evidence uchun da'voni bevosita isbotlaydigan iqtibos yoki topilmani tanlang, shunchaki aloqadorini emas.",
+        "tip_en": "Ask: if this quote stood alone, would it prove the claim?",
+        "tip_ru": "Спросите: если эта цитата будет отдельно, докажет ли она утверждение?",
+        "tip_uz": "So'rang: bu iqtibos yolg'iz tursa ham da'voni isbotlaydimi?",
+    },
+    "Quantitative Evidence": {
+        "ru": "Количественные данные",
+        "uz": "Miqdoriy dalil",
+        "strategy_en": "For Quantitative Evidence, read chart labels, units, and exact data points before choosing.",
+        "strategy_ru": "Для Quantitative Evidence сначала прочитайте подписи графика, единицы и точные данные.",
+        "strategy_uz": "Quantitative Evidence uchun avval grafik yorliqlari, birliklar va aniq ma'lumot nuqtalarini o'qing.",
+        "tip_en": "Do not choose the closest number unless the question asks for an estimate.",
+        "tip_ru": "Не выбирайте ближайшее число, если вопрос не просит оценку.",
+        "tip_uz": "Savol taxmin so'ramasa, eng yaqin sonni tanlamang.",
+    },
+    "Inference": {
+        "ru": "Вывод",
+        "uz": "Xulosa chiqarish",
+        "strategy_en": "For Inference, choose the logical conclusion that is supported by the text without adding new assumptions.",
+        "strategy_ru": "Для Inference выбирайте логический вывод, подтверждённый текстом, без новых предположений.",
+        "strategy_uz": "Inference uchun matn bilan tasdiqlangan mantiqiy xulosani tanlang, yangi taxmin qo'shmang.",
+        "tip_en": "If an answer requires extra outside knowledge, eliminate it.",
+        "tip_ru": "Если ответ требует внешних знаний, исключите его.",
+        "tip_uz": "Agar javob tashqi bilim talab qilsa, uni chiqaring.",
+    },
+    "Purpose/Function": {
+        "ru": "Цель / функция",
+        "uz": "Maqsad / funksiya",
+        "strategy_en": "For Purpose/Function, explain why the author included the part, not just what the part says.",
+        "strategy_ru": "Для Purpose/Function объясните, зачем автор включил часть, а не только что она говорит.",
+        "strategy_uz": "Purpose/Function uchun qism nima deyishini emas, muallif uni nega qo'shganini tushuntiring.",
+        "tip_en": "Use function verbs: introduce, support, contrast, qualify, conclude, or provide evidence.",
+        "tip_ru": "Используйте глаголы функции: вводит, поддерживает, противопоставляет, уточняет, заключает, доказывает.",
+        "tip_uz": "Funksiya fe'llaridan foydalaning: kiritadi, qo'llab-quvvatlaydi, qarama-qarshi qo'yadi, aniqlashtiradi, xulosa qiladi, dalil beradi.",
+    },
+    "Tone/Attitude": {
+        "ru": "Тон / отношение",
+        "uz": "Ton / munosabat",
+        "strategy_en": "For Tone/Attitude, look for opinion words and decide whether the language is positive, negative, neutral, strong, or mild.",
+        "strategy_ru": "Для Tone/Attitude ищите оценочные слова и определите: язык положительный, отрицательный, нейтральный, сильный или мягкий.",
+        "strategy_uz": "Tone/Attitude uchun baholovchi so'zlarni toping va til ijobiy, salbiy, neytral, kuchli yoki yumshoq ekanini aniqlang.",
+        "tip_en": "Avoid emotional answers unless the passage uses emotional language.",
+        "tip_ru": "Не выбирайте эмоциональные ответы, если текст не использует эмоциональный язык.",
+        "tip_uz": "Matn hissiy til ishlatmasa, hissiy javoblarni tanlamang.",
+    },
+    "Transition Words": {
+        "ru": "Переходные слова",
+        "uz": "O'tish so'zlari",
+        "strategy_en": "For Transitions, identify the relationship between ideas first: continuation, contrast, cause/effect, or example.",
+        "strategy_ru": "Для переходов сначала определите связь между идеями: продолжение, контраст, причина/следствие или пример.",
+        "strategy_uz": "Transitions uchun avval g'oyalar orasidagi munosabatni aniqlang: davom, kontrast, sabab/natija yoki misol.",
+        "tip_en": "A transition can sound smooth but still point in the wrong logical direction.",
+        "tip_ru": "Переход может звучать плавно, но указывать неверное логическое направление.",
+        "tip_uz": "O'tish so'zi ravon eshitilishi mumkin, lekin mantiqiy yo'nalishi noto'g'ri bo'lishi mumkin.",
+    },
+    "Rhetorical Synthesis": {
+        "ru": "Риторический синтез",
+        "uz": "Ritorik sintez",
+        "strategy_en": "For Rhetorical Synthesis, satisfy the student's goal and use the relevant notes accurately without adding outside information.",
+        "strategy_ru": "Для Rhetorical Synthesis выполните цель студента и точно используйте нужные заметки без внешней информации.",
+        "strategy_uz": "Rhetorical Synthesis uchun o'quvchi maqsadini bajaring va kerakli eslatmalardan tashqi ma'lumotsiz aniq foydalaning.",
+        "tip_en": "If the answer ignores the stated goal, it is wrong even if the fact is true.",
+        "tip_ru": "Если ответ игнорирует цель, он неверен, даже если факт правдив.",
+        "tip_uz": "Javob maqsadni e'tiborsiz qoldirsa, fakt to'g'ri bo'lsa ham xato.",
+    },
+    "Boundaries": {
+        "ru": "Пунктуация / границы",
+        "uz": "Tinish belgilari / chegaralar",
+        "strategy_en": "For Boundaries, identify independent and dependent clauses. Two independent clauses need a period, semicolon, or comma plus FANBOYS.",
+        "strategy_ru": "Для Boundaries определите независимые и зависимые части. Две независимые части требуют точку, точку с запятой или запятую + FANBOYS.",
+        "strategy_uz": "Boundaries uchun mustaqil va qaram gaplarni aniqlang. Ikki mustaqil gapga nuqta, nuqtali vergul yoki vergul + FANBOYS kerak.",
+        "tip_en": "A comma alone between two complete sentences is a comma splice.",
+        "tip_ru": "Одна запятая между двумя полными предложениями — comma splice.",
+        "tip_uz": "Ikki to'liq gap orasidagi yolg'iz vergul comma splice bo'ladi.",
+    },
+    "Form Structure Sense": {
+        "ru": "Форма, структура, смысл",
+        "uz": "Forma, tuzilma, ma'no",
+        "strategy_en": "For Form, Structure, Sense, check subject-verb agreement, pronoun antecedents, modifier placement, and parallel structure.",
+        "strategy_ru": "Для Form, Structure, Sense проверьте согласование, местоимения, модификаторы и параллельную структуру.",
+        "strategy_uz": "Form, Structure, Sense uchun ega-kesim mosligi, olmosh antecedenti, modifier joyi va parallel tuzilmani tekshiring.",
+        "tip_en": "The verb agrees with the subject, not the closest noun.",
+        "tip_ru": "Глагол согласуется с подлежащим, а не с ближайшим существительным.",
+        "tip_uz": "Fe'l eng yaqin ot bilan emas, ega bilan moslashadi.",
+    },
+    "Text Structure": {
+        "ru": "Структура текста",
+        "uz": "Matn tuzilishi",
+        "strategy_en": "For Text Structure, identify the whole pattern: problem/solution, claim/evidence, compare/contrast, chronological, or general-to-specific.",
+        "strategy_ru": "Для Text Structure определите общий паттерн: проблема/решение, тезис/доказательство, сравнение/контраст, хронология, от общего к частному.",
+        "strategy_uz": "Text Structure uchun umumiy tuzilmani aniqlang: muammo/yechim, da'vo/dalil, taqqoslash/qarama-qarshi, xronologik, umumiydan xususiyga.",
+        "tip_en": "Eliminate answers that describe only one paragraph or one sentence.",
+        "tip_ru": "Исключите ответы, описывающие только один абзац или одно предложение.",
+        "tip_uz": "Faqat bitta paragraf yoki gapni tasvirlaydigan javoblarni chiqaring.",
+    },
+    "General Reading": {
+        "ru": "Общее чтение",
+        "uz": "Umumiy o'qish",
+        "strategy_en": "Identify the task, find direct evidence, eliminate unsupported choices, and choose the most precise answer.",
+        "strategy_ru": "Определите задачу, найдите прямое доказательство, исключите неподтверждённые варианты и выберите самый точный ответ.",
+        "strategy_uz": "Vazifani aniqlang, bevosita dalil toping, tasdiqlanmagan variantlarni chiqaring va eng aniq javobni tanlang.",
+        "tip_en": "Every SAT answer must be proved by the text.",
+        "tip_ru": "Каждый SAT ответ должен подтверждаться текстом.",
+        "tip_uz": "Har bir SAT javobi matn bilan isbotlanishi kerak.",
+    },
+}
+
+
+def detect_question_type(question_text: str) -> str:
+    question_lower = question_text.lower()
+    if any(phrase in question_lower for phrase in ["most nearly mean", "most logical and precise", "completes the text with", "as used in the text"]):
+        return "Words in Context"
+    if any(phrase in question_lower for phrase in ["main idea", "central idea", "mainly about", "primarily about", "best states the"]):
+        return "Main Idea"
+    if any(phrase in question_lower for phrase in ["most effectively illustrates", "best supports", "which quotation", "which finding", "which detail"]):
+        return "Command of Evidence"
+    if any(phrase in question_lower for phrase in ["graph", "table", "data", "chart", "figure"]):
+        return "Quantitative Evidence"
+    if any(phrase in question_lower for phrase in ["can be inferred", "most likely", "suggests that", "implies that", "would most likely"]):
+        return "Inference"
+    if any(phrase in question_lower for phrase in ["function of", "why does the author", "serves to", "in order to", "author includes"]):
+        return "Purpose/Function"
+    if any(phrase in question_lower for phrase in ["tone", "attitude", "author feel", "author view", "perspective"]):
+        return "Tone/Attitude"
+    if any(phrase in question_lower for phrase in ["which choice most logically", "which word", "which phrase", "transition"]):
+        return "Transition Words"
+    if any(phrase in question_lower for phrase in ["notes", "research", "while noting", "student wants", "most effectively uses"]):
+        return "Rhetorical Synthesis"
+    if any(phrase in question_lower for phrase in ["correctly completes", "punctuation", "semicolon", "comma"]):
+        return "Boundaries"
+    if any(phrase in question_lower for phrase in ["verb", "pronoun", "modifier", "parallel", "agreement"]):
+        return "Form Structure Sense"
+    if any(phrase in question_lower for phrase in ["structure of the text", "primarily concerned", "organized", "passage is best described"]):
+        return "Text Structure"
+    return "General Reading"
 
 
 def user_has_active_pro(db: Session, user: User) -> bool:
@@ -813,11 +984,18 @@ def _normalize_questions_solved(analysis: dict) -> list[dict]:
         explanation_ru = str(item.get("why_correct_ru") or item.get("explanation_ru") or explanation_en)
         explanation_uz = str(item.get("why_correct_uz") or item.get("explanation_uz") or explanation_en)
         question_text = str(item.get("question_text") or item.get("question") or "Which choice is best supported by the passage?")
-        question_type = str(item.get("question_type") or "Main Idea")
+        question_type = str(item.get("question_type") or detect_question_type(question_text))
+        if question_type in {"Main Idea/Detail/Inference/Vocabulary/Tone/Purpose/Evidence", "Main Idea"}:
+            detected_type = detect_question_type(question_text)
+            question_type = detected_type if detected_type != "General Reading" else question_type
+        labels = QUESTION_TYPE_LABELS.get(question_type) or QUESTION_TYPE_LABELS["General Reading"]
 
         normalized.append(
             {
                 "question_number": int(item.get("question_number") or index),
+                "question_type": question_type,
+                "question_type_ru": str(item.get("question_type_ru") or labels["ru"]),
+                "question_type_uz": str(item.get("question_type_uz") or labels["uz"]),
                 "question_text": question_text,
                 "question_text_ru": str(item.get("question_text_ru") or question_text),
                 "question_text_uz": str(item.get("question_text_uz") or question_text),
@@ -844,11 +1022,13 @@ def _normalize_questions_solved(analysis: dict) -> list[dict]:
                 "why_wrong_ru": _normalize_wrong_map(item.get("why_wrong_ru"), correct, "Этот вариант не подтверждается прямо текстом."),
                 "why_wrong_uz": _normalize_wrong_map(item.get("why_wrong_uz"), correct, "Bu variant matndagi dalil bilan bevosita tasdiqlanmaydi."),
                 "evidence_line": evidence,
-                "question_type": question_type,
                 "difficulty": str(item.get("difficulty") or analysis.get("difficulty") or "Medium"),
-                "tip_en": str(item.get("tip_en") or f"For {question_type} questions, prove the answer with one exact phrase from the passage."),
-                "tip_ru": str(item.get("tip_ru") or f"Для вопросов типа {question_type} подтверждайте ответ точной фразой из текста."),
-                "tip_uz": str(item.get("tip_uz") or f"{question_type} savollarida javobni matndagi aniq ibora bilan isbotlang."),
+                "question_type_strategy_en": str(item.get("question_type_strategy_en") or labels["strategy_en"]),
+                "question_type_strategy_ru": str(item.get("question_type_strategy_ru") or labels["strategy_ru"]),
+                "question_type_strategy_uz": str(item.get("question_type_strategy_uz") or labels["strategy_uz"]),
+                "tip_en": str(item.get("tip_en") or labels["tip_en"]),
+                "tip_ru": str(item.get("tip_ru") or labels["tip_ru"]),
+                "tip_uz": str(item.get("tip_uz") or labels["tip_uz"]),
             }
         )
     return normalized
