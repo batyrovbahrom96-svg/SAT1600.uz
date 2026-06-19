@@ -567,7 +567,7 @@ def _send_verification_email_with_resend(email: str, code: str) -> bool:
             "</div>"
         ),
     }
-    email_request = request.Request(
+    email_request = urllib_request.Request(
         "https://api.resend.com/emails",
         data=json.dumps(payload).encode("utf-8"),
         headers={
@@ -579,7 +579,7 @@ def _send_verification_email_with_resend(email: str, code: str) -> bool:
     )
 
     try:
-        with request.urlopen(email_request, timeout=10) as response:
+        with urllib_request.urlopen(email_request, timeout=10) as response:
             if response.status >= 400:
                 raise HTTPException(status_code=502, detail="Unable to send verification email")
     except error.HTTPError as exc:
@@ -640,7 +640,7 @@ def _send_simple_email_with_resend(email: str, subject: str, text_body: str, *, 
         "text": text_body,
         "html": html or text_body.replace("\n", "<br>"),
     }
-    email_request = request.Request(
+    email_request = urllib_request.Request(
         "https://api.resend.com/emails",
         data=json.dumps(payload).encode("utf-8"),
         headers={
@@ -651,7 +651,7 @@ def _send_simple_email_with_resend(email: str, subject: str, text_body: str, *, 
         method="POST",
     )
     try:
-        with request.urlopen(email_request, timeout=10) as response:
+        with urllib_request.urlopen(email_request, timeout=10) as response:
             if response.status >= 400:
                 print(f"Analyzer follow-up email failed for {email}: status={response.status}")
     except (OSError, error.HTTPError) as exc:
