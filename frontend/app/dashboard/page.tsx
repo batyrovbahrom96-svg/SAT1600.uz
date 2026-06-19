@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -16,7 +17,6 @@ import {
   LogOut,
   Map,
   MessageSquareText,
-  Rocket,
   Search,
   Target,
   Trophy,
@@ -128,7 +128,7 @@ const copy = {
     streak: "Study Streak",
     streakValue: "0 days",
     streakAction: "Start today with 5 questions",
-    roadmap: "Study Roadmap",
+    roadmap: "Roadmap",
     pathTitle: "Your path to 1400+",
     completed: "Completed",
     upcoming: "Upcoming milestone",
@@ -137,7 +137,7 @@ const copy = {
     weakSprint: "Weak topics sprint",
     mockDate: "Mock test date",
     examDateStep: "Exam date",
-    savedLabel: "Saved for review",
+    savedLabel: "Saved questions",
     bookmarked: "Bookmarked",
     noBookmarks: "No bookmarks yet. Save difficult questions in Reading Analyzer or practice so you can review them here.",
     actionAi: "Ask a question and get an SAT-style explanation.",
@@ -205,7 +205,7 @@ const copy = {
     streak: "Серия занятий",
     streakValue: "0 дней",
     streakAction: "Начните сегодня с 5 вопросов",
-    roadmap: "Учебная карта",
+    roadmap: "Карта пути",
     pathTitle: "Ваш путь к 1400+",
     completed: "Готово",
     upcoming: "Следующий этап",
@@ -214,7 +214,7 @@ const copy = {
     weakSprint: "Спринт по слабым темам",
     mockDate: "Дата mock test",
     examDateStep: "Дата экзамена",
-    savedLabel: "Сохранено для повтора",
+    savedLabel: "Сохраненные вопросы",
     bookmarked: "Закладки",
     noBookmarks: "Пока нет закладок. Сохраняйте сложные вопросы в Analyzer или практике.",
     actionAi: "Задайте вопрос и получите SAT-объяснение.",
@@ -282,7 +282,7 @@ const copy = {
     streak: "O'qish streak",
     streakValue: "0 kun",
     streakAction: "Bugun 5 savoldan boshlang",
-    roadmap: "Study Roadmap",
+    roadmap: "Yo'l Xaritasi",
     pathTitle: "1400+ yo'lingiz",
     completed: "Tugallandi",
     upcoming: "Keyingi bosqich",
@@ -291,7 +291,7 @@ const copy = {
     weakSprint: "Zaif mavzular sprinti",
     mockDate: "Mock test sanasi",
     examDateStep: "Imtihon sanasi",
-    savedLabel: "Qayta ko'rish uchun",
+    savedLabel: "Saqlangan Savollar",
     bookmarked: "Bookmarked",
     noBookmarks: "Hali bookmark yo'q. Reading Analyzer yoki practice ichida qiyin savollarni saqlab boring.",
     actionAi: "Savol yozing, SAT usulida tushuntirish oling.",
@@ -485,12 +485,18 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
-      <div className="mx-auto grid min-h-screen max-w-[1800px] lg:grid-cols-[310px_1fr]">
-        <aside className="border-b border-white/10 bg-[#0c0c0c] px-5 py-5 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r lg:px-6">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,215,0,0.10),transparent_34%),linear-gradient(135deg,rgba(255,215,0,0.04),transparent_42%)]" />
+      <div className="relative mx-auto grid min-h-screen max-w-[1800px] lg:grid-cols-[320px_1fr]">
+        <aside className="border-b border-[#b89418]/20 bg-[#080808]/95 px-5 py-5 shadow-[20px_0_80px_rgba(0,0,0,0.25)] lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r lg:px-6">
           <div className="flex items-center justify-between gap-4 lg:block">
-            <button className="text-left" onClick={() => router.push("/")} type="button">
-              <p className="text-xl font-black tracking-[0.32em] text-[#FFD700]">SATTEST.UZ</p>
-              <p className="mt-2 text-[10px] font-black uppercase tracking-[0.24em] text-white/40">Practice • Improve • Achieve</p>
+            <button className="flex items-center gap-4 text-left lg:block" onClick={() => router.push("/")} type="button">
+              <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#FFD700]/35 bg-black shadow-[0_0_34px_rgba(255,215,0,0.14)] lg:h-24 lg:w-24">
+                <Image className="h-full w-full object-cover" src="/assets/brand/sattest-lion-crest.png" alt="SATTEST lion crest" width={160} height={160} priority />
+              </span>
+              <span className="block">
+                <span className="block text-xl font-black tracking-[0.32em] text-[#FFD700] lg:mt-4">SATTEST.UZ</span>
+                <span className="mt-2 block text-[10px] font-black uppercase tracking-[0.24em] text-white/42">Practice • Improve • Achieve</span>
+              </span>
             </button>
             <div className="flex items-center gap-2 lg:hidden">
               <LanguageButtons language={language} onChange={changeLanguage} />
@@ -505,8 +511,8 @@ export default function DashboardPage() {
               <button
                 className={`flex min-w-fit items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition lg:w-full ${
                   item.active
-                    ? "border-[#FFD700]/55 bg-[#FFD700]/12 text-[#FFD700]"
-                    : "border-transparent text-white/58 hover:border-white/10 hover:bg-white/[0.04] hover:text-white"
+                    ? "border-[#FFD700] bg-[#FFD700] text-black shadow-[0_14px_44px_rgba(255,215,0,0.18)]"
+                    : "border-transparent text-white/55 hover:border-[#FFD700]/30 hover:bg-[#FFD700]/[0.07] hover:text-[#FFD700]"
                 }`}
                 key={item.key}
                 onClick={() => router.push(withLanguage(item.href))}
@@ -514,7 +520,7 @@ export default function DashboardPage() {
               >
                 <item.icon size={18} />
                 <span className="font-semibold">{t.nav[item.key as keyof typeof t.nav]}</span>
-                {item.badgeKey ? <span className="ml-auto rounded-full bg-[#FFD700] px-2 py-0.5 text-[10px] font-black text-black">{t.new}</span> : null}
+                {item.badgeKey ? <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-black ${item.active ? "bg-black text-[#FFD700]" : "bg-[#FFD700] text-black"}`}>{t.new}</span> : null}
               </button>
             ))}
           </nav>
@@ -530,10 +536,23 @@ export default function DashboardPage() {
           >
             <LogOut size={18} /> {t.logout}
           </button>
+
+          <div className="mt-auto hidden border-t border-[#FFD700]/15 pt-5 lg:block">
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/28">SATTEST App v1.0</p>
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#FFD700]/15 bg-[#151515] p-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#FFD700]/35 bg-[#FFD700] text-sm font-black text-black">
+                {firstName.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-white">{firstName}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FFD700]/70">{isProActive ? t.proActive : t.freePlan}</p>
+              </div>
+            </div>
+          </div>
         </aside>
 
-        <section className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <header className="flex flex-col gap-5 rounded-xl border border-white/10 bg-[#151515] p-5 md:flex-row md:items-end md:justify-between md:p-7">
+        <section className="px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:py-8">
+          <header className="flex flex-col gap-5 rounded-xl border border-[#FFD700]/15 bg-[#151515]/95 p-5 shadow-[0_24px_90px_rgba(0,0,0,0.25)] md:flex-row md:items-end md:justify-between md:p-7">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#FFD700]/70">{t.personalDashboard}</p>
               <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">👋 {t.greeting}, {firstName}!</h1>
@@ -569,6 +588,7 @@ export default function DashboardPage() {
                 title={daysLeft === null ? t.noDate : t.daysLeft(daysLeft)}
                 action={examDate ? t.examDate(examDate) : t.setExamDate}
                 onClick={saveExamDate}
+                variant="countdown"
               />
               <CompactCard
                 icon={<Target size={22} />}
@@ -640,6 +660,27 @@ export default function DashboardPage() {
           </section>
         </section>
       </div>
+      <nav className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-5 border-t border-[#FFD700]/20 bg-[#080808]/95 px-2 py-2 backdrop-blur-xl lg:hidden">
+        {[
+          { key: "dashboard", icon: LayoutDashboard, href: "/dashboard" },
+          { key: "studyPlan", icon: Map, href: "/my-1400" },
+          { key: "tests", icon: BookOpenCheck, href: "/sat-test" },
+          { key: "readingAnalyzer", icon: Search, href: "/reading-analyzer" },
+          { key: "profile", icon: User, href: "/dashboard#profile" }
+        ].map((item) => (
+          <button
+            className={`flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl text-[9px] font-black uppercase tracking-[0.08em] ${
+              item.key === "dashboard" ? "bg-[#FFD700] text-black" : "text-white/45"
+            }`}
+            key={item.key}
+            onClick={() => router.push(withLanguage(item.href))}
+            type="button"
+          >
+            <item.icon size={18} />
+            <span>{t.nav[item.key as keyof typeof t.nav].split(" ")[0]}</span>
+          </button>
+        ))}
+      </nav>
       {editing ? (
         <EditModal
           title={editing === "score" ? t.editGoalTitle : editing === "university" ? t.editUniversityTitle : t.editExamTitle}
@@ -752,24 +793,27 @@ function ScoreCard({ latestScore, diagnosticResults, diagnosticSummary, t, onDia
   const score = diagnosticResults?.score_total ?? latestScore;
   const rw = diagnosticResults?.score_reading_writing ?? 0;
   const math = diagnosticResults?.score_math ?? 0;
+  const rwPercent = rw ? Math.min(100, Math.round((rw / 800) * 100)) : 0;
+  const mathPercent = math ? Math.min(100, Math.round((math / 800) * 100)) : 0;
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-white/10 bg-[#151515] p-5 md:p-7">
+    <section className="relative overflow-hidden rounded-xl border border-[#FFD700]/18 bg-[#151515] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.22)] md:p-7">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,215,0,0.12),transparent_38%)]" />
       <div className="absolute right-5 top-5 hidden md:block">
         <SattestMascot />
       </div>
       <div className="relative z-10 max-w-3xl">
         <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38">📊 {t.lastResult}</p>
         <div className="mt-5 flex flex-wrap items-end gap-4">
-          <h2 className="text-7xl font-light leading-none text-white md:text-8xl">{score ?? "—"}</h2>
+          <h2 className="text-7xl font-light leading-none text-[#FFD700] drop-shadow-[0_0_30px_rgba(255,215,0,0.18)] md:text-8xl">{score ?? "—"}</h2>
           <span className="mb-2 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#FFD700]">
             {score ? scoreBand(score) : t.diagnosticNeeded}
           </span>
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <ScoreMetric label={t.rw} value={rw || "—"} />
-          <ScoreMetric label={t.math} value={math || "—"} />
-          <ScoreMetric label={t.accuracy} value={diagnosticSummary ? `${diagnosticSummary.overallAccuracy}%` : "—"} />
+        <div className="mt-6 grid gap-3 lg:grid-cols-[1fr_1fr_0.8fr]">
+          <ScoreMetric label={t.rw} value={rw || "—"} percent={rwPercent} />
+          <ScoreMetric label={t.math} value={math || "—"} percent={mathPercent} />
+          <ScoreMetric label={t.accuracy} value={diagnosticSummary ? `${diagnosticSummary.overallAccuracy}%` : "—"} percent={diagnosticSummary?.overallAccuracy ?? 0} />
         </div>
         <p className="mt-5 max-w-2xl text-sm leading-6 text-white/52">
           {diagnosticSummary?.feedback || t.noScoreText}
@@ -790,36 +834,50 @@ function ScoreCard({ latestScore, diagnosticResults, diagnosticSummary, t, onDia
 
 function SattestMascot() {
   return (
-    <div className="relative h-44 w-44" aria-label="SATTEST original mascot">
-      <div className="absolute inset-6 rounded-full bg-[#FFD700]/15 blur-2xl" />
-      <div className="absolute left-8 top-6 h-28 w-28 rounded-[36px] border border-[#FFD700]/45 bg-gradient-to-br from-[#FFD700] to-[#8b7208] shadow-[0_18px_60px_rgba(255,215,0,0.18)] rotate-[-8deg]" />
-      <div className="absolute left-14 top-14 flex gap-4">
-        <span className="h-5 w-5 rounded-full bg-black" />
-        <span className="h-5 w-5 rounded-full bg-black" />
-      </div>
-      <div className="absolute left-[74px] top-[86px] h-2 w-10 rounded-full bg-black/70" />
-      <Rocket className="absolute bottom-4 right-5 text-[#FFD700]" size={48} />
-      <Flame className="absolute bottom-7 left-5 text-[#FFD700]" size={30} />
+    <div className="relative h-44 w-44" aria-label="SATTEST lion studying mascot">
+      <div className="absolute inset-4 rounded-full bg-[#FFD700]/10 blur-2xl" />
+      <svg className="absolute inset-0 h-full w-full text-[#FFD700]" viewBox="0 0 180 180" fill="none" aria-hidden="true">
+        <circle cx="90" cy="80" r="52" stroke="currentColor" strokeWidth="2" opacity="0.38" />
+        <path d="M44 80c8-35 30-49 46-49s38 14 46 49c-11-13-21-18-31-20 4 9 7 21 5 35-5-9-11-15-20-18-9 3-15 9-20 18-2-14 1-26 5-35-10 2-20 7-31 20Z" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+        <path d="M66 95c5 14 14 22 24 22s19-8 24-22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        <path d="M73 78h.1M107 78h.1" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
+        <path d="M84 91h12l-6 6-6-6Z" fill="currentColor" />
+        <path d="M48 132h84M58 122h64c5 0 9 4 9 9v8H49v-8c0-5 4-9 9-9Z" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M68 132c4 6 10 9 22 9s18-3 22-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.65" />
+        <path d="M52 44 39 31M128 44l13-13M90 23V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.55" />
+      </svg>
     </div>
   );
 }
 
-function ScoreMetric({ label, value }: { label: string; value: string | number }) {
+function ScoreMetric({ label, value, percent }: { label: string; value: string | number; percent: number }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-4">
+    <div className="rounded-xl border border-[#FFD700]/12 bg-black/25 p-4">
       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">{label}</p>
       <p className="mt-2 text-2xl font-light text-white">{value}</p>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+        <div className="h-full rounded-full bg-gradient-to-r from-[#8b7208] to-[#FFD700]" style={{ width: `${percent}%` }} />
+      </div>
     </div>
   );
 }
 
-function CompactCard({ icon, label, title, action, onClick }: { icon: ReactNode; label: string; title: string; action: string; onClick: () => void }) {
+function CompactCard({ icon, label, title, action, onClick, variant = "default" }: { icon: ReactNode; label: string; title: string; action: string; onClick: () => void; variant?: "default" | "countdown" }) {
+  const isCountdown = variant === "countdown";
   return (
-    <button className="rounded-xl border border-white/10 bg-[#151515] p-5 text-left transition hover:border-[#FFD700]/40 hover:bg-[#FFD700]/[0.06]" onClick={onClick} type="button">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#FFD700]/20 bg-[#FFD700]/10 text-[#FFD700]">{icon}</div>
-      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-white/36">{label}</p>
-      <h3 className="mt-2 text-2xl font-light text-white">{title}</h3>
-      <p className="mt-3 text-sm text-[#FFD700]">{action}</p>
+    <button
+      className={`rounded-xl border p-5 text-left transition hover:scale-[1.01] ${
+        isCountdown
+          ? "border-[#FFD700]/45 bg-gradient-to-br from-[#3d3100] via-[#151515] to-[#9b7b00] shadow-[0_22px_70px_rgba(255,215,0,0.12)] hover:shadow-[0_22px_90px_rgba(255,215,0,0.18)]"
+          : "border-[#FFD700]/12 bg-[#151515] hover:border-[#FFD700]/40 hover:bg-[#FFD700]/[0.06]"
+      }`}
+      onClick={onClick}
+      type="button"
+    >
+      <div className={`flex h-12 w-12 items-center justify-center rounded-xl border ${isCountdown ? "border-black/20 bg-[#FFD700] text-black" : "border-[#FFD700]/20 bg-[#FFD700]/10 text-[#FFD700]"}`}>{icon}</div>
+      <p className={`mt-5 text-[10px] font-black uppercase tracking-[0.28em] ${isCountdown ? "text-black/60 mix-blend-screen" : "text-white/36"}`}>{label}</p>
+      <h3 className={`mt-2 text-2xl font-light ${isCountdown ? "text-[#FFD700]" : "text-white"}`}>{title}</h3>
+      <p className={`mt-3 text-sm ${isCountdown ? "font-semibold text-white" : "text-[#FFD700]"}`}>{action}</p>
     </button>
   );
 }
@@ -832,9 +890,10 @@ function RoadmapCard({ hasDiagnostic, currentWeek, examDate, t }: { hasDiagnosti
     { label: t.mockDate, complete: false },
     { label: examDate ? t.examDate(examDate) : t.examDateStep, complete: false }
   ];
+  const currentIndex = hasDiagnostic ? 1 : 0;
 
   return (
-    <section className="rounded-xl border border-white/10 bg-[#151515] p-5 md:p-6">
+    <section className="rounded-xl border border-[#FFD700]/12 bg-[#151515] p-5 md:p-6">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/36">{t.roadmap}</p>
@@ -846,8 +905,12 @@ function RoadmapCard({ hasDiagnostic, currentWeek, examDate, t }: { hasDiagnosti
         {steps.map((step, index) => (
           <div className="grid grid-cols-[28px_1fr] gap-4" key={step.label}>
             <div className="flex flex-col items-center">
-              <span className={`h-7 w-7 rounded-full border ${step.complete ? "border-[#FFD700] bg-[#FFD700]" : "border-white/18 bg-white/5"}`} />
-              {index < steps.length - 1 ? <span className={`h-12 w-px ${step.complete ? "bg-[#FFD700]" : "bg-white/12"}`} /> : null}
+              <span className={`relative flex h-7 w-7 items-center justify-center rounded-full border ${
+                step.complete ? "border-[#FFD700] bg-[#FFD700]" : index === currentIndex ? "border-[#FFD700] bg-black" : "border-white/18 bg-white/5"
+              }`}>
+                {index === currentIndex ? <span className="h-2.5 w-2.5 rounded-full bg-[#FFD700]" /> : null}
+              </span>
+              {index < steps.length - 1 ? <span className={`h-12 w-px border-l ${step.complete ? "border-[#FFD700]" : "border-dashed border-white/16"}`} /> : null}
             </div>
             <div className="pb-7">
               <p className={step.complete ? "font-semibold text-white" : "text-white/48"}>{step.label}</p>
