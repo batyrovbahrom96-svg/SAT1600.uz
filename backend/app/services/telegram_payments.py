@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_DAYS
 from app.models import PaymentOrder, Subscription, TelegramAudience, TestAttempt, User
+from app.services.reading_analyzer import build_analyzer_funnel_stats
 from app.services.bot_service import WELCOME_BOT_USERNAME, activate_telegram_user, clean_first_name, notify_bot_after_test
 from app.services.messages import BUTTONS, LANGUAGE_BUTTONS, MESSAGES, SUPPORTED_LANGUAGES
 
@@ -160,6 +161,9 @@ def _handle_message(message: dict, db: Session | None) -> dict:
 
     if text.startswith("/stats"):
         return _handle_stats_command(chat_id, db)
+
+    if text.startswith("/analyzer_stats"):
+        return _handle_analyzer_stats_command(chat_id, db)
 
     if text.startswith("/sendtip"):
         return _handle_sendtip_command(chat_id, text, db)
@@ -953,6 +957,19 @@ def _handle_stats_command(chat_id: str, db: Session | None) -> dict:
 
     _send_message(chat_id, build_welcome_bot_stats(db))
     return {"ok": True, "stats": True}
+
+
+def _handle_analyzer_stats_command(chat_id: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can request Reading Analyzer statistics.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so analyzer stats are unavailable.")
+        return {"ok": True, "database": False}
+
+    _send_message(chat_id, build_analyzer_funnel_stats(db))
+    return {"ok": True, "analyzer_stats": True}
 
 
 def _handle_broadcast_command(chat_id: str, text: str, db: Session | None) -> dict:

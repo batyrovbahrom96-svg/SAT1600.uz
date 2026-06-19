@@ -5,7 +5,17 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Clipboard, Loader2, Search, Sparkles, Star, Zap } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { ApiError, analyzePassage, analyzePassageImage, getReadingAnalyzerStats, getToken, type ReadingAnalysisResponse } from "@/lib/api";
+import {
+  ApiError,
+  analyzePassage,
+  analyzePassageImage,
+  analyzePassageImagePublic,
+  analyzePassagePublic,
+  getReadingAnalyzerAnonymousId,
+  getReadingAnalyzerStats,
+  getToken,
+  type ReadingAnalysisResponse,
+} from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
 
 const TRANSLATIONS = {
@@ -44,6 +54,11 @@ const TRANSLATIONS = {
     limit_cta: "Upgrade to Pro to continue without stopping:",
     limit_benefits: ["Unlimited text and image analyses", "Full Uzbek/Russian translation", "All questions solved with full explanations"],
     upgrade_button: "🔑 Upgrade to Pro → 300,000 UZS/month",
+    signup_title: "🎉 You've used 3 free AI analyses today!",
+    signup_body: "Create a free account to continue:",
+    signup_benefits: ["Your analysis history saves", "3 more free tomorrow", "Or go Pro for UNLIMITED analysis + full translation + all questions solved"],
+    signup_button: "Create Free Account →",
+    signup_pro_button: "Learn About Pro →",
     image_required: "Please upload or paste a screenshot first.",
     no_text_found: "Could not read this image. Please try: 1) Take a clearer screenshot 2) Make sure text is visible 3) Or paste the text directly",
     image_error: "Could not read this image. Please try: 1) Take a clearer screenshot 2) Make sure text is visible 3) Or paste the text directly",
@@ -88,6 +103,11 @@ const TRANSLATIONS = {
     limit_cta: "Перейдите на Pro, чтобы продолжить без остановки:",
     limit_benefits: ["Безлимитный анализ текста и фото", "Полный перевод на русский/узбекский", "Все вопросы решены с подробными объяснениями"],
     upgrade_button: "🔑 Получить Pro → 300,000 UZS/месяц",
+    signup_title: "🎉 Вы получили 3 бесплатных AI анализа сегодня!",
+    signup_body: "Создайте бесплатный аккаунт чтобы продолжить:",
+    signup_benefits: ["История анализов сохранится", "Завтра снова 3 бесплатных", "Или с Pro — БЕЗЛИМИТНЫЙ анализ + полный перевод + все вопросы решены"],
+    signup_button: "Создать аккаунт →",
+    signup_pro_button: "Узнать о Pro →",
     image_required: "Сначала загрузите или вставьте скриншот.",
     no_text_found: "Не удалось прочитать изображение. Попробуйте: 1) Более чёткий скриншот 2) Убедитесь что текст виден 3) Или вставьте текст напрямую",
     image_error: "Не удалось прочитать изображение. Попробуйте: 1) Более чёткий скриншот 2) Убедитесь что текст виден 3) Или вставьте текст напрямую",
@@ -132,6 +152,11 @@ const TRANSLATIONS = {
     limit_cta: "To'xtamasdan davom etish uchun Pro oling:",
     limit_benefits: ["Cheksiz matn va rasm tahlili", "To'liq Uzbek/Russian tarjima", "Barcha savollar to'liq yechim va izoh bilan"],
     upgrade_button: "🔑 Pro Olish → 300,000 UZS/oy",
+    signup_title: "🎉 Siz bugun 3 ta BEPUL AI tahlil oldingiz!",
+    signup_body: "Davom etish uchun bepul hisob yarating — bonus sifatida:",
+    signup_benefits: ["Tahlil tarixingiz saqlanadi", "Ertaga yana 3 ta bepul tahlil", "Yoki Pro bilan — CHEKSIZ tahlil + to'liq tarjima + barcha savollar yechimi"],
+    signup_button: "Bepul akaunt yaratish →",
+    signup_pro_button: "Pro haqida bilish →",
     image_required: "Avval screenshot yuklang yoki joylashtiring.",
     no_text_found: "Rasmni o'qib bo'lmadi. Sinab ko'ring: 1) Aniqroq screenshot 2) Matn ko'rinishini tekshiring 3) Yoki matnni to'g'ridan joylashtiring",
     image_error: "Rasmni o'qib bo'lmadi. Sinab ko'ring: 1) Aniqroq screenshot 2) Matn ko'rinishini tekshiring 3) Yoki matnni to'g'ridan joylashtiring",
@@ -189,6 +214,7 @@ export default function ReadingAnalyzerPage() {
   const [loadingIndex, setLoadingIndex] = useState(0);
   const [error, setError] = useState("");
   const [limitReached, setLimitReached] = useState(false);
+  const [signupWall, setSignupWall] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(3);
   const [stats, setStats] = useState({ today: 127, rating: 4.9, total: 500 });
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -213,10 +239,7 @@ export default function ReadingAnalyzerPage() {
   async function submit() {
     setError("");
     setLimitReached(false);
-    if (!getToken()) {
-      router.push(`/login?next=/reading-analyzer?lang=${language}`);
-      return;
-    }
+    setSignupWall(false);
     if (inputMode === "text" && !ready) {
       setError(copy.short as string);
       return;
@@ -227,13 +250,25 @@ export default function ReadingAnalyzerPage() {
     }
     setIsLoading(true);
     try {
-      const result = inputMode === "image" && imageFile ? await analyzeImageWithFallback(imageFile, language) : await analyzePassage({ text, language });
+      const hasToken = Boolean(getToken());
+      const result = inputMode === "image" && imageFile
+        ? await analyzeImageWithFallback(imageFile, language, hasToken)
+        : hasToken
+          ? await analyzePassage({ text, language })
+          : await analyzePassagePublic({ text, language });
       setRemaining(result.remaining_free ?? null);
       setLimitReached(false);
+      setSignupWall(false);
       saveResult(result);
       router.push(`/reading-analyzer/result?lang=${language}`);
     } catch (caught) {
       if (caught instanceof ApiError) {
+        if (isSignupRequiredError(caught)) {
+          setRemaining(0);
+          setSignupWall(true);
+          setError("");
+          return;
+        }
         if (isLimitError(caught)) {
           setRemaining(0);
           setLimitReached(true);
@@ -351,6 +386,18 @@ export default function ReadingAnalyzerPage() {
             />
           ) : null}
 
+          {signupWall ? (
+            <SignupWallCard
+              copy={copy}
+              onPro={() => router.push(`/pricing?lang=${language}`)}
+              onSignup={() => {
+                const anon = encodeURIComponent(getReadingAnalyzerAnonymousId());
+                const next = encodeURIComponent(`/reading-analyzer?lang=${language}`);
+                router.push(`/register?source=reading_analyzer_limit&anon=${anon}&next=${next}`);
+              }}
+            />
+          ) : null}
+
           {error ? <div className="mt-4 border border-red-300/25 bg-red-950/25 p-4 text-sm text-red-100">{error}</div> : null}
 
           {isLoading ? (
@@ -420,6 +467,40 @@ function LimitReachedCard({ copy, used, onUpgrade }: { copy: Record<string, unkn
   );
 }
 
+function SignupWallCard({ copy, onSignup, onPro }: { copy: Record<string, unknown>; onSignup: () => void; onPro: () => void }) {
+  const benefits = copy.signup_benefits as string[];
+  return (
+    <div className="mt-4 border border-[#FFD700]/40 bg-[#171303] p-5 shadow-[0_18px_70px_rgba(255,215,0,0.1)]">
+      <h3 className="text-2xl font-semibold leading-tight text-white">{copy.signup_title as string}</h3>
+      <p className="mt-3 text-sm font-semibold text-white/72">{copy.signup_body as string}</p>
+      <ul className="mt-4 grid gap-2 text-sm leading-6 text-white/76">
+        {benefits.map((benefit) => (
+          <li className="flex gap-2" key={benefit}>
+            <span className="text-[#FFD700]">✓</span>
+            <span>{benefit}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <button
+          className="min-h-12 border border-[#FFD700] bg-[#FFD700] px-4 text-sm font-black uppercase tracking-[0.1em] text-black transition hover:bg-transparent hover:text-[#FFD700]"
+          onClick={onSignup}
+          type="button"
+        >
+          {copy.signup_button as string}
+        </button>
+        <button
+          className="min-h-12 border border-white/15 bg-black/20 px-4 text-sm font-black uppercase tracking-[0.1em] text-white/72 transition hover:border-[#FFD700]/60 hover:text-[#FFD700]"
+          onClick={onPro}
+          type="button"
+        >
+          {copy.signup_pro_button as string}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function saveResult(result: ReadingAnalysisResponse) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem("sattest_reading_analysis_latest", JSON.stringify(result));
@@ -443,10 +524,21 @@ function isLimitError(error: ApiError) {
   return error.status === 403 || message.includes("limit_reached");
 }
 
-async function analyzeImageWithFallback(file: File, language: Language): Promise<ReadingAnalysisResponse> {
+function isSignupRequiredError(error: ApiError) {
+  const detail = error.detail;
+  const message = error.message || "";
+  return error.status === 403 && (
+    message.includes("signup_required") ||
+    (typeof detail === "object" && detail !== null && JSON.stringify(detail).includes("signup_required"))
+  );
+}
+
+async function analyzeImageWithFallback(file: File, language: Language, authenticated: boolean): Promise<ReadingAnalysisResponse> {
   const normalizedFile = await normalizeImageForClaude(file);
   try {
-    return await analyzePassageImage({ file: normalizedFile, language });
+    return authenticated
+      ? await analyzePassageImage({ file: normalizedFile, language })
+      : await analyzePassageImagePublic({ file: normalizedFile, language });
   } catch (error) {
     if (!(error instanceof ApiError) || !isImageReadError(error)) {
       throw error;
@@ -455,7 +547,9 @@ async function analyzeImageWithFallback(file: File, language: Language): Promise
     if (extractedText.trim().length < 50) {
       throw error;
     }
-    return analyzePassage({ text: extractedText.slice(0, 9000), language });
+    return authenticated
+      ? analyzePassage({ text: extractedText.slice(0, 9000), language })
+      : analyzePassagePublic({ text: extractedText.slice(0, 9000), language });
   }
 }
 

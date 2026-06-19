@@ -1,8 +1,8 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, JSON, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, Enum, Float, ForeignKey, Integer, JSON, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -52,6 +52,10 @@ class User(Base):
     daily_analyses: Mapped[int] = mapped_column(Integer, default=0)
     last_analysis_date: Mapped[datetime | None] = mapped_column(DateTime)
     total_analyses: Mapped[int] = mapped_column(Integer, default=0)
+    signup_source: Mapped[str | None] = mapped_column(String(80))
+    anonymous_visitor_id: Mapped[str | None] = mapped_column(String(80), index=True)
+    reading_analyzer_limit_signup_at: Mapped[datetime | None] = mapped_column(DateTime)
+    reading_analyzer_followup_sent_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     attempts: Mapped[list["TestAttempt"]] = relationship(back_populates="user")
@@ -304,7 +308,7 @@ class ReadingAnalysis(Base):
     __tablename__ = "reading_analyses"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     share_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     language: Mapped[str] = mapped_column(String(16), default="uz")
     source_text: Mapped[str] = mapped_column(Text)
@@ -314,6 +318,34 @@ class ReadingAnalysis(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped[User] = relationship(back_populates="reading_analyses")
+
+
+class ReadingAnalyzerAnonymousUsage(Base):
+    __tablename__ = "reading_analyzer_anonymous_usage"
+    __table_args__ = (UniqueConstraint("anonymous_id", "usage_date", name="uq_reading_analyzer_anon_usage_day"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    anonymous_id: Mapped[str] = mapped_column(String(80), index=True)
+    usage_date: Mapped[date] = mapped_column(Date, index=True)
+    daily_analyses: Mapped[int] = mapped_column(Integer, default=0)
+    total_analyses: Mapped[int] = mapped_column(Integer, default=0)
+    limit_hit_at: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ReadingAnalyzerLimitEvent(Base):
+    __tablename__ = "reading_analyzer_limit_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    anonymous_id: Mapped[str | None] = mapped_column(String(80), index=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True)
+    language: Mapped[str] = mapped_column(String(16), default="en")
+    source: Mapped[str] = mapped_column(String(80), default="reading_analyzer_limit")
+    used_count: Mapped[int] = mapped_column(Integer, default=3)
+    limit_hit_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    account_created_at: Mapped[datetime | None] = mapped_column(DateTime)
+    followup_sent_at: Mapped[datetime | None] = mapped_column(DateTime)
 
 
 class TelegramAudience(Base):

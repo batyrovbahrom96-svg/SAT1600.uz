@@ -33,6 +33,7 @@ from app.services.sat_engine import (
     start_attempt,
 )
 from app.services.bot_service import WELCOME_BOT_USERNAME
+from app.services.reading_analyzer import attach_reading_analyzer_limit_signup, mark_analyzer_limit_followup_sent
 from app.services.telegram_payments import (
     handle_telegram_update,
     notify_admin_diagnostic_result,
@@ -115,6 +116,10 @@ def register(payload: AuthRegister, db: Session = Depends(get_db)) -> TokenRespo
     db.add(user)
     db.commit()
     db.refresh(user)
+    if payload.signup_source == "reading_analyzer_limit":
+        attach_reading_analyzer_limit_signup(db, user, payload.anonymous_id)
+        _send_analyzer_limit_followup(email, user.full_name)
+        mark_analyzer_limit_followup_sent(db, user)
     verification_codes.pop(email, None)
     return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role, full_name=user.full_name)
 
@@ -426,6 +431,88 @@ def _send_verification_email_with_resend(email: str, code: str) -> bool:
         raise HTTPException(status_code=502, detail="Unable to send verification email") from exc
 
     return False
+
+
+def _send_analyzer_limit_followup(email: str, full_name: str) -> None:
+    text = (
+        "Salom! 👋\n\n"
+        "Bugun Reading Analyzer'dan 3 marta foydalandingiz — zo'r!\n\n"
+        "Bilasizmi, Pro bilan bu CHEKSIZ bo'ladi, plus:\n\n"
+        "✅ To'liq tarjima (qisman emas)\n"
+        "✅ BARCHA savollar yechiladi (faqat 1-chi emas)\n"
+        "✅ Mock testlar + shaxsiy reja\n\n"
+        "300,000 UZS/oy\n\n"
+        "Savol bo'lsa: @FounderSATTESTUZ"
+    )
+    settings = get_settings()
+    if settings.resend_api_key:
+        _send_simple_email_with_resend(
+            email,
+            "SATTEST.UZ Reading Analyzer Pro",
+            text,
+            html=(
+                "<div style=\"font-family:Arial,sans-serif;color:#111;line-height:1.55\">"
+                f"<p>Salom {full_name}! 👋</p>"
+                "<p>Bugun Reading Analyzer'dan 3 marta foydalandingiz — zo'r!</p>"
+                "<p><strong>Pro bilan bu CHEKSIZ bo'ladi:</strong></p>"
+                "<ul>"
+                "<li>To'liq tarjima (qisman emas)</li>"
+                "<li>BARCHA savollar yechiladi (faqat 1-chi emas)</li>"
+                "<li>Mock testlar + shaxsiy reja</li>"
+                "</ul>"
+                "<p><strong>300,000 UZS/oy</strong></p>"
+                "<p>Savol bo'lsa: @FounderSATTESTUZ</p>"
+                "</div>"
+            ),
+        )
+        return
+    if settings.smtp_host:
+        _send_simple_email_with_smtp(email, "SATTEST.UZ Reading Analyzer Pro", text)
+
+
+def _send_simple_email_with_resend(email: str, subject: str, text_body: str, *, html: str | None = None) -> None:
+    settings = get_settings()
+    from_email = settings.resend_from_email or f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
+    payload = {
+        "from": from_email,
+        "to": [email],
+        "subject": subject,
+        "text": text_body,
+        "html": html or text_body.replace("\n", "<br>"),
+    }
+    email_request = request.Request(
+        "https://api.resend.com/emails",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {settings.resend_api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "SATTEST.UZ/1.0",
+        },
+        method="POST",
+    )
+    try:
+        with request.urlopen(email_request, timeout=10) as response:
+            if response.status >= 400:
+                print(f"Analyzer follow-up email failed for {email}: status={response.status}")
+    except (OSError, error.HTTPError) as exc:
+        print(f"Analyzer follow-up email failed for {email}: {exc}")
+
+
+def _send_simple_email_with_smtp(email: str, subject: str, text_body: str) -> None:
+    settings = get_settings()
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
+    message["To"] = email
+    message.set_content(text_body)
+    try:
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
+            smtp.starttls()
+            if settings.smtp_username and settings.smtp_password:
+                smtp.login(settings.smtp_username, settings.smtp_password)
+            smtp.send_message(message)
+    except (OSError, smtplib.SMTPException) as exc:
+        print(f"Analyzer follow-up SMTP failed for {email}: {exc}")
 
 
 @router.get("/tests")

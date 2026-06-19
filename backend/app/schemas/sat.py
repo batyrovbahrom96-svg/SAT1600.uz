@@ -8,6 +8,8 @@ class AuthRegister(BaseModel):
     full_name: str = Field(min_length=2, max_length=255)
     password: str = Field(min_length=8, max_length=128)
     verification_code: str = Field(min_length=6, max_length=6)
+    signup_source: str | None = Field(default=None, max_length=80)
+    anonymous_id: str | None = Field(default=None, max_length=80)
 
 
 class VerificationCodeRequest(BaseModel):

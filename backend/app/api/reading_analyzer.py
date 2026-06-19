@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+import secrets
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
 from pydantic import BaseModel, Field
 from datetime import datetime, time
 
@@ -11,7 +13,9 @@ from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models import ReadingAnalysis, User
 from app.services.reading_analyzer import (
+    analyze_reading_image_public,
     analyze_reading_image,
+    analyze_reading_passage_public,
     analyze_reading_passage,
     extract_text_from_reading_image,
     public_shared_analysis,
@@ -19,6 +23,7 @@ from app.services.reading_analyzer import (
 )
 
 router = APIRouter(prefix="/api", tags=["reading-analyzer"])
+ANON_COOKIE_NAME = "sattest_ra_anon_id"
 
 
 class PassageInput(BaseModel):
@@ -50,6 +55,23 @@ async def analyze_text_alias(
     return await analyze_passage(payload, db, current_user)
 
 
+@router.post("/reading-analyzer/public/analyze")
+async def analyze_text_public(
+    payload: PassageInput,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> dict:
+    anonymous_id = _anonymous_id(request, response)
+    try:
+        result = analyze_reading_passage_public(db, anonymous_id, payload.text, payload.language)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if result.get("limit_reached"):
+        raise HTTPException(status_code=403, detail=result)
+    return result
+
+
 @router.post("/reading-analyzer/analyze-image")
 async def analyze_image(
     file: UploadFile = File(...),
@@ -65,6 +87,26 @@ async def analyze_image(
         raise HTTPException(status_code=400, detail={"error": error_key}) from exc
     if result.get("limit_reached"):
         raise HTTPException(status_code=403, detail={"error": result["message"]})
+    return result
+
+
+@router.post("/reading-analyzer/public/analyze-image")
+async def analyze_image_public(
+    request: Request,
+    response: Response,
+    file: UploadFile = File(...),
+    language: str = Form("uz"),
+    db: Session = Depends(get_db),
+) -> dict:
+    anonymous_id = _anonymous_id(request, response)
+    contents = await file.read()
+    try:
+        result = analyze_reading_image_public(db, anonymous_id, contents, file.content_type or "", language)
+    except ValueError as exc:
+        error_key = str(exc)
+        raise HTTPException(status_code=400, detail={"error": error_key}) from exc
+    if result.get("limit_reached"):
+        raise HTTPException(status_code=403, detail=result)
     return result
 
 
@@ -136,3 +178,29 @@ def get_shared_analysis(share_id: str, db: Session = Depends(get_db)) -> dict:
     if not result:
         raise HTTPException(status_code=404, detail="Shared analysis not found")
     return result
+
+
+def _anonymous_id(request: Request, response: Response) -> str:
+    from_header = request.headers.get("X-SATTEST-RA-ID")
+    if from_header and len(from_header) <= 80:
+        anonymous_id = from_header
+        response.set_cookie(
+            ANON_COOKIE_NAME,
+            anonymous_id,
+            max_age=60 * 60 * 24 * 365,
+            secure=request.url.scheme == "https",
+            samesite="lax",
+        )
+        return anonymous_id
+    existing = request.cookies.get(ANON_COOKIE_NAME)
+    if existing and len(existing) <= 80:
+        return existing
+    anonymous_id = secrets.token_urlsafe(24)
+    response.set_cookie(
+        ANON_COOKIE_NAME,
+        anonymous_id,
+        max_age=60 * 60 * 24 * 365,
+        secure=request.url.scheme == "https",
+        samesite="lax",
+    )
+    return anonymous_id

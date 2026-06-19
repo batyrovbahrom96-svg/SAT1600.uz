@@ -279,11 +279,13 @@ export function getStudentName() {
 
 export class ApiError extends Error {
   status?: number;
+  detail?: unknown;
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, detail?: unknown) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.detail = detail;
   }
 }
 
@@ -335,9 +337,21 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     if (response.status === 404 && body.detail === "Not Found") {
       throw new ApiError("This API endpoint is not deployed yet. Redeploy the SATTEST.UZ backend with the latest code.", response.status);
     }
-    throw new ApiError(formatApiErrorDetail(body.detail), response.status);
+    throw new ApiError(formatApiErrorDetail(body.detail), response.status, body.detail);
   }
   return response.json();
+}
+
+export function getReadingAnalyzerAnonymousId() {
+  const storage = getSafeStorage();
+  if (!storage) return "";
+  const existing = storage.getItem("sattest_ra_anon_id");
+  if (existing) return existing;
+  const generated = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `ra_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  storage.setItem("sattest_ra_anon_id", generated);
+  return generated;
 }
 
 export async function getSubscriptionStatus() {
@@ -370,12 +384,31 @@ export async function analyzePassage(payload: { text: string; language: "uz" | "
   });
 }
 
+export async function analyzePassagePublic(payload: { text: string; language: "uz" | "ru" | "en" }) {
+  return api<ReadingAnalysisResponse>("/api/reading-analyzer/public/analyze", {
+    method: "POST",
+    headers: { "X-SATTEST-RA-ID": getReadingAnalyzerAnonymousId() },
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function analyzePassageImage(payload: { file: File; language: "uz" | "ru" | "en" }) {
   const formData = new FormData();
   formData.append("file", payload.file);
   formData.append("language", payload.language);
   return api<ReadingAnalysisResponse>("/api/reading-analyzer/analyze-image", {
     method: "POST",
+    body: formData,
+  });
+}
+
+export async function analyzePassageImagePublic(payload: { file: File; language: "uz" | "ru" | "en" }) {
+  const formData = new FormData();
+  formData.append("file", payload.file);
+  formData.append("language", payload.language);
+  return api<ReadingAnalysisResponse>("/api/reading-analyzer/public/analyze-image", {
+    method: "POST",
+    headers: { "X-SATTEST-RA-ID": getReadingAnalyzerAnonymousId() },
     body: formData,
   });
 }

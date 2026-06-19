@@ -13,11 +13,15 @@ export default function RegisterPage() {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [prefillEmail, setPrefillEmail] = useState("");
   const [nextPath, setNextPath] = useState("/pricing?plan=pro&from=registration");
+  const [signupSource, setSignupSource] = useState("");
+  const [anonymousId, setAnonymousId] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setPrefillEmail(params.get("email") ?? "");
     setNextPath(params.get("next") || "/pricing?plan=pro&from=registration");
+    setSignupSource(params.get("source") || "");
+    setAnonymousId(params.get("anon") || "");
   }, []);
 
   function getEmailBotError(err: unknown, fallback: string) {
@@ -40,7 +44,9 @@ export default function RegisterPage() {
           full_name: form.get("full_name"),
           email: form.get("email"),
           password: form.get("password"),
-          verification_code: form.get("verification_code")
+          verification_code: form.get("verification_code"),
+          signup_source: signupSource || undefined,
+          anonymous_id: anonymousId || undefined
         })
       });
       saveAuth(result.access_token, result.full_name);

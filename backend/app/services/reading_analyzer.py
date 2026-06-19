@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import base64
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 import json
 import re
 import secrets
 from urllib import error, request
 
-from sqlalchemy import or_, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models import ReadingAnalysis, Subscription, User
+from app.models import ReadingAnalysis, ReadingAnalyzerAnonymousUsage, ReadingAnalyzerLimitEvent, Subscription, User
 
 FREE_DAILY_ANALYSES = 3
 MAX_INPUT_CHARS = 9000
@@ -435,6 +435,23 @@ def analyze_reading_passage(db: Session, user: User, text: str, language: str) -
     return _finish_analysis(db, user, clean_text, normalized_language, is_pro, analysis, "text")
 
 
+def analyze_reading_passage_public(db: Session, anonymous_id: str, text: str, language: str) -> dict:
+    clean_text = " ".join(text.strip().split())
+    if len(clean_text) < 50:
+        raise ValueError("text_too_short")
+    if len(clean_text) > MAX_INPUT_CHARS:
+        raise ValueError("Passage is too long. Please paste a shorter passage.")
+
+    normalized_language = normalize_language(language)
+    usage = _anonymous_usage_for_today(db, anonymous_id)
+    if usage.daily_analyses >= FREE_DAILY_ANALYSES:
+        _record_limit_event(db, anonymous_id=anonymous_id, user_id=None, language=normalized_language)
+        return _limit_reached_payload()
+
+    analysis = _call_claude_text(clean_text, normalized_language) or _fallback_analysis(clean_text)
+    return _finish_public_analysis(db, usage, clean_text, normalized_language, analysis, "text")
+
+
 def analyze_reading_image(db: Session, user: User, image_data: bytes, image_type: str, language: str) -> dict:
     if len(image_data) > MAX_IMAGE_BYTES:
         raise ValueError("image_too_large")
@@ -464,6 +481,31 @@ def analyze_reading_image(db: Session, user: User, image_data: bytes, image_type
     extracted_text = str(analysis.get("extracted_text") or "").strip()
     source_text = extracted_text or "Image passage"
     return _finish_analysis(db, user, source_text, normalized_language, is_pro, analysis, "image")
+
+
+def analyze_reading_image_public(db: Session, anonymous_id: str, image_data: bytes, image_type: str, language: str) -> dict:
+    if len(image_data) > MAX_IMAGE_BYTES:
+        raise ValueError("image_too_large")
+    normalized_type = _detect_image_type(image_data, image_type)
+    if normalized_type not in ALLOWED_IMAGE_TYPES:
+        raise ValueError("invalid_file_type")
+
+    normalized_language = normalize_language(language)
+    usage = _anonymous_usage_for_today(db, anonymous_id)
+    if usage.daily_analyses >= FREE_DAILY_ANALYSES:
+        _record_limit_event(db, anonymous_id=anonymous_id, user_id=None, language=normalized_language)
+        return _limit_reached_payload()
+
+    analysis = _call_claude_image(image_data, normalized_type, normalized_language)
+    extracted_text = str((analysis or {}).get("extracted_text") or "").strip()
+    if not analysis or not analysis.get("main_idea"):
+        extracted_text = extracted_text or (extract_text_from_reading_image(image_data, normalized_type) or "").strip()
+        if len(extracted_text) < 20:
+            raise ValueError("image_error")
+        analysis = _call_claude_text(extracted_text, normalized_language) or _fallback_analysis(extracted_text)
+        analysis["extracted_text"] = extracted_text
+    source_text = str(analysis.get("extracted_text") or "").strip() or "Image passage"
+    return _finish_public_analysis(db, usage, source_text, normalized_language, analysis, "image")
 
 
 def extract_text_from_reading_image(image_data: bytes, image_type: str) -> str | None:
@@ -550,6 +592,205 @@ def _finish_analysis(db: Session, user: User, source_text: str, language: str, i
         "input_type": input_type,
         "created_at": row.created_at.isoformat(),
     }
+
+
+def _finish_public_analysis(db: Session, usage: ReadingAnalyzerAnonymousUsage, source_text: str, language: str, analysis: dict, input_type: str) -> dict:
+    analysis = _normalize_analysis(analysis)
+    analysis = _repair_analysis_quality(analysis, source_text)
+
+    original_question_count = len(analysis.get("questions_solved") or [])
+    analysis["vocabulary"] = analysis["vocabulary"][:3]
+    analysis["difficult_words"] = analysis["vocabulary"]
+    analysis["vocabulary_locked"] = True
+    analysis["translation_locked"] = True
+    analysis["questions_solved_locked"] = max(0, original_question_count - 1)
+    analysis["questions_solved"] = (analysis.get("questions_solved") or [])[:1]
+    analysis["practice_questions"] = "LOCKED"
+    analysis["improvement_plan_locked"] = True
+
+    usage.daily_analyses = (usage.daily_analyses or 0) + 1
+    usage.total_analyses = (usage.total_analyses or 0) + 1
+    usage.updated_at = datetime.utcnow()
+
+    share_id = _new_share_id(db)
+    row = ReadingAnalysis(
+        user_id=None,
+        share_id=share_id,
+        language=language,
+        source_text=source_text,
+        input_type=input_type,
+        analysis=analysis,
+        is_pro_snapshot=False,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+
+    return {
+        "id": str(row.id),
+        "share_id": row.share_id,
+        "share_url": f"https://www.sattest.uz/reading-analyzer/shared/{row.share_id}",
+        "is_pro": False,
+        "remaining_free": max(0, FREE_DAILY_ANALYSES - (usage.daily_analyses or 0)),
+        "analysis": analysis,
+        "source_text": source_text,
+        "input_type": input_type,
+        "created_at": row.created_at.isoformat(),
+    }
+
+
+def _anonymous_usage_for_today(db: Session, anonymous_id: str) -> ReadingAnalyzerAnonymousUsage:
+    today = date.today()
+    usage = (
+        db.execute(
+            select(ReadingAnalyzerAnonymousUsage).where(
+                ReadingAnalyzerAnonymousUsage.anonymous_id == anonymous_id,
+                ReadingAnalyzerAnonymousUsage.usage_date == today,
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if usage:
+        return usage
+    usage = ReadingAnalyzerAnonymousUsage(anonymous_id=anonymous_id, usage_date=today)
+    db.add(usage)
+    db.commit()
+    db.refresh(usage)
+    return usage
+
+
+def _limit_reached_payload() -> dict:
+    return {
+        "limit_reached": True,
+        "message": "signup_required",
+        "remaining_free": 0,
+        "is_pro": False,
+        "used_today": FREE_DAILY_ANALYSES,
+        "signup_source": "reading_analyzer_limit",
+    }
+
+
+def _record_limit_event(db: Session, *, anonymous_id: str | None, user_id: object | None, language: str) -> None:
+    today_start = datetime.combine(datetime.utcnow().date(), datetime.min.time())
+    existing = (
+        db.execute(
+            select(ReadingAnalyzerLimitEvent).where(
+                ReadingAnalyzerLimitEvent.source == "reading_analyzer_limit",
+                ReadingAnalyzerLimitEvent.limit_hit_at >= today_start,
+                ReadingAnalyzerLimitEvent.anonymous_id == anonymous_id,
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if existing:
+        return
+    db.add(
+        ReadingAnalyzerLimitEvent(
+            anonymous_id=anonymous_id,
+            user_id=user_id,
+            language=language,
+            used_count=FREE_DAILY_ANALYSES,
+        )
+    )
+    db.commit()
+
+
+def attach_reading_analyzer_limit_signup(db: Session, user: User, anonymous_id: str | None) -> None:
+    now = datetime.utcnow()
+    user.signup_source = "reading_analyzer_limit"
+    user.anonymous_visitor_id = anonymous_id
+    user.reading_analyzer_limit_signup_at = now
+    event = None
+    if anonymous_id:
+        event = (
+            db.execute(
+                select(ReadingAnalyzerLimitEvent)
+                .where(
+                    ReadingAnalyzerLimitEvent.anonymous_id == anonymous_id,
+                    ReadingAnalyzerLimitEvent.source == "reading_analyzer_limit",
+                    ReadingAnalyzerLimitEvent.account_created_at.is_(None),
+                )
+                .order_by(ReadingAnalyzerLimitEvent.limit_hit_at.desc())
+            )
+            .scalars()
+            .first()
+        )
+    if not event:
+        event = ReadingAnalyzerLimitEvent(
+            anonymous_id=anonymous_id,
+            user_id=user.id,
+            language=normalize_language(user.chosen_language or user.detected_language or "en"),
+            account_created_at=now,
+        )
+        db.add(event)
+    else:
+        event.user_id = user.id
+        event.account_created_at = now
+    db.commit()
+
+
+def mark_analyzer_limit_followup_sent(db: Session, user: User) -> None:
+    now = datetime.utcnow()
+    user.reading_analyzer_followup_sent_at = now
+    event = (
+        db.execute(
+            select(ReadingAnalyzerLimitEvent)
+            .where(ReadingAnalyzerLimitEvent.user_id == user.id)
+            .order_by(ReadingAnalyzerLimitEvent.limit_hit_at.desc())
+        )
+        .scalars()
+        .first()
+    )
+    if event:
+        event.followup_sent_at = now
+    db.commit()
+
+
+def build_analyzer_funnel_stats(db: Session) -> str:
+    today_start = datetime.combine(datetime.utcnow().date(), datetime.min.time())
+    today_hits = db.execute(
+        select(func.count(ReadingAnalyzerLimitEvent.id)).where(ReadingAnalyzerLimitEvent.limit_hit_at >= today_start)
+    ).scalar() or 0
+    today_accounts = db.execute(
+        select(func.count(ReadingAnalyzerLimitEvent.id)).where(ReadingAnalyzerLimitEvent.account_created_at >= today_start)
+    ).scalar() or 0
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    recent_events = (
+        db.execute(
+            select(ReadingAnalyzerLimitEvent)
+            .where(ReadingAnalyzerLimitEvent.account_created_at.is_not(None))
+            .where(ReadingAnalyzerLimitEvent.account_created_at >= seven_days_ago)
+        )
+        .scalars()
+        .all()
+    )
+    upgraded = 0
+    for event in recent_events:
+        if not event.user_id or not event.account_created_at:
+            continue
+        has_upgrade = db.execute(
+            select(Subscription.id)
+            .where(
+                Subscription.user_id == event.user_id,
+                Subscription.status == "active",
+                Subscription.created_at >= event.account_created_at,
+                Subscription.created_at <= event.account_created_at + timedelta(days=7),
+            )
+            .limit(1)
+        ).first()
+        if has_upgrade:
+            upgraded += 1
+    account_rate = round((int(today_accounts) / int(today_hits) * 100), 1) if today_hits else 0
+    upgrade_rate = round((upgraded / len(recent_events) * 100), 1) if recent_events else 0
+    return (
+        "📊 READING ANALYZER FUNNEL\n\n"
+        f"🚧 3-use limit hit today: {int(today_hits)}\n"
+        f"👤 Accounts created today: {int(today_accounts)} ({account_rate}%)\n"
+        f"💎 Pro within 7 days: {upgraded}/{len(recent_events)} ({upgrade_rate}%)\n\n"
+        "Source: reading_analyzer_limit"
+    )
 
 
 def public_shared_analysis(db: Session, share_id: str) -> dict | None:
