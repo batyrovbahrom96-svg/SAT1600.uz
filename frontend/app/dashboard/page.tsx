@@ -24,6 +24,8 @@ import {
   Zap
 } from "lucide-react";
 import { ApiError, api, clearAuth, getStudentName, getToken } from "@/lib/api";
+import { getSubscriptionStatus } from "@/lib/api";
+import { languages, useLanguage, type Language } from "@/lib/i18n";
 
 type Test = { id: string; title: string; description: string; is_premium: boolean };
 type ScoreHistoryItem = { attempt_id: string; score: number; date: string };
@@ -64,30 +66,269 @@ type DiagnosticSummary = {
 };
 
 const navItems = [
-  { label: "AI Tutor Chat", badge: "New", icon: Bot, href: "/practice" },
-  { label: "Dashboard", active: true, icon: LayoutDashboard, href: "/dashboard" },
-  { label: "My Study Plan", icon: Map, href: "/my-1400" },
-  { label: "Leaderboard", icon: Trophy, href: "/about-us" },
-  { label: "Diagnostic & Mock Tests", icon: BookOpenCheck, href: "/sat-test" },
-  { label: "Quick Practice", icon: Zap, href: "/practice" },
-  { label: "Reading Analyzer", icon: Search, href: "/reading-analyzer" },
-  { label: "Vocabulary Builder", icon: LibraryBig, href: "/practice/reading" },
-  { label: "Webinars", icon: CalendarDays, href: "/my-1400" },
-  { label: "Profile", icon: User, href: "/dashboard" }
+  { key: "aiTutor", badgeKey: "new", icon: Bot, href: "/practice" },
+  { key: "dashboard", active: true, icon: LayoutDashboard, href: "/dashboard" },
+  { key: "studyPlan", icon: Map, href: "/my-1400" },
+  { key: "leaderboard", icon: Trophy, href: "/results/demo" },
+  { key: "tests", icon: BookOpenCheck, href: "/sat-test" },
+  { key: "quickPractice", icon: Zap, href: "/practice" },
+  { key: "readingAnalyzer", icon: Search, href: "/reading-analyzer" },
+  { key: "vocabulary", icon: LibraryBig, href: "/practice/reading" },
+  { key: "webinars", icon: CalendarDays, href: "/my-1400#webinars" },
+  { key: "profile", icon: User, href: "/dashboard#profile" }
 ];
+
+const copy = {
+  en: {
+    nav: {
+      aiTutor: "AI Tutor Chat",
+      dashboard: "Dashboard",
+      studyPlan: "My Study Plan",
+      leaderboard: "Leaderboard",
+      tests: "Diagnostic & Mock Tests",
+      quickPractice: "Quick Practice",
+      readingAnalyzer: "Reading Analyzer",
+      vocabulary: "Vocabulary Builder",
+      webinars: "Webinars",
+      profile: "Profile"
+    },
+    new: "New",
+    logout: "Log out",
+    personalDashboard: "Personal dashboard",
+    greeting: "Hello",
+    fallbackName: "Student",
+    motivationNoScore: "Take your diagnostic today. SATTEST will turn it into a personal score-growth roadmap.",
+    motivationGoalReached: "Goal reached. Now we protect your score with harder timed practice.",
+    motivationGap: (gap: number) => `${gap} points left. Today's focused practice moves you closer.`,
+    startMock: "Start mock",
+    analyzer: "Analyzer",
+    messageTests: "Practice tests are temporarily unavailable.",
+    lastResult: "Last Test Result",
+    diagnosticNeeded: "Diagnostic needed",
+    rw: "Reading & Writing",
+    math: "Math",
+    accuracy: "Accuracy",
+    noScoreText: "Your latest score, section breakdown, and weak areas will appear here after the diagnostic.",
+    takeDiagnostic: "Take Diagnostic Test",
+    fullReport: "Full report",
+    examCountdown: "Exam Countdown",
+    noDate: "No date set",
+    daysLeft: (days: number) => `${days} days left`,
+    setExamDate: "+ Set exam date →",
+    examDate: (date: string) => `Exam: ${date}`,
+    goalScore: "Goal Score",
+    setGoal: "Set goal",
+    goalUniversity: "Goal University",
+    setUniversity: "Set university",
+    chooseUniversity: "Choose university",
+    proStatus: "Plan Status",
+    proActive: "Pro Active",
+    freePlan: "Free Plan",
+    upgradePro: "Upgrade to Pro",
+    streak: "Study Streak",
+    streakValue: "0 days",
+    streakAction: "Start today with 5 questions",
+    roadmap: "Study Roadmap",
+    pathTitle: "Your path to 1400+",
+    completed: "Completed",
+    upcoming: "Upcoming milestone",
+    diagnosticTaken: "Diagnostic taken",
+    currentWeek: (week: number) => `Current week ${week}`,
+    weakSprint: "Weak topics sprint",
+    mockDate: "Mock test date",
+    examDateStep: "Exam date",
+    savedLabel: "Saved for review",
+    bookmarked: "Bookmarked",
+    noBookmarks: "No bookmarks yet. Save difficult questions in Reading Analyzer or practice so you can review them here.",
+    actionAi: "Ask a question and get an SAT-style explanation.",
+    actionPractice: "Keep today's streak with a quick 5-question drill.",
+    actionAnalyzer: "Analyze passages, screenshots, and questions with AI.",
+    actionTests: "Start a diagnostic or full mock test.",
+    editGoalTitle: "Set your goal score",
+    editGoalHelp: "Most students aim for 1400+, but choose the score that matches your university target.",
+    editUniversityTitle: "Choose goal university",
+    editUniversityHelp: "Write the university or scholarship target you want SATTEST to keep visible.",
+    editExamTitle: "Set SAT exam date",
+    editExamHelp: "Use YYYY-MM-DD format so the countdown stays accurate.",
+    save: "Save",
+    cancel: "Cancel",
+    scorePlaceholder: "1400",
+    universityPlaceholder: "Example: NYU Abu Dhabi",
+    datePlaceholder: "2026-08-23"
+  },
+  ru: {
+    nav: {
+      aiTutor: "AI Tutor Chat",
+      dashboard: "Панель",
+      studyPlan: "Мой план",
+      leaderboard: "Рейтинг",
+      tests: "Диагностика и Mock Tests",
+      quickPractice: "Быстрая практика",
+      readingAnalyzer: "Reading Analyzer",
+      vocabulary: "Словарь",
+      webinars: "Вебинары",
+      profile: "Профиль"
+    },
+    new: "Новое",
+    logout: "Выйти",
+    personalDashboard: "Личный кабинет",
+    greeting: "Привет",
+    fallbackName: "Студент",
+    motivationNoScore: "Пройдите диагностику сегодня. SATTEST превратит результат в личный план роста.",
+    motivationGoalReached: "Цель достигнута. Теперь закрепляем результат сложной практикой на время.",
+    motivationGap: (gap: number) => `Осталось ${gap} баллов. Сегодняшняя практика приближает вас к цели.`,
+    startMock: "Начать mock",
+    analyzer: "Analyzer",
+    messageTests: "Практические тесты временно недоступны.",
+    lastResult: "Последний результат",
+    diagnosticNeeded: "Нужна диагностика",
+    rw: "Reading & Writing",
+    math: "Math",
+    accuracy: "Точность",
+    noScoreText: "После диагностики здесь появятся ваш балл, секции и слабые темы.",
+    takeDiagnostic: "Пройти диагностику",
+    fullReport: "Полный отчет",
+    examCountdown: "До экзамена",
+    noDate: "Дата не указана",
+    daysLeft: (days: number) => `Осталось ${days} дней`,
+    setExamDate: "+ Указать дату экзамена →",
+    examDate: (date: string) => `Экзамен: ${date}`,
+    goalScore: "Целевой балл",
+    setGoal: "Задать цель",
+    goalUniversity: "Целевой университет",
+    setUniversity: "Выберите университет",
+    chooseUniversity: "Выбрать университет",
+    proStatus: "Статус плана",
+    proActive: "Pro активен",
+    freePlan: "Бесплатный план",
+    upgradePro: "Получить Pro",
+    streak: "Серия занятий",
+    streakValue: "0 дней",
+    streakAction: "Начните сегодня с 5 вопросов",
+    roadmap: "Учебная карта",
+    pathTitle: "Ваш путь к 1400+",
+    completed: "Готово",
+    upcoming: "Следующий этап",
+    diagnosticTaken: "Диагностика пройдена",
+    currentWeek: (week: number) => `Текущая неделя ${week}`,
+    weakSprint: "Спринт по слабым темам",
+    mockDate: "Дата mock test",
+    examDateStep: "Дата экзамена",
+    savedLabel: "Сохранено для повтора",
+    bookmarked: "Закладки",
+    noBookmarks: "Пока нет закладок. Сохраняйте сложные вопросы в Analyzer или практике.",
+    actionAi: "Задайте вопрос и получите SAT-объяснение.",
+    actionPractice: "Сделайте быстрые 5 вопросов сегодня.",
+    actionAnalyzer: "Анализируйте тексты, скриншоты и вопросы с AI.",
+    actionTests: "Начните диагностику или полный mock test.",
+    editGoalTitle: "Укажите целевой балл",
+    editGoalHelp: "Большинство учеников целятся в 1400+, но выберите свою цель.",
+    editUniversityTitle: "Выберите университет",
+    editUniversityHelp: "Напишите университет или стипендию, которую хотите держать в фокусе.",
+    editExamTitle: "Укажите дату SAT",
+    editExamHelp: "Формат YYYY-MM-DD сохранит точный отсчет.",
+    save: "Сохранить",
+    cancel: "Отмена",
+    scorePlaceholder: "1400",
+    universityPlaceholder: "Например: NYU Abu Dhabi",
+    datePlaceholder: "2026-08-23"
+  },
+  uz: {
+    nav: {
+      aiTutor: "AI Tutor Chat",
+      dashboard: "Dashboard",
+      studyPlan: "Mening Rejam",
+      leaderboard: "Leaderboard",
+      tests: "Diagnostic & Mock Tests",
+      quickPractice: "Tezkor Mashq",
+      readingAnalyzer: "Reading Analyzer",
+      vocabulary: "Vocabulary Builder",
+      webinars: "Webinarlar",
+      profile: "Profil"
+    },
+    new: "Yangi",
+    logout: "Chiqish",
+    personalDashboard: "Shaxsiy dashboard",
+    greeting: "Salom",
+    fallbackName: "O'quvchi",
+    motivationNoScore: "Bugun diagnostic topshiring. SATTEST natijangizdan shaxsiy yo'l xaritasini quradi.",
+    motivationGoalReached: "Maqsadga yetdingiz. Endi qiyin timed practice bilan natijani mustahkamlaymiz.",
+    motivationGap: (gap: number) => `${gap} ball qoldi. Bugungi aniq mashq sizni yaqinlashtiradi.`,
+    startMock: "Mock boshlash",
+    analyzer: "Analyzer",
+    messageTests: "Practice testlar vaqtincha mavjud emas.",
+    lastResult: "Oxirgi test natijasi",
+    diagnosticNeeded: "Diagnostic kerak",
+    rw: "Reading & Writing",
+    math: "Math",
+    accuracy: "Aniqlik",
+    noScoreText: "Diagnosticdan keyin oxirgi ball, bo'limlar va zaif mavzular shu yerda ko'rinadi.",
+    takeDiagnostic: "Diagnostic Testni Boshlash",
+    fullReport: "To'liq hisobot",
+    examCountdown: "Imtihongacha",
+    noDate: "Sana yo'q",
+    daysLeft: (days: number) => `${days} kun qoldi`,
+    setExamDate: "+ Imtihon sanasini belgilash →",
+    examDate: (date: string) => `Imtihon: ${date}`,
+    goalScore: "Maqsad Ball",
+    setGoal: "Maqsadni belgilash",
+    goalUniversity: "Maqsad Universitet",
+    setUniversity: "Universitet tanlang",
+    chooseUniversity: "Universitet tanlash",
+    proStatus: "Reja holati",
+    proActive: "Pro faol",
+    freePlan: "Bepul reja",
+    upgradePro: "Pro olish",
+    streak: "O'qish streak",
+    streakValue: "0 kun",
+    streakAction: "Bugun 5 savoldan boshlang",
+    roadmap: "Study Roadmap",
+    pathTitle: "1400+ yo'lingiz",
+    completed: "Tugallandi",
+    upcoming: "Keyingi bosqich",
+    diagnosticTaken: "Diagnostic topshirildi",
+    currentWeek: (week: number) => `Joriy hafta ${week}`,
+    weakSprint: "Zaif mavzular sprinti",
+    mockDate: "Mock test sanasi",
+    examDateStep: "Imtihon sanasi",
+    savedLabel: "Qayta ko'rish uchun",
+    bookmarked: "Bookmarked",
+    noBookmarks: "Hali bookmark yo'q. Reading Analyzer yoki practice ichida qiyin savollarni saqlab boring.",
+    actionAi: "Savol yozing, SAT usulida tushuntirish oling.",
+    actionPractice: "5 savollik tez mashq bilan bugungi streakni saqlang.",
+    actionAnalyzer: "Passage, screenshot va savollarni AI bilan tahlil qiling.",
+    actionTests: "Diagnostic yoki full mock testni boshlang.",
+    editGoalTitle: "Maqsad ballingizni belgilang",
+    editGoalHelp: "Ko'p o'quvchilar 1400+ ni nishonlaydi, lekin universitetingizga mos maqsadni tanlang.",
+    editUniversityTitle: "Maqsad universitetni tanlang",
+    editUniversityHelp: "SATTEST doim ko'rsatib turishi uchun universitet yoki grant maqsadingizni yozing.",
+    editExamTitle: "SAT imtihon sanasini belgilang",
+    editExamHelp: "Countdown to'g'ri ishlashi uchun YYYY-MM-DD formatidan foydalaning.",
+    save: "Saqlash",
+    cancel: "Bekor qilish",
+    scorePlaceholder: "1400",
+    universityPlaceholder: "Masalan: NYU Abu Dhabi",
+    datePlaceholder: "2026-08-23"
+  }
+};
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { language, setLanguage } = useLanguage();
+  const t = copy[language];
   const [tests, setTests] = useState<Test[]>([]);
   const [history, setHistory] = useState<AnalyticsHistory | null>(null);
   const [diagnosticResults, setDiagnosticResults] = useState<Results | null>(null);
   const [requestedAttemptId, setRequestedAttemptId] = useState<string | null>(null);
   const [canShowDashboard, setCanShowDashboard] = useState(true);
   const [message, setMessage] = useState("");
+  const [isProActive, setIsProActive] = useState(false);
   const [goalScore, setGoalScore] = useState("1400");
-  const [goalUniversity, setGoalUniversity] = useState("Set university");
+  const [goalUniversity, setGoalUniversity] = useState("");
   const [examDate, setExamDate] = useState("");
   const [bookmarks, setBookmarks] = useState<string[]>([]);
+  const [editing, setEditing] = useState<"score" | "university" | "exam" | null>(null);
+  const [draftValue, setDraftValue] = useState("");
 
   const latestHistoryItem = history?.score_history[history.score_history.length - 1];
   const latestScore = latestHistoryItem?.score;
@@ -96,9 +337,9 @@ export default function DashboardPage() {
   const diagnosticSummary = diagnosticResults ? buildDiagnosticSummary(diagnosticResults) : null;
   const storedName = getStudentName();
   const firstName = useMemo(() => {
-    const name = (storedName || "O'quvchi").trim();
-    return name.split(/\s+/)[0] || "O'quvchi";
-  }, [storedName]);
+    const name = (storedName || t.fallbackName).trim();
+    return name.split(/\s+/)[0] || t.fallbackName;
+  }, [storedName, t.fallbackName]);
   const daysLeft = useMemo(() => {
     if (!examDate) return null;
     const now = new Date();
@@ -108,9 +349,24 @@ export default function DashboardPage() {
   const progressPercent = latestScore ? Math.max(8, Math.min(100, Math.round((latestScore / Number(goalScore || 1400)) * 100))) : 12;
   const motivationalLine = latestScore
     ? latestScore >= Number(goalScore || 1400)
-      ? "Maqsadga yetdingiz. Endi barqarorlik va top-range savollar ustida ishlaymiz."
-      : `${Number(goalScore || 1400) - latestScore} ball qoldi. Bugungi kichik mashq ham natijani yaqinlashtiradi.`
-    : "Bugun diagnostic topshiring, keyin SATTEST sizga shaxsiy yo'l xaritasini quradi.";
+      ? t.motivationGoalReached
+      : t.motivationGap(Number(goalScore || 1400) - latestScore)
+    : t.motivationNoScore;
+
+  const withLanguage = (href: string) => {
+    const [withoutHash, hash] = href.split("#");
+    const [pathname, query = ""] = withoutHash.split("?");
+    const params = new URLSearchParams(query);
+    params.set("lang", language);
+    return `${pathname}?${params.toString()}${hash ? `#${hash}` : ""}`;
+  };
+
+  const changeLanguage = (next: Language) => {
+    setLanguage(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", next);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  };
 
   useEffect(() => {
     if (!getToken()) {
@@ -120,7 +376,7 @@ export default function DashboardPage() {
 
     setRequestedAttemptId(new URLSearchParams(window.location.search).get("attemptId"));
     setGoalScore(window.localStorage.getItem("sattest_goal_score") || "1400");
-    setGoalUniversity(window.localStorage.getItem("sattest_goal_university") || "Set university");
+    setGoalUniversity(window.localStorage.getItem("sattest_goal_university") || "");
     setExamDate(window.localStorage.getItem("sattest_exam_date") || "");
     const savedBookmarks = window.localStorage.getItem("sattest_bookmarks");
     try {
@@ -134,7 +390,7 @@ export default function DashboardPage() {
         router.push("/login");
         return;
       }
-      setMessage("Practice tests are temporarily unavailable.");
+      setMessage(t.messageTests);
     });
     withTimeout(api<AnalyticsHistory>("/api/analytics/me"), 4500).then((data) => {
       setHistory(data);
@@ -147,7 +403,17 @@ export default function DashboardPage() {
       setCanShowDashboard(true);
       setHistory({ attempts: 0, score_history: [] });
     });
-  }, [router]);
+
+    api<{ full_name: string }>("/api/auth/me")
+      .then((profile) => {
+        if (profile.full_name) window.localStorage.setItem("sat1600_full_name", profile.full_name);
+      })
+      .catch(() => {});
+
+    getSubscriptionStatus()
+      .then((status) => setIsProActive(status.has_active_subscription))
+      .catch(() => setIsProActive(false));
+  }, [router, t.messageTests]);
 
   useEffect(() => {
     if (!latestAttemptId) {
@@ -167,24 +433,36 @@ export default function DashboardPage() {
   }
 
   function saveGoalScore() {
-    const next = window.prompt("Maqsad ballingizni kiriting", goalScore);
-    if (!next) return;
-    setGoalScore(next);
-    window.localStorage.setItem("sattest_goal_score", next);
+    setDraftValue(goalScore);
+    setEditing("score");
   }
 
   function saveUniversity() {
-    const next = window.prompt("Maqsad universitetingiz", goalUniversity === "Set university" ? "" : goalUniversity);
-    if (!next) return;
-    setGoalUniversity(next);
-    window.localStorage.setItem("sattest_goal_university", next);
+    setDraftValue(goalUniversity);
+    setEditing("university");
   }
 
   function saveExamDate() {
-    const next = window.prompt("Imtihon sanasi (YYYY-MM-DD)", examDate || "2026-08-23");
+    setDraftValue(examDate);
+    setEditing("exam");
+  }
+
+  function saveDraft() {
+    const next = draftValue.trim();
     if (!next) return;
-    setExamDate(next);
-    window.localStorage.setItem("sattest_exam_date", next);
+    if (editing === "score") {
+      setGoalScore(next);
+      window.localStorage.setItem("sattest_goal_score", next);
+    }
+    if (editing === "university") {
+      setGoalUniversity(next);
+      window.localStorage.setItem("sattest_goal_university", next);
+    }
+    if (editing === "exam") {
+      setExamDate(next);
+      window.localStorage.setItem("sattest_exam_date", next);
+    }
+    setEditing(null);
   }
 
   function logout() {
@@ -214,9 +492,12 @@ export default function DashboardPage() {
               <p className="text-xl font-black tracking-[0.32em] text-[#FFD700]">SATTEST.UZ</p>
               <p className="mt-2 text-[10px] font-black uppercase tracking-[0.24em] text-white/40">Practice • Improve • Achieve</p>
             </button>
-            <button className="rounded-xl border border-white/10 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-white/50 lg:hidden" onClick={logout} type="button">
-              Log out
-            </button>
+            <div className="flex items-center gap-2 lg:hidden">
+              <LanguageButtons language={language} onChange={changeLanguage} />
+              <button className="rounded-xl border border-white/10 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-white/50" onClick={logout} type="button">
+                {t.logout}
+              </button>
+            </div>
           </div>
 
           <nav className="mt-6 flex gap-2 overflow-x-auto pb-2 lg:mt-10 lg:block lg:space-y-2 lg:overflow-visible lg:pb-0">
@@ -227,39 +508,43 @@ export default function DashboardPage() {
                     ? "border-[#FFD700]/55 bg-[#FFD700]/12 text-[#FFD700]"
                     : "border-transparent text-white/58 hover:border-white/10 hover:bg-white/[0.04] hover:text-white"
                 }`}
-                key={item.label}
-                onClick={() => router.push(item.href)}
+                key={item.key}
+                onClick={() => router.push(withLanguage(item.href))}
                 type="button"
               >
                 <item.icon size={18} />
-                <span className="font-semibold">{item.label}</span>
-                {item.badge ? <span className="ml-auto rounded-full bg-[#FFD700] px-2 py-0.5 text-[10px] font-black text-black">{item.badge}</span> : null}
+                <span className="font-semibold">{t.nav[item.key as keyof typeof t.nav]}</span>
+                {item.badgeKey ? <span className="ml-auto rounded-full bg-[#FFD700] px-2 py-0.5 text-[10px] font-black text-black">{t.new}</span> : null}
               </button>
             ))}
           </nav>
+
+          <div className="mt-7 hidden lg:block">
+            <LanguageButtons language={language} onChange={changeLanguage} />
+          </div>
 
           <button
             className="mt-7 hidden w-full items-center gap-3 rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-white/45 transition hover:border-red-300/25 hover:bg-red-500/10 hover:text-red-100 lg:flex"
             onClick={logout}
             type="button"
           >
-            <LogOut size={18} /> Log out
+            <LogOut size={18} /> {t.logout}
           </button>
         </aside>
 
         <section className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <header className="flex flex-col gap-5 rounded-xl border border-white/10 bg-[#151515] p-5 md:flex-row md:items-end md:justify-between md:p-7">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#FFD700]/70">Personal dashboard</p>
-              <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">👋 Salom, {firstName}!</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#FFD700]/70">{t.personalDashboard}</p>
+              <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">👋 {t.greeting}, {firstName}!</h1>
               <p className="mt-4 max-w-3xl text-base leading-7 text-white/55">{motivationalLine}</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <button className="rounded-xl border border-[#FFD700] bg-[#FFD700] px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:bg-transparent hover:text-[#FFD700]" onClick={() => satMockTest && start(satMockTest.id)} type="button">
-                Start mock
+                {t.startMock}
               </button>
               <button className="rounded-xl border border-white/12 px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-white/62 transition hover:border-white/35 hover:text-white" onClick={() => router.push("/reading-analyzer")} type="button">
-                Analyzer
+                {t.analyzer}
               </button>
             </div>
           </header>
@@ -271,30 +556,47 @@ export default function DashboardPage() {
               latestScore={latestScore}
               diagnosticResults={diagnosticResults}
               diagnosticSummary={diagnosticSummary}
+              language={language}
+              t={t}
+              onDiagnostic={() => router.push(withLanguage("/mock-test/diagnostic"))}
               onReport={() => latestAttemptId && router.push(`/results/${latestAttemptId}`)}
             />
 
-            <div className="grid gap-5 sm:grid-cols-3 xl:grid-cols-1">
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1">
               <CompactCard
                 icon={<CalendarDays size={22} />}
-                label="Exam Countdown"
-                title={daysLeft === null ? "Sana yo'q" : `${daysLeft} kun qoldi`}
-                action={examDate ? `Imtihon: ${examDate}` : "+ Imtihon sanasini belgilash →"}
+                label={t.examCountdown}
+                title={daysLeft === null ? t.noDate : t.daysLeft(daysLeft)}
+                action={examDate ? t.examDate(examDate) : t.setExamDate}
                 onClick={saveExamDate}
               />
               <CompactCard
                 icon={<Target size={22} />}
-                label="Maqsad Ball"
+                label={t.goalScore}
                 title={goalScore}
-                action="Set goal button"
+                action={t.setGoal}
                 onClick={saveGoalScore}
               />
               <CompactCard
                 icon={<GraduationCap size={22} />}
-                label="Maqsad Universitet"
-                title={goalUniversity}
-                action="Choose university"
+                label={t.goalUniversity}
+                title={goalUniversity || t.setUniversity}
+                action={t.chooseUniversity}
                 onClick={saveUniversity}
+              />
+              <CompactCard
+                icon={<Crown size={22} />}
+                label={t.proStatus}
+                title={isProActive ? t.proActive : t.freePlan}
+                action={isProActive ? "SATTEST.UZ Pro" : t.upgradePro}
+                onClick={() => router.push(withLanguage("/pricing"))}
+              />
+              <CompactCard
+                icon={<Flame size={22} />}
+                label={t.streak}
+                title={t.streakValue}
+                action={t.streakAction}
+                onClick={() => router.push(withLanguage("/practice"))}
               />
             </div>
           </div>
@@ -304,12 +606,13 @@ export default function DashboardPage() {
               hasDiagnostic={Boolean(latestScore)}
               currentWeek={latestScore ? Math.max(1, Math.min(4, Math.ceil(progressPercent / 25))) : 1}
               examDate={examDate}
+              t={t}
             />
             <section className="rounded-xl border border-white/10 bg-[#151515] p-5 md:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/36">Saved for review</p>
-                  <h2 className="mt-2 text-2xl font-light">Bookmarked</h2>
+                  <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/36">{t.savedLabel}</p>
+                  <h2 className="mt-2 text-2xl font-light">{t.bookmarked}</h2>
                 </div>
                 <BookMarked className="text-[#FFD700]" size={26} />
               </div>
@@ -321,7 +624,7 @@ export default function DashboardPage() {
                 )) : (
                   <div className="rounded-xl border border-dashed border-white/12 bg-black/20 p-6">
                     <p className="text-sm leading-6 text-white/48">
-                      Hali bookmark yo'q. Reading Analyzer yoki practice ichida qiyin savollarni belgilab boring.
+                      {t.noBookmarks}
                     </p>
                   </div>
                 )}
@@ -330,13 +633,26 @@ export default function DashboardPage() {
           </div>
 
           <section className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            <ActionCard icon={<MessageSquareText size={22} />} title="AI Tutor Chat" text="Savolni yozing, SAT usulida tushuntirish oling." href="/practice" router={router} />
-            <ActionCard icon={<Zap size={22} />} title="Quick Practice" text="5 savollik tez mashq bilan bugungi streakni saqlang." href="/practice" router={router} />
-            <ActionCard icon={<Search size={22} />} title="Reading Analyzer" text="Passage, screenshot va savollarni AI bilan tahlil qiling." href="/reading-analyzer" router={router} />
-            <ActionCard icon={<Crown size={22} />} title="Mock Tests" text="Diagnostic yoki full mock testni boshlang." href="/sat-test" router={router} />
+            <ActionCard icon={<MessageSquareText size={22} />} title={t.nav.aiTutor} text={t.actionAi} href={withLanguage("/practice")} router={router} />
+            <ActionCard icon={<Zap size={22} />} title={t.nav.quickPractice} text={t.actionPractice} href={withLanguage("/practice")} router={router} />
+            <ActionCard icon={<Search size={22} />} title={t.nav.readingAnalyzer} text={t.actionAnalyzer} href={withLanguage("/reading-analyzer")} router={router} />
+            <ActionCard icon={<Crown size={22} />} title="Mock Tests" text={t.actionTests} href={withLanguage("/sat-test")} router={router} />
           </section>
         </section>
       </div>
+      {editing ? (
+        <EditModal
+          title={editing === "score" ? t.editGoalTitle : editing === "university" ? t.editUniversityTitle : t.editExamTitle}
+          help={editing === "score" ? t.editGoalHelp : editing === "university" ? t.editUniversityHelp : t.editExamHelp}
+          placeholder={editing === "score" ? t.scorePlaceholder : editing === "university" ? t.universityPlaceholder : t.datePlaceholder}
+          value={draftValue}
+          saveLabel={t.save}
+          cancelLabel={t.cancel}
+          onChange={setDraftValue}
+          onClose={() => setEditing(null)}
+          onSave={saveDraft}
+        />
+      ) : null}
     </main>
   );
 }
@@ -356,10 +672,81 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
-function ScoreCard({ latestScore, diagnosticResults, diagnosticSummary, onReport }: {
+function LanguageButtons({ language, onChange }: { language: Language; onChange: (language: Language) => void }) {
+  return (
+    <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-black/25 p-1" aria-label="Language selector">
+      {languages.map((item) => (
+        <button
+          className={`h-9 rounded-lg px-3 text-[10px] font-black uppercase tracking-[0.16em] transition ${language === item.code ? "bg-white text-black" : "text-white/45 hover:text-white"}`}
+          key={item.code}
+          onClick={() => onChange(item.code)}
+          type="button"
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function EditModal({
+  title,
+  help,
+  placeholder,
+  value,
+  saveLabel,
+  cancelLabel,
+  onChange,
+  onClose,
+  onSave
+}: {
+  title: string;
+  help: string;
+  placeholder: string;
+  value: string;
+  saveLabel: string;
+  cancelLabel: string;
+  onChange: (value: string) => void;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-xl border border-[#FFD700]/25 bg-[#151515] p-6 shadow-[0_24px_90px_rgba(0,0,0,0.45)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.34em] text-[#FFD700]/70">SATTEST.UZ</p>
+        <h2 className="mt-3 text-3xl font-light text-white">{title}</h2>
+        <p className="mt-3 text-sm leading-6 text-white/50">{help}</p>
+        <input
+          autoFocus
+          className="mt-6 h-14 w-full rounded-xl border border-white/12 bg-black/35 px-4 text-base text-white outline-none transition focus:border-[#FFD700]"
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onSave();
+            if (event.key === "Escape") onClose();
+          }}
+          placeholder={placeholder}
+          value={value}
+        />
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <button className="h-12 flex-1 rounded-xl border border-[#FFD700] bg-[#FFD700] text-xs font-black uppercase tracking-[0.18em] text-black transition hover:bg-transparent hover:text-[#FFD700]" onClick={onSave} type="button">
+            {saveLabel}
+          </button>
+          <button className="h-12 flex-1 rounded-xl border border-white/12 text-xs font-black uppercase tracking-[0.18em] text-white/60 transition hover:border-white/35 hover:text-white" onClick={onClose} type="button">
+            {cancelLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScoreCard({ latestScore, diagnosticResults, diagnosticSummary, t, onDiagnostic, onReport }: {
   latestScore?: number;
   diagnosticResults: Results | null;
   diagnosticSummary: DiagnosticSummary | null;
+  language: Language;
+  t: typeof copy.en;
+  onDiagnostic: () => void;
   onReport: () => void;
 }) {
   const score = diagnosticResults?.score_total ?? latestScore;
@@ -372,26 +759,30 @@ function ScoreCard({ latestScore, diagnosticResults, diagnosticSummary, onReport
         <SattestMascot />
       </div>
       <div className="relative z-10 max-w-3xl">
-        <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38">📊 Last Test Result</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38">📊 {t.lastResult}</p>
         <div className="mt-5 flex flex-wrap items-end gap-4">
           <h2 className="text-7xl font-light leading-none text-white md:text-8xl">{score ?? "—"}</h2>
           <span className="mb-2 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#FFD700]">
-            {score ? scoreBand(score) : "Diagnostic kerak"}
+            {score ? scoreBand(score) : t.diagnosticNeeded}
           </span>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <ScoreMetric label="Reading & Writing" value={rw || "—"} />
-          <ScoreMetric label="Math" value={math || "—"} />
-          <ScoreMetric label="Accuracy" value={diagnosticSummary ? `${diagnosticSummary.overallAccuracy}%` : "—"} />
+          <ScoreMetric label={t.rw} value={rw || "—"} />
+          <ScoreMetric label={t.math} value={math || "—"} />
+          <ScoreMetric label={t.accuracy} value={diagnosticSummary ? `${diagnosticSummary.overallAccuracy}%` : "—"} />
         </div>
         <p className="mt-5 max-w-2xl text-sm leading-6 text-white/52">
-          {diagnosticSummary?.feedback || "Diagnostic topshirganingizdan keyin bu yerda oxirgi ball, bo'limlar va zaif mavzular ko'rinadi."}
+          {diagnosticSummary?.feedback || t.noScoreText}
         </p>
         {score ? (
           <button className="mt-6 inline-flex items-center gap-3 rounded-xl border border-[#FFD700] bg-[#FFD700] px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:bg-transparent hover:text-[#FFD700]" onClick={onReport} type="button">
-            Full report <ArrowRight size={16} />
+            {t.fullReport} <ArrowRight size={16} />
           </button>
-        ) : null}
+        ) : (
+          <button className="mt-6 inline-flex items-center gap-3 rounded-xl border border-[#FFD700] bg-[#FFD700] px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:bg-transparent hover:text-[#FFD700]" onClick={onDiagnostic} type="button">
+            {t.takeDiagnostic} <ArrowRight size={16} />
+          </button>
+        )}
       </div>
     </section>
   );
@@ -433,21 +824,21 @@ function CompactCard({ icon, label, title, action, onClick }: { icon: ReactNode;
   );
 }
 
-function RoadmapCard({ hasDiagnostic, currentWeek, examDate }: { hasDiagnostic: boolean; currentWeek: number; examDate: string }) {
+function RoadmapCard({ hasDiagnostic, currentWeek, examDate, t }: { hasDiagnostic: boolean; currentWeek: number; examDate: string; t: typeof copy.en }) {
   const steps = [
-    { label: "Diagnostic taken", complete: hasDiagnostic },
-    { label: `Current week ${currentWeek}`, complete: hasDiagnostic },
-    { label: "Weak topics sprint", complete: false },
-    { label: "Mock test date", complete: false },
-    { label: examDate ? `Exam: ${examDate}` : "Exam date", complete: false }
+    { label: t.diagnosticTaken, complete: hasDiagnostic },
+    { label: t.currentWeek(currentWeek), complete: hasDiagnostic },
+    { label: t.weakSprint, complete: false },
+    { label: t.mockDate, complete: false },
+    { label: examDate ? t.examDate(examDate) : t.examDateStep, complete: false }
   ];
 
   return (
     <section className="rounded-xl border border-white/10 bg-[#151515] p-5 md:p-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/36">Study Roadmap</p>
-          <h2 className="mt-2 text-2xl font-light">Your path to 1400+</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/36">{t.roadmap}</p>
+          <h2 className="mt-2 text-2xl font-light">{t.pathTitle}</h2>
         </div>
         <Map className="text-[#FFD700]" size={28} />
       </div>
@@ -460,7 +851,7 @@ function RoadmapCard({ hasDiagnostic, currentWeek, examDate }: { hasDiagnostic: 
             </div>
             <div className="pb-7">
               <p className={step.complete ? "font-semibold text-white" : "text-white/48"}>{step.label}</p>
-              <p className="mt-1 text-sm text-white/35">{step.complete ? "Completed" : "Upcoming milestone"}</p>
+              <p className="mt-1 text-sm text-white/35">{step.complete ? t.completed : t.upcoming}</p>
             </div>
           </div>
         ))}
