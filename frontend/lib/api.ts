@@ -273,6 +273,18 @@ export function getToken() {
   return getSafeStorage()?.getItem("sat1600_token") ?? null;
 }
 
+function writeAuthCookie(token: string) {
+  if (typeof document === "undefined") return;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `sat1600_token=${encodeURIComponent(token)}; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax${secure}`;
+}
+
+function clearAuthCookie() {
+  if (typeof document === "undefined") return;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `sat1600_token=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+}
+
 export function getStudentName() {
   return getSafeStorage()?.getItem("sat1600_full_name") ?? null;
 }
@@ -437,6 +449,7 @@ export function saveAuth(token: string, fullName?: string | null) {
   const storage = getSafeStorage();
   if (!storage) return;
   storage.setItem("sat1600_token", token);
+  writeAuthCookie(token);
   if (fullName) {
     storage.setItem("sat1600_full_name", fullName);
   }
@@ -447,6 +460,7 @@ export function clearAuth() {
   const storage = getSafeStorage();
   storage?.removeItem("sat1600_token");
   storage?.removeItem("sat1600_full_name");
+  clearAuthCookie();
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("sattest:auth-change"));
   }
