@@ -45,7 +45,10 @@ function drawShader(ctx: CanvasRenderingContext2D, width: number, height: number
 }
 
 function now() {
-  return window.performance?.now?.() ?? Date.now();
+  if (typeof window !== "undefined" && window.performance && typeof window.performance.now === "function") {
+    return window.performance.now();
+  }
+  return Date.now();
 }
 
 export function LuxuryShaderBackground() {

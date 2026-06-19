@@ -56,6 +56,9 @@ class User(Base):
     anonymous_visitor_id: Mapped[str | None] = mapped_column(String(80), index=True)
     reading_analyzer_limit_signup_at: Mapped[datetime | None] = mapped_column(DateTime)
     reading_analyzer_followup_sent_at: Mapped[datetime | None] = mapped_column(DateTime)
+    onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    target_score: Mapped[int | None] = mapped_column(Integer)
+    self_assessed_level: Mapped[str | None] = mapped_column(String(40))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     attempts: Mapped[list["TestAttempt"]] = relationship(back_populates="user")
@@ -262,6 +265,39 @@ class RoadmapNode(Base):
     icon_key: Mapped[str] = mapped_column(String(40), default="topic")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class ReadingLevel(Base):
+    __tablename__ = "reading_levels"
+    __table_args__ = (UniqueConstraint("user_id", "topic_key", name="uq_reading_level_user_topic"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    topic_key: Mapped[str] = mapped_column(String(120), index=True)
+    order_index: Mapped[int] = mapped_column(Integer, index=True)
+    status: Mapped[str] = mapped_column(String(24), default="locked", index=True)
+    best_score: Mapped[float] = mapped_column(Float, default=0)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+    questions: Mapped[list["LevelQuestion"]] = relationship(back_populates="level", cascade="all, delete-orphan")
+
+
+class LevelQuestion(Base):
+    __tablename__ = "level_questions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    level_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("reading_levels.id", ondelete="CASCADE"), index=True)
+    question_text: Mapped[str] = mapped_column(Text)
+    options: Mapped[dict] = mapped_column(JSON, default=dict)
+    correct_answer: Mapped[str] = mapped_column(String(8))
+    explanation: Mapped[str] = mapped_column(Text)
+    question_type: Mapped[str] = mapped_column(String(80), index=True)
+    difficulty: Mapped[str] = mapped_column(String(24), default="Medium")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    level: Mapped[ReadingLevel] = relationship(back_populates="questions")
 
 
 class GraphAsset(Base):

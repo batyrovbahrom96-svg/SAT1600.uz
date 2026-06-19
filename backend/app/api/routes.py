@@ -19,7 +19,7 @@ from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db, get_engine
 from app.models import PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, RoadmapNode, Subscription, Test, TestAttempt, TestTelemetrySummary, User
-from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, ResultsOut, TokenResponse, VerificationCodeRequest
+from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, OnboardingRegister, ResultsOut, TokenResponse, VerificationCodeRequest
 from app.services.graph_engine import generate_linear_graph, generate_sat_graph_set
 from app.services.sat_engine import (
     advance_module,
@@ -122,6 +122,28 @@ def register(payload: AuthRegister, db: Session = Depends(get_db)) -> TokenRespo
         _send_analyzer_limit_followup(email, user.full_name)
         mark_analyzer_limit_followup_sent(db, user)
     verification_codes.pop(email, None)
+    return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role, full_name=user.full_name)
+
+
+@router.post("/auth/onboarding-register", response_model=TokenResponse)
+def onboarding_register(payload: OnboardingRegister, db: Session = Depends(get_db)) -> TokenResponse:
+    email = payload.email.lower()
+    existing = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=409, detail="Email already registered")
+
+    user = User(
+        email=email,
+        full_name=payload.full_name,
+        password_hash=hash_password(payload.password),
+        onboarding_completed=True,
+        target_score=payload.target_score,
+        self_assessed_level=payload.self_assessed_level,
+        signup_source="welcome_reading_path",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
     return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role, full_name=user.full_name)
 
 
