@@ -1,11 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpenCheck, CalendarDays, CheckCircle2, Clock3, Crown, LineChart, Search, Target, TrendingUp, XCircle } from "lucide-react";
-import { CurriculumPrompt } from "@/components/CurriculumPrompt";
-import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { ApiError, api, getSubscriptionStatus, getToken } from "@/lib/api";
+import {
+  ArrowRight,
+  BookMarked,
+  BookOpenCheck,
+  Bot,
+  CalendarDays,
+  Crown,
+  Flame,
+  GraduationCap,
+  LayoutDashboard,
+  LibraryBig,
+  LogOut,
+  Map,
+  MessageSquareText,
+  Rocket,
+  Search,
+  Target,
+  Trophy,
+  User,
+  Zap
+} from "lucide-react";
+import { ApiError, api, clearAuth, getStudentName, getToken } from "@/lib/api";
 
 type Test = { id: string; title: string; description: string; is_premium: boolean };
 type ScoreHistoryItem = { attempt_id: string; score: number; date: string };
@@ -45,449 +63,419 @@ type DiagnosticSummary = {
   feedback: string;
 };
 
+const navItems = [
+  { label: "AI Tutor Chat", badge: "New", icon: Bot, href: "/practice" },
+  { label: "Dashboard", active: true, icon: LayoutDashboard, href: "/dashboard" },
+  { label: "My Study Plan", icon: Map, href: "/my-1400" },
+  { label: "Leaderboard", icon: Trophy, href: "/about-us" },
+  { label: "Diagnostic & Mock Tests", icon: BookOpenCheck, href: "/sat-test" },
+  { label: "Quick Practice", icon: Zap, href: "/practice" },
+  { label: "Reading Analyzer", icon: Search, href: "/reading-analyzer" },
+  { label: "Vocabulary Builder", icon: LibraryBig, href: "/practice/reading" },
+  { label: "Webinars", icon: CalendarDays, href: "/my-1400" },
+  { label: "Profile", icon: User, href: "/dashboard" }
+];
+
 export default function DashboardPage() {
   const router = useRouter();
   const [tests, setTests] = useState<Test[]>([]);
   const [history, setHistory] = useState<AnalyticsHistory | null>(null);
   const [diagnosticResults, setDiagnosticResults] = useState<Results | null>(null);
   const [requestedAttemptId, setRequestedAttemptId] = useState<string | null>(null);
-  const [canShowCabinet, setCanShowCabinet] = useState(false);
-  const [showCurriculumPanel, setShowCurriculumPanel] = useState(false);
-  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
-  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
+  const [canShowDashboard, setCanShowDashboard] = useState(true);
   const [message, setMessage] = useState("");
-  const attempts = history?.attempts ?? 0;
-  const latestScore = history?.score_history.at(-1)?.score;
-  const latestAttemptId = requestedAttemptId || history?.score_history.at(-1)?.attempt_id;
-  const hasDiagnostic = Boolean(latestScore && latestAttemptId);
+  const [goalScore, setGoalScore] = useState("1400");
+  const [goalUniversity, setGoalUniversity] = useState("Set university");
+  const [examDate, setExamDate] = useState("");
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
+
+  const latestHistoryItem = history?.score_history[history.score_history.length - 1];
+  const latestScore = latestHistoryItem?.score;
+  const latestAttemptId = requestedAttemptId || latestHistoryItem?.attempt_id;
   const satMockTest = tests.find((test) => test.is_premium) ?? tests[0];
   const diagnosticSummary = diagnosticResults ? buildDiagnosticSummary(diagnosticResults) : null;
+  const storedName = getStudentName();
+  const firstName = useMemo(() => {
+    const name = (storedName || "O'quvchi").trim();
+    return name.split(/\s+/)[0] || "O'quvchi";
+  }, [storedName]);
+  const daysLeft = useMemo(() => {
+    if (!examDate) return null;
+    const now = new Date();
+    const target = new Date(`${examDate}T09:00:00`);
+    return Math.max(0, Math.ceil((target.getTime() - now.getTime()) / 86_400_000));
+  }, [examDate]);
+  const progressPercent = latestScore ? Math.max(8, Math.min(100, Math.round((latestScore / Number(goalScore || 1400)) * 100))) : 12;
+  const motivationalLine = latestScore
+    ? latestScore >= Number(goalScore || 1400)
+      ? "Maqsadga yetdingiz. Endi barqarorlik va top-range savollar ustida ishlaymiz."
+      : `${Number(goalScore || 1400) - latestScore} ball qoldi. Bugungi kichik mashq ham natijani yaqinlashtiradi.`
+    : "Bugun diagnostic topshiring, keyin SATTEST sizga shaxsiy yo'l xaritasini quradi.";
 
   useEffect(() => {
     if (!getToken()) {
-      router.replace("/practice");
+      router.replace("/login");
       return;
     }
 
     setRequestedAttemptId(new URLSearchParams(window.location.search).get("attemptId"));
+    setGoalScore(window.localStorage.getItem("sattest_goal_score") || "1400");
+    setGoalUniversity(window.localStorage.getItem("sattest_goal_university") || "Set university");
+    setExamDate(window.localStorage.getItem("sattest_exam_date") || "");
+    const savedBookmarks = window.localStorage.getItem("sattest_bookmarks");
+    try {
+      setBookmarks(savedBookmarks ? JSON.parse(savedBookmarks) : []);
+    } catch {
+      setBookmarks([]);
+    }
 
-    api<Test[]>("/api/tests").then(setTests).catch((error) => {
+    withTimeout(api<Test[]>("/api/tests"), 4500).then(setTests).catch((error) => {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         router.push("/login");
         return;
       }
-      console.log("API unavailable, continue");
       setMessage("Practice tests are temporarily unavailable.");
     });
-    api<AnalyticsHistory>("/api/analytics/me").then((data) => {
+    withTimeout(api<AnalyticsHistory>("/api/analytics/me"), 4500).then((data) => {
       setHistory(data);
-      setCanShowCabinet(true);
+      setCanShowDashboard(true);
     }).catch((error) => {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         router.replace("/login");
         return;
       }
-      console.log("API unavailable, continue");
-      router.replace("/practice");
+      setCanShowDashboard(true);
+      setHistory({ attempts: 0, score_history: [] });
     });
-    getSubscriptionStatus()
-      .then((status) => setHasActiveSubscription(status.has_active_subscription))
-      .catch(() => setHasActiveSubscription(false))
-      .finally(() => setSubscriptionChecked(true));
   }, [router]);
-
-  useEffect(() => {
-    if (hasActiveSubscription) {
-      setShowCurriculumPanel(false);
-    }
-  }, [hasActiveSubscription]);
 
   useEffect(() => {
     if (!latestAttemptId) {
       setDiagnosticResults(null);
       return;
     }
-
-    api<Results>(`/api/attempts/${latestAttemptId}/results`).then(setDiagnosticResults).catch((error) => {
-      console.log("Unable to load diagnostic results", error);
-    });
+    api<Results>(`/api/attempts/${latestAttemptId}/results`).then(setDiagnosticResults).catch(() => setDiagnosticResults(null));
   }, [latestAttemptId]);
-
-  useEffect(() => {
-    if (!diagnosticResults || !latestAttemptId || !subscriptionChecked || hasActiveSubscription) return undefined;
-    const timer = window.setTimeout(() => setShowCurriculumPanel(true), 1400);
-    return () => window.clearTimeout(timer);
-  }, [diagnosticResults, hasActiveSubscription, latestAttemptId, subscriptionChecked]);
 
   async function start(testId: string) {
     try {
       const result = await api<{ attempt_id: string }>(`/api/tests/${testId}/attempts`, { method: "POST" });
       router.push(`/test/${result.attempt_id}`);
     } catch (error) {
-      console.log("API unavailable, continue");
       setMessage(error instanceof Error ? error.message : "Unable to start test.");
     }
   }
 
-  if (!canShowCabinet) {
-    return (
-      <main className="min-h-screen bg-[#101112] text-white">
-        <LuxuryNavbar />
-        <section className="mx-auto flex min-h-[calc(100vh-81px)] max-w-4xl flex-col items-center justify-center px-5 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/38">Student access</p>
-          <h1 className="mt-5 text-4xl font-light text-white md:text-5xl">Checking your cabinet access</h1>
-          <p className="mt-4 max-w-xl text-sm font-light leading-7 text-white/48">
-            Practice and personal track are available after registration and your saved SAT mock test.
-          </p>
-        </section>
-      </main>
-    );
+  function saveGoalScore() {
+    const next = window.prompt("Maqsad ballingizni kiriting", goalScore);
+    if (!next) return;
+    setGoalScore(next);
+    window.localStorage.setItem("sattest_goal_score", next);
   }
 
-  if (!hasDiagnostic) {
+  function saveUniversity() {
+    const next = window.prompt("Maqsad universitetingiz", goalUniversity === "Set university" ? "" : goalUniversity);
+    if (!next) return;
+    setGoalUniversity(next);
+    window.localStorage.setItem("sattest_goal_university", next);
+  }
+
+  function saveExamDate() {
+    const next = window.prompt("Imtihon sanasi (YYYY-MM-DD)", examDate || "2026-08-23");
+    if (!next) return;
+    setExamDate(next);
+    window.localStorage.setItem("sattest_exam_date", next);
+  }
+
+  function logout() {
+    clearAuth();
+    router.replace("/login");
+  }
+
+  if (!canShowDashboard) {
     return (
-      <main className="min-h-screen bg-[#101112] text-white">
-        <LuxuryNavbar />
-        <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1fr_440px] lg:items-center">
+      <main className="min-h-screen bg-[#0a0a0a] text-white">
+        <div className="flex min-h-screen items-center justify-center px-6 text-center">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Diagnostic required</p>
-            <h1 className="mt-6 max-w-4xl text-5xl font-light leading-none text-white md:text-7xl">
-              Practice unlocks after your SAT mock test.
-            </h1>
-            <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-              Your personal SAT track, weak-skill analysis, daily hours, and study curriculum appear after your SAT mock result is saved.
-            </p>
+            <p className="text-[10px] font-black uppercase tracking-[0.45em] text-[#FFD700]/70">SATTEST.UZ</p>
+            <h1 className="mt-5 text-4xl font-light">Dashboard tayyorlanmoqda...</h1>
           </div>
-
-          <div className="border border-white/10 bg-white/[0.035] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
-            <div className="border-b border-white/10 pb-5">
-              <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-black/20 text-white/70">
-                <Target size={22} />
-              </div>
-              <h2 className="mt-5 text-2xl font-light text-white">No diagnostic result yet</h2>
-              <p className="mt-3 text-sm font-light leading-6 text-white/48">
-                Take the SAT Mock Test first. After submission, this cabinet becomes your personal study track.
-              </p>
-            </div>
-
-            <div className="mt-5 grid gap-3">
-              <button
-                className="flex h-13 items-center justify-between border border-white bg-white px-5 py-4 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-                disabled={!satMockTest}
-                onClick={() => satMockTest && start(satMockTest.id)}
-                type="button"
-              >
-                Start SAT Mock Test <ArrowRight size={18} />
-              </button>
-            </div>
-          </div>
-        </section>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#101112] text-white">
-      <LuxuryNavbar />
-
-      <section className="mx-auto max-w-7xl px-5 py-10 md:px-8 md:py-14">
-        <div className="grid gap-8 border-b border-white/10 pb-10 lg:grid-cols-[1fr_420px] lg:items-end">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">Student cabinet</p>
-            <h1 className="mt-5 text-5xl font-light leading-none text-white md:text-7xl">Personal SAT track</h1>
-            <p className="mt-6 max-w-2xl text-lg font-light leading-8 text-white/50">
-              Start with the SAT Mock Test. After submission, this cabinet becomes your personal 1400+ roadmap with weaknesses, daily hours, and practice curriculum.
-            </p>
+    <main className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="mx-auto grid min-h-screen max-w-[1800px] lg:grid-cols-[310px_1fr]">
+        <aside className="border-b border-white/10 bg-[#0c0c0c] px-5 py-5 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r lg:px-6">
+          <div className="flex items-center justify-between gap-4 lg:block">
+            <button className="text-left" onClick={() => router.push("/")} type="button">
+              <p className="text-xl font-black tracking-[0.32em] text-[#FFD700]">SATTEST.UZ</p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-[0.24em] text-white/40">Practice • Improve • Achieve</p>
+            </button>
+            <button className="rounded-xl border border-white/10 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-white/50 lg:hidden" onClick={logout} type="button">
+              Log out
+            </button>
           </div>
-          <div className="grid grid-cols-2 border border-white/10 bg-white/[0.035]">
-            <div className="border-r border-white/10 p-5">
-              <div className="text-[10px] font-black uppercase tracking-[0.28em] text-white/38">Attempts</div>
-              <div className="mt-4 text-4xl font-light text-white">{attempts}</div>
-            </div>
-            <div className="p-5">
-              <div className="text-[10px] font-black uppercase tracking-[0.28em] text-white/38">Diagnostic score</div>
-              <div className="mt-4 text-4xl font-light text-white">{latestScore ?? "none"}</div>
-            </div>
-          </div>
-        </div>
 
-        <div className="mt-8 grid gap-5">
-          {message ? <p className="border border-yellow-300/25 bg-yellow-950/20 p-4 font-semibold text-yellow-100">{message}</p> : null}
-
-          <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-            <article className="border border-white/10 bg-white/[0.035] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.24)] md:p-8">
-              <div className="flex h-14 w-14 items-center justify-center border border-white/10 bg-black/25 text-white/75">
-                {hasDiagnostic ? <TrendingUp size={24} /> : <Target size={24} />}
-              </div>
-              <p className="mt-7 text-[10px] font-black uppercase tracking-[0.42em] text-white/42">
-                {hasDiagnostic ? "Diagnostic completed" : "Step 1"}
-              </p>
-              <h2 className="mt-4 max-w-3xl text-4xl font-light leading-tight text-white md:text-5xl">
-                {hasDiagnostic ? "Your SAT mock evaluation is inside this cabinet." : "Take your SAT Mock Test first."}
-              </h2>
-              <p className="mt-5 max-w-2xl text-base font-light leading-7 text-white/50">
-                {hasDiagnostic
-                  ? "Your latest SAT mock result is now connected to your personal track. Review the section evaluation, weaknesses, and priority topics before starting the next practice cycle."
-                  : "The SAT Mock Test unlocks your personal SAT track. Your score, weak skills, daily study hours, and 30-day 1400+ roadmap will appear here after the test."}
-              </p>
-
-              <div className="mt-7 flex flex-wrap gap-3">
-                {satMockTest ? (
-                  <button onClick={() => start(satMockTest.id)} className="flex h-12 items-center justify-center gap-3 border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white">
-                    {hasDiagnostic ? "Retake SAT Mock Test" : "Start SAT Mock Test"} <ArrowRight size={17} />
-                  </button>
-                ) : (
-                  <div className="border border-white/10 bg-black/20 px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-white/45">
-                    Loading SAT Mock Test
-                  </div>
-                )}
-                <button
-                  className="flex h-12 items-center justify-center gap-3 border border-white/15 bg-black/20 px-6 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-white/35 hover:text-white"
-                  onClick={() => setShowCurriculumPanel(true)}
-                  type="button"
-                >
-                  Open 1400+ plan
-                </button>
-              </div>
-            </article>
-
-            <aside className="grid gap-4">
-              {[
-                { label: "Target", value: "1400+", icon: Target },
-                { label: "Study plan", value: hasDiagnostic ? "30 days" : "Locked", icon: CalendarDays },
-                { label: "Daily hours", value: hasDiagnostic ? "Calculated soon" : "After mock", icon: Clock3 }
-              ].map((item) => (
-                <div className="grid grid-cols-[52px_1fr] items-center gap-4 border border-white/10 bg-white/[0.03] p-5" key={item.label}>
-                  <div className="flex h-13 w-13 items-center justify-center border border-white/10 bg-black/20 text-white/60">
-                    <item.icon size={22} />
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-black uppercase tracking-[0.28em] text-white/35">{item.label}</div>
-                    <div className="mt-2 text-2xl font-light text-white">{item.value}</div>
-                  </div>
-                </div>
-              ))}
-            </aside>
-          </section>
-
-          {diagnosticResults && diagnosticSummary ? (
-            <section className="border border-white/10 bg-white/[0.035] p-5 md:p-6">
-              <div className="grid gap-6 border-b border-white/10 pb-6 lg:grid-cols-[1fr_auto] lg:items-end">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.36em] text-white/38">Diagnostic evaluation</p>
-                  <h2 className="mt-3 text-3xl font-light leading-tight text-white md:text-4xl">SAT result classified by section</h2>
-                  <p className="mt-3 max-w-3xl text-sm font-light leading-6 text-white/50">
-                    {diagnosticSummary.feedback}
-                  </p>
-                </div>
-                <button
-                  className="flex h-12 items-center justify-center gap-3 border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-                  onClick={() => router.push(`/results/${diagnosticResults?.attempt_id || latestAttemptId}`)}
-                  type="button"
-                >
-                  Full report <ArrowRight size={17} />
-                </button>
-              </div>
-
-              <div className="mt-6 grid gap-4 md:grid-cols-4">
-                <DiagnosticMetric label="Total score" value={diagnosticResults.score_total} detail={scoreBand(diagnosticResults.score_total)} />
-                <DiagnosticMetric label="Reading & Writing" value={diagnosticResults.score_reading_writing} detail={`${diagnosticSummary.sections[0]?.accuracy ?? 0}% accuracy`} />
-                <DiagnosticMetric label="Math" value={diagnosticResults.score_math} detail={`${diagnosticSummary.sections[1]?.accuracy ?? 0}% accuracy`} />
-                <DiagnosticMetric label="Overall accuracy" value={`${diagnosticSummary.overallAccuracy}%`} detail={`${diagnosticSummary.correctCount}/${diagnosticSummary.answeredCount} correct`} />
-              </div>
-
-              <div className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-                <div className="grid gap-4">
-                  {diagnosticSummary.sections.map((section) => (
-                    <article className="border border-white/10 bg-black/20 p-5" key={section.key}>
-                      <div className="flex items-center justify-between gap-4">
-                        <h3 className="text-xl font-light text-white">{section.label}</h3>
-                        <span className="text-3xl font-light text-white">{section.score}</span>
-                      </div>
-                      <div className="mt-4 h-2 bg-white/[0.07]">
-                        <div className="h-full bg-white/75" style={{ width: `${section.accuracy}%` }} />
-                      </div>
-                      <p className="mt-3 text-sm font-light text-white/48">
-                        {section.correct} correct out of {section.total || "available"} questions. Accuracy: {section.accuracy}%.
-                      </p>
-                    </article>
-                  ))}
-                </div>
-
-                <div className="grid gap-4">
-                  <article className="border border-white/10 bg-black/20 p-5">
-                    <h3 className="text-xl font-light text-white">Priority topics</h3>
-                    <div className="mt-4 grid gap-3">
-                      {diagnosticSummary.topicChart.slice(0, 6).map((item) => (
-                        <div key={item.topic}>
-                          <div className="flex items-center justify-between gap-4 text-sm">
-                            <span className="text-white/65">{item.topic}</span>
-                            <span className="font-black text-white/80">{item.accuracy}%</span>
-                          </div>
-                          <div className="mt-2 h-1.5 bg-white/[0.07]">
-                            <div className="h-full bg-white/70" style={{ width: `${item.accuracy}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </article>
-
-                  <article className="grid gap-4 md:grid-cols-2">
-                    <DiagnosticList title="Strengths" items={diagnosticSummary.strengths} emptyText="No clear strengths yet." />
-                    <DiagnosticList title="Weaknesses" items={diagnosticSummary.weaknesses} emptyText="No urgent weak topic." />
-                  </article>
-                </div>
-              </div>
-
-              <section className="mt-6 border border-white/10 bg-black/20">
-                <div className="flex items-center justify-between gap-4 border-b border-white/10 p-5">
-                  <div>
-                    <h3 className="text-xl font-light text-white">Mistakes and setbacks</h3>
-                    <p className="mt-2 text-sm font-light text-white/45">These mistakes will drive the future personal practice curriculum.</p>
-                  </div>
-                  <span className="inline-flex items-center gap-2 border border-red-300/20 bg-red-950/20 px-3 py-2 text-sm font-black text-red-200">
-                    <XCircle size={17} /> {diagnosticSummary.wrongQuestions.length} missed
-                  </span>
-                </div>
-                <div className="divide-y divide-white/10">
-                  {diagnosticSummary.wrongQuestions.slice(0, 4).map((question, index) => (
-                    <SetbackCard key={question.id} question={question} index={index + 1} />
-                  ))}
-                  {diagnosticSummary.wrongQuestions.length === 0 ? (
-                    <div className="p-5 text-sm font-light text-white/48">No missed questions were recorded for this diagnostic.</div>
-                  ) : null}
-                </div>
-              </section>
-            </section>
-          ) : null}
-
-          <section className="grid gap-5 lg:grid-cols-4">
-            <article className="border border-white/10 bg-white/[0.03] p-6">
-              <div className="flex items-center gap-3 text-white/70">
-                <LineChart size={20} />
-                <h3 className="text-lg font-light text-white">Progress track</h3>
-              </div>
-              <p className="mt-4 text-sm font-light leading-6 text-white/45">
-                {hasDiagnostic ? "Your diagnostic score is saved. The next build will add completed study hours and weekly growth." : "Score history, completed hours, weekly growth, and readiness for 1400+ will be tracked here after the diagnostic."}
-              </p>
-              <div className="mt-6 h-2 bg-white/[0.06]">
-                <div className="h-full w-[12%] bg-white/70" />
-              </div>
-            </article>
-
-            <article className="border border-white/10 bg-white/[0.03] p-6">
-              <div className="flex items-center gap-3 text-white/70">
-                <BookOpenCheck size={20} />
-                <h3 className="text-lg font-light text-white">Practice curriculum</h3>
-              </div>
-              <p className="mt-4 text-sm font-light leading-6 text-white/45">
-                Practice will become personal: algebra, grammar, reading, timing, and mistake review by the student’s own weak skills.
-              </p>
-              <div className="mt-6 grid gap-2 text-xs font-black uppercase tracking-[0.18em] text-white/35">
-                <span>{hasDiagnostic ? "Diagnostic connected" : "Diagnostic required"}</span>
-                <span>Reading/Writing and Math bound</span>
-              </div>
-              {hasDiagnostic ? (
-                <button
-                  className="mt-5 flex h-11 items-center justify-center gap-3 border border-white bg-white px-5 text-xs font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-white"
-                  onClick={() => setShowCurriculumPanel(true)}
-                  type="button"
-                >
-                  View curriculum <ArrowRight size={16} />
-                </button>
-              ) : null}
-            </article>
-
-            <article className="border border-white/10 bg-white/[0.03] p-6">
-              <div className="flex items-center gap-3 text-white/70">
-                <CheckCircle2 size={20} />
-                <h3 className="text-lg font-light text-white">Weakness report</h3>
-              </div>
-              <p className="mt-4 text-sm font-light leading-6 text-white/45">
-                Missed questions will be grouped into biggest score leaks, careless mistakes, timing problems, and high-impact topics.
-              </p>
-              <div className="mt-6 border border-white/10 bg-black/20 p-4 text-sm font-light text-white/45">
-                {diagnosticSummary?.weaknesses.slice(0, 3).join(", ") || "Waiting for first diagnostic result."}
-              </div>
-            </article>
-
-            <article className="border border-[#FFD700]/25 bg-[#FFD700]/[0.06] p-6">
-              <div className="flex items-center gap-3 text-[#FFD700]">
-                <Search size={20} />
-                <h3 className="text-lg font-light text-white">Reading Analyzer</h3>
-              </div>
-              <p className="mt-4 text-sm font-light leading-6 text-white/58">
-                Analyze any SAT passage with AI: main idea, difficult words, tone, purpose, and SAT strategy.
-              </p>
+          <nav className="mt-6 flex gap-2 overflow-x-auto pb-2 lg:mt-10 lg:block lg:space-y-2 lg:overflow-visible lg:pb-0">
+            {navItems.map((item) => (
               <button
-                className="mt-5 flex h-11 items-center justify-center gap-3 border border-[#FFD700] bg-[#FFD700] px-5 text-xs font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-[#FFD700]"
-                onClick={() => router.push("/reading-analyzer")}
+                className={`flex min-w-fit items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition lg:w-full ${
+                  item.active
+                    ? "border-[#FFD700]/55 bg-[#FFD700]/12 text-[#FFD700]"
+                    : "border-transparent text-white/58 hover:border-white/10 hover:bg-white/[0.04] hover:text-white"
+                }`}
+                key={item.label}
+                onClick={() => router.push(item.href)}
                 type="button"
               >
-                Try Now <ArrowRight size={16} />
+                <item.icon size={18} />
+                <span className="font-semibold">{item.label}</span>
+                {item.badge ? <span className="ml-auto rounded-full bg-[#FFD700] px-2 py-0.5 text-[10px] font-black text-black">{item.badge}</span> : null}
               </button>
-            </article>
-          </section>
+            ))}
+          </nav>
 
-          <section className="border border-white/10 bg-white/[0.03] p-5 md:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.36em] text-white/38">Available mock tests</p>
-                <h2 className="mt-2 text-2xl font-light text-white">Diagnostic and practice attempts</h2>
-              </div>
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-white/35">{tests.length || 0} tests</span>
+          <button
+            className="mt-7 hidden w-full items-center gap-3 rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-white/45 transition hover:border-red-300/25 hover:bg-red-500/10 hover:text-red-100 lg:flex"
+            onClick={logout}
+            type="button"
+          >
+            <LogOut size={18} /> Log out
+          </button>
+        </aside>
+
+        <section className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <header className="flex flex-col gap-5 rounded-xl border border-white/10 bg-[#151515] p-5 md:flex-row md:items-end md:justify-between md:p-7">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#FFD700]/70">Personal dashboard</p>
+              <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">👋 Salom, {firstName}!</h1>
+              <p className="mt-4 max-w-3xl text-base leading-7 text-white/55">{motivationalLine}</p>
             </div>
+            <div className="flex flex-wrap gap-3">
+              <button className="rounded-xl border border-[#FFD700] bg-[#FFD700] px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:bg-transparent hover:text-[#FFD700]" onClick={() => satMockTest && start(satMockTest.id)} type="button">
+                Start mock
+              </button>
+              <button className="rounded-xl border border-white/12 px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-white/62 transition hover:border-white/35 hover:text-white" onClick={() => router.push("/reading-analyzer")} type="button">
+                Analyzer
+              </button>
+            </div>
+          </header>
 
-            <div className="mt-5 grid gap-4">
-              {tests.map((test, index) => (
-                <article key={test.id} className="grid gap-5 border border-white/10 bg-black/20 p-5 transition-colors hover:border-white/25 hover:bg-white/[0.045] md:grid-cols-[56px_1fr_auto] md:items-center md:p-6">
-                  <div className="flex h-14 w-14 items-center justify-center border border-white/10 bg-black/30 text-white/70">
-                    <LineChart size={24} />
-                  </div>
-                  <div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-2xl font-light text-white">{index === 0 ? "Diagnostic Mock Test" : test.title}</h3>
-                      {index === 0 ? (
-                        <span className="inline-flex items-center gap-2 border border-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/58">
-                          Required
-                        </span>
-                      ) : null}
-                      {test.is_premium ? (
-                        <span className="inline-flex items-center gap-2 border border-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/58">
-                          <Crown size={13} /> Premium
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="mt-2 max-w-3xl text-sm font-light leading-6 text-white/48">
-                      {index === 0 ? "Take this first so SATTEST.UZ can build your personal cabinet, progress track, and study curriculum." : test.description}
+          {message ? <p className="mt-5 rounded-xl border border-[#FFD700]/25 bg-[#FFD700]/10 p-4 text-sm font-semibold text-[#FFD700]">{message}</p> : null}
+
+          <div className="mt-6 grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+            <ScoreCard
+              latestScore={latestScore}
+              diagnosticResults={diagnosticResults}
+              diagnosticSummary={diagnosticSummary}
+              onReport={() => latestAttemptId && router.push(`/results/${latestAttemptId}`)}
+            />
+
+            <div className="grid gap-5 sm:grid-cols-3 xl:grid-cols-1">
+              <CompactCard
+                icon={<CalendarDays size={22} />}
+                label="Exam Countdown"
+                title={daysLeft === null ? "Sana yo'q" : `${daysLeft} kun qoldi`}
+                action={examDate ? `Imtihon: ${examDate}` : "+ Imtihon sanasini belgilash →"}
+                onClick={saveExamDate}
+              />
+              <CompactCard
+                icon={<Target size={22} />}
+                label="Maqsad Ball"
+                title={goalScore}
+                action="Set goal button"
+                onClick={saveGoalScore}
+              />
+              <CompactCard
+                icon={<GraduationCap size={22} />}
+                label="Maqsad Universitet"
+                title={goalUniversity}
+                action="Choose university"
+                onClick={saveUniversity}
+              />
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+            <RoadmapCard
+              hasDiagnostic={Boolean(latestScore)}
+              currentWeek={latestScore ? Math.max(1, Math.min(4, Math.ceil(progressPercent / 25))) : 1}
+              examDate={examDate}
+            />
+            <section className="rounded-xl border border-white/10 bg-[#151515] p-5 md:p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/36">Saved for review</p>
+                  <h2 className="mt-2 text-2xl font-light">Bookmarked</h2>
+                </div>
+                <BookMarked className="text-[#FFD700]" size={26} />
+              </div>
+              <div className="mt-5 grid gap-3">
+                {bookmarks.length ? bookmarks.slice(0, 5).map((item, index) => (
+                  <article className="rounded-xl border border-white/10 bg-black/25 p-4" key={`${item}-${index}`}>
+                    <p className="text-sm leading-6 text-white/65">{item}</p>
+                  </article>
+                )) : (
+                  <div className="rounded-xl border border-dashed border-white/12 bg-black/20 p-6">
+                    <p className="text-sm leading-6 text-white/48">
+                      Hali bookmark yo'q. Reading Analyzer yoki practice ichida qiyin savollarni belgilab boring.
                     </p>
                   </div>
-                  <button onClick={() => start(test.id)} className="flex h-12 items-center justify-center gap-3 border border-white bg-white px-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white">
-                    Start <ArrowRight size={17} />
-                  </button>
-                </article>
-              ))}
-            </div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          <section className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <ActionCard icon={<MessageSquareText size={22} />} title="AI Tutor Chat" text="Savolni yozing, SAT usulida tushuntirish oling." href="/practice" router={router} />
+            <ActionCard icon={<Zap size={22} />} title="Quick Practice" text="5 savollik tez mashq bilan bugungi streakni saqlang." href="/practice" router={router} />
+            <ActionCard icon={<Search size={22} />} title="Reading Analyzer" text="Passage, screenshot va savollarni AI bilan tahlil qiling." href="/reading-analyzer" router={router} />
+            <ActionCard icon={<Crown size={22} />} title="Mock Tests" text="Diagnostic yoki full mock testni boshlang." href="/sat-test" router={router} />
           </section>
-
-          {!message && tests.length === 0 ? (
-            <div className="border border-white/10 bg-white/[0.03] p-8 text-white/50">
-              Loading available mock tests...
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      {showCurriculumPanel && diagnosticResults && latestAttemptId ? (
-        <CurriculumPrompt
-          onClose={() => setShowCurriculumPanel(false)}
-          onOpen={() => router.push(`/curriculum/${latestAttemptId}`)}
-          score={diagnosticResults.score_total}
-          weaknesses={diagnosticSummary?.weaknesses ?? []}
-          isUnlocked={hasActiveSubscription}
-        />
-      ) : null}
+        </section>
+      </div>
     </main>
+  );
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("Request timed out")), ms);
+    promise
+      .then((value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      });
+  });
+}
+
+function ScoreCard({ latestScore, diagnosticResults, diagnosticSummary, onReport }: {
+  latestScore?: number;
+  diagnosticResults: Results | null;
+  diagnosticSummary: DiagnosticSummary | null;
+  onReport: () => void;
+}) {
+  const score = diagnosticResults?.score_total ?? latestScore;
+  const rw = diagnosticResults?.score_reading_writing ?? 0;
+  const math = diagnosticResults?.score_math ?? 0;
+
+  return (
+    <section className="relative overflow-hidden rounded-xl border border-white/10 bg-[#151515] p-5 md:p-7">
+      <div className="absolute right-5 top-5 hidden md:block">
+        <SattestMascot />
+      </div>
+      <div className="relative z-10 max-w-3xl">
+        <p className="text-[10px] font-black uppercase tracking-[0.34em] text-white/38">📊 Last Test Result</p>
+        <div className="mt-5 flex flex-wrap items-end gap-4">
+          <h2 className="text-7xl font-light leading-none text-white md:text-8xl">{score ?? "—"}</h2>
+          <span className="mb-2 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#FFD700]">
+            {score ? scoreBand(score) : "Diagnostic kerak"}
+          </span>
+        </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <ScoreMetric label="Reading & Writing" value={rw || "—"} />
+          <ScoreMetric label="Math" value={math || "—"} />
+          <ScoreMetric label="Accuracy" value={diagnosticSummary ? `${diagnosticSummary.overallAccuracy}%` : "—"} />
+        </div>
+        <p className="mt-5 max-w-2xl text-sm leading-6 text-white/52">
+          {diagnosticSummary?.feedback || "Diagnostic topshirganingizdan keyin bu yerda oxirgi ball, bo'limlar va zaif mavzular ko'rinadi."}
+        </p>
+        {score ? (
+          <button className="mt-6 inline-flex items-center gap-3 rounded-xl border border-[#FFD700] bg-[#FFD700] px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:bg-transparent hover:text-[#FFD700]" onClick={onReport} type="button">
+            Full report <ArrowRight size={16} />
+          </button>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function SattestMascot() {
+  return (
+    <div className="relative h-44 w-44" aria-label="SATTEST original mascot">
+      <div className="absolute inset-6 rounded-full bg-[#FFD700]/15 blur-2xl" />
+      <div className="absolute left-8 top-6 h-28 w-28 rounded-[36px] border border-[#FFD700]/45 bg-gradient-to-br from-[#FFD700] to-[#8b7208] shadow-[0_18px_60px_rgba(255,215,0,0.18)] rotate-[-8deg]" />
+      <div className="absolute left-14 top-14 flex gap-4">
+        <span className="h-5 w-5 rounded-full bg-black" />
+        <span className="h-5 w-5 rounded-full bg-black" />
+      </div>
+      <div className="absolute left-[74px] top-[86px] h-2 w-10 rounded-full bg-black/70" />
+      <Rocket className="absolute bottom-4 right-5 text-[#FFD700]" size={48} />
+      <Flame className="absolute bottom-7 left-5 text-[#FFD700]" size={30} />
+    </div>
+  );
+}
+
+function ScoreMetric({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/25 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">{label}</p>
+      <p className="mt-2 text-2xl font-light text-white">{value}</p>
+    </div>
+  );
+}
+
+function CompactCard({ icon, label, title, action, onClick }: { icon: ReactNode; label: string; title: string; action: string; onClick: () => void }) {
+  return (
+    <button className="rounded-xl border border-white/10 bg-[#151515] p-5 text-left transition hover:border-[#FFD700]/40 hover:bg-[#FFD700]/[0.06]" onClick={onClick} type="button">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#FFD700]/20 bg-[#FFD700]/10 text-[#FFD700]">{icon}</div>
+      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-white/36">{label}</p>
+      <h3 className="mt-2 text-2xl font-light text-white">{title}</h3>
+      <p className="mt-3 text-sm text-[#FFD700]">{action}</p>
+    </button>
+  );
+}
+
+function RoadmapCard({ hasDiagnostic, currentWeek, examDate }: { hasDiagnostic: boolean; currentWeek: number; examDate: string }) {
+  const steps = [
+    { label: "Diagnostic taken", complete: hasDiagnostic },
+    { label: `Current week ${currentWeek}`, complete: hasDiagnostic },
+    { label: "Weak topics sprint", complete: false },
+    { label: "Mock test date", complete: false },
+    { label: examDate ? `Exam: ${examDate}` : "Exam date", complete: false }
+  ];
+
+  return (
+    <section className="rounded-xl border border-white/10 bg-[#151515] p-5 md:p-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/36">Study Roadmap</p>
+          <h2 className="mt-2 text-2xl font-light">Your path to 1400+</h2>
+        </div>
+        <Map className="text-[#FFD700]" size={28} />
+      </div>
+      <div className="mt-7 space-y-0">
+        {steps.map((step, index) => (
+          <div className="grid grid-cols-[28px_1fr] gap-4" key={step.label}>
+            <div className="flex flex-col items-center">
+              <span className={`h-7 w-7 rounded-full border ${step.complete ? "border-[#FFD700] bg-[#FFD700]" : "border-white/18 bg-white/5"}`} />
+              {index < steps.length - 1 ? <span className={`h-12 w-px ${step.complete ? "bg-[#FFD700]" : "bg-white/12"}`} /> : null}
+            </div>
+            <div className="pb-7">
+              <p className={step.complete ? "font-semibold text-white" : "text-white/48"}>{step.label}</p>
+              <p className="mt-1 text-sm text-white/35">{step.complete ? "Completed" : "Upcoming milestone"}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ActionCard({ icon, title, text, href, router }: { icon: ReactNode; title: string; text: string; href: string; router: ReturnType<typeof useRouter> }) {
+  return (
+    <button className="rounded-xl border border-white/10 bg-[#151515] p-5 text-left transition hover:border-[#FFD700]/40 hover:bg-white/[0.04]" onClick={() => router.push(href)} type="button">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-black/25 text-[#FFD700]">{icon}</div>
+      <h3 className="mt-5 text-xl font-light text-white">{title}</h3>
+      <p className="mt-3 text-sm leading-6 text-white/45">{text}</p>
+    </button>
   );
 }
 
@@ -529,125 +517,10 @@ function buildDiagnosticSummary(results: Results): DiagnosticSummary {
 function buildDiagnosticFeedback(results: Results, weaknesses: string[], accuracy: number) {
   if (results.report) return cleanReportText(results.report);
   if (weaknesses.length) {
-    return `Your biggest score gains are in ${weaknesses.slice(0, 2).join(" and ")}. These topics should become the first blocks of your personal practice curriculum.`;
+    return `Eng katta o'sish imkoniyati: ${weaknesses.slice(0, 2).join(" va ")}. Bugungi practice shu mavzulardan boshlansin.`;
   }
-  if (accuracy >= 80) return "Strong diagnostic result. Your next focus is hard timed practice and reducing small errors under pressure.";
-  return "The diagnostic is complete. Review every missed question, then rebuild the weak skills before taking another timed module.";
-}
-
-function DiagnosticMetric({ label, value, detail }: { label: string; value: string | number; detail: string }) {
-  return (
-    <div className="border border-white/10 bg-black/20 p-5">
-      <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">{label}</div>
-      <div className="mt-4 text-4xl font-light text-white">{value}</div>
-      <div className="mt-3 text-sm font-light text-white/48">{detail}</div>
-    </div>
-  );
-}
-
-function DiagnosticList({ title, items, emptyText }: { title: string; items: string[]; emptyText: string }) {
-  return (
-    <div className="border border-white/10 bg-black/20 p-5">
-      <h3 className="text-lg font-light text-white">{title}</h3>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {items.length ? items.map((item) => (
-          <span className="border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-white/58" key={item}>
-            {item}
-          </span>
-        )) : <span className="text-sm font-light text-white/42">{emptyText}</span>}
-      </div>
-    </div>
-  );
-}
-
-function SetbackCard({ question, index }: { question: ResultQuestion; index: number }) {
-  const report = buildSetbackReport(question);
-
-  return (
-    <div className="grid gap-4 p-5 md:grid-cols-[42px_1fr]">
-      <span className="flex h-10 w-10 items-center justify-center border border-white/10 bg-white/[0.04] text-sm font-black text-white/70">
-        {index}
-      </span>
-      <div>
-        <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
-          <span>{sectionName(question.section)}</span>
-          <span>{formatTopicLabel(question.topic)}</span>
-          {question.trap_type ? <span>{formatTopicLabel(question.trap_type)}</span> : null}
-        </div>
-
-        <div className="mt-4 grid gap-3 lg:grid-cols-3">
-          <div className="border border-white/10 bg-white/[0.03] p-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Why it happened</div>
-            <p className="mt-2 text-sm font-light leading-6 text-white/62">{report.reason}</p>
-          </div>
-          <div className="border border-red-200/15 bg-red-400/10 p-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-red-100/60">Setback pattern</div>
-            <p className="mt-2 text-sm font-light leading-6 text-red-50/76">{report.trap}</p>
-          </div>
-          <div className="border border-emerald-200/15 bg-emerald-400/10 p-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/60">Next correction</div>
-            <p className="mt-2 text-sm font-light leading-6 text-emerald-50/76">{report.nextMove}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function buildSetbackReport(question: ResultQuestion) {
-  const parsed = parseDiagnosticExplanation(question.explanation || "");
-  const trap = question.trap_type || parsed.pattern || parsed.distractor_taxonomy || "evidence mismatch";
-  const logicPattern = parsed.logic_pattern || "";
-  const cleanReason = parsed.cleanText || "The selected answer did not match the exact evidence needed for the question.";
-
-  return {
-    reason: cleanReason,
-    trap: `${formatTopicLabel(trap)}. This answer type feels tempting because it is related to the passage, but it adds a claim or connection that the text does not fully prove.`,
-    nextMove: logicPattern
-      ? `Before choosing, ${formatSentence(logicPattern)}. Then eliminate answers that go beyond the stated evidence.`
-      : `Find the exact line of support first, then choose only the answer that stays inside that evidence.`
-  };
-}
-
-function parseDiagnosticExplanation(value: string): Record<string, string> & { cleanText: string } {
-  const metadata: Record<string, string> = {};
-  const readableParts: string[] = [];
-
-  value
-    .split(";")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .forEach((part) => {
-      const match = part.match(/^([a-zA-Z_]+)=(.+)$/);
-      if (match) {
-        metadata[match[1]] = match[2].trim();
-        return;
-      }
-      readableParts.push(part);
-    });
-
-  return {
-    ...metadata,
-    cleanText: cleanDiagnosticSentence(readableParts.join("; "))
-  };
-}
-
-function cleanDiagnosticSentence(value: string) {
-  return value
-    .replace(/^Ambiguity-first validation:\s*/i, "")
-    .replace(/[_/\\]+/g, " ")
-    .replace(/\s+([,.;:])/g, "$1")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-}
-
-function formatSentence(value: string) {
-  const cleaned = value
-    .replace(/[_/\\-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-  return cleaned || "check the exact evidence";
+  if (accuracy >= 80) return "Kuchli diagnostic natija. Endi timed practice va mayda xatolarni kamaytirishga o'ting.";
+  return "Diagnostic tugadi. Har bir xato savolni ko'rib chiqing, keyin zaif mavzularni qayta quring.";
 }
 
 function normalizeLabels(values: string[]) {
@@ -679,12 +552,6 @@ function cleanReportText(value: string) {
     .replace(/[–—-]/g, " ")
     .replace(/\s{2,}/g, " ")
     .trim();
-}
-
-function sectionName(section?: string) {
-  if (section === "reading_writing") return "Reading and Writing";
-  if (section === "math") return "Math";
-  return "SAT";
 }
 
 function scoreBand(score: number) {
