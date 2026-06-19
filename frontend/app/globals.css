@@ -1996,7 +1996,7 @@ html[lang="ru"] .about-robot-section__copy > p:not(.about-kicker) {
   width: min(66vmin, 580px);
   aspect-ratio: 1;
   background:
-    url("/assets/brand/sattest-intro-logo.png") center / contain no-repeat,
+    url("/assets/brand/sattest-intro-logo-loader.webp") center / contain no-repeat,
     #050505;
   box-shadow:
     0 0 80px rgba(255, 255, 255, 0.12),
