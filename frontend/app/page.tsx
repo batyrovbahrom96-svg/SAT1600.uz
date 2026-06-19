@@ -5,7 +5,7 @@ import Link from "next/link";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BookOpen, Check, ChevronDown, Star, TrendingUp } from "lucide-react";
-import { api, getToken, saveAuth } from "@/lib/api";
+import { API_URL, api, getToken, saveAuth } from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
 
 type SignupData = {
@@ -14,6 +14,7 @@ type SignupData = {
   level: "beginner" | "intermediate" | "ready" | "";
   email: string;
   password: string;
+  verificationCode: string;
 };
 
 const lionLogo = "/assets/brand/sattest-lion-crest.png";
@@ -73,6 +74,21 @@ const stepsCopy = {
     ru: "Создать аккаунт →",
     en: "Create Account →"
   },
+  sendCode: {
+    uz: "Email kod yuborish",
+    ru: "Отправить код",
+    en: "Send email code"
+  },
+  code: {
+    uz: "Emailingizga kelgan 6 xonali kod",
+    ru: "6-значный код из email",
+    en: "6-digit code from your email"
+  },
+  google: {
+    uz: "Google bilan davom etish",
+    ru: "Продолжить с Google",
+    en: "Continue with Google"
+  },
   loading: {
     uz: "Sizning shaxsiy yo'lingiz tayyorlanmoqda...",
     ru: "Ваш личный путь готовится...",
@@ -97,8 +113,11 @@ export default function WelcomePage() {
     targetScore: "1400",
     level: "",
     email: "",
-    password: ""
+    password: "",
+    verificationCode: ""
   });
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [codeMessage, setCodeMessage] = useState("");
 
   useEffect(() => {
     if (getToken()) router.replace(`/reading-path?lang=${language}`);
@@ -131,6 +150,10 @@ export default function WelcomePage() {
       setError("Email to'g'ri bo'lishi va parol kamida 8 belgidan iborat bo'lishi kerak.");
       return;
     }
+    if (!/^\d{6}$/.test(data.verificationCode.trim())) {
+      setError("Emailingizga kelgan 6 xonali kodni kiriting.");
+      return;
+    }
 
     try {
       const result = await api<{ access_token: string; full_name?: string }>("/api/auth/onboarding-register", {
@@ -139,6 +162,7 @@ export default function WelcomePage() {
           full_name: data.name.trim(),
           email: data.email.trim(),
           password: data.password,
+          verification_code: data.verificationCode.trim(),
           target_score: Number(data.targetScore),
           self_assessed_level: data.level
         })
@@ -150,6 +174,27 @@ export default function WelcomePage() {
       window.setTimeout(() => router.push(`/reading-path?lang=${language}`), 2300);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Account creation failed");
+    }
+  }
+
+  async function sendEmailCode() {
+    if (!data.email.includes("@")) {
+      setError("Avval emailingizni to'g'ri kiriting.");
+      return;
+    }
+    setError("");
+    setCodeMessage("");
+    setIsSendingCode(true);
+    try {
+      const result = await api<{ sent: boolean; dev_code?: string }>("/api/auth/request-verification-code", {
+        method: "POST",
+        body: JSON.stringify({ email: data.email.trim() })
+      });
+      setCodeMessage(result.dev_code ? `Email code sent. Local test code: ${result.dev_code}` : "Email code sent. Check your inbox.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to send email code");
+    } finally {
+      setIsSendingCode(false);
     }
   }
 
@@ -218,7 +263,20 @@ export default function WelcomePage() {
               <form onSubmit={createAccount}>
                 <QuestionFrame title={stepsCopy.account[language]}>
                   <input className="mt-8 min-h-14 w-full rounded-xl border border-white/15 bg-[#151515] px-5 text-lg font-bold text-white outline-none focus:border-[#FFD700]" type="email" value={data.email} onChange={(event) => update("email", event.target.value)} placeholder="email@example.com" />
+                  <button
+                    className="mt-4 flex min-h-12 w-full items-center justify-center rounded-xl border border-[#FFD700]/35 px-5 text-sm font-black text-[#FFD700] transition hover:bg-[#FFD700] hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={isSendingCode}
+                    onClick={sendEmailCode}
+                    type="button"
+                  >
+                    {isSendingCode ? "Sending..." : stepsCopy.sendCode[language]}
+                  </button>
+                  <input className="mt-4 min-h-14 w-full rounded-xl border border-white/15 bg-[#151515] px-5 text-lg font-bold text-white outline-none focus:border-[#FFD700]" inputMode="numeric" maxLength={6} minLength={6} value={data.verificationCode} onChange={(event) => update("verificationCode", event.target.value)} placeholder={stepsCopy.code[language]} />
                   <input className="mt-4 min-h-14 w-full rounded-xl border border-white/15 bg-[#151515] px-5 text-lg font-bold text-white outline-none focus:border-[#FFD700]" type="password" minLength={8} value={data.password} onChange={(event) => update("password", event.target.value)} placeholder="Password" />
+                  <a className="mt-4 flex min-h-12 w-full items-center justify-center rounded-xl border border-white/15 px-5 text-sm font-black text-white transition hover:border-white hover:bg-white hover:text-black" href={`${API_URL}/api/auth/google/start?next=${encodeURIComponent(`/reading-path?lang=${language}`)}`}>
+                    {stepsCopy.google[language]}
+                  </a>
+                  {codeMessage ? <p className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-950/20 p-3 text-sm font-bold text-emerald-100">{codeMessage}</p> : null}
                   <PrimaryButton type="submit">{stepsCopy.create[language]}</PrimaryButton>
                 </QuestionFrame>
               </form>

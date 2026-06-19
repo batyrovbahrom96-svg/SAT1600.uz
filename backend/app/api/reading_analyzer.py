@@ -62,14 +62,7 @@ async def analyze_text_public(
     response: Response,
     db: Session = Depends(get_db),
 ) -> dict:
-    anonymous_id = _anonymous_id(request, response)
-    try:
-        result = analyze_reading_passage_public(db, anonymous_id, payload.text, payload.language)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    if result.get("limit_reached"):
-        raise HTTPException(status_code=403, detail=result)
-    return result
+    raise HTTPException(status_code=401, detail="Create an account or log in to use Reading Analyzer")
 
 
 @router.post("/reading-analyzer/analyze-image")
@@ -98,16 +91,7 @@ async def analyze_image_public(
     language: str = Form("uz"),
     db: Session = Depends(get_db),
 ) -> dict:
-    anonymous_id = _anonymous_id(request, response)
-    contents = await file.read()
-    try:
-        result = analyze_reading_image_public(db, anonymous_id, contents, file.content_type or "", language)
-    except ValueError as exc:
-        error_key = str(exc)
-        raise HTTPException(status_code=400, detail={"error": error_key}) from exc
-    if result.get("limit_reached"):
-        raise HTTPException(status_code=403, detail=result)
-    return result
+    raise HTTPException(status_code=401, detail="Create an account or log in to use Reading Analyzer")
 
 
 @router.post("/reading-analyzer/test-image-reading")

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
+import { AuthGate } from "@/components/AuthGate";
 import { DevOverlayCleaner } from "@/components/DevOverlayCleaner";
 import { EtherealSiteBackground } from "@/components/EtherealSiteBackground";
 import { LuxuryShaderBackground } from "@/components/LuxuryShaderBackground";
@@ -81,7 +82,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <LuxuryShaderBackground />
         <EtherealSiteBackground />
         <div className="site-content-shell">
-          <PageTransition>{children}</PageTransition>
+          <AuthGate>
+            <PageTransition>{children}</PageTransition>
+          </AuthGate>
         </div>
         <SiteTranslator />
         <DevOverlayCleaner />
