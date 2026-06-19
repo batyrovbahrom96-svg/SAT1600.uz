@@ -13,39 +13,44 @@ export function LuxuryNavbar() {
   const [studentName, setStudentName] = useState<string | null>(null);
   const [isProActive, setIsProActive] = useState(false);
   const { language, setLanguage } = useLanguage();
-  const navCopy: Record<Language, Array<{ label: string; href: string; proHref?: string }>> = {
+  const publicNavCopy: Record<Language, Array<{ label: string; href: string; proHref?: string }>> = {
     en: [
-      { label: "About Us", href: "/about-us" },
       { label: "Free Diagnostic", href: "/mock-test/diagnostic" },
-      { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
-      { label: "Practice", href: "/practice" },
       { label: "Reading Analyzer 🔍", href: "/reading-analyzer" },
-      { label: "Demo Report", href: "/results/demo" },
-      { label: "My 1400+", href: "/my-1400" },
-      { label: "Pricing & Pay", href: "/pricing" }
+      { label: "Pricing & Pay", href: "/pricing" },
+      { label: "About Us", href: "/about-us" }
     ],
     ru: [
-      { label: "О нас", href: "/about-us" },
       { label: "Бесплатная диагностика", href: "/mock-test/diagnostic" },
-      { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
-      { label: "Практика", href: "/practice" },
       { label: "Reading Analyzer 🔍", href: "/reading-analyzer" },
-      { label: "Демо отчет", href: "/results/demo" },
-      { label: "Мой 1400+", href: "/my-1400" },
-      { label: "Цены и оплата", href: "/pricing" }
+      { label: "Цены и оплата", href: "/pricing" },
+      { label: "О нас", href: "/about-us" }
     ],
     uz: [
-      { label: "Biz haqimizda", href: "/about-us" },
       { label: "Bepul diagnostika", href: "/mock-test/diagnostic" },
-      { label: "SAT Mock Test", href: "/sat-test", proHref: "/sat-mock" },
-      { label: "Mashqlar", href: "/practice" },
       { label: "Reading Analyzer 🔍", href: "/reading-analyzer" },
-      { label: "Demo hisobot", href: "/results/demo" },
-      { label: "Mening 1400+", href: "/my-1400" },
-      { label: "Narx va to'lov", href: "/pricing" }
+      { label: "Narx va to'lov", href: "/pricing" },
+      { label: "Biz haqimizda", href: "/about-us" }
     ]
   };
-  const navItems = navCopy[language];
+  const studentNavCopy: Record<Language, Array<{ label: string; href: string; proHref?: string }>> = {
+    en: [
+      { label: "Learn", href: "/path" },
+      { label: "Leaderboard", href: "/path#leaderboard" },
+      { label: "Profile", href: "/path#profile" }
+    ],
+    ru: [
+      { label: "Учиться", href: "/path" },
+      { label: "Рейтинг", href: "/path#leaderboard" },
+      { label: "Профиль", href: "/path#profile" }
+    ],
+    uz: [
+      { label: "O'qish", href: "/path" },
+      { label: "Reyting", href: "/path#leaderboard" },
+      { label: "Profil", href: "/path#profile" }
+    ]
+  };
+  const navItems = studentName ? studentNavCopy[language] : publicNavCopy[language];
   const actionCopy = {
     pricing: {
       en: "Pricing & Paynet",
@@ -172,7 +177,7 @@ export function LuxuryNavbar() {
           {studentName ? (
             <>
               <span className="hidden lg:block">
-                <PremiumButton className="max-w-[230px] 2xl:max-w-[280px]" href={withLanguage("/dashboard")} variant="compact">
+                <PremiumButton className="max-w-[230px] 2xl:max-w-[280px]" href={withLanguage("/path")} variant="compact">
                   <span className="flex min-w-0 items-center gap-2">
                     <span className="truncate">{studentName}</span>
                     {isProActive ? (
