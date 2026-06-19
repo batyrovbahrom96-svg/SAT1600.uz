@@ -15,22 +15,16 @@ export function LuxuryNavbar() {
   const { language, setLanguage } = useLanguage();
   const publicNavCopy: Record<Language, Array<{ label: string; href: string; proHref?: string }>> = {
     en: [
-      { label: "Free Diagnostic", href: "/mock-test/diagnostic" },
-      { label: "Reading Analyzer 🔍", href: "/reading-analyzer" },
-      { label: "Pricing & Pay", href: "/pricing" },
-      { label: "About Us", href: "/about-us" }
+      { label: "About Us", href: "/about-us" },
+      { label: "Pricing", href: "/pricing" }
     ],
     ru: [
-      { label: "Бесплатная диагностика", href: "/mock-test/diagnostic" },
-      { label: "Reading Analyzer 🔍", href: "/reading-analyzer" },
-      { label: "Цены и оплата", href: "/pricing" },
-      { label: "О нас", href: "/about-us" }
+      { label: "О нас", href: "/about-us" },
+      { label: "Цены", href: "/pricing" }
     ],
     uz: [
-      { label: "Bepul diagnostika", href: "/mock-test/diagnostic" },
-      { label: "Reading Analyzer 🔍", href: "/reading-analyzer" },
-      { label: "Narx va to'lov", href: "/pricing" },
-      { label: "Biz haqimizda", href: "/about-us" }
+      { label: "Biz haqimizda", href: "/about-us" },
+      { label: "Narxlar", href: "/pricing" }
     ]
   };
   const studentNavCopy: Record<Language, Array<{ label: string; href: string; proHref?: string }>> = {
@@ -61,6 +55,11 @@ export function LuxuryNavbar() {
       en: "Login",
       ru: "Войти",
       uz: "Kirish"
+    },
+    learn: {
+      en: "Bepul boshlash →",
+      ru: "Bepul boshlash →",
+      uz: "Bepul boshlash →"
     },
     logout: {
       en: "Log out",
@@ -195,8 +194,8 @@ export function LuxuryNavbar() {
           ) : (
             <>
               <span className="hidden sm:block">
-                <PremiumButton href={withLanguage("/pricing")} variant="compact">
-                  {actionCopy.pricing[language]}
+                <PremiumButton href={withLanguage("/learn")} variant="compact">
+                  {actionCopy.learn[language]}
                 </PremiumButton>
               </span>
               <Link className="h-9 whitespace-nowrap border border-white/12 bg-white/[0.035] px-2 text-[8px] font-black uppercase tracking-[0.1em] leading-[36px] text-white/70 transition-colors hover:border-white/35 hover:text-white sm:h-11 sm:px-4 sm:text-[10px] sm:tracking-[0.22em] sm:leading-[44px]" href={withLanguage("/login")}>
