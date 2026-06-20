@@ -798,7 +798,7 @@ export default function PathPage() {
       });
   }
 
-  async function openMasteryType(type: MasteryType) {
+  async function openMasteryType(type: MasteryType, forceNew = false) {
     setMasteryError("");
     if (type.locked_reason === "pro_required") {
       setActiveMasteryType(type);
@@ -813,7 +813,7 @@ export default function PathPage() {
     try {
       const response = await api<{ type: MasteryType; content: MasteryContent }>("/api/reading-mastery/start", {
         method: "POST",
-        body: JSON.stringify({ type_id: type.id })
+        body: JSON.stringify({ type_id: type.id, force_new: forceNew })
       });
       setActiveMasteryType(response.type);
       setMasteryContent(response.content);
@@ -896,6 +896,11 @@ export default function PathPage() {
     setMasteryFeedback(null);
     setMasteryResult(null);
     setMasteryScreen("explanation");
+  }
+
+  function regenerateMasterySet() {
+    if (!activeMasteryType || masteryLoading) return;
+    openMasteryType(activeMasteryType, true);
   }
 
   function openNode(node: PathNode, index: number) {
@@ -1335,9 +1340,16 @@ export default function PathPage() {
                 <h2 className="mt-2 text-2xl font-black md:text-4xl">{activeMasteryType.type_name}</h2>
                 <p className="mt-1 text-sm font-semibold text-white/50">{activeMasteryType.type_name_uz}</p>
               </div>
-              <button className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-white/60 hover:border-white/30 hover:text-white" onClick={closeMasteryModal} type="button">
-                Close
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                {masteryContent && masteryScreen !== "paywall" ? (
+                  <button className="rounded-xl border border-[#FFD700]/30 px-4 py-2 text-sm font-black text-[#FFD700] hover:bg-[#FFD700] hover:text-black disabled:opacity-45" disabled={masteryLoading} onClick={regenerateMasterySet} type="button">
+                    Yangi 10 savol yaratish
+                  </button>
+                ) : null}
+                <button className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-white/60 hover:border-white/30 hover:text-white" onClick={closeMasteryModal} type="button">
+                  Close
+                </button>
+              </div>
             </div>
 
             {masteryScreen === "paywall" ? (
