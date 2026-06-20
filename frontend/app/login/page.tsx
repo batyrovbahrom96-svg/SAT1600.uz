@@ -15,8 +15,12 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search);
     const email = params.get("email") || "";
     const requestedNext = params.get("next") || "";
+    const googleError = params.get("google_error");
     setEmailFromLink(email);
     setNextPath(requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/path");
+    if (googleError === "not_configured") {
+      setError("Google login is not configured yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Railway, or use email login for now.");
+    }
   }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -58,10 +62,10 @@ export default function LoginPage() {
           <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="password" type="password" required />
           {error ? <p className="mt-5 border border-red-400/30 bg-red-950/20 p-3 text-sm font-semibold text-red-200">{error}</p> : null}
           <button className="mt-8 w-full border border-white bg-white px-4 py-4 font-black uppercase tracking-[0.16em] text-black transition-all duration-200 ease-in-out hover:bg-[#151515] hover:text-white">Login</button>
-          <a className="mt-4 flex w-full items-center justify-center border border-white/15 px-4 py-4 text-center font-black uppercase tracking-[0.16em] text-white transition-all duration-200 ease-in-out hover:border-white hover:bg-white hover:text-black" href={`${API_URL}/api/auth/google/start?next=${encodeURIComponent(nextPath)}`}>
+          <a className="mt-4 flex w-full items-center justify-center border border-white/15 px-4 py-4 text-center font-black uppercase tracking-[0.16em] text-white transition-all duration-200 ease-in-out hover:border-white hover:bg-white hover:text-black" href={`${API_URL}/api/auth/google/start?next=${encodeURIComponent(nextPath)}&source=login`}>
             Continue with Google
           </a>
-          <Link className="mt-5 block text-center text-sm font-bold text-[#d8d8d8] transition-all duration-200 ease-in-out hover:text-white" href="/register">Create account</Link>
+          <Link className="mt-5 block text-center text-sm font-bold text-[#d8d8d8] transition-all duration-200 ease-in-out hover:text-white" href={`/register?next=${encodeURIComponent(nextPath)}`}>Create account</Link>
         </form>
       </section>
     </main>

@@ -301,7 +301,7 @@ export default function LearnPage() {
                   </button>
                   <input className="mt-4 min-h-14 w-full rounded-xl border border-white/15 bg-[#151515] px-5 text-lg font-bold text-white outline-none focus:border-[#FFD700]" inputMode="numeric" maxLength={6} minLength={6} value={data.verificationCode} onChange={(event) => update("verificationCode", event.target.value)} placeholder={stepsCopy.code[language]} />
                   <input className="mt-4 min-h-14 w-full rounded-xl border border-white/15 bg-[#151515] px-5 text-lg font-bold text-white outline-none focus:border-[#FFD700]" type="password" minLength={8} value={data.password} onChange={(event) => update("password", event.target.value)} placeholder="Password" />
-                  <a className="mt-4 flex min-h-12 w-full items-center justify-center rounded-xl border border-white/15 px-5 text-sm font-black text-white transition hover:border-white hover:bg-white hover:text-black" href={`${API_URL}/api/auth/google/start?next=${encodeURIComponent(`/learn?lang=${language}`)}`}>
+                  <a className="mt-4 flex min-h-12 w-full items-center justify-center rounded-xl border border-white/15 px-5 text-sm font-black text-white transition hover:border-white hover:bg-white hover:text-black" href={`${API_URL}/api/auth/google/start?next=${encodeURIComponent(`/learn?lang=${language}`)}&source=register`}>
                     {stepsCopy.google[language]}
                   </a>
                   {codeMessage ? <p className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-950/20 p-3 text-sm font-bold text-emerald-100">{codeMessage}</p> : null}

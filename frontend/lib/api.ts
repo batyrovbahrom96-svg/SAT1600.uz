@@ -345,7 +345,10 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   }
 
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
+    const body = await response.json().catch(async () => {
+      const text = await response.text().catch(() => "");
+      return text ? { detail: text } : {};
+    });
     if (response.status === 404 && body.detail === "Not Found") {
       throw new ApiError("This API endpoint is not deployed yet. Redeploy the SATTEST.UZ backend with the latest code.", response.status);
     }

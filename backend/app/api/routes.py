@@ -243,11 +243,13 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> TokenResponse:
 
 
 @router.get("/auth/google/start")
-def google_login_start(request: Request, next: str = "/path") -> RedirectResponse:
+def google_login_start(request: Request, next: str = "/path", source: str = "login") -> RedirectResponse:
     settings = get_settings()
-    if not settings.google_client_id or not settings.google_client_secret:
-        raise HTTPException(status_code=503, detail="Google login is not configured yet")
     safe_next = next if next.startswith("/") and not next.startswith("//") else "/path"
+    if not settings.google_client_id or not settings.google_client_secret:
+        fallback_path = "/register" if source == "register" else "/login"
+        params = parse.urlencode({"next": safe_next, "google_error": "not_configured"})
+        return RedirectResponse(f"{settings.frontend_url.rstrip('/')}{fallback_path}?{params}", status_code=302)
     state = secrets.token_urlsafe(32)
     google_oauth_states[state] = {"next": safe_next, "created_at": datetime.utcnow()}
     params = parse.urlencode(

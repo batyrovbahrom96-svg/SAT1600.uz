@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.requests import Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -38,6 +40,15 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-SATTEST-RA-ID"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    configure_logging(settings.log_level)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Server error. Please try again in a moment or contact SATTEST support."},
+    )
 
 app.include_router(router)
 app.include_router(reading_analyzer_router)
