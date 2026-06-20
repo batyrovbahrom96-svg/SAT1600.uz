@@ -558,9 +558,9 @@ def _send_verification_email(email: str, code: str) -> bool:
         return _send_verification_email_with_resend(email, code)
 
     if not settings.smtp_host:
-        if settings.environment.lower() == "production":
+        if settings.environment.lower() == "production" and not settings.email_verification_fallback_enabled:
             raise HTTPException(status_code=500, detail="Email verification is not configured")
-        print(f"SATTEST.UZ verification code for {email}: {code}")
+        print(f"SATTEST.UZ verification code fallback for {email}: {code}")
         return True
 
     message = EmailMessage()

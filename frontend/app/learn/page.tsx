@@ -257,7 +257,11 @@ export default function LearnPage() {
         method: "POST",
         body: JSON.stringify({ email: data.email.trim() })
       });
-      setCodeMessage(result.dev_code ? `Email code sent. Local test code: ${result.dev_code}` : "Email code sent. Check your inbox.");
+      setCodeMessage(
+        result.dev_code
+          ? `Temporary verification code: ${result.dev_code}. Email delivery is being configured.`
+          : "Email code sent. Check your inbox."
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to send email code");
     } finally {

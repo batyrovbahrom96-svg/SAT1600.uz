@@ -70,7 +70,7 @@ export default function RegisterPage() {
       });
       setMessage(
         result.dev_code
-          ? `Verification code sent. Local test code: ${result.dev_code}`
+          ? `Temporary verification code: ${result.dev_code}. Email delivery is being configured.`
           : "Verification code sent. Check your email and paste the 6-digit code below."
       );
     } catch (err) {

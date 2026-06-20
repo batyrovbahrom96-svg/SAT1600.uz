@@ -1,4 +1,7 @@
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://api.sattest.uz").replace(/\/$/, "");
+export const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://web-production-a1ec0.up.railway.app"
+).replace(/\/$/, "");
 
 export type Question = {
   id: string;

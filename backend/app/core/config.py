@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     smtp_from_email: str = "no-reply@sattest.uz"
     smtp_from_name: str = "SATTEST.UZ Email Bot"
+    email_verification_fallback_enabled: bool = False
     resend_api_key: str | None = None
     resend_from_email: str | None = None
     telegram_bot_token: str | None = None
