@@ -19,7 +19,7 @@ sys.path.insert(0, REPO_DIR)
 from app.core.config import get_settings
 from app.db.session import get_session_local
 from app.services.bot_service import WELCOME_BOT_USERNAME, ensure_welcome_bot_schema
-from app.services.telegram_payments import handle_telegram_update, process_subscription_maintenance, send_webinar_reminders
+from app.services.telegram_payments import handle_telegram_update, process_subscription_maintenance, send_streak_reminders, send_webinar_reminders
 
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
@@ -95,6 +95,19 @@ async def run_webinar_reminders() -> None:
             db.close()
 
 
+async def run_streak_reminders() -> None:
+    db = None
+    try:
+        db = get_session_local()()
+        sent = await asyncio.to_thread(send_streak_reminders, db)
+        logger.info("Streak reminders sent: %s", sent)
+    except Exception:
+        logger.exception("Streak reminder job failed")
+    finally:
+        if db is not None:
+            db.close()
+
+
 async def post_init(application: Application) -> None:
     try:
         await application.bot.set_my_commands(
@@ -108,6 +121,7 @@ async def post_init(application: Application) -> None:
                 BotCommand("help", "Barcha buyruqlar"),
                 BotCommand("contact", "Murojaat"),
                 BotCommand("analyzer_stats", "Reading Analyzer funnel"),
+                BotCommand("funnel_stats", "Platform funnel"),
             ]
         )
         await application.bot.set_my_name("SATTEST Welcome Bot")
@@ -158,6 +172,12 @@ def main() -> None:
         run_webinar_reminders,
         CronTrigger(day_of_week="sun", hour=18, minute=0, timezone="Asia/Tashkent"),
         id="welcome_bot_webinar_reminder",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        run_streak_reminders,
+        CronTrigger(hour=20, minute=0, timezone="Asia/Tashkent"),
+        id="welcome_bot_streak_reminder",
         replace_existing=True,
     )
     scheduler.start()

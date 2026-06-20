@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Check, Mail, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { freeDiagnosticQuestions, type DiagnosticAnswers } from "@/lib/free-diagnostic";
@@ -75,6 +75,7 @@ const TELEGRAM_DIAGNOSTIC_USER_KEY = "sattest_telegram_diagnostic_user_id";
 
 export default function FreeDiagnosticPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { language } = useLanguage();
   const copy = pageCopy[language];
   const emailCopy = emailPromptCopy[language];
@@ -126,6 +127,10 @@ export default function FreeDiagnosticPage() {
         email: email || window.localStorage.getItem(FREE_DIAGNOSTIC_EMAIL_KEY) || ""
       });
       saveFreeDiagnosticResult(diagnosticPayload);
+    }
+    if (searchParams.get("from") === "learn") {
+      router.push(`/path?lang=${language}`);
+      return;
     }
     router.push("/mock-test/results");
   }

@@ -28,21 +28,9 @@ export function LuxuryNavbar() {
     ]
   };
   const studentNavCopy: Record<Language, Array<{ label: string; href: string; proHref?: string }>> = {
-    en: [
-      { label: "Learn", href: "/path" },
-      { label: "Leaderboard", href: "/path#leaderboard" },
-      { label: "Profile", href: "/path#profile" }
-    ],
-    ru: [
-      { label: "Учиться", href: "/path" },
-      { label: "Рейтинг", href: "/path#leaderboard" },
-      { label: "Профиль", href: "/path#profile" }
-    ],
-    uz: [
-      { label: "O'qish", href: "/path" },
-      { label: "Reyting", href: "/path#leaderboard" },
-      { label: "Profil", href: "/path#profile" }
-    ]
+    en: [],
+    ru: [],
+    uz: []
   };
   const navItems = studentName ? studentNavCopy[language] : publicNavCopy[language];
   const actionCopy = {
@@ -205,17 +193,19 @@ export function LuxuryNavbar() {
           )}
         </div>
 
-        <nav className="order-last flex w-full min-w-0 items-center justify-start gap-1 overflow-x-auto border border-white/10 bg-black/20 px-2 py-1 [scrollbar-width:none] sm:justify-center [&::-webkit-scrollbar]:hidden">
-          {navItems.map((item) => (
-            <Link
-              className="shrink-0 whitespace-nowrap px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-white/48 transition-colors hover:text-white sm:px-4 sm:text-[10px] sm:tracking-[0.2em]"
-              href={withLanguage(isProActive && item.proHref ? item.proHref : item.href)}
-              key={item.label}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        {navItems.length ? (
+          <nav className="order-last flex w-full min-w-0 items-center justify-start gap-1 overflow-x-auto border border-white/10 bg-black/20 px-2 py-1 [scrollbar-width:none] sm:justify-center [&::-webkit-scrollbar]:hidden">
+            {navItems.map((item) => (
+              <Link
+                className="shrink-0 whitespace-nowrap px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-white/48 transition-colors hover:text-white sm:px-4 sm:text-[10px] sm:tracking-[0.2em]"
+                href={withLanguage(isProActive && item.proHref ? item.proHref : item.href)}
+                key={item.label}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
       </div>
     </header>
   );

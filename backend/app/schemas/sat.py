@@ -1,3 +1,4 @@
+from datetime import date
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -18,7 +19,14 @@ class OnboardingRegister(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     verification_code: str = Field(min_length=6, max_length=6)
     target_score: int = Field(default=1400, ge=400, le=1600)
-    self_assessed_level: str = Field(pattern="^(beginner|intermediate|ready)$")
+    self_assessed_level: str = Field(default="beginner", pattern="^(beginner|intermediate|ready|first_time|tried_before|sat_before)$")
+
+
+class OnboardingProfile(BaseModel):
+    target_score: int = Field(default=1400, ge=400, le=1600)
+    exam_date: date | None = None
+    sat_experience: str = Field(pattern="^(first_time|tried_before|sat_before)$")
+    daily_goal: int = Field(default=2, ge=1, le=8)
 
 
 class VerificationCodeRequest(BaseModel):

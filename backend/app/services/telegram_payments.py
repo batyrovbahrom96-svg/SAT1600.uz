@@ -165,6 +165,9 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     if text.startswith("/analyzer_stats"):
         return _handle_analyzer_stats_command(chat_id, db)
 
+    if text.startswith("/funnel_stats"):
+        return _handle_funnel_stats_command(chat_id, db)
+
     if text.startswith("/sendtip"):
         return _handle_sendtip_command(chat_id, text, db)
 
@@ -972,6 +975,61 @@ def _handle_analyzer_stats_command(chat_id: str, db: Session | None) -> dict:
     return {"ok": True, "analyzer_stats": True}
 
 
+def _handle_funnel_stats_command(chat_id: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can request platform funnel statistics.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so funnel stats are unavailable.")
+        return {"ok": True, "database": False}
+
+    _send_message(chat_id, build_platform_funnel_stats(db))
+    return {"ok": True, "funnel_stats": True}
+
+
+def _pct(part: int, whole: int) -> str:
+    return f"{round((part / whole) * 100, 1)}%" if whole else "0%"
+
+
+def build_platform_funnel_stats(db: Session) -> str:
+    users = db.execute(select(User)).scalars().all()
+    total = len(users)
+    diagnostic_completed = sum(1 for user in users if user.diagnostic_completed or user.diagnostic_completed_at)
+    first_lesson_completed = sum(1 for user in users if user.first_lesson_completed or user.first_lesson_completed_at)
+    seven_day_streak = sum(1 for user in users if user.reached_7_day_streak or user.reached_7_day_streak_at or (user.longest_streak or 0) >= 7)
+    first_mock_completed = sum(1 for user in users if user.first_mock_completed or user.first_mock_completed_at)
+    upgraded_to_pro = sum(1 for user in users if user.upgraded_to_pro or user.upgraded_to_pro_at)
+    source_counts = {
+        "diagnostic_result": sum(1 for user in users if user.pro_conversion_source == "diagnostic_result"),
+        "reading_analyzer_limit": sum(1 for user in users if user.pro_conversion_source == "reading_analyzer_limit"),
+        "path_node_lock": sum(1 for user in users if user.pro_conversion_source == "path_node_lock"),
+    }
+
+    if upgraded_to_pro == 0:
+        active_subscriptions = db.execute(
+            select(func.count(Subscription.id)).where(
+                Subscription.status == "active",
+                or_(Subscription.current_period_end.is_(None), Subscription.current_period_end > datetime.utcnow()),
+            )
+        ).scalar() or 0
+        upgraded_to_pro = int(active_subscriptions)
+
+    return (
+        "📊 PLATFORM FUNNEL\n\n"
+        f"Signed up: {total}\n"
+        f"→ Diagnostic completed: {diagnostic_completed} ({_pct(diagnostic_completed, total)})\n"
+        f"→ First lesson completed: {first_lesson_completed} ({_pct(first_lesson_completed, total)})\n"
+        f"→ Reached 7-day streak: {seven_day_streak} ({_pct(seven_day_streak, total)})\n"
+        f"→ First mock completed: {first_mock_completed} ({_pct(first_mock_completed, total)})\n"
+        f"→ Upgraded to Pro: {upgraded_to_pro} ({_pct(upgraded_to_pro, total)})\n\n"
+        "Pro conversion source:\n"
+        f"- From diagnostic lock: {source_counts['diagnostic_result']}\n"
+        f"- From analyzer limit: {source_counts['reading_analyzer_limit']}\n"
+        f"- From path node lock: {source_counts['path_node_lock']}"
+    )
+
+
 def _handle_broadcast_command(chat_id: str, text: str, db: Session | None) -> dict:
     settings = get_settings()
     if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
@@ -1315,6 +1373,45 @@ def send_webinar_reminders(db: Session) -> int:
     for lead in leads:
         language = _lead_language(lead)
         response = _send_message(lead.chat_id, _message("webinar_reminder", language))
+        if response.get("ok", True):
+            sent += 1
+    return sent
+
+
+def send_streak_reminders(db: Session) -> int:
+    today = datetime.now(TASHKENT_TZ).date()
+    users = (
+        db.execute(
+            select(User)
+            .where(User.current_streak > 0)
+            .where(or_(User.last_lesson_date.is_(None), User.last_lesson_date < today))
+        )
+        .scalars()
+        .all()
+    )
+    sent = 0
+    for user in users:
+        order = (
+            db.execute(
+                select(PaymentOrder)
+                .where(PaymentOrder.email == user.email)
+                .where(PaymentOrder.telegram_chat_id.is_not(None))
+                .order_by(PaymentOrder.created_at.desc())
+            )
+            .scalars()
+            .first()
+        )
+        if not order or not order.telegram_chat_id:
+            continue
+        response = _send_message(
+            str(order.telegram_chat_id),
+            (
+                "Salom! 👋\n"
+                "Bugun hali darsni tugatmadingiz.\n"
+                f"{user.current_streak} kunlik streak'ingizni saqlab qoling! 🔥"
+            ),
+            reply_markup={"inline_keyboard": [[{"text": "Davom etish →", "url": _public_link("/path")}]]},
+        )
         if response.get("ok", True):
             sent += 1
     return sent

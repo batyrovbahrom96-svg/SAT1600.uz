@@ -43,7 +43,7 @@ export function setStoredLanguage(language: Language) {
 }
 
 export function useLanguage() {
-  const [language, setLanguageState] = useState<Language>(() => activeLanguage ?? getInitialLanguage());
+  const [language, setLanguageState] = useState<Language>(() => getInitialLanguage());
 
   useEffect(() => {
     const syncLanguage = () => {

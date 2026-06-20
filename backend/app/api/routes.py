@@ -21,7 +21,7 @@ from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db, get_engine
 from app.models import PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, RoadmapNode, Subscription, Test, TestAttempt, TestTelemetrySummary, User
-from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, OnboardingRegister, ResultsOut, TokenResponse, VerificationCodeRequest
+from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, OnboardingProfile, OnboardingRegister, ResultsOut, TokenResponse, VerificationCodeRequest
 from app.services.graph_engine import generate_linear_graph, generate_sat_graph_set
 from app.services.sat_engine import (
     advance_module,
@@ -72,6 +72,14 @@ class PaymentOrderCreate(BaseModel):
     subscription_type: str = Field(pattern="^(monthly|three_month)$")
     estimated_score: int | None = Field(default=None, ge=400, le=1600)
     weak_areas: list[str] = Field(default_factory=list, max_length=8)
+
+
+class PlatformProgressPayload(BaseModel):
+    event: str = Field(pattern="^(diagnostic_completed|lesson_completed|mock_completed|pro_lock_viewed)$")
+    current_streak: int | None = Field(default=None, ge=0)
+    longest_streak: int | None = Field(default=None, ge=0)
+    daily_goal: int | None = Field(default=None, ge=1, le=8)
+    pro_conversion_source: str | None = Field(default=None, max_length=80)
 
 
 PAYMENT_PLANS = {
@@ -148,6 +156,51 @@ def onboarding_register(payload: OnboardingRegister, db: Session = Depends(get_d
     return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role, full_name=user.full_name)
 
 
+@router.post("/auth/onboarding-profile")
+def update_onboarding_profile(payload: OnboardingProfile, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    user.target_score = payload.target_score
+    user.exam_date = payload.exam_date
+    user.sat_experience = payload.sat_experience
+    user.self_assessed_level = payload.sat_experience
+    user.daily_goal = payload.daily_goal
+    user.onboarding_completed = True
+    db.commit()
+    return {
+        "ok": True,
+        "next": "/mock-test/diagnostic" if payload.sat_experience != "sat_before" else "/mock-test/diagnostic?mode=weak-area",
+    }
+
+
+@router.post("/platform/progress")
+def update_platform_progress(payload: PlatformProgressPayload, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    now = datetime.utcnow()
+    if payload.daily_goal is not None:
+        user.daily_goal = payload.daily_goal
+    if payload.current_streak is not None:
+        user.current_streak = payload.current_streak
+    if payload.longest_streak is not None:
+        user.longest_streak = max(user.longest_streak or 0, payload.longest_streak)
+
+    if payload.event == "diagnostic_completed":
+        user.diagnostic_completed = True
+        user.diagnostic_completed_at = user.diagnostic_completed_at or now
+    elif payload.event == "lesson_completed":
+        user.last_lesson_date = now.date()
+        user.first_lesson_completed = True
+        user.first_lesson_completed_at = user.first_lesson_completed_at or now
+        if (user.longest_streak or 0) >= 7:
+            user.reached_7_day_streak = True
+            user.reached_7_day_streak_at = user.reached_7_day_streak_at or now
+    elif payload.event == "mock_completed":
+        user.first_mock_completed = True
+        user.first_mock_completed_at = user.first_mock_completed_at or now
+    elif payload.event == "pro_lock_viewed" and payload.pro_conversion_source:
+        user.pro_conversion_source = payload.pro_conversion_source
+
+    db.commit()
+    return {"ok": True}
+
+
 @router.post("/auth/request-verification-code")
 def request_verification_code(payload: VerificationCodeRequest, db: Session = Depends(get_db)) -> dict:
     email = payload.email.lower()
@@ -190,11 +243,11 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> TokenResponse:
 
 
 @router.get("/auth/google/start")
-def google_login_start(request: Request, next: str = "/reading-path") -> RedirectResponse:
+def google_login_start(request: Request, next: str = "/path") -> RedirectResponse:
     settings = get_settings()
     if not settings.google_client_id or not settings.google_client_secret:
         raise HTTPException(status_code=503, detail="Google login is not configured yet")
-    safe_next = next if next.startswith("/") and not next.startswith("//") else "/reading-path"
+    safe_next = next if next.startswith("/") and not next.startswith("//") else "/path"
     state = secrets.token_urlsafe(32)
     google_oauth_states[state] = {"next": safe_next, "created_at": datetime.utcnow()}
     params = parse.urlencode(

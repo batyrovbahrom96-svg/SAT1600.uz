@@ -6,7 +6,6 @@ import { DevOverlayCleaner } from "@/components/DevOverlayCleaner";
 import { EtherealSiteBackground } from "@/components/EtherealSiteBackground";
 import { LuxuryShaderBackground } from "@/components/LuxuryShaderBackground";
 import { PageTransition } from "@/components/PageTransition";
-import { SiteTranslator } from "@/components/SiteTranslator";
 import "./globals.css";
 
 const siteUrl = "https://www.sattest.uz";
@@ -86,7 +85,6 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
             <PageTransition>{children}</PageTransition>
           </AuthGate>
         </div>
-        <SiteTranslator />
         <DevOverlayCleaner />
       </body>
     </html>

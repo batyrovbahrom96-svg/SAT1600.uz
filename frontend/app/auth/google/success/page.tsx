@@ -12,14 +12,14 @@ export default function GoogleAuthSuccessPage() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     const name = params.get("name");
-    const next = params.get("next") || "/reading-path";
+    const next = params.get("next") || "/path";
     if (!token) {
       setMessage("Google login failed. Please try again.");
       window.setTimeout(() => router.replace("/login"), 1200);
       return;
     }
     saveAuth(token, name);
-    router.replace(next.startsWith("/") && !next.startsWith("//") ? next : "/reading-path");
+    router.replace(next.startsWith("/") && !next.startsWith("//") ? next : "/path");
   }, [router]);
 
   return (

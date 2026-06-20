@@ -1092,8 +1092,13 @@ function languageHref(language: Language, pathname: string) {
 }
 
 export function SiteTranslator() {
-  const { language, setLanguage } = useLanguage();
   const pathname = usePathname();
+  if (pathname === "/sat-test" || pathname === "/learn") return null;
+  return <ActiveSiteTranslator pathname={pathname} />;
+}
+
+function ActiveSiteTranslator({ pathname }: { pathname: string }) {
+  const { language, setLanguage } = useLanguage();
   const applyLanguage = (next: Language) => {
     activeTranslatorLanguage = next;
     setLanguage(next);
@@ -1141,8 +1146,6 @@ export function SiteTranslator() {
       document.removeEventListener("click", onLanguageClick);
     };
   }, [setLanguage]);
-
-  if (pathname === "/sat-test") return null;
 
   return (
     <div

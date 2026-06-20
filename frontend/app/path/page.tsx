@@ -16,7 +16,6 @@ import {
   GraduationCap,
   Lock,
   LogOut,
-  Map,
   Medal,
   Play,
   Settings,
@@ -26,7 +25,7 @@ import {
   User,
   Zap
 } from "lucide-react";
-import { clearAuth, getStudentName, getSubscriptionStatus, getToken } from "@/lib/api";
+import { api, clearAuth, getStudentName, getSubscriptionStatus, getToken } from "@/lib/api";
 import { calculateDiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult } from "@/lib/free-diagnostic-storage";
 import { pick, useLanguage, type Language } from "@/lib/i18n";
@@ -45,9 +44,11 @@ type Progress = {
   completed: string[];
   xp: number;
   streak: number;
+  longestStreak: number;
   dailyGoal: number;
   todayLessons: number;
   lastCompletedDate?: string;
+  lastGoalDate?: string;
   goalScore?: string;
   examDate?: string;
   university?: string;
@@ -68,19 +69,24 @@ const defaultProgress: Progress = {
   completed: [],
   xp: 0,
   streak: 0,
-  dailyGoal: 3,
+  longestStreak: 0,
+  dailyGoal: 2,
   todayLessons: 0
 };
 
 const copy = {
   nav: {
     learn: { en: "Learn", ru: "Учиться", uz: "O'qish" },
-    roadmap: { en: "Study Roadmap", ru: "Дорожная карта", uz: "Yo'l xaritasi" },
-    leaderboard: { en: "Leaderboard", ru: "Рейтинг", uz: "Reyting" },
-    bank: { en: "Practice Bank", ru: "Банк практики", uz: "Mashq banki" },
     profile: { en: "Profile", ru: "Профиль", uz: "Profil" },
     settings: { en: "Settings", ru: "Настройки", uz: "Sozlamalar" },
     logout: { en: "Log out", ru: "Выйти", uz: "Chiqish" }
+  },
+  today: {
+    prefix: { en: "Today", ru: "Сегодня", uz: "Bugun" },
+    diagnostic: { en: "Finish the Reading diagnostic", ru: "Завершить Reading диагностику", uz: "Reading diagnostikani tugatish" },
+    lesson: { en: "Complete", ru: "Пройти", uz: "Dars" },
+    practice: { en: "5-question practice", ru: "Практика из 5 вопросов", uz: "5 savollik amaliyot" },
+    mock: { en: "Mini Mock Test", ru: "Mini Mock Test", uz: "Mini Mock Test" }
   },
   header: {
     hello: { en: "Hello", ru: "Привет", uz: "Salom" },
@@ -247,10 +253,15 @@ function readProgress(): Progress {
     if (!raw) return defaultProgress;
     const parsed = JSON.parse(raw) as Partial<Progress>;
     const today = todayKey();
+    const dailyGoal = Number(window.localStorage.getItem("sattest_path_daily_goal") || parsed.dailyGoal || defaultProgress.dailyGoal);
+    const lastGoalDate = parsed.lastGoalDate;
+    const streakStillAlive = lastGoalDate === today || lastGoalDate === yesterdayKey();
     return {
       ...defaultProgress,
       ...parsed,
       completed: Array.isArray(parsed.completed) ? parsed.completed : [],
+      dailyGoal: Number.isFinite(dailyGoal) && dailyGoal > 0 ? dailyGoal : defaultProgress.dailyGoal,
+      streak: streakStillAlive ? parsed.streak ?? 0 : 0,
       todayLessons: parsed.lastCompletedDate === today ? parsed.todayLessons ?? 0 : 0
     };
   } catch {
@@ -410,8 +421,20 @@ export default function PathPage() {
     }
     setStudentName(getStudentName() || "Student");
     const savedProgress = readProgress();
-    setProgress(savedProgress);
-    setWeakAreas(readDiagnosticWeakAreas());
+    const diagnosticWeakAreas = readDiagnosticWeakAreas();
+    const progressWithDiagnostic =
+      diagnosticWeakAreas.length && !savedProgress.completed.includes("diagnostic")
+        ? { ...savedProgress, completed: ["diagnostic", ...savedProgress.completed] }
+        : savedProgress;
+    setProgress(progressWithDiagnostic);
+    saveProgress(progressWithDiagnostic);
+    setWeakAreas(diagnosticWeakAreas);
+    if (diagnosticWeakAreas.length) {
+      api("/api/platform/progress", {
+        method: "POST",
+        body: JSON.stringify({ event: "diagnostic_completed", daily_goal: progressWithDiagnostic.dailyGoal })
+      }).catch(() => undefined);
+    }
     setShowOnboarding(window.localStorage.getItem(onboardingKey) !== "done");
     getSubscriptionStatus().then((status) => setIsProActive(status.has_active_subscription)).catch(() => setIsProActive(false));
   }, [language, router]);
@@ -421,6 +444,13 @@ export default function PathPage() {
   const currentIndex = path.findIndex((node) => !completedSet.has(node.id));
   const safeCurrentIndex = currentIndex === -1 ? path.length - 1 : currentIndex;
   const currentNode = path[safeCurrentIndex];
+  const todayAction = useMemo(() => {
+    if (!currentNode) return "";
+    if (currentNode.diagnostic) return pick(copy.today.diagnostic, language);
+    if (currentNode.focus === "Mock Test" || currentNode.id.includes("mock")) return pick(copy.today.mock, language);
+    if (currentNode.focus.includes("Practice")) return pick(copy.today.practice, language);
+    return `${pick(copy.today.lesson, language)}: ${pick(currentNode.title, language)}`;
+  }, [currentNode, language]);
   const questions = activeNode ? lessonQuestions(activeNode.focus) : [];
   const answeredCount = Object.keys(answers).length;
   const perfect = questions.length > 0 && questions.every((question, index) => answers[index] === question.answer);
@@ -445,21 +475,33 @@ export default function PathPage() {
     if (!activeNode) return;
     const today = todayKey();
     const wasCompleted = progress.completed.includes(activeNode.id);
-    const streak =
-      progress.lastCompletedDate === today
-        ? progress.streak
-        : progress.lastCompletedDate === yesterdayKey()
-          ? progress.streak + 1
-          : 1;
+    const previousTodayLessons = progress.lastCompletedDate === today ? progress.todayLessons : 0;
+    const todayLessons = previousTodayLessons + (wasCompleted ? 0 : 1);
+    const goalWasAlreadyMet = progress.lastGoalDate === today;
+    const goalMetNow = !goalWasAlreadyMet && todayLessons >= progress.dailyGoal;
+    const baseStreak = progress.lastGoalDate === yesterdayKey() || progress.lastGoalDate === today ? progress.streak : 0;
+    const streak = goalMetNow ? baseStreak + 1 : baseStreak;
+    const longestStreak = Math.max(progress.longestStreak ?? 0, streak);
     const next: Progress = {
       ...progress,
       completed: wasCompleted ? progress.completed : [...progress.completed, activeNode.id],
       xp: progress.xp + (wasCompleted ? 0 : 10) + (!wasCompleted && perfect ? 5 : 0),
       streak,
-      todayLessons: progress.lastCompletedDate === today ? progress.todayLessons + (wasCompleted ? 0 : 1) : 1,
-      lastCompletedDate: today
+      longestStreak,
+      todayLessons,
+      lastCompletedDate: today,
+      lastGoalDate: goalMetNow ? today : progress.lastGoalDate
     };
     updateProgress(next);
+    api("/api/platform/progress", {
+      method: "POST",
+      body: JSON.stringify({
+        event: activeNode.id.includes("mock") ? "mock_completed" : "lesson_completed",
+        current_streak: next.streak,
+        longest_streak: next.longestStreak,
+        daily_goal: next.dailyGoal
+      })
+    }).catch(() => undefined);
     setLessonComplete(true);
   }
 
@@ -494,11 +536,8 @@ export default function PathPage() {
 
           <nav className="mt-8 grid gap-2">
             <SideLink active icon={<BookOpen size={18} />} label={pick(copy.nav.learn, language)} />
-            <SideLink icon={<Map size={18} />} label={pick(copy.nav.roadmap, language)} href="/roadmap" />
-            <SideLink icon={<Trophy size={18} />} label={pick(copy.nav.leaderboard, language)} href="#leaderboard" />
-            <SideLink icon={<Zap size={18} />} label={pick(copy.nav.bank, language)} href="/practice" />
-            <SideLink icon={<User size={18} />} label={pick(copy.nav.profile, language)} href="#profile" />
-            <SideLink icon={<Settings size={18} />} label={pick(copy.nav.settings, language)} href="#settings" />
+            <SideLink icon={<User size={18} />} label={pick(copy.nav.profile, language)} href="#profile" muted />
+            <SideLink icon={<Settings size={18} />} label={pick(copy.nav.settings, language)} href="#settings" muted />
             <button className="mt-2 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-white/55 transition hover:bg-white/5 hover:text-[#FFD700]" onClick={logout} type="button">
               <LogOut size={18} />
               {pick(copy.nav.logout, language)}
@@ -518,6 +557,10 @@ export default function PathPage() {
               <h1 className="mt-2 text-3xl font-black text-white md:text-5xl">
                 👋 {pick(copy.header.hello, language)}, {studentName.split(" ")[0] || "Student"}!
               </h1>
+              <div className="mt-4 inline-flex max-w-full items-center gap-3 rounded-2xl border border-[#FFD700]/35 bg-[#FFD700]/10 px-4 py-3 text-base font-black text-[#FFD700]">
+                <Target size={20} />
+                <span>{pick(copy.today.prefix, language)}: {todayAction}</span>
+              </div>
               <p className="mt-3 max-w-2xl text-base leading-7 text-white/60">
                 {weakAreas.length ? pick(copy.header.withTest, language) : pick(copy.header.noTest, language)}
               </p>
@@ -745,10 +788,10 @@ export default function PathPage() {
   );
 }
 
-function SideLink({ active = false, href = "#", icon, label }: { active?: boolean; href?: string; icon: ReactNode; label: string }) {
+function SideLink({ active = false, href = "#", icon, label, muted = false }: { active?: boolean; href?: string; icon: ReactNode; label: string; muted?: boolean }) {
   const className = [
     "flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition",
-    active ? "bg-[#FFD700] text-black" : "text-white/55 hover:bg-white/5 hover:text-[#FFD700]"
+    active ? "bg-[#FFD700] text-black" : muted ? "text-white/38 hover:bg-white/5 hover:text-white/70" : "text-white/55 hover:bg-white/5 hover:text-[#FFD700]"
   ].join(" ");
   return href.startsWith("/") ? (
     <Link className={className} href={href}>

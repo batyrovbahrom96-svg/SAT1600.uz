@@ -9,14 +9,14 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [emailFromLink, setEmailFromLink] = useState("");
-  const [nextPath, setNextPath] = useState("/reading-path");
+  const [nextPath, setNextPath] = useState("/path");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const email = params.get("email") || "";
     const requestedNext = params.get("next") || "";
     setEmailFromLink(email);
-    setNextPath(requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/reading-path");
+    setNextPath(requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/path");
   }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {

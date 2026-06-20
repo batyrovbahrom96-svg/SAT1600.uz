@@ -12,14 +12,14 @@ export default function RegisterPage() {
   const [message, setMessage] = useState("");
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [prefillEmail, setPrefillEmail] = useState("");
-  const [nextPath, setNextPath] = useState("/reading-path");
+  const [nextPath, setNextPath] = useState("/path");
   const [signupSource, setSignupSource] = useState("");
   const [anonymousId, setAnonymousId] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setPrefillEmail(params.get("email") ?? "");
-    setNextPath(params.get("next") || "/reading-path");
+    setNextPath(params.get("next") || "/path");
     setSignupSource(params.get("source") || "");
     setAnonymousId(params.get("anon") || "");
   }, []);
