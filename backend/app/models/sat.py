@@ -333,6 +333,38 @@ class LevelQuestion(Base):
     level: Mapped[ReadingLevel] = relationship(back_populates="questions")
 
 
+class QuestionType(Base):
+    __tablename__ = "question_types"
+    __table_args__ = (UniqueConstraint("order_index", name="uq_question_types_order"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    type_name: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    type_name_uz: Mapped[str] = mapped_column(String(220))
+    order_index: Mapped[int] = mapped_column(Integer, index=True)
+    is_free: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    progress: Mapped[list["UserTypeProgress"]] = relationship(back_populates="question_type", cascade="all, delete-orphan")
+
+
+class UserTypeProgress(Base):
+    __tablename__ = "user_type_progress"
+    __table_args__ = (UniqueConstraint("user_id", "type_id", name="uq_user_type_progress_user_type"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    type_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("question_types.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(24), default="locked", index=True)
+    best_score: Mapped[int] = mapped_column(Integer, default=0)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    last_attempt_questions: Mapped[dict] = mapped_column(JSON, default=dict)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    question_type: Mapped[QuestionType] = relationship(back_populates="progress")
+
+
 class GraphAsset(Base):
     __tablename__ = "graph_assets"
 

@@ -18,7 +18,7 @@ from app.core.config import get_settings
 from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_DAYS, THREE_MONTH_PRICE
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db, get_engine
-from app.models import CurriculumUnit, PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, RoadmapNode, Subscription, Test, TestAttempt, TestTelemetrySummary, User
+from app.models import CurriculumUnit, PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, QuestionType, RoadmapNode, Subscription, Test, TestAttempt, TestTelemetrySummary, User, UserTypeProgress
 from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, OnboardingProfile, OnboardingRegister, ResultsOut, TokenResponse, VerificationCodeRequest
 from app.services.graph_engine import generate_linear_graph, generate_sat_graph_set
 from app.services.sat_engine import (
@@ -33,7 +33,8 @@ from app.services.sat_engine import (
     start_attempt,
 )
 from app.services.bot_service import WELCOME_BOT_USERNAME
-from app.services.reading_analyzer import attach_reading_analyzer_limit_signup, mark_analyzer_limit_followup_sent
+from app.services.reading_analyzer import attach_reading_analyzer_limit_signup, mark_analyzer_limit_followup_sent, user_has_active_pro
+from app.services.reading_mastery import PASS_MISTAKE_LIMIT, generate_mastery_content, grade_mastery_answers
 from app.services.roadmap import generate_roadmap_for_attempt
 from app.services.telegram_payments import (
     handle_telegram_update,
@@ -77,6 +78,16 @@ class PlatformProgressPayload(BaseModel):
     longest_streak: int | None = Field(default=None, ge=0)
     daily_goal: int | None = Field(default=None, ge=1, le=8)
     pro_conversion_source: str | None = Field(default=None, max_length=80)
+
+
+class ReadingMasteryStartPayload(BaseModel):
+    type_id: UUID
+    force_new: bool = False
+
+
+class ReadingMasterySubmitPayload(BaseModel):
+    type_id: UUID
+    answers: dict[str, str] = Field(default_factory=dict)
 
 
 PAYMENT_PLANS = {
@@ -370,6 +381,256 @@ def my_subscription(db: Session = Depends(get_db), user: User = Depends(get_curr
             "provider": subscription.provider,
             "current_period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
         },
+    }
+
+
+@router.get("/reading-mastery/types")
+def reading_mastery_types(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    question_types, progress_by_type, is_pro = _ensure_reading_mastery_progress(db, user)
+    items = [_mastery_type_payload(question_type, progress_by_type.get(question_type.id), is_pro, progress_by_type) for question_type in question_types]
+    passed_count = sum(1 for item in items if item["status"] == "passed")
+    return {
+        "is_pro": is_pro,
+        "pass_mistake_limit": PASS_MISTAKE_LIMIT,
+        "passed_count": passed_count,
+        "total": len(items),
+        "paywall_required": not is_pro and passed_count >= 1,
+        "types": items,
+    }
+
+
+@router.post("/reading-mastery/start")
+def start_reading_mastery_type(payload: ReadingMasteryStartPayload, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    question_types, progress_by_type, is_pro = _ensure_reading_mastery_progress(db, user)
+    question_type = _get_question_type_or_404(db, payload.type_id)
+    progress = progress_by_type.get(question_type.id)
+    if not progress:
+        raise HTTPException(status_code=404, detail="Progress not found")
+    _assert_mastery_type_available(question_type, question_types, progress_by_type, is_pro)
+
+    stored = progress.last_attempt_questions if isinstance(progress.last_attempt_questions, dict) else {}
+    content = stored.get("content")
+    if payload.force_new or not isinstance(content, dict) or len(content.get("questions") or []) != 10:
+        content = generate_mastery_content(question_type.type_name, progress.attempts + 1)
+        progress.last_attempt_questions = {"content": content, "answers": {}, "graded": [], "attempt_number": progress.attempts + 1}
+        progress.status = "in_progress"
+        progress.updated_at = datetime.utcnow()
+        db.commit()
+
+    return {
+        "type": _mastery_type_payload(question_type, progress, is_pro, progress_by_type),
+        "content": content,
+        "pass_mistake_limit": PASS_MISTAKE_LIMIT,
+    }
+
+
+@router.post("/reading-mastery/submit")
+def submit_reading_mastery_type(payload: ReadingMasterySubmitPayload, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    question_types, progress_by_type, is_pro = _ensure_reading_mastery_progress(db, user)
+    question_type = _get_question_type_or_404(db, payload.type_id)
+    progress = progress_by_type.get(question_type.id)
+    if not progress:
+        raise HTTPException(status_code=404, detail="Progress not found")
+    _assert_mastery_type_available(question_type, question_types, progress_by_type, is_pro)
+
+    stored = progress.last_attempt_questions if isinstance(progress.last_attempt_questions, dict) else {}
+    content = stored.get("content") if isinstance(stored, dict) else None
+    questions = content.get("questions") if isinstance(content, dict) else None
+    if not isinstance(questions, list) or len(questions) != 10:
+        raise HTTPException(status_code=400, detail="Start this question type before submitting answers")
+
+    graded = grade_mastery_answers(questions, payload.answers)
+    now = datetime.utcnow()
+    progress.attempts += 1
+    progress.best_score = max(progress.best_score or 0, graded["correct"])
+    progress.updated_at = now
+
+    response: dict = {
+        "passed": graded["passed"],
+        "correct": graded["correct"],
+        "mistakes": graded["mistakes"],
+        "pass_mistake_limit": PASS_MISTAKE_LIMIT,
+        "graded": graded["graded"],
+    }
+
+    if graded["passed"]:
+        progress.status = "passed"
+        progress.completed_at = progress.completed_at or now
+        progress.last_attempt_questions = {
+            "content": content,
+            "answers": payload.answers,
+            "graded": graded["graded"],
+            "correct": graded["correct"],
+            "mistakes": graded["mistakes"],
+            "passed": True,
+            "attempt_number": progress.attempts,
+        }
+        _unlock_next_mastery_type(question_type, question_types, progress_by_type, is_pro)
+        if question_type.order_index == 1 and not is_pro:
+            response["paywall_required"] = True
+        else:
+            response["paywall_required"] = False
+        user.first_lesson_completed = True
+        user.first_lesson_completed_at = user.first_lesson_completed_at or now
+    else:
+        retry_content = generate_mastery_content(question_type.type_name, progress.attempts + 1)
+        progress.status = "in_progress"
+        progress.last_attempt_questions = {
+            "content": retry_content,
+            "previous_content": content,
+            "previous_answers": payload.answers,
+            "previous_graded": graded["graded"],
+            "correct": graded["correct"],
+            "mistakes": graded["mistakes"],
+            "passed": False,
+            "attempt_number": progress.attempts + 1,
+        }
+        response["retry_content"] = retry_content
+        response["message_uz"] = (
+            f"Bu safar {graded['mistakes']} xato qildingiz. "
+            f"{question_type.type_name} ni yaxshiroq o'zlashtirish uchun savollar yangilandi — qaytadan urinib ko'ramiz."
+        )
+
+    db.commit()
+    _, refreshed_progress, refreshed_is_pro = _ensure_reading_mastery_progress(db, user)
+    response["types"] = [
+        _mastery_type_payload(item, refreshed_progress.get(item.id), refreshed_is_pro, refreshed_progress)
+        for item in question_types
+    ]
+    return response
+
+
+def _ensure_reading_mastery_progress(db: Session, user: User) -> tuple[list[QuestionType], dict[UUID, UserTypeProgress], bool]:
+    question_types = db.execute(select(QuestionType).order_by(QuestionType.order_index)).scalars().all()
+    if not question_types:
+        raise HTTPException(status_code=503, detail="Reading mastery question types are not seeded yet")
+
+    existing = (
+        db.execute(select(UserTypeProgress).where(UserTypeProgress.user_id == user.id))
+        .scalars()
+        .all()
+    )
+    progress_by_type = {item.type_id: item for item in existing}
+    changed = False
+    for question_type in question_types:
+        if question_type.id in progress_by_type:
+            continue
+        status = "in_progress" if question_type.order_index == 1 else "locked"
+        progress = UserTypeProgress(user_id=user.id, type_id=question_type.id, status=status)
+        db.add(progress)
+        progress_by_type[question_type.id] = progress
+        changed = True
+    if changed:
+        db.commit()
+        existing = (
+            db.execute(select(UserTypeProgress).where(UserTypeProgress.user_id == user.id))
+            .scalars()
+            .all()
+        )
+        progress_by_type = {item.type_id: item for item in existing}
+
+    is_pro = user_has_active_pro(db, user)
+    _sync_mastery_locks(question_types, progress_by_type, is_pro)
+    db.commit()
+    return question_types, progress_by_type, is_pro
+
+
+def _sync_mastery_locks(question_types: list[QuestionType], progress_by_type: dict[UUID, UserTypeProgress], is_pro: bool) -> None:
+    previous_passed = True
+    for question_type in question_types:
+        progress = progress_by_type.get(question_type.id)
+        if not progress or progress.status == "passed":
+            previous_passed = bool(progress and progress.status == "passed")
+            continue
+        if question_type.order_index == 1:
+            progress.status = "in_progress"
+        elif not is_pro:
+            progress.status = "locked"
+        elif previous_passed:
+            progress.status = "in_progress"
+        else:
+            progress.status = "locked"
+        previous_passed = progress.status == "passed"
+
+
+def _get_question_type_or_404(db: Session, type_id: UUID) -> QuestionType:
+    question_type = db.get(QuestionType, type_id)
+    if not question_type:
+        raise HTTPException(status_code=404, detail="Question type not found")
+    return question_type
+
+
+def _assert_mastery_type_available(
+    question_type: QuestionType,
+    question_types: list[QuestionType],
+    progress_by_type: dict[UUID, UserTypeProgress],
+    is_pro: bool,
+) -> None:
+    progress = progress_by_type.get(question_type.id)
+    if not progress:
+        raise HTTPException(status_code=404, detail="Progress not found")
+    if question_type.order_index > 1 and not is_pro:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "pro_required",
+                "message_uz": "Birinchi mavzudan keyingi 11 ta mavzu SATTEST Pro bilan ochiladi.",
+            },
+        )
+    previous = next((item for item in question_types if item.order_index == question_type.order_index - 1), None)
+    if previous:
+        previous_progress = progress_by_type.get(previous.id)
+        if not previous_progress or previous_progress.status != "passed":
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "previous_required",
+                    "message_uz": "Avval oldingi savol turini o'zlashtiring.",
+                },
+            )
+    if progress.status == "locked":
+        raise HTTPException(status_code=403, detail={"error": "locked", "message_uz": "Bu mavzu hozircha yopiq."})
+
+
+def _unlock_next_mastery_type(
+    question_type: QuestionType,
+    question_types: list[QuestionType],
+    progress_by_type: dict[UUID, UserTypeProgress],
+    is_pro: bool,
+) -> None:
+    next_type = next((item for item in question_types if item.order_index == question_type.order_index + 1), None)
+    if not next_type or not is_pro:
+        return
+    next_progress = progress_by_type.get(next_type.id)
+    if next_progress and next_progress.status == "locked":
+        next_progress.status = "in_progress"
+        next_progress.updated_at = datetime.utcnow()
+
+
+def _mastery_type_payload(
+    question_type: QuestionType,
+    progress: UserTypeProgress | None,
+    is_pro: bool,
+    progress_by_type: dict[UUID, UserTypeProgress],
+) -> dict:
+    status = progress.status if progress else "locked"
+    locked_reason = None
+    if question_type.order_index > 1 and not is_pro:
+        locked_reason = "pro_required"
+    elif status == "locked":
+        locked_reason = "previous_required"
+    return {
+        "id": str(question_type.id),
+        "type_name": question_type.type_name,
+        "type_name_uz": question_type.type_name_uz,
+        "order_index": question_type.order_index,
+        "is_free": question_type.is_free,
+        "status": status,
+        "best_score": progress.best_score if progress else 0,
+        "attempts": progress.attempts if progress else 0,
+        "completed_at": progress.completed_at.isoformat() if progress and progress.completed_at else None,
+        "locked_reason": locked_reason,
+        "requires_pro": question_type.order_index > 1,
     }
 
 

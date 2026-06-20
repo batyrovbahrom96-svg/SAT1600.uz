@@ -63,6 +63,44 @@ type LessonQuestion = {
   explanation: string;
 };
 
+type MasteryQuestion = {
+  passage_or_sentence: string;
+  question_text: string;
+  options: Record<"A" | "B" | "C" | "D", string>;
+  correct_answer: "A" | "B" | "C" | "D";
+  explanation_uz: string;
+  why_wrong_uz: Partial<Record<"A" | "B" | "C" | "D", string>>;
+};
+
+type MasteryContent = {
+  explanation_uz: string;
+  strategy_uz: string[];
+  questions: MasteryQuestion[];
+};
+
+type MasteryType = {
+  id: string;
+  type_name: string;
+  type_name_uz: string;
+  order_index: number;
+  is_free: boolean;
+  status: "locked" | "in_progress" | "passed";
+  best_score: number;
+  attempts: number;
+  completed_at: string | null;
+  locked_reason: "pro_required" | "previous_required" | null;
+  requires_pro: boolean;
+};
+
+type MasteryCatalog = {
+  is_pro: boolean;
+  pass_mistake_limit: number;
+  passed_count: number;
+  total: number;
+  paywall_required: boolean;
+  types: MasteryType[];
+};
+
 const progressKey = "sattest_path_progress_v1";
 const onboardingKey = "sattest_path_onboarding_v1";
 const lionLogo = "/assets/brand/sattest-lion-crest.png";
@@ -656,6 +694,16 @@ export default function PathPage() {
   const [activeNode, setActiveNode] = useState<PathNode | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [lessonComplete, setLessonComplete] = useState(false);
+  const [masteryCatalog, setMasteryCatalog] = useState<MasteryCatalog | null>(null);
+  const [masteryLoading, setMasteryLoading] = useState(false);
+  const [masteryError, setMasteryError] = useState("");
+  const [activeMasteryType, setActiveMasteryType] = useState<MasteryType | null>(null);
+  const [masteryContent, setMasteryContent] = useState<MasteryContent | null>(null);
+  const [masteryScreen, setMasteryScreen] = useState<"explanation" | "strategy" | "practice" | "result" | "paywall">("explanation");
+  const [masteryQuestionIndex, setMasteryQuestionIndex] = useState(0);
+  const [masteryAnswers, setMasteryAnswers] = useState<Record<string, string>>({});
+  const [masteryFeedback, setMasteryFeedback] = useState<{ selected: string; correct: string; isCorrect: boolean } | null>(null);
+  const [masteryResult, setMasteryResult] = useState<{ passed: boolean; correct: number; mistakes: number; paywall_required?: boolean; message_uz?: string } | null>(null);
   const [recentlyCompletedNodeId, setRecentlyCompletedNodeId] = useState<string | null>(null);
   const [streakBumped, setStreakBumped] = useState(false);
   const currentNodeRef = useRef<HTMLDivElement | null>(null);
@@ -694,6 +742,7 @@ export default function PathPage() {
     }
     setShowOnboarding(window.localStorage.getItem(onboardingKey) !== "done");
     getSubscriptionStatus().then((status) => setIsProActive(status.has_active_subscription)).catch(() => setIsProActive(false));
+    refreshMasteryCatalog();
   }, [language, router]);
 
   const path = useMemo(() => (trackType === "beginner" ? buildBeginnerPath() : buildPersonalPath(weakAreas)), [trackType, weakAreas]);
@@ -736,6 +785,117 @@ export default function PathPage() {
   function updateProgress(next: Progress) {
     setProgress(next);
     saveProgress(next);
+  }
+
+  function refreshMasteryCatalog() {
+    api<MasteryCatalog>("/api/reading-mastery/types")
+      .then((catalog) => {
+        setMasteryCatalog(catalog);
+        setIsProActive(catalog.is_pro);
+      })
+      .catch(() => {
+        setMasteryError("Reading & Writing mastery tizimini yuklab bo'lmadi.");
+      });
+  }
+
+  async function openMasteryType(type: MasteryType) {
+    setMasteryError("");
+    if (type.locked_reason === "pro_required") {
+      setActiveMasteryType(type);
+      setMasteryScreen("paywall");
+      return;
+    }
+    if (type.status === "locked") {
+      setMasteryError("Avval oldingi savol turini o'zlashtiring.");
+      return;
+    }
+    setMasteryLoading(true);
+    try {
+      const response = await api<{ type: MasteryType; content: MasteryContent }>("/api/reading-mastery/start", {
+        method: "POST",
+        body: JSON.stringify({ type_id: type.id })
+      });
+      setActiveMasteryType(response.type);
+      setMasteryContent(response.content);
+      setMasteryScreen("explanation");
+      setMasteryQuestionIndex(0);
+      setMasteryAnswers({});
+      setMasteryFeedback(null);
+      setMasteryResult(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Mastery mavzusini ochib bo'lmadi.";
+      if (message.includes("pro_required")) {
+        setActiveMasteryType(type);
+        setMasteryScreen("paywall");
+      } else {
+        setMasteryError(message);
+      }
+    } finally {
+      setMasteryLoading(false);
+    }
+  }
+
+  function chooseMasteryAnswer(letter: "A" | "B" | "C" | "D") {
+    if (!masteryContent) return;
+    const question = masteryContent.questions[masteryQuestionIndex];
+    const correct = question.correct_answer;
+    setMasteryAnswers((current) => ({ ...current, [String(masteryQuestionIndex)]: letter }));
+    setMasteryFeedback({ selected: letter, correct, isCorrect: letter === correct });
+  }
+
+  async function continueMasteryPractice() {
+    if (!masteryContent || !activeMasteryType) return;
+    if (masteryQuestionIndex < masteryContent.questions.length - 1) {
+      setMasteryQuestionIndex((index) => index + 1);
+      setMasteryFeedback(null);
+      return;
+    }
+    setMasteryLoading(true);
+    try {
+      const response = await api<{
+        passed: boolean;
+        correct: number;
+        mistakes: number;
+        paywall_required?: boolean;
+        message_uz?: string;
+        retry_content?: MasteryContent;
+        types?: MasteryType[];
+      }>("/api/reading-mastery/submit", {
+        method: "POST",
+        body: JSON.stringify({ type_id: activeMasteryType.id, answers: masteryAnswers })
+      });
+      if (response.types && masteryCatalog) {
+        setMasteryCatalog({ ...masteryCatalog, types: response.types, passed_count: response.types.filter((item) => item.status === "passed").length });
+      } else {
+        refreshMasteryCatalog();
+      }
+      setMasteryResult({ passed: response.passed, correct: response.correct, mistakes: response.mistakes, paywall_required: response.paywall_required, message_uz: response.message_uz });
+      if (!response.passed && response.retry_content) {
+        setMasteryContent(response.retry_content);
+      }
+      setMasteryScreen("result");
+      setMasteryFeedback(null);
+    } catch (error) {
+      setMasteryError(error instanceof Error ? error.message : "Javoblarni tekshirishda xatolik bo'ldi.");
+    } finally {
+      setMasteryLoading(false);
+    }
+  }
+
+  function retryMasterySet() {
+    setMasteryQuestionIndex(0);
+    setMasteryAnswers({});
+    setMasteryFeedback(null);
+    setMasteryResult(null);
+    setMasteryScreen("practice");
+  }
+
+  function closeMasteryModal() {
+    setActiveMasteryType(null);
+    setMasteryContent(null);
+    setMasteryFeedback(null);
+    setMasteryResult(null);
+    setMasteryScreen("explanation");
   }
 
   function openNode(node: PathNode, index: number) {
@@ -891,6 +1051,60 @@ export default function PathPage() {
               </button>
             </form>
           ) : null}
+
+          <section className="mt-8 rounded-3xl border border-[#FFD700]/20 bg-[#151515] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">SAT Reading & Writing Mastery</p>
+                <h2 className="mt-2 text-2xl font-black text-white md:text-4xl">12 ta rasmiy savol turi</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
+                  Har bir mavzu: tushuntirish → strategiya → 10 original savol → pass/fail gate. 2 tagacha xato bilan o'tasiz; 3+ xato bo'lsa yangi savollar bilan qayta urinasiz.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[#FFD700]/25 bg-black/35 px-4 py-3 text-right">
+                <p className="text-xs font-bold text-white/45">Progress</p>
+                <p className="text-2xl font-black text-[#FFD700]">{masteryCatalog ? `${masteryCatalog.passed_count}/${masteryCatalog.total}` : "..."}</p>
+              </div>
+            </div>
+
+            {masteryError ? <div className="mt-4 rounded-2xl border border-red-400/35 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-100">{masteryError}</div> : null}
+
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {(masteryCatalog?.types || []).map((type) => {
+                const locked = type.status === "locked";
+                const passed = type.status === "passed";
+                const proLocked = type.locked_reason === "pro_required";
+                return (
+                  <button
+                    className={[
+                      "group min-h-[132px] rounded-2xl border p-4 text-left transition",
+                      passed ? "border-[#FFD700]/45 bg-[#FFD700]/12" : "",
+                      !passed && !locked ? "border-[#FFD700]/55 bg-black/35 hover:bg-[#FFD700]/10" : "",
+                      locked ? "border-white/10 bg-black/25 opacity-85 hover:border-[#FFD700]/30" : ""
+                    ].join(" ")}
+                    key={type.id}
+                    onClick={() => openMasteryType(type)}
+                    type="button"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#FFD700] text-sm font-black text-black">{type.order_index}</span>
+                      <span className={["inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-black", passed ? "bg-emerald-400/15 text-emerald-200" : proLocked ? "bg-[#FFD700]/15 text-[#FFD700]" : locked ? "bg-white/10 text-white/40" : "bg-[#FFD700]/15 text-[#FFD700]"].join(" ")}>
+                        {passed ? <Check size={14} /> : locked ? <Lock size={14} /> : <Play size={14} />}
+                        {passed ? `${type.best_score}/10` : type.is_free ? "FREE" : proLocked ? "PRO" : "OPEN"}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-lg font-black text-white">{type.type_name}</h3>
+                    <p className="mt-1 text-sm font-semibold text-white/50">{type.type_name_uz}</p>
+                    <p className="mt-3 text-xs font-bold text-white/35">
+                      {passed ? "O'zlashtirildi" : proLocked ? "Type 1 dan keyin Pro bilan ochiladi" : locked ? "Avval oldingi mavzuni tugating" : "Boshlashga tayyor"}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {!masteryCatalog && !masteryError ? <p className="mt-4 text-sm font-semibold text-white/45">Mastery tizimi yuklanmoqda...</p> : null}
+          </section>
 
           <section className="path-stage relative mx-auto mt-8 max-w-3xl py-10">
             <div className="path-line-base" />
@@ -1111,7 +1325,175 @@ export default function PathPage() {
           </div>
         </div>
       ) : null}
+
+      {activeMasteryType ? (
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/85 p-4 backdrop-blur">
+          <div className="mx-auto my-8 max-w-4xl rounded-3xl border border-[#FFD700]/25 bg-[#101010] p-5 shadow-[0_24px_100px_rgba(0,0,0,0.55)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">Question Type {activeMasteryType.order_index}</p>
+                <h2 className="mt-2 text-2xl font-black md:text-4xl">{activeMasteryType.type_name}</h2>
+                <p className="mt-1 text-sm font-semibold text-white/50">{activeMasteryType.type_name_uz}</p>
+              </div>
+              <button className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-white/60 hover:border-white/30 hover:text-white" onClick={closeMasteryModal} type="button">
+                Close
+              </button>
+            </div>
+
+            {masteryScreen === "paywall" ? (
+              <div className="mt-8 rounded-3xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-6 text-center">
+                <Image className="mx-auto h-20 w-20 rounded-full border border-[#FFD700]/40 object-cover" src={lionLogo} alt="SATTEST lion crest" width={120} height={120} />
+                <h3 className="mt-5 text-3xl font-black">🦁 Birinchi mavzuni o'zlashtirdingiz!</h3>
+                <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-white/68">
+                  Natijangiz saqlanadi. Keyingi 11 ta mavzuga o'tish uchun SATTEST Pro kerak.
+                </p>
+                <div className="mx-auto mt-5 max-w-xl rounded-2xl border border-white/10 bg-black/35 p-5 text-left">
+                  <p className="text-2xl font-black text-[#FFD700]">300,000 UZS/oy</p>
+                  <ul className="mt-4 grid gap-2 text-sm font-semibold text-white/70">
+                    <li>✅ Qolgan 11 ta savol turi</li>
+                    <li>✅ Har biri 10 ta original savol bilan</li>
+                    <li>✅ Natijalaringiz saqlanadi va kuzatiladi</li>
+                    <li>✅ Mock testlar, Reading Analyzer va shaxsiy path</li>
+                  </ul>
+                </div>
+                <Link className="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#FFD700] px-6 py-3 font-black text-black transition hover:bg-white" href={`/pricing?lang=${language}&from=reading-mastery`}>
+                  Pro Olish →
+                </Link>
+              </div>
+            ) : null}
+
+            {masteryContent && masteryScreen === "explanation" ? (
+              <div className="mt-8 grid gap-5">
+                <MasteryPanel title="Bu nima degani?">
+                  <p className="text-xl font-bold leading-9 text-white/82">{masteryContent.explanation_uz}</p>
+                </MasteryPanel>
+                <button className="min-h-12 rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black transition hover:bg-white" onClick={() => setMasteryScreen("strategy")} type="button">
+                  Strategiyani ko'rish →
+                </button>
+              </div>
+            ) : null}
+
+            {masteryContent && masteryScreen === "strategy" ? (
+              <div className="mt-8 grid gap-5">
+                <MasteryPanel title="Qanday yondashish kerak?">
+                  <ul className="grid gap-3 text-lg font-semibold leading-8 text-white/78">
+                    {masteryContent.strategy_uz.map((item) => (
+                      <li className="rounded-2xl border border-white/10 bg-black/25 p-4" key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </MasteryPanel>
+                <button className="min-h-12 rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black transition hover:bg-white" onClick={() => setMasteryScreen("practice")} type="button">
+                  10 ta savolni boshlash →
+                </button>
+              </div>
+            ) : null}
+
+            {masteryContent && masteryScreen === "practice" ? (
+              <div className="mt-8">
+                {(() => {
+                  const question = masteryContent.questions[masteryQuestionIndex];
+                  const mistakes = Object.entries(masteryAnswers).filter(([index, answer]) => masteryContent.questions[Number(index)]?.correct_answer !== answer).length;
+                  return (
+                    <div className="grid gap-5">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">Savol {masteryQuestionIndex + 1}/10</p>
+                        <p className={["rounded-full border px-3 py-1 text-sm font-black", mistakes > 2 ? "border-red-400/50 bg-red-500/10 text-red-100" : "border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700]"].join(" ")}>
+                          Xatolar: {mistakes}/2
+                        </p>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/10">
+                        <div className="h-full rounded-full bg-[#FFD700]" style={{ width: `${((masteryQuestionIndex + 1) / 10) * 100}%` }} />
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/35 p-5 text-lg leading-8 text-white/78">{question.passage_or_sentence}</div>
+                      <h3 className="text-2xl font-black leading-tight">{question.question_text}</h3>
+                      <div className="grid gap-3">
+                        {(["A", "B", "C", "D"] as const).map((letter) => {
+                          const selected = masteryFeedback?.selected === letter;
+                          const correct = masteryFeedback?.correct === letter;
+                          return (
+                            <button
+                              className={[
+                                "min-h-14 rounded-2xl border px-4 py-3 text-left text-base font-bold transition",
+                                !masteryFeedback ? "border-white/10 bg-[#151515] text-white/80 hover:border-[#FFD700]/60" : "",
+                                masteryFeedback && correct ? "border-emerald-400/60 bg-emerald-500/15 text-emerald-100" : "",
+                                masteryFeedback && selected && !correct ? "border-red-400/60 bg-red-500/15 text-red-100" : "",
+                                masteryFeedback && !selected && !correct ? "border-white/10 bg-black/20 text-white/38" : ""
+                              ].join(" ")}
+                              disabled={Boolean(masteryFeedback)}
+                              key={letter}
+                              onClick={() => chooseMasteryAnswer(letter)}
+                              type="button"
+                            >
+                              <span className="mr-2 text-[#FFD700]">{letter}.</span>
+                              {question.options[letter]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {masteryFeedback ? (
+                        <div className={["rounded-2xl border p-4", masteryFeedback.isCorrect ? "border-emerald-400/45 bg-emerald-500/10" : "border-red-400/45 bg-red-500/10"].join(" ")}>
+                          <p className="text-lg font-black">{masteryFeedback.isCorrect ? "✅ To'g'ri" : `❌ Bu emas. To'g'ri javob: ${masteryFeedback.correct}`}</p>
+                          <p className="mt-2 text-sm font-semibold leading-6 text-white/70">
+                            {masteryFeedback.isCorrect ? question.explanation_uz : question.why_wrong_uz[masteryFeedback.selected as "A" | "B" | "C" | "D"] || question.explanation_uz}
+                          </p>
+                          <button className="mt-4 min-h-11 rounded-xl bg-[#FFD700] px-5 py-3 text-sm font-black text-black hover:bg-white" disabled={masteryLoading} onClick={continueMasteryPractice} type="button">
+                            {masteryQuestionIndex === masteryContent.questions.length - 1 ? "Natijani ko'rish →" : "Davom et →"}
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : null}
+
+            {masteryScreen === "result" && masteryResult ? (
+              <div className="mt-8 rounded-3xl border border-white/10 bg-black/35 p-6 text-center">
+                {masteryResult.passed ? (
+                  <>
+                    <h3 className="text-3xl font-black text-emerald-100">✅ {activeMasteryType.type_name} o'zlashtirildi!</h3>
+                    <p className="mt-3 text-2xl font-black text-[#FFD700]">{masteryResult.correct}/10 to'g'ri</p>
+                    {masteryResult.paywall_required ? (
+                      <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-5">
+                        <p className="text-xl font-black">Keyingi 11 ta mavzu Pro bilan ochiladi.</p>
+                        <p className="mt-2 text-sm font-semibold text-white/62">Natijangiz saqlandi. Pro bilan davom etsangiz, barcha 12 tur bo'yicha to'liq mastery ochiladi.</p>
+                        <Link className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black hover:bg-white" href={`/pricing?lang=${language}&from=reading-mastery`}>
+                          Pro Olish →
+                        </Link>
+                      </div>
+                    ) : null}
+                    <button className="mt-6 min-h-11 rounded-xl border border-white/10 px-5 py-3 font-black text-white/70 hover:border-[#FFD700] hover:text-[#FFD700]" onClick={closeMasteryModal} type="button">
+                      Pathga qaytish
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-3xl font-black text-red-100">Yana urinib ko'ramiz</h3>
+                    <p className="mx-auto mt-3 max-w-2xl text-lg font-semibold leading-8 text-white/68">
+                      {masteryResult.message_uz || `Bu safar ${masteryResult.mistakes} xato qildingiz. Savollar yangilandi — qaytadan urinib ko'ramiz.`}
+                    </p>
+                    <button className="mt-6 min-h-12 rounded-xl bg-[#FFD700] px-6 py-3 font-black text-black hover:bg-white" onClick={retryMasterySet} type="button">
+                      Qayta urinish →
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : null}
+
+            {masteryLoading ? <p className="mt-5 text-center text-sm font-black text-[#FFD700]">Yuklanmoqda...</p> : null}
+          </div>
+        </div>
+      ) : null}
     </main>
+  );
+}
+
+function MasteryPanel({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-3xl border border-[#FFD700]/20 bg-[#151515] p-5">
+      <h3 className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">{title}</h3>
+      <div className="mt-4">{children}</div>
+    </section>
   );
 }
 
