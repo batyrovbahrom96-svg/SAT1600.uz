@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 const publicPrefixes = [
   "/",
   "/about-us",
-  "/auth/google/success",
   "/login",
   "/pricing",
   "/register",

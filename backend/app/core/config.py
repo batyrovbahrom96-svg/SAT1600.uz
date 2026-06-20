@@ -40,9 +40,6 @@ class Settings(BaseSettings):
     click_qr_url: str = ""
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-sonnet-4-6"
-    google_client_id: str | None = None
-    google_client_secret: str | None = None
-
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     @field_validator("cors_origins", mode="before")

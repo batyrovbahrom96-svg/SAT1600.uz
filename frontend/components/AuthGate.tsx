@@ -10,7 +10,6 @@ const publicPrefixes = [
   "/register",
   "/pricing",
   "/about-us",
-  "/auth/google/success",
   "/shared",
   "/reading-analyzer/shared"
 ];

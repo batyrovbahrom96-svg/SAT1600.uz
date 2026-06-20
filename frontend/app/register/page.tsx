@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { API_URL, ApiError, api, saveAuth } from "@/lib/api";
+import { ApiError, api, saveAuth } from "@/lib/api";
 import { markFreeDiagnosticAttachedToAccount } from "@/lib/free-diagnostic-storage";
 
 export default function RegisterPage() {
@@ -22,9 +22,6 @@ export default function RegisterPage() {
     setNextPath(params.get("next") || "/path");
     setSignupSource(params.get("source") || "");
     setAnonymousId(params.get("anon") || "");
-    if (params.get("google_error") === "not_configured") {
-      setError("Google registration is not configured yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Railway, or create an account with email for now.");
-    }
   }, []);
 
   function getEmailBotError(err: unknown, fallback: string) {
@@ -119,9 +116,6 @@ export default function RegisterPage() {
           {message ? <p className="mt-5 border border-emerald-300/25 bg-emerald-950/20 p-3 text-sm font-semibold text-emerald-100">{message}</p> : null}
           {error ? <p className="mt-5 border border-red-400/30 bg-red-950/20 p-3 text-sm font-semibold text-red-200">{error}</p> : null}
           <button className="mt-8 w-full border border-white bg-white px-4 py-4 font-black uppercase tracking-[0.16em] text-black transition-all duration-200 ease-in-out hover:bg-[#151515] hover:text-white">Register</button>
-          <a className="mt-4 flex w-full items-center justify-center border border-white/15 px-4 py-4 text-center font-black uppercase tracking-[0.16em] text-white transition-all duration-200 ease-in-out hover:border-white hover:bg-white hover:text-black" href={`${API_URL}/api/auth/google/start?next=${encodeURIComponent(nextPath)}&source=register`}>
-            Continue with Google
-          </a>
           <Link className="mt-5 block text-center text-sm font-bold text-[#d8d8d8] transition-all duration-200 ease-in-out hover:text-white" href={`/login?next=${encodeURIComponent(nextPath)}`}>Already have account?</Link>
         </form>
       </section>

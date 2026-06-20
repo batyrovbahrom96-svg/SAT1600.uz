@@ -2,13 +2,11 @@ from datetime import datetime, timedelta
 from email.message import EmailMessage
 import json
 import random
-import secrets
 import smtplib
-from urllib import error, parse, request as urllib_request
+from urllib import error, request as urllib_request
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import RedirectResponse
 from collections import Counter, defaultdict
 from pydantic import BaseModel, Field
 
@@ -48,7 +46,6 @@ from app.services.telegram_payments import (
 
 router = APIRouter(prefix="/api")
 verification_codes: dict[str, dict[str, datetime | str]] = {}
-google_oauth_states: dict[str, dict[str, datetime | str]] = {}
 
 
 class DiagnosticResultNotification(BaseModel):
@@ -294,105 +291,6 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> TokenResponse:
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     return TokenResponse(access_token=create_access_token(user.id, user.role), role=user.role, full_name=user.full_name)
-
-
-@router.get("/auth/google/start")
-def google_login_start(request: Request, next: str = "/path", source: str = "login") -> RedirectResponse:
-    settings = get_settings()
-    safe_next = next if next.startswith("/") and not next.startswith("//") else "/path"
-    if not settings.google_client_id or not settings.google_client_secret:
-        fallback_path = "/register" if source == "register" else "/login"
-        params = parse.urlencode({"next": safe_next, "google_error": "not_configured"})
-        return RedirectResponse(f"{settings.frontend_url.rstrip('/')}{fallback_path}?{params}", status_code=302)
-    state = secrets.token_urlsafe(32)
-    google_oauth_states[state] = {"next": safe_next, "created_at": datetime.utcnow()}
-    params = parse.urlencode(
-        {
-            "client_id": settings.google_client_id,
-            "redirect_uri": str(request.url_for("google_login_callback")),
-            "response_type": "code",
-            "scope": "openid email profile",
-            "state": state,
-            "access_type": "online",
-            "prompt": "select_account",
-        }
-    )
-    return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{params}", status_code=302)
-
-
-@router.get("/auth/google/callback")
-def google_login_callback(request: Request, code: str, state: str, db: Session = Depends(get_db)) -> RedirectResponse:
-    settings = get_settings()
-    state_data = google_oauth_states.pop(state, None)
-    if not state_data or datetime.utcnow() > state_data["created_at"] + timedelta(minutes=10):
-        raise HTTPException(status_code=400, detail="Invalid or expired Google login state")
-    if not settings.google_client_id or not settings.google_client_secret:
-        raise HTTPException(status_code=503, detail="Google login is not configured yet")
-
-    redirect_uri = str(request.url_for("google_login_callback"))
-    token_payload = parse.urlencode(
-        {
-            "code": code,
-            "client_id": settings.google_client_id,
-            "client_secret": settings.google_client_secret,
-            "redirect_uri": redirect_uri,
-            "grant_type": "authorization_code",
-        }
-    ).encode("utf-8")
-    token_request = urllib_request.Request(
-        "https://oauth2.googleapis.com/token",
-        data=token_payload,
-        headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": "SATTEST.UZ/1.0"},
-        method="POST",
-    )
-    try:
-        with urllib_request.urlopen(token_request, timeout=10) as response:
-            token_data = json.loads(response.read().decode("utf-8"))
-    except (OSError, error.HTTPError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=502, detail="Google login failed") from exc
-
-    access_token = token_data.get("access_token")
-    if not access_token:
-        raise HTTPException(status_code=502, detail="Google login failed")
-
-    profile_request = urllib_request.Request(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
-        headers={"Authorization": f"Bearer {access_token}", "User-Agent": "SATTEST.UZ/1.0"},
-        method="GET",
-    )
-    try:
-        with urllib_request.urlopen(profile_request, timeout=10) as response:
-            profile = json.loads(response.read().decode("utf-8"))
-    except (OSError, error.HTTPError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=502, detail="Google profile fetch failed") from exc
-
-    email = str(profile.get("email") or "").lower()
-    if not email or not profile.get("email_verified"):
-        raise HTTPException(status_code=400, detail="Google account email is not verified")
-
-    full_name = str(profile.get("name") or email.split("@")[0]).strip()
-    user = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
-    created = False
-    if not user:
-        user = User(
-            email=email,
-            full_name=full_name,
-            password_hash=hash_password(secrets.token_urlsafe(32)),
-            onboarding_completed=True,
-            signup_source="google",
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        created = True
-
-    if created:
-        _send_registration_confirmation_email(email, user.full_name)
-
-    token = create_access_token(user.id, user.role)
-    next_path = str(state_data["next"])
-    params = parse.urlencode({"token": token, "name": user.full_name, "next": next_path})
-    return RedirectResponse(f"{settings.frontend_url.rstrip('/')}/auth/google/success?{params}", status_code=302)
 
 
 @router.get("/auth/me")
