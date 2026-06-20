@@ -761,6 +761,9 @@ export default function PathPage() {
   const answeredCount = Object.keys(answers).length;
   const correctCount = questions.filter((question, index) => answers[index] === question.answer).length;
   const perfect = questions.length > 0 && questions.every((question, index) => answers[index] === question.answer);
+  const masteryPassedCount = masteryCatalog?.types.filter((item) => item.status === "passed").length ?? 0;
+  const masteryTotal = masteryCatalog?.total ?? 12;
+  const readingWritingMockUnlocked = Boolean(masteryCatalog && masteryPassedCount >= masteryTotal && isProActive);
 
   useEffect(() => {
     if (progress.streak > previousStreakRef.current) {
@@ -966,6 +969,18 @@ export default function PathPage() {
     router.push("/");
   }
 
+  function openReadingWritingMock() {
+    if (!readingWritingMockUnlocked) {
+      setMasteryError(
+        isProActive
+          ? "SAT Reading & Writing Mock ochilishi uchun avval 12 ta savol turini o'zlashtiring."
+          : "SAT Reading & Writing Mock Pro curriculum ichida ochiladi. Avval 1-mavzuni tugating, keyin Pro bilan davom eting."
+      );
+      return;
+    }
+    router.push(`/sat-test?lang=${language}&section=reading_writing&from=path`);
+  }
+
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
       <div className="mx-auto grid min-h-screen max-w-[1600px] grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_320px]">
@@ -1106,6 +1121,42 @@ export default function PathPage() {
                   </button>
                 );
               })}
+            </div>
+
+            <div className="mt-5 rounded-3xl border border-[#FFD700]/25 bg-black/35 p-5">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-start gap-4">
+                  <span className={[
+                    "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border text-3xl",
+                    readingWritingMockUnlocked ? "border-[#FFD700]/70 bg-[#FFD700] text-black shadow-[0_0_28px_rgba(255,215,0,0.22)]" : "border-white/10 bg-[#2a2a2a] text-white/45"
+                  ].join(" ")}>
+                    {readingWritingMockUnlocked ? "🏆" : <Lock size={26} />}
+                  </span>
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[#FFD700]">Curriculum Milestone</p>
+                    <h3 className="mt-1 text-2xl font-black text-white">SAT Reading & Writing Mock</h3>
+                    <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-white/55">
+                      12 ta savol turini o'zlashtirgandan keyin Reading & Writing bo'yicha timed mock ochiladi. Bu curriculum ichidagi progress check, public menu emas.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
+                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/50">{masteryPassedCount}/{masteryTotal} mastery tugadi</span>
+                      <span className={["rounded-full border px-3 py-1", isProActive ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100" : "border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700]"].join(" ")}>
+                        {isProActive ? "Pro active" : "Pro required"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  className={[
+                    "min-h-12 rounded-xl px-5 py-3 text-sm font-black transition",
+                    readingWritingMockUnlocked ? "bg-[#FFD700] text-black hover:bg-white" : "border border-white/10 bg-[#151515] text-white/45"
+                  ].join(" ")}
+                  onClick={openReadingWritingMock}
+                  type="button"
+                >
+                  {readingWritingMockUnlocked ? "R&W Mock boshlash →" : "Locked"}
+                </button>
+              </div>
             </div>
 
             {!masteryCatalog && !masteryError ? <p className="mt-4 text-sm font-semibold text-white/45">Mastery tizimi yuklanmoqda...</p> : null}
