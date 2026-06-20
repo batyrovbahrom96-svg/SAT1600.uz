@@ -105,6 +105,44 @@ def ready() -> dict:
             ]
             if missing_tables:
                 raise RuntimeError(f"Missing tables: {', '.join(missing_tables)}")
+            required_user_columns = (
+                "email",
+                "password_hash",
+                "onboarding_completed",
+                "exam_date",
+                "sat_experience",
+                "current_streak",
+                "longest_streak",
+                "last_lesson_date",
+                "daily_goal",
+                "diagnostic_completed",
+                "diagnostic_completed_at",
+                "first_lesson_completed",
+                "first_lesson_completed_at",
+                "reached_7_day_streak",
+                "reached_7_day_streak_at",
+                "first_mock_completed",
+                "first_mock_completed_at",
+                "upgraded_to_pro",
+                "upgraded_to_pro_at",
+                "pro_conversion_source",
+            )
+            existing_columns = {
+                row[0]
+                for row in connection.execute(
+                    text(
+                        """
+                        SELECT column_name
+                        FROM information_schema.columns
+                        WHERE table_schema = 'public'
+                          AND table_name = 'users'
+                        """
+                    )
+                )
+            }
+            missing_columns = [column for column in required_user_columns if column not in existing_columns]
+            if missing_columns:
+                raise RuntimeError(f"Missing users columns: {', '.join(missing_columns)}")
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Database not ready") from exc
     return {"status": "ready"}

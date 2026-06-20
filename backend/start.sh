@@ -24,22 +24,26 @@ else
   echo "SMTP_HOST EXISTS"
 fi
 
+run_seed() {
+  if [ "${RUN_SEED_ON_STARTUP:-true}" = "true" ]; then
+    echo "Ensuring baseline SAT content..."
+    python scripts/seed_demo.py
+  else
+    echo "Skipping seed because RUN_SEED_ON_STARTUP is not true"
+  fi
+}
+
 run_bootstrap() {
   if [ -n "${DATABASE_URL:-}" ]; then
     echo "Running migrations..."
     python scripts/run_migrations.py
 
-    if [ "${RUN_SEED_ON_STARTUP:-true}" = "true" ]; then
-      echo "Ensuring baseline SAT content..."
-      python scripts/seed_demo.py
-    else
-      echo "Skipping seed because RUN_SEED_ON_STARTUP is not true"
-    fi
+    run_seed &
   else
     echo "Skipping migrations because DATABASE_URL is missing"
   fi
 }
 
-run_bootstrap &
+run_bootstrap
 
 exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8080}"

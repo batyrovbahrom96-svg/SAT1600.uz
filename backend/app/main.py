@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.requests import Request
@@ -16,6 +18,7 @@ from app.services.reading_analyzer import reset_all_daily_analysis_limits
 
 settings = get_settings()
 configure_logging(settings.log_level)
+logger = logging.getLogger("sattest.api")
 app = FastAPI(
     title=settings.app_name,
     docs_url="/docs" if settings.environment.lower() != "production" else None,
@@ -44,7 +47,7 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    configure_logging(settings.log_level)
+    logger.exception("Unhandled API error path=%s", request.url.path)
     return JSONResponse(
         status_code=500,
         content={"detail": "Server error. Please try again in a moment or contact SATTEST support."},
