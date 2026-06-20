@@ -59,6 +59,8 @@ class User(Base):
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     target_score: Mapped[int | None] = mapped_column(Integer)
     self_assessed_level: Mapped[str | None] = mapped_column(String(40))
+    track_type: Mapped[str | None] = mapped_column(String(24))
+    selected_track_at: Mapped[datetime | None] = mapped_column(DateTime)
     exam_date: Mapped[date | None] = mapped_column(Date)
     sat_experience: Mapped[str | None] = mapped_column(String(40))
     current_streak: Mapped[int] = mapped_column(Integer, default=0)
@@ -282,6 +284,20 @@ class RoadmapNode(Base):
     icon_key: Mapped[str] = mapped_column(String(40), default="topic")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class CurriculumUnit(Base):
+    __tablename__ = "curriculum_units"
+    __table_args__ = (UniqueConstraint("domain", "order_index", name="uq_curriculum_units_domain_order"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    unit_name: Mapped[str] = mapped_column(String(255))
+    domain: Mapped[str] = mapped_column(String(40), index=True)
+    order_index: Mapped[int] = mapped_column(Integer, index=True)
+    overview_text: Mapped[str] = mapped_column(Text)
+    topics: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class ReadingLevel(Base):

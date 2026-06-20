@@ -35,7 +35,12 @@ type PathNode = {
   focus: string;
   checkpoint?: boolean;
   diagnostic?: boolean;
+  unitIntro?: boolean;
+  unitStart?: Record<Language, string>;
+  domain?: "reading_writing" | "math";
 };
+
+type TrackType = "beginner" | "diagnostic";
 
 type Progress = {
   completed: string[];
@@ -92,6 +97,20 @@ const copy = {
     start: { en: "START", ru: "СТАРТ", uz: "BOSHLASH" },
     completed: { en: "Completed", ru: "Готово", uz: "Tugadi" },
     locked: { en: "Locked", ru: "Закрыто", uz: "Yopiq" }
+  },
+  track: {
+    beginner: { en: "Complete SAT curriculum", ru: "Полная SAT программа", uz: "To'liq SAT curriculum" },
+    diagnostic: { en: "Your personal weak-area path", ru: "Ваш путь по слабым темам", uz: "Sizning shaxsiy zaif-mavzu yo'lingiz" },
+    beginnerBody: {
+      en: "Beginner track walks through every Reading & Writing and Math domain topic by topic.",
+      ru: "Beginner track проходит все темы Reading & Writing и Math по порядку.",
+      uz: "Beginner track Reading & Writing va Math bo'limlarini mavzuma-mavzu to'liq olib boradi."
+    },
+    diagnosticBody: {
+      en: "Diagnostic track stays shorter and focuses only on weak areas found in your test.",
+      ru: "Diagnostic track короче и фокусируется только на слабых темах из теста.",
+      uz: "Diagnostic track qisqaroq: diagnostikada topilgan zaif mavzularga e'tibor beradi."
+    }
   },
   right: {
     proTitle: { en: "SATTEST PRO", ru: "SATTEST PRO", uz: "SATTEST PRO" },
@@ -233,6 +252,130 @@ const weakAreaNodes: Record<string, PathNode[]> = {
   ]
 };
 
+const beginnerUnits: Array<{
+  domain: "reading_writing" | "math";
+  name: Record<Language, string>;
+  overview: Record<Language, string>;
+  topics: Array<{ key: string; icon: string; focus: string; title: Record<Language, string>; subtitle: Record<Language, string> }>;
+}> = [
+  {
+    domain: "reading_writing",
+    name: { en: "Information & Ideas", ru: "Информация и идеи", uz: "Information & Ideas" },
+    overview: {
+      en: "You learn how SAT questions ask for central ideas, details, inferences, and evidence. The goal is simple: prove answers from the text.",
+      ru: "Вы учитесь находить главную идею, детали, выводы и доказательства. Цель проста: доказывать ответ текстом.",
+      uz: "Bu bo'limda central idea, details, inference va evidence savollarini o'rganasiz. Maqsad oddiy: javobni matndan dalil bilan isbotlash."
+    },
+    topics: [
+      { key: "central-ideas-details", icon: "📖", focus: "Central Ideas & Details", title: { en: "Central Ideas & Details", ru: "Главная идея и детали", uz: "Central Ideas & Details" }, subtitle: { en: "Separate the big idea from supporting facts.", ru: "Отделяйте главную мысль от деталей.", uz: "Asosiy g'oyani qo'llab-quvvatlovchi detaldan ajrating." } },
+      { key: "inferences", icon: "🔍", focus: "Inferences", title: { en: "Inferences", ru: "Выводы", uz: "Inferences" }, subtitle: { en: "Make only the conclusion the text supports.", ru: "Делайте только вывод, который поддержан текстом.", uz: "Faqat matn qo'llab-quvvatlagan xulosani oling." } },
+      { key: "evidence-textual", icon: "📌", focus: "Command of Evidence (Textual)", title: { en: "Command of Evidence — Textual", ru: "Доказательство — текст", uz: "Command of Evidence — Textual" }, subtitle: { en: "Choose the line that directly proves the claim.", ru: "Выберите строку, которая прямо доказывает мысль.", uz: "Da'voni to'g'ridan-to'g'ri isbotlaydigan qatorni tanlang." } },
+      { key: "evidence-quantitative", icon: "📊", focus: "Command of Evidence (Quantitative)", title: { en: "Command of Evidence — Quantitative", ru: "Доказательство — данные", uz: "Command of Evidence — Quantitative" }, subtitle: { en: "Read graphs and data without guessing.", ru: "Читайте графики и данные без догадок.", uz: "Grafik va ma'lumotni taxminsiz o'qing." } }
+    ]
+  },
+  {
+    domain: "reading_writing",
+    name: { en: "Craft & Structure", ru: "Стиль и структура", uz: "Craft & Structure" },
+    overview: {
+      en: "You learn how authors use words, structure, purpose, and paired texts to build meaning.",
+      ru: "Вы изучаете, как авторы создают смысл через слова, структуру, цель и связанные тексты.",
+      uz: "Muallif so'z tanlovi, tuzilma, maqsad va bog'langan matnlar orqali ma'no yaratishini o'rganasiz."
+    },
+    topics: [
+      { key: "words-in-context", icon: "🔤", focus: "Words in Context", title: { en: "Words in Context", ru: "Слова в контексте", uz: "Words in Context" }, subtitle: { en: "Use context, not the common dictionary meaning.", ru: "Используйте контекст, не обычное значение.", uz: "Oddiy lug'at ma'nosini emas, kontekstni ishlating." } },
+      { key: "text-structure-purpose", icon: "🏗️", focus: "Text Structure & Purpose", title: { en: "Text Structure & Purpose", ru: "Структура и цель текста", uz: "Text Structure & Purpose" }, subtitle: { en: "Name how the passage is built and why.", ru: "Определяйте, как построен текст и зачем.", uz: "Matn qanday qurilganini va nima uchunligini toping." } },
+      { key: "cross-text-connections", icon: "🔗", focus: "Cross-Text Connections", title: { en: "Cross-Text Connections", ru: "Связь двух текстов", uz: "Cross-Text Connections" }, subtitle: { en: "Compare claims without mixing them.", ru: "Сравнивайте идеи, не смешивая их.", uz: "Da'volarni aralashtirmasdan solishtiring." } }
+    ]
+  },
+  {
+    domain: "reading_writing",
+    name: { en: "Expression of Ideas", ru: "Выражение идей", uz: "Expression of Ideas" },
+    overview: {
+      en: "You learn how information should be combined and connected so the writing flows logically.",
+      ru: "Вы учитесь объединять и связывать информацию логично.",
+      uz: "Ma'lumotlarni mantiqan birlashtirish va bog'lashni o'rganasiz."
+    },
+    topics: [
+      { key: "rhetorical-synthesis", icon: "🧩", focus: "Rhetorical Synthesis", title: { en: "Rhetorical Synthesis", ru: "Риторический синтез", uz: "Rhetorical Synthesis" }, subtitle: { en: "Combine notes for a clear purpose.", ru: "Объединяйте заметки под цель.", uz: "Eslatmalarni aniq maqsad uchun birlashtiring." } },
+      { key: "transitions", icon: "↔️", focus: "Transitions", title: { en: "Transitions", ru: "Переходы", uz: "Transitions" }, subtitle: { en: "Match the logical direction between ideas.", ru: "Определяйте логическое направление.", uz: "G'oyalar orasidagi mantiqiy yo'nalishni toping." } }
+    ]
+  },
+  {
+    domain: "reading_writing",
+    name: { en: "Standard English Conventions", ru: "Стандартная грамматика", uz: "Standard English Conventions" },
+    overview: {
+      en: "You learn sentence boundaries, punctuation, agreement, and structure so every sentence is complete and precise.",
+      ru: "Вы изучаете границы предложений, пунктуацию, согласование и структуру.",
+      uz: "Gap chegaralari, punctuation, agreement va sentence structure ni o'rganasiz."
+    },
+    topics: [
+      { key: "boundaries", icon: "✍️", focus: "Boundaries", title: { en: "Boundaries — Punctuation", ru: "Границы — пунктуация", uz: "Boundaries — Punctuation" }, subtitle: { en: "Avoid comma splices and broken sentences.", ru: "Избегайте comma splice и неполных предложений.", uz: "Comma splice va noto'liq gaplardan saqlaning." } },
+      { key: "form-structure-sense", icon: "🧠", focus: "Form, Structure, and Sense", title: { en: "Form, Structure, and Sense", ru: "Форма, структура и смысл", uz: "Form, Structure, and Sense" }, subtitle: { en: "Match verbs, pronouns, modifiers, and parallel forms.", ru: "Согласуйте глаголы, местоимения и формы.", uz: "Fe'l, olmosh, modifier va parallel formalarni moslang." } }
+    ]
+  },
+  {
+    domain: "math",
+    name: { en: "Algebra", ru: "Алгебра", uz: "Algebra" },
+    overview: {
+      en: "You build the algebra base: equations, functions, systems, and inequalities.",
+      ru: "Вы строите базу алгебры: уравнения, функции, системы и неравенства.",
+      uz: "Tenglama, funksiya, sistema va tengsizliklar bo'yicha algebra bazasini qurasiz."
+    },
+    topics: [
+      { key: "linear-equations-one-variable", icon: "x", focus: "Linear equations (one variable)", title: { en: "Linear Equations — One Variable", ru: "Линейные уравнения — 1 переменная", uz: "Linear equations — one variable" }, subtitle: { en: "Solve one unknown cleanly.", ru: "Чётко решайте одну неизвестную.", uz: "Bitta noma'lumni toza yeching." } },
+      { key: "linear-equations-two-variables", icon: "xy", focus: "Linear equations (two variables)", title: { en: "Linear Equations — Two Variables", ru: "Линейные уравнения — 2 переменные", uz: "Linear equations — two variables" }, subtitle: { en: "Understand slope, intercept, and pairs.", ru: "Понимайте наклон, пересечение и пары.", uz: "Slope, intercept va juft qiymatlarni tushuning." } },
+      { key: "linear-functions", icon: "ƒ", focus: "Linear functions", title: { en: "Linear Functions", ru: "Линейные функции", uz: "Linear functions" }, subtitle: { en: "Connect graphs, tables, and equations.", ru: "Связывайте графики, таблицы и уравнения.", uz: "Grafik, jadval va tenglamani bog'lang." } },
+      { key: "systems-linear-equations", icon: "≡", focus: "Systems of linear equations", title: { en: "Systems of Linear Equations", ru: "Системы линейных уравнений", uz: "Systems of linear equations" }, subtitle: { en: "Find the pair that satisfies both equations.", ru: "Находите пару для двух уравнений.", uz: "Ikkala tenglamaga mos juftlikni toping." } },
+      { key: "linear-inequalities", icon: "≤", focus: "Linear inequalities", title: { en: "Linear Inequalities", ru: "Линейные неравенства", uz: "Linear inequalities" }, subtitle: { en: "Track direction and solution ranges.", ru: "Следите за направлением и диапазоном.", uz: "Yo'nalish va yechim oralig'ini kuzating." } }
+    ]
+  },
+  {
+    domain: "math",
+    name: { en: "Advanced Math", ru: "Продвинутая математика", uz: "Advanced Math" },
+    overview: {
+      en: "You learn expressions, nonlinear equations, and functions by reading structure.",
+      ru: "Вы изучаете выражения, нелинейные уравнения и функции через структуру.",
+      uz: "Ifodalar, nonlinear tenglamalar va funksiyalarni structure orqali o'rganasiz."
+    },
+    topics: [
+      { key: "equivalent-expressions", icon: "=", focus: "Equivalent expressions", title: { en: "Equivalent Expressions", ru: "Эквивалентные выражения", uz: "Equivalent expressions" }, subtitle: { en: "Rewrite without changing value.", ru: "Переписывайте без изменения значения.", uz: "Qiymatni o'zgartirmasdan qayta yozing." } },
+      { key: "nonlinear-equations", icon: "∩", focus: "Nonlinear equations", title: { en: "Nonlinear Equations", ru: "Нелинейные уравнения", uz: "Nonlinear equations" }, subtitle: { en: "Solve quadratics and curved relationships.", ru: "Решайте квадраты и нелинейные связи.", uz: "Kvadrat va egri bog'lanishlarni yeching." } },
+      { key: "nonlinear-functions", icon: "𝑓", focus: "Nonlinear functions", title: { en: "Nonlinear Functions", ru: "Нелинейные функции", uz: "Nonlinear functions" }, subtitle: { en: "Read function behavior from structure.", ru: "Читайте поведение функции из структуры.", uz: "Funksiya xatti-harakatini strukturadan o'qing." } }
+    ]
+  },
+  {
+    domain: "math",
+    name: { en: "Problem-Solving & Data Analysis", ru: "Задачи и анализ данных", uz: "Problem-Solving & Data Analysis" },
+    overview: {
+      en: "You keep units attached through ratios, rates, percents, data, and probability.",
+      ru: "Вы сохраняете единицы в отношениях, процентах, данных и вероятности.",
+      uz: "Ratio, rate, percent, data va probability da birliklarni saqlab borasiz."
+    },
+    topics: [
+      { key: "ratios-rates-proportions", icon: ":", focus: "Ratios, rates, proportions", title: { en: "Ratios, Rates, Proportions", ru: "Отношения, скорости, пропорции", uz: "Ratios, rates, proportions" }, subtitle: { en: "Compare quantities with units.", ru: "Сравнивайте величины с единицами.", uz: "Miqdorlarni birliklar bilan solishtiring." } },
+      { key: "percentages", icon: "%", focus: "Percentages", title: { en: "Percentages", ru: "Проценты", uz: "Percentages" }, subtitle: { en: "Track percent of what.", ru: "Следите: процент от чего.", uz: "Nimaning foizi ekanini kuzating." } },
+      { key: "one-variable-data", icon: "📈", focus: "One-variable data distributions", title: { en: "One-Variable Data", ru: "Данные одной переменной", uz: "One-variable data" }, subtitle: { en: "Mean, median, spread, and meaning.", ru: "Среднее, медиана, разброс и смысл.", uz: "Mean, median, spread va ma'no." } },
+      { key: "two-variable-data", icon: "📉", focus: "Two-variable data models", title: { en: "Two-Variable Data Models", ru: "Модели двух переменных", uz: "Two-variable data models" }, subtitle: { en: "Read trends and linear models.", ru: "Читайте тренды и линейные модели.", uz: "Trend va linear modelni o'qing." } },
+      { key: "probability", icon: "🎲", focus: "Probability", title: { en: "Probability", ru: "Вероятность", uz: "Probability" }, subtitle: { en: "Favorable outcomes over total outcomes.", ru: "Нужные исходы делите на все исходы.", uz: "Kerakli natijani umumiy natijaga bo'ling." } }
+    ]
+  },
+  {
+    domain: "math",
+    name: { en: "Geometry & Trigonometry", ru: "Геометрия и тригонометрия", uz: "Geometry & Trigonometry" },
+    overview: {
+      en: "You learn shapes, measurement, triangles, circles, and right-triangle trig.",
+      ru: "Вы изучаете фигуры, измерения, треугольники, окружности и тригонометрию.",
+      uz: "Shakllar, o'lchov, uchburchak, aylana va right-triangle trig ni o'rganasiz."
+    },
+    topics: [
+      { key: "area-volume", icon: "⬛", focus: "Area and volume", title: { en: "Area and Volume", ru: "Площадь и объём", uz: "Area and volume" }, subtitle: { en: "Match formulas to shapes.", ru: "Соотносите формулы с фигурами.", uz: "Formulani shaklga moslang." } },
+      { key: "lines-angles-triangles", icon: "△", focus: "Lines, angles, triangles", title: { en: "Lines, Angles, Triangles", ru: "Линии, углы, треугольники", uz: "Lines, angles, triangles" }, subtitle: { en: "Use angle facts without overcomplicating.", ru: "Используйте факты об углах просто.", uz: "Burchak faktlarini soddalik bilan ishlating." } },
+      { key: "right-triangle-trig", icon: "sin", focus: "Right triangle trigonometry", title: { en: "Right Triangle Trigonometry", ru: "Тригонометрия прямоугольного треугольника", uz: "Right triangle trigonometry" }, subtitle: { en: "Sine, cosine, tangent as ratios.", ru: "Синус, косинус, тангенс как отношения.", uz: "Sine, cosine, tangent ni ratio sifatida ko'ring." } },
+      { key: "circles", icon: "○", focus: "Circles", title: { en: "Circles", ru: "Окружности", uz: "Circles" }, subtitle: { en: "Radius, diameter, circumference, and arcs.", ru: "Радиус, диаметр, длина окружности и дуги.", uz: "Radius, diameter, circumference va arc." } }
+    ]
+  }
+];
+
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -361,7 +504,109 @@ function buildPersonalPath(weakAreas: string[]) {
   return uniqueNodes([baseNodes[0], ...inserted, ...baseNodes.slice(1), ...tail]);
 }
 
+function buildBeginnerPath() {
+  const nodes: PathNode[] = [];
+  beginnerUnits.forEach((unit, unitIndex) => {
+    const unitLabel = {
+      en: `STAGE ${unitIndex + 1}: ${unit.name.en}`,
+      ru: `ЭТАП ${unitIndex + 1}: ${unit.name.ru}`,
+      uz: `BOSQICH ${unitIndex + 1}: ${unit.name.uz}`
+    };
+    nodes.push({
+      id: `unit-${unitIndex + 1}-${slug(unit.name.en)}-foundations`,
+      icon: unit.domain === "math" ? "📐" : "📖",
+      focus: `${unit.name.en} Foundations`,
+      unitIntro: true,
+      unitStart: unitLabel,
+      domain: unit.domain,
+      title: {
+        en: `${unit.name.en} — Foundations`,
+        ru: `${unit.name.ru} — Основы`,
+        uz: `${unit.name.uz} — Asosiy tushunchalar`
+      },
+      subtitle: unit.overview
+    });
+    unit.topics.forEach((topic) => {
+      nodes.push({
+        id: topic.key,
+        icon: topic.icon,
+        focus: topic.focus,
+        domain: unit.domain,
+        title: topic.title,
+        subtitle: topic.subtitle
+      });
+    });
+    if ((unitIndex + 1) % 2 === 0) {
+      nodes.push({
+        id: `checkpoint-${unitIndex + 1}`,
+        icon: "🦁",
+        focus: "Checkpoint",
+        checkpoint: true,
+        domain: unit.domain,
+        title: { en: `Checkpoint ${unitIndex / 2 + 1}`, ru: `Checkpoint ${unitIndex / 2 + 1}`, uz: `Checkpoint ${unitIndex / 2 + 1}` },
+        subtitle: {
+          en: "A short review before the next stage.",
+          ru: "Короткое повторение перед следующим этапом.",
+          uz: "Keyingi bosqichdan oldin qisqa review."
+        }
+      });
+    }
+  });
+  nodes.push({
+    id: "beginner-full-mock",
+    icon: "🏆",
+    focus: "Mock Test",
+    checkpoint: true,
+    title: { en: "Full Mock Test Milestone", ru: "Full Mock Test Milestone", uz: "Full Mock Test Milestone" },
+    subtitle: {
+      en: "Use the full curriculum foundation under timed conditions.",
+      ru: "Проверьте полную базу в условиях времени.",
+      uz: "To'liq curriculum bazasini vaqt bilan sinab ko'ring."
+    }
+  });
+  return nodes;
+}
+
+function slug(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
 function lessonQuestions(focus: string): LessonQuestion[] {
+  if (focus.includes("Foundations")) {
+    return [
+      {
+        prompt: "Bu foundations ekranining asosiy maqsadi nima?",
+        choices: ["Bo'limni nima uchun o'rganishni tushunish", "Darhol final mock test topshirish", "Tasodifiy mavzu tanlash"],
+        answer: "Bo'limni nima uchun o'rganishni tushunish",
+        explanation: "Beginner track har bir unit oldidan katta rasmni beradi, keyin mavzularni tartib bilan ochadi."
+      }
+    ];
+  }
+
+  if (focus.includes("Central Ideas")) {
+    return [
+      { prompt: "Central idea savolida eng yaxshi javob nimani qamrab oladi?", choices: ["Butun matnni", "Faqat bitta detalni", "Matndan tashqari fikrni"], answer: "Butun matnni", explanation: "Central idea butun passage mazmunini qamrab olishi kerak; bitta detal yetarli emas." },
+      { prompt: "Asosiy tuzoq qaysi?", choices: ["Juda tor detail answer", "Matndan dalil", "Neutral wording"], answer: "Juda tor detail answer", explanation: "SAT ko'pincha to'g'ri ko'rinadigan, lekin faqat bir gapga tegishli javob beradi." },
+      { prompt: "Tekshirish uchun qaysi joylarni o'qiysiz?", choices: ["Birinchi va oxirgi gaplarni", "Faqat variantlarni", "Faqat eng uzun so'zni"], answer: "Birinchi va oxirgi gaplarni", explanation: "Passage boshi va oxiri odatda umumiy yo'nalishni ko'rsatadi." }
+    ];
+  }
+
+  if (focus.includes("Inference")) {
+    return [
+      { prompt: "Inference javobi qanday bo'lishi kerak?", choices: ["Matn qo'llab-quvvatlaydigan xulosa", "Shaxsiy fikr", "Juda katta taxmin"], answer: "Matn qo'llab-quvvatlaydigan xulosa", explanation: "Inference matndan tashqariga chiqmaydi; u dalilga tayangan xulosa." },
+      { prompt: "Nima xato hisoblanadi?", choices: ["Too big a leap", "Exact evidence", "Careful wording"], answer: "Too big a leap", explanation: "Agar xulosa matnda yetarli dalilga ega bo'lmasa, u SAT uchun xato." },
+      { prompt: "Inference savolida oldin nima qilasiz?", choices: ["Dalil topasiz", "Eng chiroyli variantni tanlaysiz", "Passageni e'tiborsiz qoldirasiz"], answer: "Dalil topasiz", explanation: "Har inference uchun matnda kamida bitta tayanch dalil bo'lishi kerak." }
+    ];
+  }
+
+  if (focus.includes("Evidence")) {
+    return [
+      { prompt: "Command of Evidence savolida javob nimani qilishi kerak?", choices: ["Da'voni to'g'ridan-to'g'ri isbotlash", "Faqat mavzuga o'xshash bo'lish", "Yangi fikr qo'shish"], answer: "Da'voni to'g'ridan-to'g'ri isbotlash", explanation: "Evidence javobi related emas, proof bo'lishi kerak." },
+      { prompt: "Graph/data savolida eng muhim narsa?", choices: ["Label va unit", "Variant uzunligi", "Grafik ranglari"], answer: "Label va unit", explanation: "Quantitative evidence da label, unit va exact value xatolarni oldini oladi." },
+      { prompt: "Qaysi javob odatda xato?", choices: ["Too general quote", "Exact quote", "Direct data point"], answer: "Too general quote", explanation: "Juda umumiy quote claimni to'g'ridan-to'g'ri isbotlamaydi." }
+    ];
+  }
+
   if (focus.includes("Words")) {
     return [
       { prompt: "For a Words in Context question, what comes first?", choices: ["Pick the familiar definition", "Read surrounding evidence", "Choose the longest option"], answer: "Read surrounding evidence", explanation: "SAT vocabulary is context-first. The surrounding sentence proves the meaning." },
@@ -404,6 +649,7 @@ export default function PathPage() {
   const { language } = useLanguage();
   const [studentName, setStudentName] = useState("Student");
   const [isProActive, setIsProActive] = useState(false);
+  const [trackType, setTrackType] = useState<TrackType>("diagnostic");
   const [weakAreas, setWeakAreas] = useState<string[]>([]);
   const [progress, setProgress] = useState<Progress>(defaultProgress);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -421,6 +667,16 @@ export default function PathPage() {
       return;
     }
     setStudentName(getStudentName() || "Student");
+    const savedTrack = window.localStorage.getItem("sattest_track_type");
+    setTrackType(savedTrack === "beginner" ? "beginner" : "diagnostic");
+    api<{ track_type?: TrackType }>("/api/auth/me")
+      .then((profile) => {
+        if (profile.track_type === "beginner" || profile.track_type === "diagnostic") {
+          window.localStorage.setItem("sattest_track_type", profile.track_type);
+          setTrackType(profile.track_type);
+        }
+      })
+      .catch(() => undefined);
     const savedProgress = readProgress();
     const diagnosticWeakAreas = readDiagnosticWeakAreas();
     const progressWithDiagnostic =
@@ -440,7 +696,7 @@ export default function PathPage() {
     getSubscriptionStatus().then((status) => setIsProActive(status.has_active_subscription)).catch(() => setIsProActive(false));
   }, [language, router]);
 
-  const path = useMemo(() => buildPersonalPath(weakAreas), [weakAreas]);
+  const path = useMemo(() => (trackType === "beginner" ? buildBeginnerPath() : buildPersonalPath(weakAreas)), [trackType, weakAreas]);
   const completedSet = useMemo(() => new Set(progress.completed), [progress.completed]);
   const currentIndex = path.findIndex((node) => !completedSet.has(node.id));
   const safeCurrentIndex = currentIndex === -1 ? path.length - 1 : currentIndex;
@@ -483,7 +739,7 @@ export default function PathPage() {
   }
 
   function openNode(node: PathNode, index: number) {
-    if (node.diagnostic && !completedSet.has(node.id)) {
+    if (trackType === "diagnostic" && node.diagnostic && !completedSet.has(node.id)) {
       router.push(`/mock-test/diagnostic?lang=${language}`);
       return;
     }
@@ -586,7 +842,10 @@ export default function PathPage() {
                 <span>{pick(copy.today.prefix, language)}: {todayAction}</span>
               </div>
               <p className="mt-3 max-w-2xl text-base leading-7 text-white/60">
-                {weakAreas.length ? pick(copy.header.withTest, language) : pick(copy.header.noTest, language)}
+                {trackType === "beginner" ? pick(copy.track.beginnerBody, language) : weakAreas.length ? pick(copy.header.withTest, language) : pick(copy.track.diagnosticBody, language)}
+              </p>
+              <p className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-white/50">
+                {trackType === "beginner" ? pick(copy.track.beginner, language) : pick(copy.track.diagnostic, language)}
               </p>
             </div>
             <div className="rounded-xl border border-[#FFD700]/25 bg-[#FFD700]/10 px-4 py-3">
@@ -659,6 +918,11 @@ export default function PathPage() {
                   key={node.id}
                   ref={isCurrent ? currentNodeRef : null}
                 >
+                  {node.unitStart ? (
+                    <div className="absolute -top-10 left-1/2 z-30 w-[min(92vw,520px)] -translate-x-1/2 rounded-full border border-[#FFD700]/30 bg-[#0a0a0a] px-4 py-2 text-center text-xs font-black uppercase tracking-[0.18em] text-[#FFD700] shadow-[0_0_30px_rgba(255,215,0,0.08)]">
+                      {pick(node.unitStart, language)}
+                    </div>
+                  ) : null}
                   <button
                     className={[
                       "path-node group relative z-20 flex w-full max-w-[340px] items-center gap-4 rounded-2xl border p-4 text-left",
@@ -666,7 +930,7 @@ export default function PathPage() {
                       isCompleted ? "path-node--completed border-[#FFD700]/45 bg-[#15120a] text-white" : "",
                       isRecentlyCompleted ? "path-node--just-completed" : "",
                       isLocked ? "path-node--locked cursor-not-allowed border-white/10 bg-[#151515] text-white/42" : "",
-                      node.checkpoint || node.id.includes("mock") ? "path-node--milestone" : "",
+                      node.checkpoint || node.unitIntro || node.id.includes("mock") ? "path-node--milestone" : "",
                       !isLocked && !isCurrent ? "hover:border-[#FFD700]/70 hover:bg-[#1b1b1b]" : ""
                     ].join(" ")}
                     onClick={() => openNode(node, index)}
@@ -681,14 +945,14 @@ export default function PathPage() {
                         isCurrent ? "path-node-circle--current" : "",
                         isCompleted ? "path-node-circle--completed" : "",
                         isLocked ? "path-node-circle--locked" : "",
-                        node.checkpoint || node.id.includes("mock") ? "path-node-circle--milestone" : ""
+                        node.checkpoint || node.unitIntro || node.id.includes("mock") ? "path-node-circle--milestone" : ""
                       ].join(" ")}
                     >
                       {isCompleted ? (
                         <Check className="path-check-icon" size={30} />
                       ) : isLocked ? (
                         <Lock size={24} />
-                      ) : node.checkpoint || node.id.includes("mock") ? (
+                      ) : node.checkpoint || node.unitIntro || node.id.includes("mock") ? (
                         <Image className="h-12 w-12 rounded-full object-cover" src={lionLogo} alt="" width={72} height={72} />
                       ) : (
                         node.icon
@@ -789,10 +1053,14 @@ export default function PathPage() {
 
                 <div className="mt-6 grid gap-4">
                   <LessonBlock title={pick(copy.lesson.concept, language)} icon={<BookOpen className="text-[#FFD700]" />}>
-                    {activeNode.focus} is one focused skill. Learn the rule, prove it with one example, then answer quickly with evidence.
+                    {activeNode.unitIntro
+                      ? pick(activeNode.subtitle, language)
+                      : `${activeNode.focus} is one focused SAT skill. Learn the rule, prove it with one worked example, then answer with evidence instead of guessing.`}
                   </LessonBlock>
                   <LessonBlock title={pick(copy.lesson.example, language)} icon={<BarChart3 className="text-[#FFD700]" />}>
-                    Example: before picking an answer, name what the question asks and underline the exact sentence or rule that proves it.
+                    {activeNode.unitIntro
+                      ? "Example: before this unit starts, name the skill group, why SAT tests it, and the mistake you want to avoid. Then the next nodes turn that overview into practice."
+                      : "Example: before picking an answer, name what the question asks and underline the exact sentence, data point, or math rule that proves it."}
                   </LessonBlock>
                   <div className="rounded-xl border border-white/10 bg-black/25 p-4">
                     <h3 className="text-xl font-black">{pick(copy.lesson.practice, language)}</h3>

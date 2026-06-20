@@ -11,6 +11,7 @@ type SignupData = {
   targetScore: string;
   examDate: string;
   experience: "first_time" | "tried_before" | "sat_before" | "";
+  priorScore: string;
   dailyGoal: string;
   email: string;
   password: string;
@@ -51,19 +52,19 @@ const stepsCopy = {
     en: "I do not know yet"
   },
   diagnostic: {
-    uz: "Endi diagnostikadan boshlaymiz",
-    ru: "Теперь начнём с диагностики",
-    en: "Now we start with the diagnostic"
+    uz: "Endi yo'lingizni boshlaymiz",
+    ru: "Теперь начнём ваш путь",
+    en: "Now we start your path"
   },
   diagnosticBody: {
-    uz: "Bu majburiy birinchi qadam: taxminiy ballingiz, zaif joylaringiz va birinchi darsingiz shu testdan keyin chiqadi.",
-    ru: "Это обязательный первый шаг: после теста появятся ваш примерный балл, слабые места и первый урок.",
-    en: "This is the required first step: your estimated score, weak areas, and first lesson come from this test."
+    uz: "Yangi boshlovchilar to'liq curriculum yo'lidan boshlaydi. Avval tayyorlanganlar esa diagnostika orqali faqat zaif mavzulariga yo'naltiriladi.",
+    ru: "Новички начинают с полного curriculum. Опытные студенты проходят диагностику и получают путь по слабым темам.",
+    en: "Beginners start with the complete curriculum. Experienced students take a diagnostic and get a weak-area path."
   },
   startDiagnostic: {
-    uz: "Diagnostikani boshlash →",
-    ru: "Начать диагностику →",
-    en: "Start diagnostic →"
+    uz: "Yo'lni boshlash →",
+    ru: "Начать путь →",
+    en: "Start path →"
   },
   dailyGoal: {
     uz: "Kunlik maqsad: nechta dars?",
@@ -114,6 +115,7 @@ export default function LearnPage() {
     targetScore: "1400",
     examDate: "",
     experience: "",
+    priorScore: "",
     dailyGoal: "2",
     email: "",
     password: "",
@@ -192,7 +194,7 @@ export default function LearnPage() {
     }
   }
 
-  async function startDiagnostic() {
+  async function startTrack() {
     setError("");
     if (!getToken()) {
       setStep(1);
@@ -205,26 +207,36 @@ export default function LearnPage() {
       return;
     }
 
-    const goToDiagnostic = () => {
+    const trackType = data.experience === "first_time" ? "beginner" : "diagnostic";
+
+    const saveTrackLocally = () => {
       window.localStorage.setItem("sattest_onboarding_target_score", data.targetScore);
       window.localStorage.setItem("sattest_onboarding_exam_date", data.examDate);
       window.localStorage.setItem("sattest_onboarding_experience", data.experience);
+      window.localStorage.setItem("sattest_track_type", trackType);
+      if (data.priorScore) window.localStorage.setItem("sattest_prior_score", data.priorScore);
       window.localStorage.setItem("sattest_path_daily_goal", data.dailyGoal);
       window.localStorage.setItem("sattest_after_diagnostic_next", `/path?lang=${language}`);
-      setMode("loading");
-      window.setTimeout(() => router.push(`/mock-test/diagnostic?lang=${language}&from=learn`), 1200);
     };
 
-    goToDiagnostic();
+    const goToNextStep = () => {
+      saveTrackLocally();
+      setMode("loading");
+      const destination = trackType === "beginner" ? `/path?lang=${language}` : `/mock-test/diagnostic?lang=${language}&from=learn`;
+      window.setTimeout(() => router.push(destination), 1200);
+    };
+
+    goToNextStep();
 
     try {
-      await api<{ ok: boolean }>("/api/auth/onboarding-profile", {
+      await api<{ ok: boolean; track_type: string; next: string }>("/api/auth/onboarding-profile", {
         method: "POST",
         body: JSON.stringify({
           target_score: Number(data.targetScore),
           exam_date: data.examDate || null,
           sat_experience: data.experience,
-          daily_goal: Number(data.dailyGoal) || 2
+          daily_goal: Number(data.dailyGoal) || 2,
+          prior_score: data.priorScore ? Number(data.priorScore) : null
         })
       });
     } catch (err) {
@@ -334,6 +346,15 @@ export default function LearnPage() {
                     </button>
                   ))}
                 </div>
+                {data.experience === "sat_before" ? (
+                  <input
+                    className="mt-4 min-h-14 w-full rounded-xl border border-white/15 bg-[#151515] px-5 text-lg font-bold text-white outline-none focus:border-[#FFD700]"
+                    inputMode="numeric"
+                    value={data.priorScore}
+                    onChange={(event) => update("priorScore", event.target.value)}
+                    placeholder="Oldingi SAT ballingiz, masalan 1180"
+                  />
+                ) : null}
                 <PrimaryButton onClick={nextStep}>{stepsCopy.continue[language]}</PrimaryButton>
               </QuestionFrame>
             ) : null}
@@ -347,7 +368,7 @@ export default function LearnPage() {
                   {stepsCopy.dailyGoal[language]}
                   <input className="min-h-14 rounded-xl border border-white/15 bg-[#151515] px-5 text-lg font-bold text-white outline-none focus:border-[#FFD700]" min={1} max={8} type="number" value={data.dailyGoal} onChange={(event) => update("dailyGoal", event.target.value)} />
                 </label>
-                <PrimaryButton onClick={startDiagnostic}>{stepsCopy.startDiagnostic[language]}</PrimaryButton>
+                <PrimaryButton onClick={startTrack}>{stepsCopy.startDiagnostic[language]}</PrimaryButton>
               </QuestionFrame>
             ) : null}
 

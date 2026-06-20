@@ -27,6 +27,7 @@ class OnboardingProfile(BaseModel):
     exam_date: date | None = None
     sat_experience: str = Field(pattern="^(first_time|tried_before|sat_before)$")
     daily_goal: int = Field(default=2, ge=1, le=8)
+    prior_score: int | None = Field(default=None, ge=400, le=1600)
 
 
 class VerificationCodeRequest(BaseModel):

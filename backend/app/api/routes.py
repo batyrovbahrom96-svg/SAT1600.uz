@@ -18,7 +18,7 @@ from app.core.config import get_settings
 from app.core.pricing import MONTHLY_PLAN_DAYS, MONTHLY_PRICE, THREE_MONTH_PLAN_DAYS, THREE_MONTH_PRICE
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db, get_engine
-from app.models import PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, RoadmapNode, Subscription, Test, TestAttempt, TestTelemetrySummary, User
+from app.models import CurriculumUnit, PaymentOrder, Question, QuestionExposure, QuestionResult, QuestionTelemetryLog, RoadmapNode, Subscription, Test, TestAttempt, TestTelemetrySummary, User
 from app.schemas import AdminQuestionUpdate, AnswerIn, AuthLogin, AuthRegister, ModuleOut, OnboardingProfile, OnboardingRegister, ResultsOut, TokenResponse, VerificationCodeRequest
 from app.services.graph_engine import generate_linear_graph, generate_sat_graph_set
 from app.services.sat_engine import (
@@ -121,6 +121,8 @@ def ready() -> dict:
                 "onboarding_completed",
                 "target_score",
                 "self_assessed_level",
+                "track_type",
+                "selected_track_at",
                 "exam_date",
                 "sat_experience",
                 "current_streak",
@@ -209,16 +211,21 @@ def onboarding_register(payload: OnboardingRegister, db: Session = Depends(get_d
 
 @router.post("/auth/onboarding-profile")
 def update_onboarding_profile(payload: OnboardingProfile, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    now = datetime.utcnow()
+    track_type = "beginner" if payload.sat_experience == "first_time" else "diagnostic"
     user.target_score = payload.target_score
     user.exam_date = payload.exam_date
     user.sat_experience = payload.sat_experience
     user.self_assessed_level = payload.sat_experience
+    user.track_type = track_type
+    user.selected_track_at = user.selected_track_at or now
     user.daily_goal = payload.daily_goal
     user.onboarding_completed = True
     db.commit()
     return {
         "ok": True,
-        "next": "/mock-test/diagnostic" if payload.sat_experience != "sat_before" else "/mock-test/diagnostic?mode=weak-area",
+        "track_type": track_type,
+        "next": "/path" if track_type == "beginner" else "/mock-test/diagnostic?mode=weak-area" if payload.sat_experience == "sat_before" else "/mock-test/diagnostic",
     }
 
 
@@ -295,7 +302,25 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> TokenResponse:
 
 @router.get("/auth/me")
 def current_user_profile(user: User = Depends(get_current_user)) -> dict:
-    return {"full_name": user.full_name, "role": user.role}
+    return {"full_name": user.full_name, "role": user.role, "track_type": user.track_type}
+
+
+@router.get("/curriculum/units")
+def curriculum_units(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    units = db.execute(select(CurriculumUnit).order_by(CurriculumUnit.order_index)).scalars().all()
+    return {
+        "units": [
+            {
+                "id": str(unit.id),
+                "unit_name": unit.unit_name,
+                "domain": unit.domain,
+                "order_index": unit.order_index,
+                "overview_text": unit.overview_text,
+                "topics": unit.topics,
+            }
+            for unit in units
+        ]
+    }
 
 
 @router.get("/subscriptions/me")
