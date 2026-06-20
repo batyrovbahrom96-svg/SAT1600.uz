@@ -209,6 +209,19 @@ export default function LearnPage() {
       setError("Tajribangizni tanlang.");
       return;
     }
+
+    const goToDiagnostic = () => {
+      window.localStorage.setItem("sattest_onboarding_target_score", data.targetScore);
+      window.localStorage.setItem("sattest_onboarding_exam_date", data.examDate);
+      window.localStorage.setItem("sattest_onboarding_experience", data.experience);
+      window.localStorage.setItem("sattest_path_daily_goal", data.dailyGoal);
+      window.localStorage.setItem("sattest_after_diagnostic_next", `/path?lang=${language}`);
+      setMode("loading");
+      window.setTimeout(() => router.push(`/mock-test/diagnostic?lang=${language}&from=learn`), 1200);
+    };
+
+    goToDiagnostic();
+
     try {
       await api<{ ok: boolean }>("/api/auth/onboarding-profile", {
         method: "POST",
@@ -219,15 +232,8 @@ export default function LearnPage() {
           daily_goal: Number(data.dailyGoal) || 2
         })
       });
-      window.localStorage.setItem("sattest_onboarding_target_score", data.targetScore);
-      window.localStorage.setItem("sattest_onboarding_exam_date", data.examDate);
-      window.localStorage.setItem("sattest_onboarding_experience", data.experience);
-      window.localStorage.setItem("sattest_path_daily_goal", data.dailyGoal);
-      window.localStorage.setItem("sattest_after_diagnostic_next", `/path?lang=${language}`);
-      setMode("loading");
-      window.setTimeout(() => router.push(`/mock-test/diagnostic?lang=${language}&from=learn`), 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to save onboarding");
+      console.warn("Onboarding profile sync failed; continuing to diagnostic.", err);
     }
   }
 
