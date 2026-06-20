@@ -1,4 +1,18 @@
 ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS detected_language VARCHAR(16),
+  ADD COLUMN IF NOT EXISTS chosen_language VARCHAR(16),
+  ADD COLUMN IF NOT EXISTS language_confirmed BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS language_set_date TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS daily_analyses INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS last_analysis_date TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS total_analyses INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS signup_source VARCHAR(80),
+  ADD COLUMN IF NOT EXISTS anonymous_visitor_id VARCHAR(80),
+  ADD COLUMN IF NOT EXISTS reading_analyzer_limit_signup_at TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS reading_analyzer_followup_sent_at TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS target_score INTEGER,
+  ADD COLUMN IF NOT EXISTS self_assessed_level VARCHAR(40),
   ADD COLUMN IF NOT EXISTS exam_date DATE,
   ADD COLUMN IF NOT EXISTS sat_experience VARCHAR(40),
   ADD COLUMN IF NOT EXISTS current_streak INTEGER DEFAULT 0,
@@ -19,6 +33,10 @@ ALTER TABLE users
 
 UPDATE users
 SET
+  language_confirmed = COALESCE(language_confirmed, FALSE),
+  daily_analyses = COALESCE(daily_analyses, 0),
+  total_analyses = COALESCE(total_analyses, 0),
+  onboarding_completed = COALESCE(onboarding_completed, FALSE),
   current_streak = COALESCE(current_streak, 0),
   longest_streak = COALESCE(longest_streak, 0),
   daily_goal = COALESCE(daily_goal, 2),
@@ -29,6 +47,14 @@ SET
   upgraded_to_pro = COALESCE(upgraded_to_pro, FALSE);
 
 ALTER TABLE users
+  ALTER COLUMN language_confirmed SET DEFAULT FALSE,
+  ALTER COLUMN language_confirmed SET NOT NULL,
+  ALTER COLUMN daily_analyses SET DEFAULT 0,
+  ALTER COLUMN daily_analyses SET NOT NULL,
+  ALTER COLUMN total_analyses SET DEFAULT 0,
+  ALTER COLUMN total_analyses SET NOT NULL,
+  ALTER COLUMN onboarding_completed SET DEFAULT FALSE,
+  ALTER COLUMN onboarding_completed SET NOT NULL,
   ALTER COLUMN current_streak SET DEFAULT 0,
   ALTER COLUMN current_streak SET NOT NULL,
   ALTER COLUMN longest_streak SET DEFAULT 0,

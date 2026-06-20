@@ -107,8 +107,23 @@ def ready() -> dict:
                 raise RuntimeError(f"Missing tables: {', '.join(missing_tables)}")
             required_user_columns = (
                 "email",
+                "full_name",
                 "password_hash",
+                "role",
+                "detected_language",
+                "chosen_language",
+                "language_confirmed",
+                "language_set_date",
+                "daily_analyses",
+                "last_analysis_date",
+                "total_analyses",
+                "signup_source",
+                "anonymous_visitor_id",
+                "reading_analyzer_limit_signup_at",
+                "reading_analyzer_followup_sent_at",
                 "onboarding_completed",
+                "target_score",
+                "self_assessed_level",
                 "exam_date",
                 "sat_experience",
                 "current_streak",
@@ -126,6 +141,7 @@ def ready() -> dict:
                 "upgraded_to_pro",
                 "upgraded_to_pro_at",
                 "pro_conversion_source",
+                "created_at",
             )
             existing_columns = {
                 row[0]
