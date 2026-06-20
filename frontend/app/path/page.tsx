@@ -4,21 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
   BookOpen,
-  CalendarDays,
   Check,
   ChevronRight,
   Crown,
   Flame,
-  GraduationCap,
   Lock,
   LogOut,
   Medal,
   Play,
-  Settings,
   Sparkles,
   Target,
   Trophy,
@@ -413,6 +410,10 @@ export default function PathPage() {
   const [activeNode, setActiveNode] = useState<PathNode | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [lessonComplete, setLessonComplete] = useState(false);
+  const [recentlyCompletedNodeId, setRecentlyCompletedNodeId] = useState<string | null>(null);
+  const [streakBumped, setStreakBumped] = useState(false);
+  const currentNodeRef = useRef<HTMLDivElement | null>(null);
+  const previousStreakRef = useRef(defaultProgress.streak);
 
   useEffect(() => {
     if (!getToken()) {
@@ -453,7 +454,28 @@ export default function PathPage() {
   }, [currentNode, language]);
   const questions = activeNode ? lessonQuestions(activeNode.focus) : [];
   const answeredCount = Object.keys(answers).length;
+  const correctCount = questions.filter((question, index) => answers[index] === question.answer).length;
   const perfect = questions.length > 0 && questions.every((question, index) => answers[index] === question.answer);
+
+  useEffect(() => {
+    if (progress.streak > previousStreakRef.current) {
+      setStreakBumped(true);
+      const timeout = window.setTimeout(() => setStreakBumped(false), 420);
+      previousStreakRef.current = progress.streak;
+      return () => window.clearTimeout(timeout);
+    }
+    previousStreakRef.current = progress.streak;
+  }, [progress.streak]);
+
+  useEffect(() => {
+    if (!currentNodeRef.current) return;
+    const isSmallScreen = window.matchMedia("(max-width: 767px)").matches;
+    if (!isSmallScreen) return;
+    const timeout = window.setTimeout(() => {
+      currentNodeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 250);
+    return () => window.clearTimeout(timeout);
+  }, [safeCurrentIndex, path.length]);
 
   function updateProgress(next: Progress) {
     setProgress(next);
@@ -502,6 +524,7 @@ export default function PathPage() {
         daily_goal: next.dailyGoal
       })
     }).catch(() => undefined);
+    setRecentlyCompletedNodeId(activeNode.id);
     setLessonComplete(true);
   }
 
@@ -536,8 +559,9 @@ export default function PathPage() {
 
           <nav className="mt-8 grid gap-2">
             <SideLink active icon={<BookOpen size={18} />} label={pick(copy.nav.learn, language)} />
+            <SideLink icon={<Trophy size={18} />} label="Leaderboard" href="#leaderboard" muted />
+            <SideLink icon={<Zap size={18} />} label="Practice Bank" href="#practice-bank" muted />
             <SideLink icon={<User size={18} />} label={pick(copy.nav.profile, language)} href="#profile" muted />
-            <SideLink icon={<Settings size={18} />} label={pick(copy.nav.settings, language)} href="#settings" muted />
             <button className="mt-2 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-white/55 transition hover:bg-white/5 hover:text-[#FFD700]" onClick={logout} type="button">
               <LogOut size={18} />
               {pick(copy.nav.logout, language)}
@@ -609,37 +633,70 @@ export default function PathPage() {
             </form>
           ) : null}
 
-          <section className="relative mx-auto mt-8 max-w-3xl py-6">
-            <div className="absolute left-1/2 top-10 h-[calc(100%-80px)] -translate-x-1/2 border-l-2 border-dashed border-white/15" />
+          <section className="path-stage relative mx-auto mt-8 max-w-3xl py-10">
+            <div className="path-line-base" />
+            <div
+              className="path-line-completed"
+              style={{ height: `${path.length > 1 ? Math.max(0, (safeCurrentIndex / (path.length - 1)) * 100) : 0}%` }}
+            />
             {path.map((node, index) => {
               const isCompleted = completedSet.has(node.id);
               const isCurrent = index === safeCurrentIndex && !isCompleted;
               const isLocked = index > safeCurrentIndex;
               const side = index % 2 === 0 ? "md:pr-[54%]" : "md:pl-[54%]";
+              const isRecentlyCompleted = recentlyCompletedNodeId === node.id;
+              const nodeTooltip = isLocked
+                ? "Avval oldingi darslarni tugating"
+                : isCompleted
+                  ? perfect && isRecentlyCompleted
+                    ? `${questions.length}/${questions.length} — Mukammal!`
+                    : "Review mode"
+                  : pick(copy.header.start, language);
 
               return (
-                <div className={`relative mb-8 flex justify-center ${side}`} key={node.id}>
-                  {node.checkpoint ? (
-                    <Image className="absolute left-1/2 top-1/2 z-10 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#FFD700]/45 object-cover md:block" src={lionLogo} alt="" width={72} height={72} />
-                  ) : null}
+                <div
+                  className={`path-node-row relative mb-12 flex justify-center ${side}`}
+                  key={node.id}
+                  ref={isCurrent ? currentNodeRef : null}
+                >
                   <button
                     className={[
-                      "group relative z-20 flex min-h-[112px] w-full max-w-[320px] items-center gap-4 rounded-xl border p-4 text-left transition",
-                      isCurrent ? "border-[#FFD700] bg-[#FFD700] text-black shadow-[0_0_34px_rgba(255,215,0,0.28)]" : "",
-                      isCompleted ? "border-[#FFD700]/45 bg-[#2a2408] text-white" : "",
-                      isLocked ? "border-white/10 bg-[#151515] text-white/42" : "",
+                      "path-node group relative z-20 flex w-full max-w-[340px] items-center gap-4 rounded-2xl border p-4 text-left",
+                      isCurrent ? "path-node--current border-[#FFD700]/65 bg-[#FFD700]/10 text-white" : "",
+                      isCompleted ? "path-node--completed border-[#FFD700]/45 bg-[#15120a] text-white" : "",
+                      isRecentlyCompleted ? "path-node--just-completed" : "",
+                      isLocked ? "path-node--locked cursor-not-allowed border-white/10 bg-[#151515] text-white/42" : "",
+                      node.checkpoint || node.id.includes("mock") ? "path-node--milestone" : "",
                       !isLocked && !isCurrent ? "hover:border-[#FFD700]/70 hover:bg-[#1b1b1b]" : ""
                     ].join(" ")}
                     onClick={() => openNode(node, index)}
                     type="button"
+                    aria-label={nodeTooltip}
                   >
-                    {isCurrent ? <span className="absolute -top-7 left-4 text-xs font-black text-[#FFD700]">{pick(copy.header.start, language)}</span> : null}
-                    <span className={["flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-2xl font-black", isCurrent ? "bg-black text-[#FFD700]" : isCompleted ? "bg-[#FFD700] text-black" : "bg-white/5 text-white/45"].join(" ")}>
-                      {isCompleted ? <Check size={28} /> : isLocked ? <Lock size={24} /> : node.icon}
+                    {isCurrent ? <span className="path-start-pill">{pick(copy.header.start, language)}</span> : null}
+                    <span className="path-tooltip">{nodeTooltip}</span>
+                    <span
+                      className={[
+                        "path-node-circle",
+                        isCurrent ? "path-node-circle--current" : "",
+                        isCompleted ? "path-node-circle--completed" : "",
+                        isLocked ? "path-node-circle--locked" : "",
+                        node.checkpoint || node.id.includes("mock") ? "path-node-circle--milestone" : ""
+                      ].join(" ")}
+                    >
+                      {isCompleted ? (
+                        <Check className="path-check-icon" size={30} />
+                      ) : isLocked ? (
+                        <Lock size={24} />
+                      ) : node.checkpoint || node.id.includes("mock") ? (
+                        <Image className="h-12 w-12 rounded-full object-cover" src={lionLogo} alt="" width={72} height={72} />
+                      ) : (
+                        node.icon
+                      )}
                     </span>
                     <span className="min-w-0">
                       <span className="block text-lg font-black">{pick(node.title, language)}</span>
-                      <span className={["mt-1 block text-sm leading-5", isCurrent ? "text-black/70" : "text-white/52"].join(" ")}>{pick(node.subtitle, language)}</span>
+                      <span className="mt-1 block text-sm leading-5 text-white/52">{pick(node.subtitle, language)}</span>
                       <span className="mt-3 inline-flex items-center gap-1 text-xs font-black">
                         {isCompleted ? pick(copy.header.completed, language) : isLocked ? pick(copy.header.locked, language) : difficultyFor(index)}
                         {!isLocked ? <Play size={14} /> : null}
@@ -654,7 +711,7 @@ export default function PathPage() {
 
         <aside className="border-t border-white/10 bg-[#101010] p-4 lg:sticky lg:top-0 lg:h-screen lg:border-l lg:border-t-0 lg:p-5">
           {!isProActive ? (
-            <div className="rounded-xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-5">
+            <div className="path-sidebar-card rounded-xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-5" style={{ animationDelay: "160ms" }}>
               <div className="flex items-center gap-3">
                 <Crown className="text-[#FFD700]" size={28} />
                 <h2 className="text-xl font-black">{pick(copy.right.proTitle, language)}</h2>
@@ -668,8 +725,8 @@ export default function PathPage() {
           ) : null}
 
           <div className="mt-4 grid gap-4" id="profile">
-            <MetricCard icon={<Flame className="text-[#FFD700]" />} value={`${progress.streak}`} label={pick(copy.right.streak, language)} />
-            <div className="rounded-xl border border-white/10 bg-[#151515] p-5">
+            <MetricCard animated={streakBumped} icon={<Flame className="text-[#FFD700]" />} value={`${progress.streak}`} label={pick(copy.right.streak, language)} />
+            <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" style={{ animationDelay: "80ms" }}>
               <div className="flex items-center justify-between">
                 <p className="font-black">{pick(copy.right.dailyGoal, language)}</p>
                 <Target className="text-[#FFD700]" size={20} />
@@ -679,14 +736,14 @@ export default function PathPage() {
               </div>
               <p className="mt-2 text-sm font-semibold text-white/55">{progress.todayLessons}/{progress.dailyGoal} lessons</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-[#151515] p-5">
+            <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" style={{ animationDelay: "240ms" }}>
               <div className="flex items-center gap-2">
                 <Sparkles className="text-[#FFD700]" size={20} />
                 <p className="font-black">{pick(copy.right.challenge, language)}</p>
               </div>
               <p className="mt-3 text-sm leading-6 text-white/58">{pick(copy.right.challengeBody, language)}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-[#151515] p-5" id="leaderboard">
+            <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" id="leaderboard" style={{ animationDelay: "320ms" }}>
               <div className="flex items-center gap-2">
                 <Medal className="text-[#FFD700]" size={20} />
                 <p className="font-black">Weekly XP</p>
@@ -708,14 +765,16 @@ export default function PathPage() {
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 p-4 backdrop-blur">
           <div className="mx-auto my-8 max-w-3xl rounded-xl border border-[#FFD700]/25 bg-[#111] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
             {lessonComplete ? (
-              <div className="py-12 text-center">
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#FFD700] text-5xl text-black">✓</div>
-                <h2 className="mt-6 text-4xl font-black">{pick(copy.lesson.done, language)}</h2>
-                <p className="mt-3 text-2xl font-black text-[#FFD700]">{pick(copy.lesson.xp, language)} {perfect ? `• ${pick(copy.lesson.perfect, language)}` : ""}</p>
-                <button className="mt-8 min-h-11 rounded-xl bg-[#FFD700] px-6 py-3 font-black text-black transition hover:bg-white" onClick={() => setActiveNode(null)} type="button">
-                  {pick(copy.lesson.next, language)}
-                </button>
-              </div>
+              <LessonCompletePanel
+                correct={correctCount}
+                total={questions.length}
+                perfect={perfect}
+                language={language}
+                onContinue={() => {
+                  setActiveNode(null);
+                  window.setTimeout(() => setRecentlyCompletedNodeId(null), 1000);
+                }}
+              />
             ) : (
               <>
                 <div className="flex items-start justify-between gap-4">
@@ -806,16 +865,82 @@ function SideLink({ active = false, href = "#", icon, label, muted = false }: { 
   );
 }
 
-function MetricCard({ icon, value, label }: { icon: ReactNode; value: string; label: string }) {
+function MetricCard({ animated = false, icon, value, label }: { animated?: boolean; icon: ReactNode; value: string; label: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#151515] p-5">
+    <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" style={{ animationDelay: "0ms" }}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-4xl font-black text-[#FFD700]">{value}</p>
+          <p className={["text-4xl font-black text-[#FFD700]", animated ? "path-streak-count--bump" : ""].join(" ")}>{value}</p>
           <p className="mt-1 text-sm font-semibold text-white/55">{label}</p>
         </div>
-        {icon}
+        <span className={animated ? "path-streak-flame--bump" : ""}>{icon}</span>
       </div>
+    </div>
+  );
+}
+
+function LessonCompletePanel({
+  correct,
+  total,
+  perfect,
+  language,
+  onContinue
+}: {
+  correct: number;
+  total: number;
+  perfect: boolean;
+  language: Language;
+  onContinue: () => void;
+}) {
+  const [displayCorrect, setDisplayCorrect] = useState(0);
+  const [showButton, setShowButton] = useState(false);
+
+  useEffect(() => {
+    setDisplayCorrect(0);
+    setShowButton(false);
+    const duration = 600;
+    const startedAt = performance.now();
+    let frame = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      setDisplayCorrect(Math.round(correct * progress));
+      if (progress < 1) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        window.setTimeout(() => setShowButton(true), 200);
+      }
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [correct]);
+
+  return (
+    <div className="lesson-complete-panel text-center">
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[#FFD700]/45 bg-[#FFD700]/15 text-[#FFD700]">
+        <Check size={42} />
+      </div>
+      <h2 className="mt-5 text-4xl font-black">{pick(copy.lesson.done, language)}</h2>
+      <p className={["lesson-score-text mt-5 text-5xl font-black text-[#FFD700]", perfect ? "lesson-score-text--perfect" : ""].join(" ")}>
+        {displayCorrect}/{total}
+      </p>
+      <p className="mt-2 text-lg font-bold text-white/58">to'g'ri</p>
+      <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-[#FFD700]/30 bg-[#FFD700]/10 px-5 py-3 text-sm font-black text-[#FFD700]">
+        <Sparkles size={18} />
+        {pick(copy.lesson.xp, language)}
+        {perfect ? <span>• {pick(copy.lesson.perfect, language)}</span> : null}
+      </div>
+      <button
+        className={[
+          "lesson-continue-button mt-7 min-h-12 w-full rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black transition hover:bg-white",
+          showButton ? "lesson-continue-button--visible" : ""
+        ].join(" ")}
+        onClick={onContinue}
+        type="button"
+      >
+        {pick(copy.lesson.next, language)}
+      </button>
     </div>
   );
 }
