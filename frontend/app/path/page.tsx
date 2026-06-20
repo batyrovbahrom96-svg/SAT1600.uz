@@ -978,7 +978,7 @@ export default function PathPage() {
       );
       return;
     }
-    router.push(`/sat-test?lang=${language}&section=reading_writing&from=path`);
+    router.push(`/rw-mock?lang=${language}&from=path`);
   }
 
   return (

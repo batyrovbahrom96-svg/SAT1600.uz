@@ -35,6 +35,11 @@ html {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
+  background:
+    radial-gradient(circle at 24% 34%, rgba(255, 215, 0, 0.18), transparent 30%),
+    radial-gradient(circle at 70% 18%, rgba(255, 255, 255, 0.08), transparent 26%),
+    radial-gradient(circle at 55% 72%, rgba(143, 241, 198, 0.08), transparent 30%),
+    linear-gradient(135deg, #070808 0%, #101112 46%, #050505 100%);
   opacity: 0.95;
   mix-blend-mode: screen;
   filter: saturate(1.35) contrast(1.12) brightness(1.08);

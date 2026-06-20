@@ -1003,7 +1003,7 @@ const difficultyWeights: Record<FullMockQuestion["difficulty"], number> = {
   "very-hard": 1.42,
 };
 
-function scaleWeightedScore(answers: Array<{ isCorrect: boolean; question: FullMockQuestion }>) {
+export function scaleWeightedScore(answers: Array<{ isCorrect: boolean; question: FullMockQuestion }>) {
   const total = answers.reduce((sum, answer) => sum + difficultyWeights[answer.question.difficulty], 0);
   const earned = answers.reduce((sum, answer) => sum + (answer.isCorrect ? difficultyWeights[answer.question.difficulty] : 0), 0);
   const raw = 200 + (earned / Math.max(total, 1)) * 600;

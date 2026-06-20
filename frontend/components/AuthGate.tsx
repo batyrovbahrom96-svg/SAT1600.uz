@@ -25,6 +25,7 @@ const protectedPrefixes = [
   "/reading-analyzer",
   "/reading-path",
   "/roadmap",
+  "/rw-mock",
   "/sat-mock",
   "/sat-test",
   "/test",
