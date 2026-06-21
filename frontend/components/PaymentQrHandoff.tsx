@@ -54,6 +54,7 @@ export function PaymentQrHandoff({
   const { language } = useLanguage();
   const copy = text[language];
   const [config, setConfig] = useState<PaymentConfig | null>(null);
+  const [qrSrc, setQrSrc] = useState(paynetQrImage);
 
   useEffect(() => {
     getPaymentConfig().then(setConfig).catch(() => setConfig(null));
@@ -63,6 +64,10 @@ export function PaymentQrHandoff({
   const qrLabel = config?.payme_qr_url ? "Paynet QR" : config?.click_qr_url ? "Click QR" : copy.qrFallback;
   const telegramUrl = config?.telegram_bot_url || fallbackBotUrl;
   const paymentUrl = `/payment?lang=${language}&plan=pro&from=${source}`;
+
+  useEffect(() => {
+    setQrSrc(qrUrl);
+  }, [qrUrl]);
 
   const cardClass = useMemo(
     () => [
@@ -82,7 +87,12 @@ export function PaymentQrHandoff({
 
       <div className={["mt-3 grid gap-3", compact ? "" : "sm:grid-cols-[150px_1fr] sm:items-center"].join(" ")}>
         <div className="rounded-xl bg-white p-2">
-          <img className={[compact ? "max-h-[360px]" : "max-h-[520px]", "w-full rounded-lg object-contain"].join(" ")} src={qrUrl} alt={qrLabel} />
+          <img
+            className={[compact ? "max-h-[360px]" : "max-h-[520px]", "min-h-[180px] w-full rounded-lg object-contain"].join(" ")}
+            src={qrSrc}
+            alt={qrLabel}
+            onError={() => setQrSrc(paynetQrImage)}
+          />
         </div>
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-white/45">{copy.stepsTitle}</p>

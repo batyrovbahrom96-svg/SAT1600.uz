@@ -158,11 +158,17 @@ function PlanButton({ active, label, sub, badge, onClick }: { active: boolean; l
 function QrCard({ title, imageUrl }: { title: string; imageUrl: string }) {
   const fallbackQrUrl = "/assets/payment/paynet-qr.png";
   const finalImageUrl = imageUrl || fallbackQrUrl;
+  const [qrSrc, setQrSrc] = useState(finalImageUrl);
+
+  useEffect(() => {
+    setQrSrc(finalImageUrl);
+  }, [finalImageUrl]);
+
   return (
     <article className="border border-white/10 bg-black/35 p-4">
       <h3 className="text-lg font-black text-[#FFD700]">{title}</h3>
       <div className="mt-4 grid place-items-center bg-white p-3">
-        <img className="max-h-[520px] w-full object-contain" src={finalImageUrl} alt={title} />
+        <img className="min-h-[220px] max-h-[520px] w-full object-contain" src={qrSrc} alt={title} onError={() => setQrSrc(fallbackQrUrl)} />
       </div>
       {!imageUrl ? (
         <p className="mt-3 text-xs font-bold leading-5 text-white/45">
