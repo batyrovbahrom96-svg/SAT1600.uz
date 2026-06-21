@@ -1328,20 +1328,20 @@ export default function PathPage() {
               </div>
               <p className="mt-2 text-sm font-semibold text-white/55">{progress.todayLessons}/{progress.dailyGoal} lessons</p>
             </div>
-            {!isProActive ? (
-              <div className="path-sidebar-card rounded-xl border border-[#FFD700]/30 bg-[#FFD700]/10 p-5" style={{ animationDelay: "160ms" }}>
-                <div className="flex items-center gap-2">
-                  <MessageCircle className="text-[#FFD700]" size={20} />
-                  <p className="font-black text-[#FFD700]">SATTEST PRO</p>
-                </div>
-                <p className="mt-3 text-2xl font-black text-white">300,000 UZS/oy</p>
-                <p className="mt-2 text-sm leading-6 text-white/65">
-                  Practice Bank, Mock Test va qolgan curriculum mavzularini ochish uchun Telegram bot orqali to'lov qiling.
-                </p>
-                <PaymentQrHandoff compact source="path_type_lock" className="mt-4 bg-black/30" />
-                <p className="mt-2 text-center text-xs font-bold text-white/45">@{telegramBotUsername}</p>
+            <div className="path-sidebar-card rounded-xl border border-[#FFD700]/30 bg-[#FFD700]/10 p-5" style={{ animationDelay: "160ms" }}>
+              <div className="flex items-center gap-2">
+                <MessageCircle className="text-[#FFD700]" size={20} />
+                <p className="font-black text-[#FFD700]">SATTEST PRO</p>
               </div>
-            ) : null}
+              <p className="mt-3 text-2xl font-black text-white">300,000 UZS/oy</p>
+              <p className="mt-2 text-sm leading-6 text-white/65">
+                {isProActive
+                  ? "Pro faol. To'lovni yangilash yoki boshqa akkaunt uchun QR orqali to'lov qilib, chekni botga yuboring."
+                  : "Practice Bank, Mock Test va qolgan curriculum mavzularini ochish uchun Telegram bot orqali to'lov qiling."}
+              </p>
+              <PaymentQrHandoff compact source="path_type_lock" className="mt-4 bg-black/30" />
+              <p className="mt-2 text-center text-xs font-bold text-white/45">@{telegramBotUsername}</p>
+            </div>
             <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" style={{ animationDelay: "240ms" }}>
               <div className="flex items-center gap-2">
                 <Sparkles className="text-[#FFD700]" size={20} />
