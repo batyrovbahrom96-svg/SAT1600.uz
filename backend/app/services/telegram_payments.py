@@ -168,6 +168,9 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     if text.startswith("/funnel_stats"):
         return _handle_funnel_stats_command(chat_id, db)
 
+    if text.startswith("/conversion_stats"):
+        return _handle_conversion_stats_command(chat_id, db)
+
     if text.startswith("/sendtip"):
         return _handle_sendtip_command(chat_id, text, db)
 
@@ -264,6 +267,8 @@ def _handle_message(message: dict, db: Session | None) -> dict:
         currency="UZS",
     )
     db.add(subscription)
+    user.upgraded_to_pro = True
+    user.upgraded_to_pro_at = user.upgraded_to_pro_at or period_start
     db.commit()
     db.refresh(subscription)
 
@@ -878,6 +883,8 @@ def _handle_payment_order_callback(callback_query: dict, action: str, reference:
     order.activation_date = now
     order.expiry_date = expiry
     db.add(subscription)
+    user.upgraded_to_pro = True
+    user.upgraded_to_pro_at = user.upgraded_to_pro_at or now
     db.commit()
 
     _answer_callback(callback_id, "Pro activated.")
@@ -988,8 +995,44 @@ def _handle_funnel_stats_command(chat_id: str, db: Session | None) -> dict:
     return {"ok": True, "funnel_stats": True}
 
 
+def _handle_conversion_stats_command(chat_id: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can request Pro conversion statistics.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so conversion stats are unavailable.")
+        return {"ok": True, "database": False}
+
+    _send_message(chat_id, build_conversion_stats(db))
+    return {"ok": True, "conversion_stats": True}
+
+
 def _pct(part: int, whole: int) -> str:
     return f"{round((part / whole) * 100, 1)}%" if whole else "0%"
+
+
+def build_conversion_stats(db: Session) -> str:
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    users = db.execute(select(User).where(User.upgraded_to_pro_at >= month_start)).scalars().all()
+    total = len(users)
+    source_counts = {
+        "diagnostic_lock": sum(1 for user in users if user.pro_conversion_source == "diagnostic_lock"),
+        "analyzer_limit": sum(1 for user in users if user.pro_conversion_source == "analyzer_limit"),
+        "path_type_lock": sum(1 for user in users if user.pro_conversion_source == "path_type_lock"),
+        "mock_test_lock": sum(1 for user in users if user.pro_conversion_source == "mock_test_lock"),
+    }
+
+    return (
+        "💰 PRO CONVERSIONS BU OY\n\n"
+        f"Jami: {total}\n\n"
+        "Manba bo'yicha:\n"
+        f"- Diagnostic natija: {source_counts['diagnostic_lock']} ({_pct(source_counts['diagnostic_lock'], total)})\n"
+        f"- Reading Analyzer: {source_counts['analyzer_limit']} ({_pct(source_counts['analyzer_limit'], total)})\n"
+        f"- Path (savol turlari): {source_counts['path_type_lock']} ({_pct(source_counts['path_type_lock'], total)})\n"
+        f"- Mock Test: {source_counts['mock_test_lock']} ({_pct(source_counts['mock_test_lock'], total)})"
+    )
 
 
 def build_platform_funnel_stats(db: Session) -> str:
@@ -1001,9 +1044,10 @@ def build_platform_funnel_stats(db: Session) -> str:
     first_mock_completed = sum(1 for user in users if user.first_mock_completed or user.first_mock_completed_at)
     upgraded_to_pro = sum(1 for user in users if user.upgraded_to_pro or user.upgraded_to_pro_at)
     source_counts = {
-        "diagnostic_result": sum(1 for user in users if user.pro_conversion_source == "diagnostic_result"),
-        "reading_analyzer_limit": sum(1 for user in users if user.pro_conversion_source == "reading_analyzer_limit"),
-        "path_node_lock": sum(1 for user in users if user.pro_conversion_source == "path_node_lock"),
+        "diagnostic_lock": sum(1 for user in users if user.pro_conversion_source == "diagnostic_lock"),
+        "analyzer_limit": sum(1 for user in users if user.pro_conversion_source == "analyzer_limit"),
+        "path_type_lock": sum(1 for user in users if user.pro_conversion_source == "path_type_lock"),
+        "mock_test_lock": sum(1 for user in users if user.pro_conversion_source == "mock_test_lock"),
     }
 
     if upgraded_to_pro == 0:
@@ -1024,9 +1068,10 @@ def build_platform_funnel_stats(db: Session) -> str:
         f"→ First mock completed: {first_mock_completed} ({_pct(first_mock_completed, total)})\n"
         f"→ Upgraded to Pro: {upgraded_to_pro} ({_pct(upgraded_to_pro, total)})\n\n"
         "Pro conversion source:\n"
-        f"- From diagnostic lock: {source_counts['diagnostic_result']}\n"
-        f"- From analyzer limit: {source_counts['reading_analyzer_limit']}\n"
-        f"- From path node lock: {source_counts['path_node_lock']}"
+        f"- From diagnostic lock: {source_counts['diagnostic_lock']}\n"
+        f"- From analyzer limit: {source_counts['analyzer_limit']}\n"
+        f"- From path node lock: {source_counts['path_type_lock']}\n"
+        f"- From mock test lock: {source_counts['mock_test_lock']}"
     )
 
 

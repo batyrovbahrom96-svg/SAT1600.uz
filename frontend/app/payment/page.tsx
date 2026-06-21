@@ -9,6 +9,7 @@ import { getFreeDiagnosticResult } from "@/lib/free-diagnostic-storage";
 import { MONTHLY_PRICE, MONTHLY_PRICE_LABEL, THREE_MONTH_PRICE, THREE_MONTH_PRICE_LABEL } from "@/lib/pricing";
 
 type Plan = "monthly" | "three_month";
+type ConversionSource = "diagnostic_lock" | "analyzer_limit" | "path_type_lock" | "mock_test_lock";
 
 const fallbackConfig: PaymentConfig = {
   payme_qr_url: "",
@@ -20,6 +21,14 @@ const fallbackConfig: PaymentConfig = {
   },
 };
 
+function normalizeConversionSource(value: string | null): ConversionSource | null {
+  if (value === "diagnostic_lock" || value === "diagnostic-result" || value === "diagnostic_result") return "diagnostic_lock";
+  if (value === "analyzer_limit" || value === "reading_analyzer_limit") return "analyzer_limit";
+  if (value === "path_type_lock" || value === "reading-mastery" || value === "path_node_lock") return "path_type_lock";
+  if (value === "mock_test_lock") return "mock_test_lock";
+  return null;
+}
+
 export default function PaymentPage() {
   const router = useRouter();
   const [config, setConfig] = useState<PaymentConfig>(fallbackConfig);
@@ -30,10 +39,16 @@ export default function PaymentPage() {
   const result = useMemo(() => diagnostic ? calculateDiagnosticResult(diagnostic.answers) : null, [diagnostic]);
   const weakAreas = result?.weakAreas.slice(0, 4) ?? ["Reading accuracy", "Grammar precision", "Math timing"];
   const estimatedScore = result?.estimatedTotal ?? 900;
+  const conversionSource = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    return normalizeConversionSource(params.get("from") || params.get("conversion_source"));
+  }, []);
 
   useEffect(() => {
     if (!getToken()) {
-      router.replace(`/register?next=${encodeURIComponent("/payment")}`);
+      const next = typeof window === "undefined" ? "/payment" : `${window.location.pathname}${window.location.search}`;
+      router.replace(`/register?next=${encodeURIComponent(next)}`);
       return;
     }
     getPaymentConfig().then(setConfig).catch(() => setConfig(fallbackConfig));
@@ -47,6 +62,7 @@ export default function PaymentPage() {
         subscription_type: plan,
         estimated_score: estimatedScore,
         weak_areas: weakAreas,
+        conversion_source: conversionSource,
       });
       router.push(`/payment/confirm?ref=${encodeURIComponent(order.reference)}`);
     } catch (err) {

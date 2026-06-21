@@ -381,7 +381,7 @@ export default function ReadingAnalyzerPage() {
           {limitReached ? (
             <LimitReachedCard
               copy={copy}
-              onUpgrade={() => router.push(`/pricing?lang=${language}`)}
+              onUpgrade={() => router.push(`/pricing?lang=${language}&plan=pro&from=analyzer_limit`)}
               used={Math.max(3, usedToday)}
             />
           ) : null}
@@ -389,7 +389,7 @@ export default function ReadingAnalyzerPage() {
           {signupWall ? (
             <SignupWallCard
               copy={copy}
-              onPro={() => router.push(`/pricing?lang=${language}`)}
+              onPro={() => router.push(`/pricing?lang=${language}&plan=pro&from=analyzer_limit`)}
               onSignup={() => {
                 const anon = encodeURIComponent(getReadingAnalyzerAnonymousId());
                 const next = encodeURIComponent(`/reading-analyzer?lang=${language}`);

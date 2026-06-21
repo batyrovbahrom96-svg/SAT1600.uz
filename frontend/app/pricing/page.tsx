@@ -6,6 +6,7 @@ import { ArrowRight, Check, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { PremiumButton } from "@/components/PremiumButton";
 import { PremiumText } from "@/components/PremiumText";
+import { trackProLockView } from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
 import { MONTHLY_PRICE_LABEL, THREE_MONTH_PRICE_3_MONTHS } from "@/lib/pricing";
 
@@ -17,6 +18,16 @@ const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&
 function getPlanFromUrl(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("plan") === "pro";
+}
+
+function getConversionSourceFromUrl() {
+  if (typeof window === "undefined") return null;
+  const value = new URLSearchParams(window.location.search).get("from");
+  if (value === "diagnostic_lock" || value === "diagnostic-result" || value === "diagnostic_result") return "diagnostic_lock" as const;
+  if (value === "analyzer_limit" || value === "reading_analyzer_limit") return "analyzer_limit" as const;
+  if (value === "path_type_lock" || value === "reading-mastery" || value === "path_node_lock") return "path_type_lock" as const;
+  if (value === "mock_test_lock") return "mock_test_lock" as const;
+  return null;
 }
 
 const pricingCopy: Record<
@@ -136,6 +147,8 @@ export default function PricingPage() {
 
   useEffect(() => {
     setShowPayment(getPlanFromUrl());
+    const source = getConversionSourceFromUrl();
+    if (source) void trackProLockView(source);
   }, []);
 
   return (

@@ -3,6 +3,7 @@
 import { ArrowLeft, ArrowRight, Bookmark, Clock, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { notifyFullMockResult } from "@/app/sat-test/actions";
+import { getSubscriptionStatus, trackProLockView } from "@/lib/api";
 import {
   FULL_MOCK_MODULES,
   FULL_MOCK_BANK_VERSION,
@@ -249,6 +250,7 @@ function QuestionChart({ chart }: { chart: FullMockChart }) {
 export default function SatTestPage() {
   const { language, setLanguage } = useLanguage();
   const copy = pick(satTestCopy, language);
+  const [accessAllowed, setAccessAllowed] = useState(false);
   const [screen, setScreen] = useState<ScreenState>("intro");
   const [progress, setProgress] = useState<FullMockProgress | null>(null);
   const [resumeProgress, setResumeProgress] = useState<FullMockProgress | null>(null);
@@ -256,6 +258,26 @@ export default function SatTestPage() {
   const [breakSeconds, setBreakSeconds] = useState(0);
   const [emailDraft, setEmailDraft] = useState("");
   const [isFinishing, setIsFinishing] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSubscriptionStatus()
+      .then((status) => {
+        if (cancelled) return;
+        if (status.has_active_subscription) {
+          setAccessAllowed(true);
+          return;
+        }
+        void trackProLockView("mock_test_lock");
+        window.location.replace(`/sat-mock?lang=${language}`);
+      })
+      .catch(() => {
+        if (!cancelled) window.location.replace(`/sat-mock?lang=${language}`);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [language]);
 
   useEffect(() => {
     const saved = safeReadJson<FullMockProgress>(FULL_MOCK_PROGRESS_KEY);
@@ -444,6 +466,16 @@ export default function SatTestPage() {
   }
 
   if (screen === "intro") {
+    if (!accessAllowed) {
+      return (
+        <main className="flex min-h-screen items-center justify-center bg-[#0a0a0a] px-5 text-center text-white">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#FFD700]">SATTEST.UZ Pro</p>
+            <h1 className="mt-5 text-3xl font-black">Mock Test tekshirilmoqda...</h1>
+          </div>
+        </main>
+      );
+    }
     return (
       <main className="min-h-screen bg-[#f7f7f4] text-[#071124]">
         <section className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center px-6 text-center">

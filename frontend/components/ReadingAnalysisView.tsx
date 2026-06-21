@@ -438,7 +438,7 @@ export function ReadingAnalysisView({ result, language, onLanguageChange, showSo
           <Clock className="mr-2 inline" size={25} /> {remaining === "00:00:00" ? copy.expired : `${copy.saved_for}: ${remaining}`}
         </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <Link className="inline-flex min-h-14 items-center justify-center gap-2 border border-[#FFD700] bg-[#FFD700] px-5 text-sm font-black uppercase tracking-[0.14em] text-black" href={`/pricing?lang=${language}`}>
+          <Link className="inline-flex min-h-14 items-center justify-center gap-2 border border-[#FFD700] bg-[#FFD700] px-5 text-sm font-black uppercase tracking-[0.14em] text-black" href={`/pricing?lang=${language}&plan=pro&from=analyzer_limit`}>
             {copy.upgrade} · {copy.pro_price} <ArrowRight size={16} />
           </Link>
           <Link className="inline-flex min-h-14 items-center justify-center gap-2 border border-white/15 bg-black/20 px-5 text-sm font-black uppercase tracking-[0.14em] text-white/75" href={`/reading-analyzer?lang=${language}`}>
@@ -558,7 +558,7 @@ function InfoPill({ label, value }: { label: string; value: string }) {
 }
 
 function LockedBlock({ copy }: { copy: Record<string, string> }) {
-  return <div className="border border-[#FFD700]/25 bg-[#FFD700]/10 p-5 text-center"><div className="mx-auto h-20 max-w-md space-y-2 overflow-hidden blur-sm"><p className="h-3 bg-white/30" /><p className="h-3 bg-white/20" /><p className="h-3 bg-white/15" /></div><Lock className="mx-auto mt-4 text-[#FFD700]" size={30} /><p className="mt-3 text-lg font-semibold text-white">{copy.locked_questions}</p><p className="mt-2 text-sm font-bold text-[#FFD700]">{copy.pro_price}</p><Link className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 border border-[#FFD700] bg-[#FFD700] px-6 text-sm font-black uppercase tracking-[0.14em] text-black" href="/pricing">{copy.upgrade}<ArrowRight size={16} /></Link></div>;
+  return <div className="border border-[#FFD700]/25 bg-[#FFD700]/10 p-5 text-center"><div className="mx-auto h-20 max-w-md space-y-2 overflow-hidden blur-sm"><p className="h-3 bg-white/30" /><p className="h-3 bg-white/20" /><p className="h-3 bg-white/15" /></div><Lock className="mx-auto mt-4 text-[#FFD700]" size={30} /><p className="mt-3 text-lg font-semibold text-white">{copy.locked_questions}</p><p className="mt-2 text-sm font-bold text-[#FFD700]">{copy.pro_price}</p><Link className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 border border-[#FFD700] bg-[#FFD700] px-6 text-sm font-black uppercase tracking-[0.14em] text-black" href="/pricing?plan=pro&from=analyzer_limit">{copy.upgrade}<ArrowRight size={16} /></Link></div>;
 }
 
 function mainDetailed(analysis: ReadingAnalysis, language: Language) {

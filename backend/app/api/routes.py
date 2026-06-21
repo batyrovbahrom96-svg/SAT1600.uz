@@ -70,6 +70,7 @@ class PaymentOrderCreate(BaseModel):
     subscription_type: str = Field(pattern="^(monthly|three_month)$")
     estimated_score: int | None = Field(default=None, ge=400, le=1600)
     weak_areas: list[str] = Field(default_factory=list, max_length=8)
+    conversion_source: str | None = Field(default=None, pattern="^(diagnostic_lock|analyzer_limit|path_type_lock|mock_test_lock)$")
 
 
 class PlatformProgressPayload(BaseModel):
@@ -664,6 +665,8 @@ def create_payment_order(
         estimated_score=payload.estimated_score,
         weak_areas=payload.weak_areas,
     )
+    if payload.conversion_source:
+        user.pro_conversion_source = payload.conversion_source
     db.add(order)
     db.commit()
     db.refresh(order)

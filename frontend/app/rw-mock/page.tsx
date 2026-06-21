@@ -21,6 +21,7 @@ import {
   createReadingWritingMockProgress,
   getReadingWritingMockQuestions,
 } from "@/lib/rw-mock-test";
+import { getSubscriptionStatus } from "@/lib/api";
 import { languages, pick, useLanguage, type Language } from "@/lib/i18n";
 
 type ScreenState = "intro" | "test" | "break";
@@ -250,6 +251,7 @@ function QuestionChart({ chart }: { chart: FullMockChart }) {
 export default function SatTestPage() {
   const { language, setLanguage } = useLanguage();
   const copy = pick(satTestCopy, language);
+  const [accessAllowed, setAccessAllowed] = useState(false);
   const [screen, setScreen] = useState<ScreenState>("intro");
   const [progress, setProgress] = useState<FullMockProgress | null>(null);
   const [resumeProgress, setResumeProgress] = useState<FullMockProgress | null>(null);
@@ -257,6 +259,25 @@ export default function SatTestPage() {
   const [breakSeconds, setBreakSeconds] = useState(0);
   const [emailDraft, setEmailDraft] = useState("");
   const [isFinishing, setIsFinishing] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSubscriptionStatus()
+      .then((status) => {
+        if (cancelled) return;
+        if (status.has_active_subscription) {
+          setAccessAllowed(true);
+        } else {
+          window.location.replace(`/path?lang=${language}`);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) window.location.replace(`/path?lang=${language}`);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [language]);
 
   useEffect(() => {
     const saved = safeReadJson<FullMockProgress>(RW_MOCK_PROGRESS_KEY);
@@ -434,6 +455,17 @@ export default function SatTestPage() {
     const next = { ...progress, bankVersion: FULL_MOCK_BANK_VERSION, currentQuestion: nextIndex };
     safeWriteJson(RW_MOCK_PROGRESS_KEY, next);
     setProgress(next);
+  }
+
+  if (!accessAllowed) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#0a0a0a] px-5 text-center text-white">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#FFD700]">SATTEST.UZ Pro</p>
+          <h1 className="mt-5 text-3xl font-black">Reading & Writing Mock tekshirilmoqda...</h1>
+        </div>
+      </main>
+    );
   }
 
   if (screen === "intro") {

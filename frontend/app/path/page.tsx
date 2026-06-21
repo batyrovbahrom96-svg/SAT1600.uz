@@ -10,7 +10,6 @@ import {
   BookOpen,
   Check,
   ChevronRight,
-  Crown,
   Flame,
   Lock,
   LogOut,
@@ -22,7 +21,7 @@ import {
   User,
   Zap
 } from "lucide-react";
-import { api, clearAuth, getStudentName, getSubscriptionStatus, getToken } from "@/lib/api";
+import { api, clearAuth, getStudentName, getSubscriptionStatus, getToken, trackProLockView } from "@/lib/api";
 import { calculateDiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult } from "@/lib/free-diagnostic-storage";
 import { pick, useLanguage, type Language } from "@/lib/i18n";
@@ -804,6 +803,7 @@ export default function PathPage() {
   async function openMasteryType(type: MasteryType, forceNew = false) {
     setMasteryError("");
     if (type.locked_reason === "pro_required") {
+      void trackProLockView("path_type_lock");
       setActiveMasteryType(type);
       setMasteryScreen("paywall");
       return;
@@ -828,6 +828,7 @@ export default function PathPage() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Mastery mavzusini ochib bo'lmadi.";
       if (message.includes("pro_required")) {
+        void trackProLockView("path_type_lock");
         setActiveMasteryType(type);
         setMasteryScreen("paywall");
       } else {
@@ -873,6 +874,9 @@ export default function PathPage() {
         refreshMasteryCatalog();
       }
       setMasteryResult({ passed: response.passed, correct: response.correct, mistakes: response.mistakes, paywall_required: response.paywall_required, message_uz: response.message_uz });
+      if (response.paywall_required) {
+        void trackProLockView("path_type_lock");
+      }
       if (!response.passed && response.retry_content) {
         setMasteryContent(response.retry_content);
       }
@@ -1244,20 +1248,6 @@ export default function PathPage() {
         </section>
 
         <aside className="border-t border-white/10 bg-[#101010] p-4 lg:sticky lg:top-0 lg:h-screen lg:border-l lg:border-t-0 lg:p-5">
-          {!isProActive ? (
-            <div className="path-sidebar-card rounded-xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-5" style={{ animationDelay: "160ms" }}>
-              <div className="flex items-center gap-3">
-                <Crown className="text-[#FFD700]" size={28} />
-                <h2 className="text-xl font-black">{pick(copy.right.proTitle, language)}</h2>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-white/62">{pick(copy.right.proBody, language)}</p>
-              <Link className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#FFD700] px-4 py-3 text-sm font-black text-black transition hover:bg-white" href={`/pricing?lang=${language}`}>
-                {pick(copy.right.proCta, language)}
-                <ChevronRight size={18} />
-              </Link>
-            </div>
-          ) : null}
-
           <div className="mt-4 grid gap-4" id="profile">
             <MetricCard animated={streakBumped} icon={<Flame className="text-[#FFD700]" />} value={`${progress.streak}`} label={pick(copy.right.streak, language)} />
             <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" style={{ animationDelay: "80ms" }}>
@@ -1408,7 +1398,7 @@ export default function PathPage() {
                 <Image className="mx-auto h-20 w-20 rounded-full border border-[#FFD700]/40 object-cover" src={lionLogo} alt="SATTEST lion crest" width={120} height={120} />
                 <h3 className="mt-5 text-3xl font-black">🦁 Birinchi mavzuni o'zlashtirdingiz!</h3>
                 <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-white/68">
-                  Natijangiz saqlanadi. Keyingi 11 ta mavzuga o'tish uchun SATTEST Pro kerak.
+                  Qolgan 11 ta savol turi sizni kutmoqda, har biri 10 ta original savol bilan.
                 </p>
                 <div className="mx-auto mt-5 max-w-xl rounded-2xl border border-white/10 bg-black/35 p-5 text-left">
                   <p className="text-2xl font-black text-[#FFD700]">300,000 UZS/oy</p>
@@ -1419,8 +1409,8 @@ export default function PathPage() {
                     <li>✅ Mock testlar, Reading Analyzer va shaxsiy path</li>
                   </ul>
                 </div>
-                <Link className="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#FFD700] px-6 py-3 font-black text-black transition hover:bg-white" href={`/pricing?lang=${language}&from=reading-mastery`}>
-                  Pro Olish →
+                <Link className="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#FFD700] px-6 py-3 font-black text-black transition hover:bg-white" href={`/pricing?lang=${language}&plan=pro&from=path_type_lock`}>
+                  Pro Olish — 300,000 UZS/oy →
                 </Link>
               </div>
             ) : null}
@@ -1518,10 +1508,13 @@ export default function PathPage() {
                     <p className="mt-3 text-2xl font-black text-[#FFD700]">{masteryResult.correct}/10 to'g'ri</p>
                     {masteryResult.paywall_required ? (
                       <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-5">
-                        <p className="text-xl font-black">Keyingi 11 ta mavzu Pro bilan ochiladi.</p>
-                        <p className="mt-2 text-sm font-semibold text-white/62">Natijangiz saqlandi. Pro bilan davom etsangiz, barcha 12 tur bo'yicha to'liq mastery ochiladi.</p>
-                        <Link className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black hover:bg-white" href={`/pricing?lang=${language}&from=reading-mastery`}>
-                          Pro Olish →
+                        <p className="text-xl font-black">🦁 {activeMasteryType.type_name} mavzusini o'zlashtirdingiz — {masteryResult.correct}/10!</p>
+                        <p className="mt-3 text-sm font-semibold leading-6 text-white/72">
+                          Qolgan 11 ta savol turi sizni kutmoqda, har biri 10 ta original savol bilan.
+                        </p>
+                        <p className="mt-3 text-sm font-black text-[#FFD700]">Pro bilan to'liq SAT yo'lini oching:</p>
+                        <Link className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black hover:bg-white" href={`/pricing?lang=${language}&plan=pro&from=path_type_lock`}>
+                          Pro Olish — 300,000 UZS/oy →
                         </Link>
                       </div>
                     ) : null}

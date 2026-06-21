@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, LockKeyhole, Target } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { PremiumButton } from "@/components/PremiumButton";
-import { api, getSubscriptionStatus, getToken } from "@/lib/api";
+import { api, getSubscriptionStatus, getToken, trackProLockView } from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
 
 type Test = { id: string; title: string; description: string; is_premium: boolean };
@@ -30,7 +30,7 @@ const copy: Record<Language, {
     loginTitle: "Login required",
     loginBody: "Sign in first, then SATTEST.UZ can attach the mock test result to your account and My 1400+ route.",
     payTitle: "Pro required",
-    payBody: "The full SAT Mock Test opens after Pro subscription is active. Free Diagnostic is separate.",
+    payBody: "Full Mock Test — real SAT format, 98 questions, with exact timing.\n\nThis is available for Pro students:",
     errorTitle: "Unable to start SAT Mock Test",
     startButton: "Try again",
     loginButton: "Login",
@@ -43,7 +43,7 @@ const copy: Record<Language, {
     loginTitle: "Нужен вход",
     loginBody: "Сначала войдите, чтобы SATTEST.UZ сохранил результат mock test в вашем аккаунте и маршруте My 1400+.",
     payTitle: "Нужен Pro",
-    payBody: "Полный SAT Mock Test открывается после активной подписки Pro. Free Diagnostic отдельно.",
+    payBody: "Полный Mock Test — настоящий формат SAT, 98 вопросов, с точным временем.\n\nДоступно для Pro учеников:",
     errorTitle: "Не удалось запустить SAT Mock Test",
     startButton: "Попробовать снова",
     loginButton: "Войти",
@@ -56,7 +56,7 @@ const copy: Record<Language, {
     loginTitle: "Login kerak",
     loginBody: "Avval kiring, shunda SATTEST.UZ mock test natijasini akkauntingiz va My 1400+ yo'nalishingizga bog'laydi.",
     payTitle: "Pro kerak",
-    payBody: "To'liq SAT Mock Test Pro obuna faol bo'lgandan keyin ochiladi. Free Diagnostic alohida.",
+    payBody: "To'liq Mock Test — haqiqiy SAT formatida, 98 savol, aniq vaqt bilan.\n\nBu Pro o'quvchilar uchun mavjud:",
     errorTitle: "SAT Mock Test boshlanmadi",
     startButton: "Qayta urinish",
     loginButton: "Kirish",
@@ -83,6 +83,7 @@ export default function SatMockPage() {
     try {
       const subscription = await getSubscriptionStatus();
       if (!subscription.has_active_subscription) {
+        void trackProLockView("mock_test_lock");
         setStatus("pay");
         return;
       }
@@ -119,12 +120,12 @@ export default function SatMockPage() {
         </div>
         <p className="mt-6 text-[10px] font-black uppercase tracking-[0.42em] text-white/38">{eyebrow}</p>
         <h1 className="mt-5 text-4xl font-light leading-tight text-white md:text-6xl">{title}</h1>
-        <p className="mt-5 max-w-2xl text-base font-light leading-7 text-white/56">{body}</p>
+        <p className="mt-5 max-w-2xl whitespace-pre-line text-base font-light leading-7 text-white/56">{body}</p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           {status === "login" ? (
             <PremiumButton href="/login" icon={<ArrowRight size={18} />}>{text.loginButton}</PremiumButton>
           ) : status === "pay" ? (
-            <PremiumButton href="/pricing?plan=pro" icon={<ArrowRight size={18} />}>{text.pricingButton}</PremiumButton>
+            <PremiumButton href={`/pricing?lang=${language}&plan=pro&from=mock_test_lock`} icon={<ArrowRight size={18} />}>{text.pricingButton}</PremiumButton>
           ) : status === "error" ? (
             <PremiumButton icon={<ArrowRight size={18} />} onClick={startMock}>{text.startButton}</PremiumButton>
           ) : null}

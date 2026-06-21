@@ -1,22 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { ArrowRight, BarChart3, BookOpenCheck, Check, Lock, MessageCircle, Target, X, XCircle } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpenCheck, Target, XCircle } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { PremiumButton } from "@/components/PremiumButton";
 import { Skeleton } from "@/components/SkeletonLoader";
+import { trackProLockView } from "@/lib/api";
 import { calculateDiagnosticResult, freeDiagnosticQuestions, type DiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-diagnostic-storage";
 import { useLanguage } from "@/lib/i18n";
 import { notifyDiagnosticResult } from "./actions";
 
 const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_Welcome_Bot";
-const telegramBotUrl = `https://t.me/${telegramBotUsername}?start=pro`;
-const paynetQrPayload =
-  "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
-const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(paynetQrPayload)}`;
-const diagnosticPaywallCountdownKey = "sattest_diagnostic_paywall_countdown_end";
-const diagnosticPaywallDurationMs = 24 * 60 * 60 * 1000;
 const telegramDiagnosticUserKey = "sattest_telegram_diagnostic_user_id";
 
 const resultCopy = {
@@ -66,8 +62,7 @@ const resultCopy = {
         "Full 98-question Mock Test",
         "Unlimited practice tests"
       ],
-      expired: "⚠️ Time is over! Get Pro now!",
-      countdownNote: "Your plan disappears today!",
+      expired: "",
       primary: "🔑 GET PRO → 300,000 UZS/MONTH",
       threeMonth: "💎 3 MONTHS → 900,000 UZS",
       socialProof: "✅ 47 students got Pro this month"
@@ -143,8 +138,7 @@ const resultCopy = {
         "Полный Mock Test из 98 вопросов",
         "Безлимитные тренировочные тесты"
       ],
-      expired: "⚠️ Время вышло! Получите Pro сейчас!",
-      countdownNote: "Ваш план исчезнет сегодня!",
+      expired: "",
       primary: "🔑 ПОЛУЧИТЬ PRO → 300,000 UZS/МЕСЯЦ",
       threeMonth: "💎 3 МЕСЯЦА → 900,000 UZS",
       socialProof: "✅ В этом месяце 47 учеников получили Pro"
@@ -220,8 +214,7 @@ const resultCopy = {
         "To'liq 98 savollik Mock Test",
         "Cheksiz mashq testlari"
       ],
-      expired: "⚠️ Vaqt tugadi! Hozir Pro oling!",
-      countdownNote: "Rejangiz bugun o'chadi!",
+      expired: "",
       primary: "🔑 PRO OLISH → 300,000 UZS/OY",
       threeMonth: "💎 3 OY → 900,000 UZS",
       socialProof: "✅ Bu oy 47 o'quvchi Pro oldi"
@@ -253,15 +246,11 @@ const resultCopy = {
   }
 };
 
-type ProPlan = "monthly" | "threeMonth";
-
 export default function FreeDiagnosticResultsPage() {
   const { language } = useLanguage();
   const copy = resultCopy[language];
   const [stored, setStored] = useState<StoredFreeDiagnostic | null>(null);
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
-  const [countdownSeconds, setCountdownSeconds] = useState(24 * 60 * 60);
-  const [paymentPlan, setPaymentPlan] = useState<ProPlan | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -275,32 +264,8 @@ export default function FreeDiagnosticResultsPage() {
   }, [stored]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    function getCountdownEnd() {
-      const raw = window.localStorage.getItem(diagnosticPaywallCountdownKey);
-      const saved = raw ? Number(raw) : 0;
-      if (Number.isFinite(saved) && saved > Date.now()) return saved;
-
-      const next = Date.now() + diagnosticPaywallDurationMs;
-      window.localStorage.setItem(diagnosticPaywallCountdownKey, String(next));
-      return next;
-    }
-
-    let endAt = Date.now() + diagnosticPaywallDurationMs;
-    try {
-      endAt = getCountdownEnd();
-    } catch {
-      endAt = Date.now() + diagnosticPaywallDurationMs;
-    }
-
-    const updateCountdown = () => {
-      setCountdownSeconds(Math.max(0, Math.ceil((endAt - Date.now()) / 1000)));
-    };
-    updateCountdown();
-    const timer = window.setInterval(updateCountdown, 1000);
-    return () => window.clearInterval(timer);
-  }, []);
+    if (result) void trackProLockView("diagnostic_lock");
+  }, [result]);
 
   useEffect(() => {
     if (!result || !stored || typeof window === "undefined") return;
@@ -375,41 +340,10 @@ export default function FreeDiagnosticResultsPage() {
 
   const workedExample = result.missedQuestions[0];
   const weakAreas = result.weakAreas.slice(0, 3);
+  const lockedWeakCount = Math.max(0, Math.max(result.missedQuestions.length, result.weakAreas.length) - 1);
 
   return (
     <main className="min-h-screen bg-[#080908] text-white" data-sattest-no-translate="true">
-      <style>{`
-        .locked-section {
-          filter: blur(6px);
-          pointer-events: none;
-          user-select: none;
-          position: relative;
-        }
-
-        .lock-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0,0,0,0.5);
-          z-index: 10;
-          border-radius: 12px;
-        }
-
-        @keyframes diagnostic-timer-pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.03); opacity: 0.72; }
-        }
-
-        .diagnostic-timer-pulse {
-          animation: diagnostic-timer-pulse 1.2s ease-in-out infinite;
-        }
-      `}</style>
       <LuxuryNavbar />
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
         <RevealSection delay={0}>
@@ -432,13 +366,8 @@ export default function FreeDiagnosticResultsPage() {
         </div>
         </RevealSection>
 
-        <RevealSection delay={120}>
-          <DiagnosticProLockCard countdownSeconds={countdownSeconds} copy={copy.lockCard} onOpenPayment={setPaymentPlan} />
-        </RevealSection>
-
         <RevealSection delay={180}>
         <div className="mt-10 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-          <LockedAnalysisSection>
           <section className="border border-white/10 bg-white/[0.035] p-5">
             <div className="flex items-center gap-3">
               <BarChart3 className="text-[#c8bd88]" size={20} />
@@ -458,10 +387,8 @@ export default function FreeDiagnosticResultsPage() {
               ))}
             </div>
           </section>
-          </LockedAnalysisSection>
 
           <section className="grid gap-6">
-            <LockedAnalysisSection>
             <div className="border border-red-200/15 bg-red-400/10 p-5">
               <div className="flex items-center gap-3">
                 <Target className="text-red-100" size={20} />
@@ -475,9 +402,7 @@ export default function FreeDiagnosticResultsPage() {
                 ))}
               </div>
             </div>
-            </LockedAnalysisSection>
 
-            <LockedAnalysisSection>
             <div className="border border-white/10 bg-white/[0.035] p-5">
               <div className="flex items-center gap-3">
                 <XCircle className="text-[#c8bd88]" size={20} />
@@ -491,7 +416,6 @@ export default function FreeDiagnosticResultsPage() {
                 ))}
               </div>
             </div>
-            </LockedAnalysisSection>
           </section>
         </div>
         </RevealSection>
@@ -518,207 +442,42 @@ export default function FreeDiagnosticResultsPage() {
         </RevealSection>
 
         <RevealSection delay={540}>
-        <section className="mt-6 border border-[#c8bd88]/35 bg-[#c8bd88]/[0.07] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
-          <div className="grid gap-8 lg:grid-cols-[1fr_0.82fr] lg:items-end">
-            <div>
-              <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.34em] text-[#c8bd88]">
-                <Lock size={16} /> {copy.locked}
-              </p>
-              <h2 className="mt-5 text-4xl font-light leading-tight md:text-6xl">
-                {copy.upsellTitle} <span className="block text-white/72">{copy.goal} {result.estimatedTotal}</span>
-              </h2>
-              <p className="mt-5 max-w-3xl text-xl font-semibold leading-8 text-white">
-                {copy.bridge}
-              </p>
-              <p className="mt-5 max-w-3xl text-lg leading-8 text-white/64">
-                {copy.upsellBodyB}
-              </p>
-            </div>
-            <div className="grid gap-4">
-              <article className="border border-white/15 bg-black/30 p-5">
-                <p className="text-[10px] font-black uppercase tracking-[0.26em] text-white/45">{copy.monthlyPlan}</p>
-                <h3 className="mt-3 text-4xl font-light">{copy.monthly}</h3>
-                <div className="mt-5 grid min-h-[290px] place-items-center border border-white/15 bg-white p-4">
-                  <img className="h-[270px] w-[270px] object-contain" src={paynetQrImage} alt={copy.qrAlt} />
-                </div>
-                <p className="mt-4 text-center text-sm font-semibold uppercase tracking-[0.16em] text-white/70">{copy.scanLine}</p>
-                <div className="mt-5 grid gap-3">
-                  {copy.instructions.map((instruction) => (
-                    <p className="flex items-start gap-3 text-sm leading-6 text-white/70" key={instruction}>
-                      <Check className="mt-0.5 shrink-0 text-[#c8bd88]" size={16} /> {instruction}
-                    </p>
-                  ))}
-                </div>
-                <a className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-3 border border-[#c8bd88]/45 bg-[#c8bd88] px-5 text-center text-[11px] font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-white" href={telegramBotUrl} target="_blank" rel="noreferrer">
-                  <MessageCircle size={18} /> {copy.cta}
-                </a>
-              </article>
-              <div className="border border-white/10 bg-black/25 p-4 text-sm leading-6 text-white/58">
-                {copy.proOpens}
-              </div>
-            </div>
-          </div>
-        </section>
+          <DiagnosticProLockCard language={language} lockedCount={lockedWeakCount} />
         </RevealSection>
       </section>
-      {paymentPlan ? (
-        <PaymentQrModal copy={copy.paymentModal} plan={paymentPlan} onClose={() => setPaymentPlan(null)} />
-      ) : null}
     </main>
   );
 }
 
-function LockedAnalysisSection({ children }: { children: ReactNode }) {
-  return (
-    <div className="relative overflow-hidden rounded-xl">
-      <div className="locked-section">{children}</div>
-      <div className="lock-overlay">
-        <Lock className="text-[#FFD700]" size={32} />
-        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.22em] text-white">Pro kerak</p>
-      </div>
-    </div>
-  );
-}
-
-function DiagnosticProLockCard({
-  countdownSeconds,
-  copy,
-  onOpenPayment,
-}: {
-  countdownSeconds: number;
-  copy: (typeof resultCopy.en)["lockCard"];
-  onOpenPayment: (plan: ProPlan) => void;
-}) {
-  const expired = countdownSeconds <= 0;
-  const isUrgent = countdownSeconds > 0 && countdownSeconds <= 60 * 60;
-
+function DiagnosticProLockCard({ language, lockedCount }: { language: keyof typeof resultCopy; lockedCount: number }) {
+  const href = `/pricing?lang=${language}&plan=pro&from=diagnostic_lock`;
   return (
     <section className="mt-8 rounded-xl border border-[#FFD700]/35 bg-black/55 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.38)] md:p-7">
       <div className="mx-auto max-w-3xl text-white">
         <div className="flex items-center gap-3">
           <span className="text-3xl" aria-hidden="true">🔒</span>
-          <h2 className="text-3xl font-black leading-tight text-[#FFD700]">{copy.title}</h2>
+          <h2 className="text-3xl font-black leading-tight text-[#FFD700]">Pro tahlil ochiladi</h2>
         </div>
 
         <p className="mt-5 text-2xl font-semibold leading-9">
-          {copy.body}
+          Birinchi tahlilni ko'rdingiz. Qolgan {lockedCount || 1} ta zaif mavzu va 30-kunlik rejangiz Pro'da kutmoqda.
         </p>
 
-        <div className="mt-6">
-          <p className="text-lg font-black text-white">{copy.includedTitle}</p>
-          <div className="mt-4 grid gap-3 text-lg leading-7 text-white/82">
-            {copy.benefits.map((benefit) => (
-              <p key={benefit}>✅ {benefit}</p>
-            ))}
-          </div>
+        <div className="mt-5 grid gap-3 text-base font-semibold leading-7 text-white/72">
+          <p>✅ Qolgan zaif mavzularning to'liq thinking process tahlili</p>
+          <p>✅ Evidence va why-wrong breakdown</p>
+          <p>✅ 30-kunlik shaxsiy o'quv reja</p>
         </div>
 
-        <div className="mt-7 rounded-xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-4 text-center">
-          {expired ? (
-            <p className="text-2xl font-black text-[#FFD700]">{copy.expired}</p>
-          ) : (
-            <>
-              <p className={["text-4xl font-black tabular-nums text-[#FFD700]", isUrgent ? "diagnostic-timer-pulse" : ""].join(" ")}>
-                ⏰ {formatCountdown(countdownSeconds)}
-              </p>
-              <p className="mt-2 text-lg font-bold text-white">{copy.countdownNote}</p>
-            </>
-          )}
-        </div>
-
-        <div className="mt-6 grid gap-3">
-          <button
-            className="flex h-14 w-full items-center justify-center rounded-xl bg-[#FFD700] px-5 text-center text-lg font-black text-black transition hover:bg-white"
-            onClick={() => onOpenPayment("monthly")}
-            type="button"
-          >
-            {copy.primary}
-          </button>
-          <button
-            className="flex h-14 w-full items-center justify-center rounded-xl border border-[#FFD700]/55 bg-white/10 px-5 text-center text-lg font-black text-[#FFD700] transition hover:bg-[#FFD700] hover:text-black"
-            onClick={() => onOpenPayment("threeMonth")}
-            type="button"
-          >
-            {copy.threeMonth}
-          </button>
-        </div>
-
-        <p className="mt-5 text-center text-base font-bold text-white/82">{copy.socialProof}</p>
+        <Link
+          className="mt-7 flex min-h-14 w-full items-center justify-center rounded-xl bg-[#FFD700] px-5 text-center text-lg font-black text-black transition hover:bg-white"
+          href={href}
+        >
+          Pro Olish — 300,000 UZS/oy →
+        </Link>
       </div>
     </section>
   );
-}
-
-function PaymentQrModal({
-  copy,
-  onClose,
-  plan,
-}: {
-  copy: (typeof resultCopy.en)["paymentModal"];
-  onClose: () => void;
-  plan: ProPlan;
-}) {
-  const isThreeMonth = plan === "threeMonth";
-
-  return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/78 px-4 py-6 backdrop-blur-md" role="dialog" aria-modal="true" aria-label={copy.title}>
-      <section className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-xl border border-[#FFD700]/30 bg-[#090a08] p-5 text-white shadow-[0_40px_120px_rgba(0,0,0,0.62)] md:p-7">
-        <div className="flex items-start justify-between gap-5">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-[#FFD700]">{isThreeMonth ? copy.planThreeMonth : copy.planMonthly}</p>
-            <h2 className="mt-3 text-4xl font-light leading-tight md:text-5xl">{copy.title}</h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-white/64">{copy.body}</p>
-          </div>
-          <button className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/15 text-white/60 transition hover:border-white/40 hover:text-white" onClick={onClose} type="button" aria-label={copy.close}>
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="mt-7 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <article className="rounded-xl border border-white/10 bg-white/[0.035] p-5">
-            <p className="text-3xl font-light">{isThreeMonth ? copy.threeMonthPrice : copy.monthlyPrice}</p>
-            <div className="mt-5 grid min-h-[330px] place-items-center rounded-lg bg-white p-4">
-              <img className="h-[310px] w-[310px] object-contain" src={paynetQrImage} alt={copy.qrAlt} />
-            </div>
-            <p className="mt-4 text-center text-xs font-black uppercase tracking-[0.2em] text-white/58">{copy.scanLine}</p>
-          </article>
-
-          <article className="rounded-xl border border-white/10 bg-black/35 p-5">
-            <h3 className="text-2xl font-semibold">{copy.instructionsTitle}</h3>
-            <div className="mt-5 grid gap-3">
-              {copy.instructions.map((instruction) => (
-                <p className="flex items-start gap-3 text-base leading-7 text-white/76" key={instruction}>
-                  <Check className="mt-1 shrink-0 text-[#FFD700]" size={18} /> {instruction}
-                </p>
-              ))}
-            </div>
-
-            <div className="mt-6 rounded-xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-4">
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-[#FFD700]">{copy.warningTitle}</p>
-              <p className="mt-2 text-sm leading-6 text-white/72">{copy.warningBody}</p>
-            </div>
-
-            <div className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-300/10 p-4">
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-emerald-200">{copy.notificationTitle}</p>
-              <p className="mt-2 text-sm leading-6 text-white/72">{copy.notificationBody}</p>
-            </div>
-
-            <a className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-[#FFD700] px-5 text-center text-base font-black uppercase tracking-[0.12em] text-black transition hover:bg-white" href={telegramBotUrl} target="_blank" rel="noreferrer">
-              <MessageCircle size={20} /> {copy.telegramCta}
-            </a>
-          </article>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function formatCountdown(seconds: number) {
-  const safe = Math.max(0, seconds);
-  const hours = Math.floor(safe / 3600);
-  const minutes = Math.floor((safe % 3600) / 60);
-  const remainder = safe % 60;
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
 }
 
 function RevealSection({ children, delay = 0 }: { children: ReactNode; delay?: number }) {

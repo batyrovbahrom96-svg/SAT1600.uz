@@ -560,7 +560,7 @@ export default function ResultsPage() {
               <PremiumButton
                 className="mt-5 w-full"
                 icon={<ArrowRight size={18} />}
-                onClick={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro&from=diagnostic-result")}
+                onClick={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro&from=diagnostic_lock")}
                 type="button"
               >
                 {hasActiveSubscription ? "Open my route" : `🔑 Unlock Pro — ${MONTHLY_PRICE_PER_MONTH} →`}
@@ -585,7 +585,7 @@ export default function ResultsPage() {
       {showCurriculumPanel ? (
         <CurriculumPrompt
           onClose={() => setShowCurriculumPanel(false)}
-          onOpen={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro&from=diagnostic-result")}
+          onOpen={() => router.push(hasActiveSubscription && attemptId ? `/curriculum/${attemptId}` : "/pricing?plan=pro&from=diagnostic_lock")}
           score={reportResults.score_total}
           weaknesses={analytics.weaknesses}
           isUnlocked={hasActiveSubscription}

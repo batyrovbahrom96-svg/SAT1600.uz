@@ -384,11 +384,20 @@ export async function createPaymentOrder(payload: {
   subscription_type: "monthly" | "three_month";
   estimated_score?: number | null;
   weak_areas?: string[];
+  conversion_source?: "diagnostic_lock" | "analyzer_limit" | "path_type_lock" | "mock_test_lock" | null;
 }) {
   return api<PaymentOrder>("/api/payment/orders", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export function trackProLockView(source: "diagnostic_lock" | "analyzer_limit" | "path_type_lock" | "mock_test_lock") {
+  if (!getToken()) return Promise.resolve({ ok: false });
+  return api<{ ok: boolean }>("/api/platform/progress", {
+    method: "POST",
+    body: JSON.stringify({ event: "pro_lock_viewed", pro_conversion_source: source }),
+  }).catch(() => ({ ok: false }));
 }
 
 export async function getPaymentOrder(reference: string) {
