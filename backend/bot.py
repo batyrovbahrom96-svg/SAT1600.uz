@@ -153,7 +153,7 @@ async def post_init(application: Application) -> None:
 def main() -> None:
     settings = get_settings()
     if not settings.telegram_bot_token:
-        raise RuntimeError("TELEGRAM_BOT_TOKEN is missing. Create @SATTEST_Welcome_Bot in @BotFather and add the token to Railway.")
+        raise RuntimeError("TELEGRAM_BOT_TOKEN is missing. Add the payment bot token from @BotFather to Railway.")
     if not settings.database_url:
         raise RuntimeError("DATABASE_URL is missing. Add the Railway Postgres DATABASE_URL before starting the bot.")
 

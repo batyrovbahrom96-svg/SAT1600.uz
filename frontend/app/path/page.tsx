@@ -30,7 +30,7 @@ import { calculateDiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult } from "@/lib/free-diagnostic-storage";
 import { pick, useLanguage, type Language } from "@/lib/i18n";
 
-const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_Welcome_Bot";
+const telegramBotUsername = process.env.NEXT_PUBLIC_PAYMENT_BOT_USERNAME || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_UZ_Payment_Bot";
 
 type PathNode = {
   id: string;

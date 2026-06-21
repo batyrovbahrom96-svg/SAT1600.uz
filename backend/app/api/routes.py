@@ -32,7 +32,6 @@ from app.services.sat_engine import (
     save_answer,
     start_attempt,
 )
-from app.services.bot_service import WELCOME_BOT_USERNAME
 from app.services.reading_analyzer import attach_reading_analyzer_limit_signup, mark_analyzer_limit_followup_sent, user_has_active_pro
 from app.services.reading_mastery import PASS_MISTAKE_LIMIT, generate_mastery_content, grade_mastery_answers
 from app.services.roadmap import generate_roadmap_for_attempt
@@ -643,7 +642,7 @@ def payment_config() -> dict:
     return {
         "payme_qr_url": settings.payme_qr_url,
         "click_qr_url": settings.click_qr_url,
-        "telegram_bot_url": f"https://t.me/{WELCOME_BOT_USERNAME}",
+        "telegram_bot_url": f"https://t.me/{settings.payment_bot_username}",
         "plans": {
             key: {"amount": value["amount"], "days": value["days"], "label": value["label"]}
             for key, value in PAYMENT_PLANS.items()
@@ -713,8 +712,8 @@ def telegram_status() -> dict:
         "bot_token_configured": bool(settings.telegram_bot_token),
         "bot_token_valid": bool(bot.get("ok")),
         "bot_username": ((bot.get("result") or {}).get("username") if bot.get("ok") else None),
-        "bot_expected_username": WELCOME_BOT_USERNAME,
-        "bot_username_matches_expected": ((bot.get("result") or {}).get("username") == WELCOME_BOT_USERNAME if bot.get("ok") else False),
+        "bot_expected_username": settings.payment_bot_username,
+        "bot_username_matches_expected": ((bot.get("result") or {}).get("username") == settings.payment_bot_username if bot.get("ok") else False),
         "webhook_secret_configured": bool(settings.telegram_webhook_secret),
         "webhook_configured": bool(webhook_result.get("url")),
         "webhook_url": webhook_result.get("url") or None,
@@ -1410,7 +1409,7 @@ def _owned_payment_order(db: Session, reference: str, user: User) -> PaymentOrde
 
 def _payment_order_payload(order: PaymentOrder, user: User) -> dict:
     settings = get_settings()
-    telegram_url = f"https://t.me/{WELCOME_BOT_USERNAME}?start={order.reference}"
+    telegram_url = f"https://t.me/{settings.payment_bot_username}?start={order.reference}"
     return {
         "id": order.id,
         "reference": order.reference,

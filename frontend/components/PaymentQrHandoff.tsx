@@ -5,7 +5,7 @@ import { MessageCircle, QrCode } from "lucide-react";
 import { getPaymentConfig, type PaymentConfig } from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
 
-const fallbackBotUrl = "https://t.me/SATTEST_Welcome_Bot";
+const fallbackBotUrl = "https://t.me/SATTEST_UZ_Payment_Bot";
 
 const text: Record<Language, {
   qrTitle: string;
