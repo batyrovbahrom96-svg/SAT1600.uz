@@ -156,18 +156,21 @@ function PlanButton({ active, label, sub, badge, onClick }: { active: boolean; l
 }
 
 function QrCard({ title, imageUrl }: { title: string; imageUrl: string }) {
+  const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(
+    "SATTEST.UZ PRO\nAmount: 300,000 UZS / month\nPay by Payme, Click, Paynet, card, or transfer.\nAfter payment send receipt to @SATTEST_Welcome_Bot with your registered email."
+  )}`;
+  const finalImageUrl = imageUrl || fallbackQrUrl;
   return (
     <article className="border border-white/10 bg-black/35 p-4">
       <h3 className="text-lg font-black text-[#FFD700]">{title}</h3>
       <div className="mt-4 grid aspect-square place-items-center bg-white p-4">
-        {imageUrl ? (
-          <img className="h-full w-full object-contain" src={imageUrl} alt={title} />
-        ) : (
-          <div className="grid h-full w-full place-items-center border border-black/15 text-center text-sm font-black uppercase tracking-[0.2em] text-black/45">
-            QR URL
-          </div>
-        )}
+        <img className="h-full w-full object-contain" src={finalImageUrl} alt={title} />
       </div>
+      {!imageUrl ? (
+        <p className="mt-3 text-xs font-bold leading-5 text-white/45">
+          QR URL hali sozlanmagan. Bu vaqtinchalik QR to'lov tartibini ko'rsatadi.
+        </p>
+      ) : null}
     </article>
   );
 }

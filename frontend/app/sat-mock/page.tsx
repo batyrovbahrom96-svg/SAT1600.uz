@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2, LockKeyhole, MessageCircle, Target } from "lucide-react";
+import { ArrowRight, Loader2, LockKeyhole, Target } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { PremiumButton } from "@/components/PremiumButton";
+import { PaymentQrHandoff } from "@/components/PaymentQrHandoff";
 import { api, getSubscriptionStatus, getToken, trackProLockView } from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
 
 type Test = { id: string; title: string; description: string; is_premium: boolean };
-
-const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_Welcome_Bot";
-const telegramPaymentUrl = `https://t.me/${telegramBotUsername}?start=pro_mock`;
 
 const copy: Record<Language, {
   checking: string;
@@ -25,8 +23,6 @@ const copy: Record<Language, {
   startButton: string;
   loginButton: string;
   pricingButton: string;
-  payStepsTitle: string;
-  paySteps: string[];
 }> = {
   en: {
     checking: "Opening SAT Mock Test",
@@ -39,9 +35,7 @@ const copy: Record<Language, {
     errorTitle: "Unable to start SAT Mock Test",
     startButton: "Try again",
     loginButton: "Login",
-    pricingButton: "Pay in Telegram bot",
-    payStepsTitle: "Payment order",
-    paySteps: ["Open the Telegram bot.", "Choose Pro payment.", "Send your receipt and registered email in the bot."]
+    pricingButton: "Open payment"
   },
   ru: {
     checking: "Открываем SAT Mock Test",
@@ -54,9 +48,7 @@ const copy: Record<Language, {
     errorTitle: "Не удалось запустить SAT Mock Test",
     startButton: "Попробовать снова",
     loginButton: "Войти",
-    pricingButton: "Оплатить в Telegram боте",
-    payStepsTitle: "Порядок оплаты",
-    paySteps: ["Откройте Telegram бот.", "Выберите оплату Pro.", "Отправьте чек и email регистрации в бот."]
+    pricingButton: "Открыть оплату"
   },
   uz: {
     checking: "SAT Mock Test ochilmoqda",
@@ -69,9 +61,7 @@ const copy: Record<Language, {
     errorTitle: "SAT Mock Test boshlanmadi",
     startButton: "Qayta urinish",
     loginButton: "Kirish",
-    pricingButton: "Telegram botda to'lash",
-    payStepsTitle: "To'lov tartibi",
-    paySteps: ["Telegram botga o'ting.", "Pro to'lovni tanlang.", "Chek va ro'yxatdan o'tgan emailingizni botga yuboring."]
+    pricingButton: "To'lovni ochish"
   }
 };
 
@@ -133,21 +123,13 @@ export default function SatMockPage() {
         <h1 className="mt-5 text-4xl font-light leading-tight text-white md:text-6xl">{title}</h1>
         <p className="mt-5 max-w-2xl whitespace-pre-line text-base font-light leading-7 text-white/56">{body}</p>
         {status === "pay" ? (
-          <div className="mt-6 w-full max-w-xl rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/10 p-5 text-left">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">{text.payStepsTitle}</p>
-            <ol className="mt-3 grid gap-2 text-sm font-semibold leading-6 text-white/72">
-              {text.paySteps.map((step, index) => (
-                <li key={step}>{index + 1}. {step}</li>
-              ))}
-            </ol>
-            <p className="mt-3 text-sm font-black text-[#FFD700]">300,000 UZS/oy</p>
-          </div>
+          <PaymentQrHandoff source="mock_test_lock" className="mt-6 w-full max-w-2xl text-left" />
         ) : null}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           {status === "login" ? (
             <PremiumButton href={`/login?lang=${language}&next=${encodeURIComponent(`/sat-mock?lang=${language}`)}`} icon={<ArrowRight size={18} />}>{text.loginButton}</PremiumButton>
           ) : status === "pay" ? (
-            <PremiumButton href={telegramPaymentUrl} icon={<MessageCircle size={18} />}>{text.pricingButton}</PremiumButton>
+            <PremiumButton href={`/payment?lang=${language}&plan=pro&from=mock_test_lock`} icon={<ArrowRight size={18} />}>{text.pricingButton}</PremiumButton>
           ) : status === "error" ? (
             <PremiumButton icon={<ArrowRight size={18} />} onClick={startMock}>{text.startButton}</PremiumButton>
           ) : null}

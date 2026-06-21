@@ -1,8 +1,8 @@
 "use client";
 
-import { LockKeyhole, MessageCircle, Zap } from "lucide-react";
+import { LockKeyhole, Zap } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
-import { PremiumButton } from "@/components/PremiumButton";
+import { PaymentQrHandoff } from "@/components/PaymentQrHandoff";
 import { useLanguage, type Language } from "@/lib/i18n";
 
 const copy: Record<Language, {
@@ -12,9 +12,6 @@ const copy: Record<Language, {
   body: string;
   price: string;
   bullets: string[];
-  cta: string;
-  stepsTitle: string;
-  steps: string[];
 }> = {
   en: {
     checking: "Checking Pro access",
@@ -22,10 +19,7 @@ const copy: Record<Language, {
     title: "Practice Bank is a Pro feature.",
     body: "Unlock targeted Reading, Writing, and Math practice with Easy / Medium / Hard sets and progress tracking.",
     price: "300,000 UZS/month",
-    bullets: ["Full Practice Bank", "Reading, Writing, and Math drills", "Mistake tracking and progress history", "Full mock tests included"],
-    cta: "Pay in Telegram bot",
-    stepsTitle: "Payment order",
-    steps: ["Open the Telegram bot.", "Choose Pro payment.", "Send your receipt and registered email in the bot."]
+    bullets: ["Full Practice Bank", "Reading, Writing, and Math drills", "Mistake tracking and progress history", "Full mock tests included"]
   },
   ru: {
     checking: "Проверяем Pro доступ",
@@ -33,10 +27,7 @@ const copy: Record<Language, {
     title: "Practice Bank доступен в Pro.",
     body: "Откройте целевые задания по Reading, Writing и Math с уровнями Easy / Medium / Hard и отслеживанием прогресса.",
     price: "300,000 UZS/месяц",
-    bullets: ["Полный Practice Bank", "Reading, Writing и Math задания", "История ошибок и прогресса", "Full mock tests включены"],
-    cta: "Оплатить в Telegram боте",
-    stepsTitle: "Порядок оплаты",
-    steps: ["Откройте Telegram бот.", "Выберите оплату Pro.", "Отправьте чек и email регистрации в бот."]
+    bullets: ["Полный Practice Bank", "Reading, Writing и Math задания", "История ошибок и прогресса", "Full mock tests включены"]
   },
   uz: {
     checking: "Pro kirish tekshirilmoqda",
@@ -44,15 +35,11 @@ const copy: Record<Language, {
     title: "Practice Bank Pro uchun ochiladi.",
     body: "Reading, Writing va Math bo'yicha Easy / Medium / Hard mashqlar, xato kuzatuvi va progress tarixini oching.",
     price: "300,000 UZS/oy",
-    bullets: ["To'liq Practice Bank", "Reading, Writing va Math mashqlari", "Xatolar va progress tarixi", "Full mock testlar ham kiradi"],
-    cta: "Telegram botda to'lash",
-    stepsTitle: "To'lov tartibi",
-    steps: ["Telegram botga o'ting.", "Pro to'lovni tanlang.", "Chek va ro'yxatdan o'tgan emailingizni botga yuboring."]
+    bullets: ["To'liq Practice Bank", "Reading, Writing va Math mashqlari", "Xatolar va progress tarixi", "Full mock testlar ham kiradi"]
   }
 };
 
 const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_Welcome_Bot";
-const telegramPaymentUrl = `https://t.me/${telegramBotUsername}?start=pro_practice`;
 
 export function PracticeProChecking() {
   const { language } = useLanguage();
@@ -91,17 +78,7 @@ export function PracticeProPaywall({ title }: { title?: string }) {
               </li>
             ))}
           </ul>
-          <div className="mt-7 rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/10 p-4">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">{text.stepsTitle}</p>
-            <ol className="mt-3 grid gap-2 text-sm font-semibold leading-6 text-white/72">
-              {text.steps.map((step, index) => (
-                <li key={step}>{index + 1}. {step}</li>
-              ))}
-            </ol>
-          </div>
-          <PremiumButton className="mt-8 min-w-[280px]" href={telegramPaymentUrl} icon={<MessageCircle size={18} />}>
-            {text.cta}
-          </PremiumButton>
+          <PaymentQrHandoff source="path_type_lock" className="mt-7" />
           <p className="mt-3 text-sm font-bold text-white/45">@{telegramBotUsername}</p>
         </article>
       </section>
