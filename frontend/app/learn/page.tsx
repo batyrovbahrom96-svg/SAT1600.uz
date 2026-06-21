@@ -95,6 +95,11 @@ const stepsCopy = {
     uz: "Sizning shaxsiy yo'lingiz tayyorlanmoqda...",
     ru: "Ваш личный путь готовится...",
     en: "Your personal path is being prepared..."
+  },
+  back: {
+    uz: "Orqaga",
+    ru: "Назад",
+    en: "Back"
   }
 };
 
@@ -157,6 +162,15 @@ export default function LearnPage() {
       return;
     }
     setStep((current) => current + 1);
+  }
+
+  function goBack() {
+    const firstStep = hasExistingAccount ? 2 : 1;
+    if (step <= firstStep) {
+      router.push(`/?lang=${language}`);
+      return;
+    }
+    setStep((current) => Math.max(firstStep, current - 1));
   }
 
   async function createAccount(event: FormEvent<HTMLFormElement>) {
@@ -379,8 +393,8 @@ export default function LearnPage() {
             {error ? <p className="mt-5 rounded-xl border border-red-400/35 bg-red-500/10 p-4 text-sm font-bold text-red-100">{error}</p> : null}
           </section>
 
-          <button className="mx-auto text-sm font-bold text-white/45 hover:text-white" onClick={() => setStep((current) => Math.max(hasExistingAccount ? 2 : 1, current - 1))} type="button">
-            Orqaga
+          <button className="mx-auto text-sm font-bold text-white/45 hover:text-white" onClick={goBack} type="button">
+            {stepsCopy.back[language]}
           </button>
         </div>
       </main>

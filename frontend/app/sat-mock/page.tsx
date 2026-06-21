@@ -123,7 +123,7 @@ export default function SatMockPage() {
         <p className="mt-5 max-w-2xl whitespace-pre-line text-base font-light leading-7 text-white/56">{body}</p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           {status === "login" ? (
-            <PremiumButton href="/login" icon={<ArrowRight size={18} />}>{text.loginButton}</PremiumButton>
+            <PremiumButton href={`/login?lang=${language}&next=${encodeURIComponent(`/sat-mock?lang=${language}`)}`} icon={<ArrowRight size={18} />}>{text.loginButton}</PremiumButton>
           ) : status === "pay" ? (
             <PremiumButton href={`/pricing?lang=${language}&plan=pro&from=mock_test_lock`} icon={<ArrowRight size={18} />}>{text.pricingButton}</PremiumButton>
           ) : status === "error" ? (

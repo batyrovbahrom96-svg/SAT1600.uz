@@ -10,13 +10,16 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [emailFromLink, setEmailFromLink] = useState("");
   const [nextPath, setNextPath] = useState("/path");
+  const [language, setLanguage] = useState("uz");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const email = params.get("email") || "";
     const requestedNext = params.get("next") || "";
+    const requestedLanguage = params.get("lang") || "";
     setEmailFromLink(email);
     setNextPath(requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/path");
+    setLanguage(requestedLanguage === "en" || requestedLanguage === "ru" || requestedLanguage === "uz" ? requestedLanguage : "uz");
   }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -58,7 +61,10 @@ export default function LoginPage() {
           <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="password" type="password" required />
           {error ? <p className="mt-5 border border-red-400/30 bg-red-950/20 p-3 text-sm font-semibold text-red-200">{error}</p> : null}
           <button className="mt-8 w-full border border-white bg-white px-4 py-4 font-black uppercase tracking-[0.16em] text-black transition-all duration-200 ease-in-out hover:bg-[#151515] hover:text-white">Login</button>
-          <Link className="mt-5 block text-center text-sm font-bold text-[#d8d8d8] transition-all duration-200 ease-in-out hover:text-white" href={`/register?next=${encodeURIComponent(nextPath)}`}>Create account</Link>
+          <Link className="mt-5 block text-center text-sm font-bold text-[#d8d8d8] transition-all duration-200 ease-in-out hover:text-white" href={`/register?lang=${language}&next=${encodeURIComponent(nextPath)}`}>Create account</Link>
+          <Link className="mt-4 block text-center text-sm font-black text-[#9f9f9f] transition-all duration-200 ease-in-out hover:text-white" href={`/?lang=${language}`}>
+            Orqaga
+          </Link>
         </form>
       </section>
     </main>

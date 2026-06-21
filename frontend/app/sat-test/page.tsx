@@ -658,14 +658,15 @@ function SatMockBottomControls({
     isActive ? "bg-[#071124] text-white" : "bg-white text-[#071124]/55 hover:text-[#071124]"
   ].join(" ");
 
-  const backControl = backHref ? (
-    <a className={backClassName} href={backHref}>
-      <ArrowLeft size={16} /> {backLabel}
-    </a>
-  ) : (
+  const safeBackHref = backHref || "/";
+  const backControl = onBack ? (
     <button className={backClassName} onClick={onBack} type="button">
       <ArrowLeft size={16} /> {backLabel}
     </button>
+  ) : (
+    <a className={backClassName} href={safeBackHref}>
+      <ArrowLeft size={16} /> {backLabel}
+    </a>
   );
 
   return (
