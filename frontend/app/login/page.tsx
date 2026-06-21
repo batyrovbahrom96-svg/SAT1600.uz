@@ -11,6 +11,13 @@ export default function LoginPage() {
   const [emailFromLink, setEmailFromLink] = useState("");
   const [nextPath, setNextPath] = useState("/path");
   const [language, setLanguage] = useState("uz");
+  const destinationLabel = nextPath.startsWith("/sat-mock")
+    ? "SAT Mock Test"
+    : nextPath.startsWith("/path")
+      ? "Learning Path dashboard"
+      : nextPath.startsWith("/reading-analyzer")
+        ? "Reading Analyzer"
+        : "SATTEST platform";
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -55,6 +62,12 @@ export default function LoginPage() {
         <form onSubmit={onSubmit} className="w-full max-w-md">
           <h2 className="text-3xl font-black text-white">Login</h2>
           <p className="mt-3 text-sm font-semibold leading-6 text-[#9f9f9f]">Use the account you created to continue your SAT practice.</p>
+          <div className="mt-5 rounded-xl border border-[#FFD700]/25 bg-[#FFD700]/10 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#FFD700]">After login</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-white/78">
+              You will continue to: <span className="text-[#FFD700]">{destinationLabel}</span>
+            </p>
+          </div>
           <label className="mt-8 block text-xs font-black uppercase tracking-[0.2em] text-[#9f9f9f]">Email</label>
           <input className="mt-3 w-full border border-white/10 bg-[#0b0b0b] px-4 py-4 text-white outline-none transition-all duration-200 ease-in-out hover:border-white focus:border-white" name="email" onChange={(event) => setEmailFromLink(event.target.value)} type="email" value={emailFromLink} required />
           <label className="mt-5 block text-xs font-black uppercase tracking-[0.2em] text-[#9f9f9f]">Password</label>
