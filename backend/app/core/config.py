@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     telegram_webhook_secret: str | None = None
     telegram_admin_chat_id: str | None = None
     telegram_channel_id: str | None = None
-    payment_bot_username: str = "SATTEST_UZ_Payment_Bot"
+    payment_bot_username: str = "SATTESTUZBot"
     admin_chat_id: str | None = None
     payme_qr_url: str = ""
     click_qr_url: str = ""

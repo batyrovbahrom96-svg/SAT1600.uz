@@ -12,7 +12,7 @@ import { getFreeDiagnosticResult, type StoredFreeDiagnostic } from "@/lib/free-d
 import { useLanguage } from "@/lib/i18n";
 import { notifyDiagnosticResult } from "./actions";
 
-const telegramBotUsername = process.env.NEXT_PUBLIC_PAYMENT_BOT_USERNAME || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_UZ_Payment_Bot";
+const telegramBotUsername = process.env.NEXT_PUBLIC_PAYMENT_BOT_USERNAME || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
 const telegramDiagnosticUserKey = "sattest_telegram_diagnostic_user_id";
 
 const resultCopy = {

@@ -14,7 +14,7 @@ type ConversionSource = "diagnostic_lock" | "analyzer_limit" | "path_type_lock" 
 const fallbackConfig: PaymentConfig = {
   payme_qr_url: "",
   click_qr_url: "",
-  telegram_bot_url: "https://t.me/SATTEST_UZ_Payment_Bot",
+  telegram_bot_url: "https://t.me/SATTESTUZBot",
   plans: {
     monthly: { amount: MONTHLY_PRICE, days: 30, label: "1 month" },
     three_month: { amount: THREE_MONTH_PRICE, days: 90, label: "3 months" },
@@ -157,7 +157,7 @@ function PlanButton({ active, label, sub, badge, onClick }: { active: boolean; l
 
 function QrCard({ title, imageUrl }: { title: string; imageUrl: string }) {
   const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(
-    "SATTEST.UZ PRO\nAmount: 300,000 UZS / month\nPay by Payme, Click, Paynet, card, or transfer.\nAfter payment send receipt to @SATTEST_UZ_Payment_Bot with your registered email."
+    "SATTEST.UZ PRO\nAmount: 300,000 UZS / month\nPay by Payme, Click, Paynet, card, or transfer.\nAfter payment send receipt to @SATTESTUZBot with your registered email."
   )}`;
   const finalImageUrl = imageUrl || fallbackQrUrl;
   return (

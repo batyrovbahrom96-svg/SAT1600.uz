@@ -39,7 +39,7 @@ const copy: Record<Language, {
   }
 };
 
-const telegramBotUsername = process.env.NEXT_PUBLIC_PAYMENT_BOT_USERNAME || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_UZ_Payment_Bot";
+const telegramBotUsername = process.env.NEXT_PUBLIC_PAYMENT_BOT_USERNAME || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
 
 export function PracticeProChecking() {
   const { language } = useLanguage();
