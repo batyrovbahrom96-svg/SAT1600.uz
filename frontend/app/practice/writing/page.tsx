@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, PenLine, X } from "lucide-react";
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
+import { PracticeProChecking, PracticeProPaywall } from "@/components/PracticeProPaywall";
+import { getSubscriptionStatus } from "@/lib/api";
 
 type Question = {
   prompt: string;
@@ -108,17 +110,32 @@ function buildQuestions(topic: Topic, difficulty: Difficulty): Question[] {
 }
 
 export default function WritingPracticePage() {
+  const [hasPro, setHasPro] = useState<boolean | null>(null);
   const [activeDifficulty, setActiveDifficulty] = useState<Difficulty | null>(null);
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [confirmedAnswers, setConfirmedAnswers] = useState<(number | null)[]>([]);
 
+  useEffect(() => {
+    getSubscriptionStatus()
+      .then((status) => setHasPro(status.has_active_subscription))
+      .catch(() => setHasPro(false));
+  }, []);
+
   const questions = useMemo(() => (activeTopic && activeDifficulty ? buildQuestions(activeTopic, activeDifficulty) : []), [activeTopic, activeDifficulty]);
   const currentQuestion = questions[questionIndex];
   const confirmedAnswer = confirmedAnswers[questionIndex];
   const score = confirmedAnswers.reduce<number>((total, answer, index) => total + (answer === questions[index]?.answerIndex ? 1 : 0), 0);
   const isFinished = Boolean(activeTopic && confirmedAnswers.length === questions.length);
+
+  if (hasPro === null) {
+    return <PracticeProChecking />;
+  }
+
+  if (!hasPro) {
+    return <PracticeProPaywall title="SAT Writing Practice is Pro-only." />;
+  }
 
   function startTopic(topic: Topic) {
     setActiveTopic(topic);

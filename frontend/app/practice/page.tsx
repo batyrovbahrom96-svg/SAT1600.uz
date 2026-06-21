@@ -18,6 +18,7 @@ import {
 import { LuxuryNavbar } from "@/components/LuxuryNavbar";
 import { PremiumButton } from "@/components/PremiumButton";
 import { PremiumText } from "@/components/PremiumText";
+import { PracticeProPaywall } from "@/components/PracticeProPaywall";
 import { getSubscriptionStatus, getToken } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
 
@@ -709,44 +710,7 @@ export default function PracticeAccessPage() {
   }
 
   if (isLoggedIn) {
-    return (
-      <main className="sat-lux-page min-h-screen text-white">
-        <LuxuryNavbar />
-
-        <section className="mx-auto min-h-[calc(100vh-81px)] max-w-7xl px-5 py-14 md:px-8">
-          <div className="grid gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1fr_440px] lg:items-end">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-white/45">{copy.heroEyebrow}</p>
-              <PremiumText as="h1" className="mt-6 max-w-5xl text-5xl font-light leading-none text-white md:text-7xl" variant="hero">
-                {copy.loggedTitle}
-              </PremiumText>
-              <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-white/50">
-                {copy.loggedBody}
-              </p>
-            </div>
-
-            <PracticeHeroPreview copy={copy} />
-          </div>
-
-          <SamplePracticePreview copy={copy} />
-
-          <div className="mt-5 border border-emerald-300/25 bg-emerald-300/[0.06] p-5 md:flex md:items-center md:justify-between md:gap-6">
-            <div>
-              <div className="flex items-center gap-3">
-                <LockKeyhole size={18} className="text-emerald-100" />
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-50/62">{copy.fullLocked}</p>
-              </div>
-              <p className="mt-3 max-w-2xl text-sm font-light leading-6 text-white/58">
-                {copy.autoOpen}
-              </p>
-            </div>
-            <PremiumButton className="mt-5 min-w-[220px] md:mt-0" href="/pricing?plan=pro" icon={<ArrowRight size={18} />}>
-              {copy.unlockPro}
-            </PremiumButton>
-          </div>
-        </section>
-      </main>
-    );
+    return <PracticeProPaywall title={copy.fullLocked} />;
   }
 
   return (

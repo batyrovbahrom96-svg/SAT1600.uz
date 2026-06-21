@@ -173,6 +173,7 @@ const copy = {
     practiceTitle: { en: "Practice Bank", ru: "Банк практики", uz: "Practice Bank" },
     practiceBody: { en: "Easy / Medium / Hard question sets", ru: "Easy / Medium / Hard наборы", uz: "Easy / Medium / Hard savollar" },
     practiceMeta: { en: "Question bank", ru: "Банк вопросов", uz: "Savol banki" },
+    practiceFree: { en: "Pro required", ru: "Нужен Pro", uz: "Pro kerak" },
     analyzerTitle: { en: "Reading Analyzer", ru: "Reading Analyzer", uz: "Reading Analyzer" },
     analyzerBody: { en: "Analyze SAT passages with AI", ru: "AI анализ SAT текстов", uz: "SAT matnini AI bilan tahlil qiling" },
     analyzerFree: { en: "3/3 free analyses today", ru: "3/3 бесплатных анализа сегодня", uz: "Bugun 3/3 bepul tahlil qoldi" },
@@ -1114,10 +1115,10 @@ export default function PathPage() {
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               <QuickAccessCard
                 body={pick(copy.quick.practiceBody, language)}
-                cta={pick(copy.quick.start, language)}
+                cta={isProActive ? pick(copy.quick.start, language) : pick(copy.quick.practiceFree, language)}
                 href={`/practice?lang=${language}`}
-                icon={<Zap size={24} />}
-                meta={`${pick(copy.quick.practiceMeta, language)} — Easy/Medium/Hard`}
+                icon={isProActive ? <Zap size={24} /> : <Lock size={24} />}
+                meta={isProActive ? `${pick(copy.quick.practiceMeta, language)} — Easy/Medium/Hard` : "300,000 UZS/oy"}
                 title={`⚡ ${pick(copy.quick.practiceTitle, language)}`}
               />
               <QuickAccessCard
