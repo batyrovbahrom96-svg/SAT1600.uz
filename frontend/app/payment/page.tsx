@@ -12,7 +12,7 @@ type Plan = "monthly" | "three_month";
 type ConversionSource = "diagnostic_lock" | "analyzer_limit" | "path_type_lock" | "mock_test_lock";
 
 const fallbackConfig: PaymentConfig = {
-  payme_qr_url: "/assets/payment/paynet-qr.png",
+  payme_qr_url: "/assets/payment/paynet-qr.png?v=20260622",
   click_qr_url: "",
   telegram_bot_url: "https://t.me/SATTESTUZBot",
   plans: {
@@ -156,8 +156,8 @@ function PlanButton({ active, label, sub, badge, onClick }: { active: boolean; l
 }
 
 function QrCard({ title, imageUrl }: { title: string; imageUrl: string }) {
-  const fallbackQrUrl = "/assets/payment/paynet-qr.png";
-  const finalImageUrl = imageUrl || fallbackQrUrl;
+  const fallbackQrUrl = "/assets/payment/paynet-qr.png?v=20260622";
+  const finalImageUrl = fallbackQrUrl;
   const [qrSrc, setQrSrc] = useState(finalImageUrl);
 
   useEffect(() => {

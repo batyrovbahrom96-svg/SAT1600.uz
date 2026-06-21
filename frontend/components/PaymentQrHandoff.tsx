@@ -6,7 +6,7 @@ import { getPaymentConfig, type PaymentConfig } from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
 
 const fallbackBotUrl = "https://t.me/SATTESTUZBot";
-const paynetQrImage = "/assets/payment/paynet-qr.png";
+const paynetQrImage = "/assets/payment/paynet-qr.png?v=20260622";
 
 const text: Record<Language, {
   qrTitle: string;
@@ -60,8 +60,8 @@ export function PaymentQrHandoff({
     getPaymentConfig().then(setConfig).catch(() => setConfig(null));
   }, []);
 
-  const qrUrl = config?.payme_qr_url || config?.click_qr_url || paynetQrImage;
-  const qrLabel = config?.payme_qr_url ? "Paynet QR" : config?.click_qr_url ? "Click QR" : copy.qrFallback;
+  const qrUrl = paynetQrImage;
+  const qrLabel = copy.qrFallback;
   const telegramUrl = config?.telegram_bot_url || fallbackBotUrl;
   const paymentUrl = `/payment?lang=${language}&plan=pro&from=${source}`;
 
