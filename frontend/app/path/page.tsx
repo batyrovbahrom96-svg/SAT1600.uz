@@ -717,6 +717,7 @@ export default function PathPage() {
   const { language } = useLanguage();
   const [studentName, setStudentName] = useState("Student");
   const [isProActive, setIsProActive] = useState(false);
+  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
   const [trackType, setTrackType] = useState<TrackType>("diagnostic");
   const [weakAreas, setWeakAreas] = useState<string[]>([]);
   const [progress, setProgress] = useState<Progress>(defaultProgress);
@@ -771,7 +772,11 @@ export default function PathPage() {
       }).catch(() => undefined);
     }
     setShowOnboarding(window.localStorage.getItem(onboardingKey) !== "done");
-    getSubscriptionStatus().then((status) => setIsProActive(status.has_active_subscription)).catch(() => setIsProActive(false));
+    setSubscriptionChecked(false);
+    getSubscriptionStatus()
+      .then((status) => setIsProActive(status.has_active_subscription))
+      .catch(() => setIsProActive(false))
+      .finally(() => setSubscriptionChecked(true));
     refreshMasteryCatalog();
   }, [language, router]);
 
@@ -825,6 +830,7 @@ export default function PathPage() {
       .then((catalog) => {
         setMasteryCatalog(catalog);
         setIsProActive(catalog.is_pro);
+        setSubscriptionChecked(true);
       })
       .catch(() => {
         setMasteryError("Reading & Writing mastery tizimini yuklab bo'lmadi.");
@@ -1328,20 +1334,20 @@ export default function PathPage() {
               </div>
               <p className="mt-2 text-sm font-semibold text-white/55">{progress.todayLessons}/{progress.dailyGoal} lessons</p>
             </div>
-            <div className="path-sidebar-card rounded-xl border border-[#FFD700]/30 bg-[#FFD700]/10 p-5" style={{ animationDelay: "160ms" }}>
-              <div className="flex items-center gap-2">
-                <MessageCircle className="text-[#FFD700]" size={20} />
-                <p className="font-black text-[#FFD700]">SATTEST PRO</p>
+            {subscriptionChecked && !isProActive ? (
+              <div className="path-sidebar-card rounded-xl border border-[#FFD700]/30 bg-[#FFD700]/10 p-5" style={{ animationDelay: "160ms" }}>
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="text-[#FFD700]" size={20} />
+                  <p className="font-black text-[#FFD700]">SATTEST PRO</p>
+                </div>
+                <p className="mt-3 text-2xl font-black text-white">300,000 UZS/oy</p>
+                <p className="mt-2 text-sm leading-6 text-white/65">
+                  Practice Bank, Mock Test va qolgan curriculum mavzularini ochish uchun Telegram bot orqali to'lov qiling.
+                </p>
+                <PaymentQrHandoff compact source="path_type_lock" className="mt-4 bg-black/30" />
+                <p className="mt-2 text-center text-xs font-bold text-white/45">@{telegramBotUsername}</p>
               </div>
-              <p className="mt-3 text-2xl font-black text-white">300,000 UZS/oy</p>
-              <p className="mt-2 text-sm leading-6 text-white/65">
-                {isProActive
-                  ? "Pro faol. To'lovni yangilash yoki boshqa akkaunt uchun QR orqali to'lov qilib, chekni botga yuboring."
-                  : "Practice Bank, Mock Test va qolgan curriculum mavzularini ochish uchun Telegram bot orqali to'lov qiling."}
-              </p>
-              <PaymentQrHandoff compact source="path_type_lock" className="mt-4 bg-black/30" />
-              <p className="mt-2 text-center text-xs font-bold text-white/45">@{telegramBotUsername}</p>
-            </div>
+            ) : null}
             <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" style={{ animationDelay: "240ms" }}>
               <div className="flex items-center gap-2">
                 <Sparkles className="text-[#FFD700]" size={20} />
