@@ -1328,6 +1328,27 @@ export default function PathPage() {
               </div>
               <p className="mt-2 text-sm font-semibold text-white/55">{progress.todayLessons}/{progress.dailyGoal} lessons</p>
             </div>
+            {!isProActive ? (
+              <div className="path-sidebar-card rounded-xl border border-[#FFD700]/30 bg-[#FFD700]/10 p-5" style={{ animationDelay: "160ms" }}>
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="text-[#FFD700]" size={20} />
+                  <p className="font-black text-[#FFD700]">SATTEST PRO</p>
+                </div>
+                <p className="mt-3 text-2xl font-black text-white">300,000 UZS/oy</p>
+                <p className="mt-2 text-sm leading-6 text-white/65">
+                  Practice Bank, Mock Test va qolgan curriculum mavzularini ochish uchun Telegram bot orqali to'lov qiling.
+                </p>
+                <ol className="mt-4 grid gap-2 text-xs font-bold leading-5 text-white/62">
+                  <li>1. Botga o'ting.</li>
+                  <li>2. Pro to'lovni tanlang.</li>
+                  <li>3. Chek + emailingizni yuboring.</li>
+                </ol>
+                <a className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#FFD700] px-4 py-3 text-sm font-black text-black transition hover:bg-white" href={pathPaymentTelegramUrl} target="_blank" rel="noreferrer">
+                  <MessageCircle size={17} /> Botda to'lash →
+                </a>
+                <p className="mt-2 text-center text-xs font-bold text-white/45">@{telegramBotUsername}</p>
+              </div>
+            ) : null}
             <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" style={{ animationDelay: "240ms" }}>
               <div className="flex items-center gap-2">
                 <Sparkles className="text-[#FFD700]" size={20} />
