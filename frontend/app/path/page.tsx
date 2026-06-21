@@ -14,7 +14,9 @@ import {
   Lock,
   LogOut,
   Medal,
+  FileText,
   Play,
+  Search,
   Sparkles,
   Target,
   Trophy,
@@ -116,6 +118,9 @@ const defaultProgress: Progress = {
 const copy = {
   nav: {
     learn: { en: "Learn", ru: "Учиться", uz: "O'qish" },
+    practice: { en: "Practice Bank", ru: "Банк практики", uz: "Practice Bank" },
+    analyzer: { en: "Reading Analyzer", ru: "Reading Analyzer", uz: "Reading Analyzer" },
+    mock: { en: "Mock Test", ru: "Mock Test", uz: "Mock Test" },
     profile: { en: "Profile", ru: "Профиль", uz: "Profil" },
     settings: { en: "Settings", ru: "Настройки", uz: "Sozlamalar" },
     logout: { en: "Log out", ru: "Выйти", uz: "Chiqish" }
@@ -157,6 +162,27 @@ const copy = {
     dailyGoal: { en: "Today’s goal", ru: "Цель на сегодня", uz: "Bugungi maqsad" },
     challenge: { en: "Today’s mini-challenge", ru: "Мини-челлендж дня", uz: "Bugungi mini-challenge" },
     challengeBody: { en: "Finish one Reading node before 8 PM to protect your streak.", ru: "Закончите один Reading урок до 20:00, чтобы сохранить серию.", uz: "Streakni saqlash uchun 20:00 gacha bitta Reading node tugating." }
+  },
+  quick: {
+    title: { en: "Quick access", ru: "Быстрый доступ", uz: "Tez kirish" },
+    body: {
+      en: "Use the existing tools when you need extra practice, AI analysis, or a full mock.",
+      ru: "Используйте готовые инструменты для практики, AI анализа или полного mock test.",
+      uz: "Qo'shimcha mashq, AI tahlil yoki full mock kerak bo'lsa, mavjud toolslarga tez o'ting."
+    },
+    practiceTitle: { en: "Practice Bank", ru: "Банк практики", uz: "Practice Bank" },
+    practiceBody: { en: "Easy / Medium / Hard question sets", ru: "Easy / Medium / Hard наборы", uz: "Easy / Medium / Hard savollar" },
+    practiceMeta: { en: "Question bank", ru: "Банк вопросов", uz: "Savol banki" },
+    analyzerTitle: { en: "Reading Analyzer", ru: "Reading Analyzer", uz: "Reading Analyzer" },
+    analyzerBody: { en: "Analyze SAT passages with AI", ru: "AI анализ SAT текстов", uz: "SAT matnini AI bilan tahlil qiling" },
+    analyzerFree: { en: "3/3 free analyses today", ru: "3/3 бесплатных анализа сегодня", uz: "Bugun 3/3 bepul tahlil qoldi" },
+    analyzerPro: { en: "Unlimited — Pro", ru: "Безлимит — Pro", uz: "Cheksiz — Pro" },
+    mockTitle: { en: "Full Mock Test", ru: "Полный Mock Test", uz: "To'liq Mock Test" },
+    mockBody: { en: "98 questions, adaptive format", ru: "98 вопросов, adaptive format", uz: "98 savol, adaptive format" },
+    mockFree: { en: "Pro required", ru: "Нужен Pro", uz: "Pro kerak" },
+    mockPro: { en: "Ready to start", ru: "Готов к старту", uz: "Boshlashga tayyor" },
+    start: { en: "Start", ru: "Начать", uz: "Boshlash" },
+    open: { en: "Open", ru: "Открыть", uz: "Ochish" }
   },
   onboarding: {
     title: { en: "Let’s build your SAT path.", ru: "Соберём ваш SAT путь.", uz: "SAT yo'lingizni tuzamiz." },
@@ -1000,7 +1026,9 @@ export default function PathPage() {
           <nav className="mt-8 grid gap-2">
             <SideLink active icon={<BookOpen size={18} />} label={pick(copy.nav.learn, language)} />
             <SideLink icon={<Trophy size={18} />} label="Leaderboard" href="#leaderboard" muted />
-            <SideLink icon={<Zap size={18} />} label="Practice Bank" href="#practice-bank" muted />
+            <SideLink icon={<Zap size={18} />} label={pick(copy.nav.practice, language)} href={`/practice?lang=${language}`} muted />
+            <SideLink icon={<Search size={18} />} label={pick(copy.nav.analyzer, language)} href={`/reading-analyzer?lang=${language}`} muted />
+            <SideLink icon={<FileText size={18} />} label={pick(copy.nav.mock, language)} href={`/sat-mock?lang=${language}`} muted />
             <SideLink icon={<User size={18} />} label={pick(copy.nav.profile, language)} href="#profile" muted />
             <button className="mt-2 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-white/55 transition hover:bg-white/5 hover:text-[#FFD700]" onClick={logout} type="button">
               <LogOut size={18} />
@@ -1075,6 +1103,41 @@ export default function PathPage() {
               </button>
             </form>
           ) : null}
+
+          <section className="mt-8 rounded-3xl border border-white/10 bg-[#151515] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.18)]">
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">{pick(copy.quick.title, language)}</p>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">{pick(copy.quick.body, language)}</p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              <QuickAccessCard
+                body={pick(copy.quick.practiceBody, language)}
+                cta={pick(copy.quick.start, language)}
+                href={`/practice?lang=${language}`}
+                icon={<Zap size={24} />}
+                meta={`${pick(copy.quick.practiceMeta, language)} — Easy/Medium/Hard`}
+                title={`⚡ ${pick(copy.quick.practiceTitle, language)}`}
+              />
+              <QuickAccessCard
+                body={pick(copy.quick.analyzerBody, language)}
+                cta={pick(copy.quick.open, language)}
+                href={`/reading-analyzer?lang=${language}`}
+                icon={<Search size={24} />}
+                meta={isProActive ? pick(copy.quick.analyzerPro, language) : pick(copy.quick.analyzerFree, language)}
+                title={`🔍 ${pick(copy.quick.analyzerTitle, language)}`}
+              />
+              <QuickAccessCard
+                body={pick(copy.quick.mockBody, language)}
+                cta={isProActive ? pick(copy.quick.start, language) : pick(copy.quick.mockFree, language)}
+                href={`/sat-mock?lang=${language}`}
+                icon={isProActive ? <FileText size={24} /> : <Lock size={24} />}
+                meta={isProActive ? pick(copy.quick.mockPro, language) : "300,000 UZS/oy"}
+                title={`📝 ${pick(copy.quick.mockTitle, language)}`}
+              />
+            </div>
+          </section>
 
           <section className="mt-8 rounded-3xl border border-[#FFD700]/20 bg-[#151515] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -1568,6 +1631,46 @@ function SideLink({ active = false, href = "#", icon, label, muted = false }: { 
       {icon}
       {label}
     </a>
+  );
+}
+
+function QuickAccessCard({
+  body,
+  cta,
+  href,
+  icon,
+  meta,
+  title
+}: {
+  body: string;
+  cta: string;
+  href: string;
+  icon: ReactNode;
+  meta: string;
+  title: string;
+}) {
+  return (
+    <Link
+      className="group flex min-h-[190px] flex-col justify-between rounded-2xl border border-white/10 bg-black/25 p-5 transition hover:border-[#FFD700]/55 hover:bg-[#FFD700]/10"
+      href={href}
+    >
+      <div>
+        <div className="flex items-start justify-between gap-4">
+          <span className="grid h-12 w-12 place-items-center rounded-xl border border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700] transition group-hover:bg-[#FFD700] group-hover:text-black">
+            {icon}
+          </span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-right text-[10px] font-black uppercase tracking-[0.12em] text-white/48">
+            {meta}
+          </span>
+        </div>
+        <h3 className="mt-5 text-xl font-black text-white">{title}</h3>
+        <p className="mt-2 text-sm font-semibold leading-6 text-white/52">{body}</p>
+      </div>
+      <span className="mt-5 inline-flex items-center justify-between rounded-xl border border-[#FFD700]/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-[#FFD700] transition group-hover:bg-[#FFD700] group-hover:text-black">
+        {cta}
+        <ChevronRight size={16} />
+      </span>
+    </Link>
   );
 }
 
