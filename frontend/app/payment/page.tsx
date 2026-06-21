@@ -12,7 +12,7 @@ type Plan = "monthly" | "three_month";
 type ConversionSource = "diagnostic_lock" | "analyzer_limit" | "path_type_lock" | "mock_test_lock";
 
 const fallbackConfig: PaymentConfig = {
-  payme_qr_url: "",
+  payme_qr_url: "/assets/payment/paynet-qr.png",
   click_qr_url: "",
   telegram_bot_url: "https://t.me/SATTESTUZBot",
   plans: {
@@ -156,19 +156,17 @@ function PlanButton({ active, label, sub, badge, onClick }: { active: boolean; l
 }
 
 function QrCard({ title, imageUrl }: { title: string; imageUrl: string }) {
-  const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(
-    "SATTEST.UZ PRO\nAmount: 300,000 UZS / month\nPay by Payme, Click, Paynet, card, or transfer.\nAfter payment send receipt to @SATTESTUZBot with your registered email."
-  )}`;
+  const fallbackQrUrl = "/assets/payment/paynet-qr.png";
   const finalImageUrl = imageUrl || fallbackQrUrl;
   return (
     <article className="border border-white/10 bg-black/35 p-4">
       <h3 className="text-lg font-black text-[#FFD700]">{title}</h3>
-      <div className="mt-4 grid aspect-square place-items-center bg-white p-4">
-        <img className="h-full w-full object-contain" src={finalImageUrl} alt={title} />
+      <div className="mt-4 grid place-items-center bg-white p-3">
+        <img className="max-h-[520px] w-full object-contain" src={finalImageUrl} alt={title} />
       </div>
       {!imageUrl ? (
         <p className="mt-3 text-xs font-bold leading-5 text-white/45">
-          QR URL hali sozlanmagan. Bu vaqtinchalik QR to'lov tartibini ko'rsatadi.
+          Paynet QR orqali to'lang, keyin chekni Telegram botga yuboring.
         </p>
       ) : null}
     </article>

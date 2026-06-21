@@ -9,9 +9,7 @@ import { pick, useLanguage, type Language } from "@/lib/i18n";
 
 const telegramBotUsername = process.env.NEXT_PUBLIC_PAYMENT_BOT_USERNAME || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTESTUZBot";
 const telegramBotUrl = `https://t.me/${telegramBotUsername}?start=pro`;
-const paynetQrPayload =
-  "00020101021140440012qr-online.uz01186qz7uqn60TiFsWDuxO0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz630453C8";
-const paynetQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(paynetQrPayload)}`;
+const paynetQrImage = "/assets/payment/paynet-qr.png";
 
 const resultsCopy: Record<Language, {
   missingTitle: string;

@@ -6,6 +6,7 @@ import { getPaymentConfig, type PaymentConfig } from "@/lib/api";
 import { useLanguage, type Language } from "@/lib/i18n";
 
 const fallbackBotUrl = "https://t.me/SATTESTUZBot";
+const paynetQrImage = "/assets/payment/paynet-qr.png";
 
 const text: Record<Language, {
   qrTitle: string;
@@ -41,17 +42,6 @@ const text: Record<Language, {
   }
 };
 
-function generatedQrUrl(language: Language) {
-  const payload = [
-    "SATTEST.UZ PRO",
-    "Amount: 300,000 UZS / month",
-    "Pay by Payme, Click, Paynet, card, or transfer.",
-    "After payment upload receipt to Telegram bot with your registered email.",
-    `Language: ${language}`
-  ].join("\n");
-  return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(payload)}`;
-}
-
 export function PaymentQrHandoff({
   source,
   compact = false,
@@ -69,8 +59,8 @@ export function PaymentQrHandoff({
     getPaymentConfig().then(setConfig).catch(() => setConfig(null));
   }, []);
 
-  const qrUrl = config?.payme_qr_url || config?.click_qr_url || generatedQrUrl(language);
-  const qrLabel = config?.payme_qr_url ? "Payme QR" : config?.click_qr_url ? "Click QR" : copy.qrFallback;
+  const qrUrl = config?.payme_qr_url || config?.click_qr_url || paynetQrImage;
+  const qrLabel = config?.payme_qr_url ? "Paynet QR" : config?.click_qr_url ? "Click QR" : copy.qrFallback;
   const telegramUrl = config?.telegram_bot_url || fallbackBotUrl;
   const paymentUrl = `/payment?lang=${language}&plan=pro&from=${source}`;
 
@@ -92,7 +82,7 @@ export function PaymentQrHandoff({
 
       <div className={["mt-3 grid gap-3", compact ? "" : "sm:grid-cols-[150px_1fr] sm:items-center"].join(" ")}>
         <div className="rounded-xl bg-white p-2">
-          <img className="aspect-square w-full rounded-lg object-contain" src={qrUrl} alt={qrLabel} />
+          <img className="max-h-[420px] w-full rounded-lg object-contain" src={qrUrl} alt={qrLabel} />
         </div>
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-white/45">{copy.stepsTitle}</p>

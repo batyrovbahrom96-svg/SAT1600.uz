@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     telegram_channel_id: str | None = None
     payment_bot_username: str = "SATTESTUZBot"
     admin_chat_id: str | None = None
-    payme_qr_url: str = ""
+    payme_qr_url: str = "/assets/payment/paynet-qr.png"
     click_qr_url: str = ""
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-sonnet-4-6"
