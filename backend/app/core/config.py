@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 60 * 24
     frontend_url: str = "http://localhost:3000"
+    api_public_url: str = ""
     cors_origins: str | list[str] = Field(default="")
     cors_origin_regex: str | None = None
     graph_output_dir: str = "static/graphs"

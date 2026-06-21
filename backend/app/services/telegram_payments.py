@@ -2116,6 +2116,21 @@ def telegram_get_me() -> dict:
     return _telegram_api("getMe", {})
 
 
+def telegram_get_webhook_info() -> dict:
+    return _telegram_api("getWebhookInfo", {})
+
+
+def telegram_set_webhook(webhook_url: str, secret_token: str) -> dict:
+    return _telegram_api(
+        "setWebhook",
+        {
+            "url": webhook_url,
+            "secret_token": secret_token,
+            "allowed_updates": ["message", "callback_query", "chat_member"],
+        },
+    )
+
+
 def _send_message(chat_id: str, text: str, reply_markup: dict | None = None) -> dict:
     payload: dict = {"chat_id": chat_id, "text": text}
     if reply_markup:

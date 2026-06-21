@@ -43,6 +43,8 @@ from app.services.telegram_payments import (
     notify_diagnostic_user_result,
     process_subscription_maintenance,
     telegram_get_me,
+    telegram_get_webhook_info,
+    telegram_set_webhook,
 )
 
 router = APIRouter(prefix="/api")
@@ -705,6 +707,8 @@ async def telegram_webhook(request: Request) -> dict:
 def telegram_status() -> dict:
     settings = get_settings()
     bot = telegram_get_me() if settings.telegram_bot_token else {"ok": False, "skipped": "telegram_bot_token_missing"}
+    webhook = telegram_get_webhook_info() if settings.telegram_bot_token else {"ok": False, "skipped": "telegram_bot_token_missing"}
+    webhook_result = webhook.get("result") or {}
     return {
         "bot_token_configured": bool(settings.telegram_bot_token),
         "bot_token_valid": bool(bot.get("ok")),
@@ -712,10 +716,37 @@ def telegram_status() -> dict:
         "bot_expected_username": WELCOME_BOT_USERNAME,
         "bot_username_matches_expected": ((bot.get("result") or {}).get("username") == WELCOME_BOT_USERNAME if bot.get("ok") else False),
         "webhook_secret_configured": bool(settings.telegram_webhook_secret),
+        "webhook_configured": bool(webhook_result.get("url")),
+        "webhook_url": webhook_result.get("url") or None,
+        "webhook_pending_update_count": webhook_result.get("pending_update_count"),
+        "webhook_last_error_message": webhook_result.get("last_error_message"),
         "admin_chat_id_configured": bool(settings.telegram_admin_chat_id),
         "channel_id_configured": bool(settings.telegram_channel_id),
         "database_configured": bool(settings.database_url),
     }
+
+
+@router.post("/telegram/setup-webhook")
+def telegram_setup_webhook(request: Request) -> dict:
+    settings = get_settings()
+    if not settings.telegram_bot_token:
+        raise HTTPException(status_code=500, detail="TELEGRAM_BOT_TOKEN is missing")
+    if not settings.telegram_webhook_secret:
+        raise HTTPException(status_code=500, detail="TELEGRAM_WEBHOOK_SECRET is missing")
+
+    secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+    if secret != settings.telegram_webhook_secret:
+        raise HTTPException(status_code=403, detail="Invalid Telegram setup secret")
+
+    if settings.api_public_url:
+        webhook_url = f"{settings.api_public_url.rstrip('/')}/api/telegram/webhook"
+    else:
+        webhook_url = str(request.url_for("telegram_webhook")).replace("http://", "https://", 1)
+
+    result = telegram_set_webhook(webhook_url, settings.telegram_webhook_secret)
+    if not result.get("ok"):
+        raise HTTPException(status_code=502, detail=result)
+    return {"ok": True, "webhook_url": webhook_url, "telegram": result}
 
 
 @router.post("/telegram/daily-report")
