@@ -82,7 +82,7 @@ export function PaymentQrHandoff({
 
       <div className={["mt-3 grid gap-3", compact ? "" : "sm:grid-cols-[150px_1fr] sm:items-center"].join(" ")}>
         <div className="rounded-xl bg-white p-2">
-          <img className="max-h-[420px] w-full rounded-lg object-contain" src={qrUrl} alt={qrLabel} />
+          <img className={[compact ? "max-h-[360px]" : "max-h-[520px]", "w-full rounded-lg object-contain"].join(" ")} src={qrUrl} alt={qrLabel} />
         </div>
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-white/45">{copy.stepsTitle}</p>

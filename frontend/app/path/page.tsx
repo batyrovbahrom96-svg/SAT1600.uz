@@ -1315,8 +1315,8 @@ export default function PathPage() {
           </section>
         </section>
 
-        <aside className="border-t border-white/10 bg-[#101010] p-4 lg:sticky lg:top-0 lg:h-screen lg:border-l lg:border-t-0 lg:p-5">
-          <div className="mt-4 grid gap-4" id="profile">
+        <aside className="border-t border-white/10 bg-[#101010] p-4 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-hidden lg:border-l lg:border-t-0 lg:p-5">
+          <div className="path-sidebar-scroll mt-4 grid gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:pb-6 lg:pr-2" id="profile">
             <MetricCard animated={streakBumped} icon={<Flame className="text-[#FFD700]" />} value={`${progress.streak}`} label={pick(copy.right.streak, language)} />
             <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" style={{ animationDelay: "80ms" }}>
               <div className="flex items-center justify-between">

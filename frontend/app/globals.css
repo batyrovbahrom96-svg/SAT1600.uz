@@ -7671,6 +7671,29 @@ html[lang="uz"] .founder-trust-section__proof strong {
   animation: path-sidebar-enter 420ms ease-out both;
 }
 
+.path-sidebar-scroll {
+  scrollbar-color: rgba(255, 215, 0, 0.55) rgba(255, 255, 255, 0.08);
+  scrollbar-width: thin;
+}
+
+.path-sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.path-sidebar-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+}
+
+.path-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.55);
+  border-radius: 999px;
+}
+
+.path-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.8);
+}
+
 .path-streak-flame--bump {
   display: inline-flex;
   animation: path-streak-bounce 300ms ease-out both;
