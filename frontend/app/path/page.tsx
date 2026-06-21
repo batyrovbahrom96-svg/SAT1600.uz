@@ -14,6 +14,7 @@ import {
   Lock,
   LogOut,
   Medal,
+  MessageCircle,
   FileText,
   Play,
   Search,
@@ -27,6 +28,9 @@ import { api, clearAuth, getStudentName, getSubscriptionStatus, getToken, trackP
 import { calculateDiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult } from "@/lib/free-diagnostic-storage";
 import { pick, useLanguage, type Language } from "@/lib/i18n";
+
+const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "SATTEST_Welcome_Bot";
+const pathPaymentTelegramUrl = `https://t.me/${telegramBotUsername}?start=pro_path`;
 
 type PathNode = {
   id: string;
@@ -1472,10 +1476,19 @@ export default function PathPage() {
                     <li>✅ Natijalaringiz saqlanadi va kuzatiladi</li>
                     <li>✅ Mock testlar, Reading Analyzer va shaxsiy path</li>
                   </ul>
+                  <div className="mt-5 rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/10 p-4">
+                    <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">To'lov tartibi</p>
+                    <ol className="mt-3 grid gap-2 text-sm font-semibold leading-6 text-white/72">
+                      <li>1. Pastdagi tugmani bosing.</li>
+                      <li>2. Telegram botda Pro to'lovni tanlang.</li>
+                      <li>3. To'lov chekini va ro'yxatdan o'tgan emailingizni botga yuboring.</li>
+                    </ol>
+                  </div>
                 </div>
-                <Link className="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#FFD700] px-6 py-3 font-black text-black transition hover:bg-white" href={`/pricing?lang=${language}&plan=pro&from=path_type_lock`}>
-                  Pro Olish — 300,000 UZS/oy →
-                </Link>
+                <a className="mt-6 inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-[#FFD700] px-6 py-3 font-black text-black transition hover:bg-white" href={pathPaymentTelegramUrl} target="_blank" rel="noreferrer">
+                  <MessageCircle size={18} /> Telegram botda to'lash →
+                </a>
+                <p className="mt-3 text-sm font-bold text-white/45">@{telegramBotUsername}</p>
               </div>
             ) : null}
 
@@ -1577,9 +1590,18 @@ export default function PathPage() {
                           Qolgan 11 ta savol turi sizni kutmoqda, har biri 10 ta original savol bilan.
                         </p>
                         <p className="mt-3 text-sm font-black text-[#FFD700]">Pro bilan to'liq SAT yo'lini oching:</p>
-                        <Link className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black hover:bg-white" href={`/pricing?lang=${language}&plan=pro&from=path_type_lock`}>
-                          Pro Olish — 300,000 UZS/oy →
-                        </Link>
+                        <div className="mt-4 rounded-2xl border border-[#FFD700]/25 bg-black/25 p-4 text-left">
+                          <p className="text-sm font-black text-[#FFD700]">To'lov tartibi:</p>
+                          <ol className="mt-2 grid gap-1 text-sm font-semibold leading-6 text-white/72">
+                            <li>1. Telegram botga o'ting.</li>
+                            <li>2. Pro to'lovni tanlang.</li>
+                            <li>3. Chek + emailingizni yuboring.</li>
+                          </ol>
+                        </div>
+                        <a className="mt-4 inline-flex min-h-11 items-center justify-center gap-3 rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black hover:bg-white" href={pathPaymentTelegramUrl} target="_blank" rel="noreferrer">
+                          <MessageCircle size={18} /> Telegram botda to'lash →
+                        </a>
+                        <p className="mt-2 text-xs font-bold text-white/45">@{telegramBotUsername}</p>
                       </div>
                     ) : null}
                     <button className="mt-6 min-h-11 rounded-xl border border-white/10 px-5 py-3 font-black text-white/70 hover:border-[#FFD700] hover:text-[#FFD700]" onClick={closeMasteryModal} type="button">
