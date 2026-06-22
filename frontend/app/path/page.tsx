@@ -24,7 +24,8 @@ import {
   User,
   Zap
 } from "lucide-react";
-import { api, clearAuth, getStudentName, getSubscriptionStatus, getToken, trackProLockView } from "@/lib/api";
+import { api, clearAuth, getStudentName, getSubscriptionStatus, getToken, getUserProfile, trackProLockView } from "@/lib/api";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PaymentQrHandoff } from "@/components/PaymentQrHandoff";
 import { calculateDiagnosticResult } from "@/lib/free-diagnostic";
 import { getFreeDiagnosticResult } from "@/lib/free-diagnostic-storage";
@@ -748,7 +749,7 @@ export default function PathPage() {
     setStudentName(getStudentName() || "Student");
     const savedTrack = window.localStorage.getItem("sattest_track_type");
     setTrackType(savedTrack === "beginner" ? "beginner" : "diagnostic");
-    api<{ track_type?: TrackType }>("/api/auth/me")
+    getUserProfile()
       .then((profile) => {
         if (profile.track_type === "beginner" || profile.track_type === "diagnostic") {
           window.localStorage.setItem("sattest_track_type", profile.track_type);
@@ -1071,9 +1072,12 @@ export default function PathPage() {
                 {trackType === "beginner" ? pick(copy.track.beginner, language) : pick(copy.track.diagnostic, language)}
               </p>
             </div>
-            <div className="rounded-xl border border-[#FFD700]/25 bg-[#FFD700]/10 px-4 py-3">
-              <p className="text-xs font-semibold text-white/50">XP</p>
-              <p className="text-3xl font-black text-[#FFD700]">{progress.xp}</p>
+            <div className="flex shrink-0 flex-col items-start gap-3 md:items-end">
+              <LanguageSwitcher />
+              <div className="rounded-xl border border-[#FFD700]/25 bg-[#FFD700]/10 px-4 py-3">
+                <p className="text-xs font-semibold text-white/50">XP</p>
+                <p className="text-3xl font-black text-[#FFD700]">{progress.xp}</p>
+              </div>
             </div>
           </header>
 

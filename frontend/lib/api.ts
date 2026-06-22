@@ -51,6 +51,13 @@ export type SubscriptionStatus = {
   } | null;
 };
 
+export type UserProfile = {
+  full_name: string;
+  role: string;
+  track_type?: "beginner" | "diagnostic" | null;
+  preferred_language?: "uz" | "ru" | "en";
+};
+
 export type PaymentConfig = {
   payme_qr_url: string;
   click_qr_url: string;
@@ -374,6 +381,17 @@ export function getReadingAnalyzerAnonymousId() {
 
 export async function getSubscriptionStatus() {
   return api<SubscriptionStatus>("/api/subscriptions/me");
+}
+
+export async function getUserProfile() {
+  return api<UserProfile>("/api/auth/me");
+}
+
+export async function updatePreferredLanguage(language: "uz" | "ru" | "en") {
+  return api<{ ok: boolean; preferred_language: "uz" | "ru" | "en" }>("/api/auth/preferred-language", {
+    method: "POST",
+    body: JSON.stringify({ preferred_language: language }),
+  });
 }
 
 export async function getPaymentConfig() {

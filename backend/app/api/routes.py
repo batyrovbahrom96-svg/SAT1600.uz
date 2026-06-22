@@ -82,6 +82,10 @@ class PlatformProgressPayload(BaseModel):
     pro_conversion_source: str | None = Field(default=None, max_length=80)
 
 
+class PreferredLanguagePayload(BaseModel):
+    preferred_language: str = Field(pattern="^(uz|ru|en)$")
+
+
 class ReadingMasteryStartPayload(BaseModel):
     type_id: UUID
     force_new: bool = False
@@ -98,6 +102,11 @@ PAYMENT_PLANS = {
 }
 
 
+def ensure_user_language_schema() -> None:
+    with get_engine().begin() as connection:
+        connection.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(16) DEFAULT 'uz'"))
+
+
 @router.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -108,6 +117,7 @@ def ready() -> dict:
     try:
         with get_engine().connect() as connection:
             connection.execute(text("SELECT 1"))
+            connection.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(16) DEFAULT 'uz'"))
             missing_tables = [
                 table
                 for table in ("users", "tests", "questions", "test_attempts", "question_results")
@@ -122,6 +132,7 @@ def ready() -> dict:
                 "role",
                 "detected_language",
                 "chosen_language",
+                "preferred_language",
                 "language_confirmed",
                 "language_set_date",
                 "daily_analyses",
@@ -315,7 +326,22 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> TokenResponse:
 
 @router.get("/auth/me")
 def current_user_profile(user: User = Depends(get_current_user)) -> dict:
-    return {"full_name": user.full_name, "role": user.role, "track_type": user.track_type}
+    return {
+        "full_name": user.full_name,
+        "role": user.role,
+        "track_type": user.track_type,
+        "preferred_language": user.preferred_language or user.chosen_language or "uz",
+    }
+
+
+@router.post("/auth/preferred-language")
+def update_preferred_language(payload: PreferredLanguagePayload, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    user.preferred_language = payload.preferred_language
+    user.chosen_language = payload.preferred_language
+    user.language_confirmed = True
+    user.language_set_date = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "preferred_language": user.preferred_language}
 
 
 @router.get("/curriculum/units")

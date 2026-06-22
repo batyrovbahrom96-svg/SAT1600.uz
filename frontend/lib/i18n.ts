@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 export type Language = "en" | "ru" | "uz";
 
 export const languages: Array<{ code: Language; label: string }> = [
-  { code: "en", label: "EN" },
+  { code: "uz", label: "UZ" },
   { code: "ru", label: "RU" },
-  { code: "uz", label: "UZ" }
+  { code: "en", label: "EN" }
 ];
 
 const storageKey = "sattest_language";
@@ -14,7 +14,7 @@ let activeLanguage: Language | null = null;
 const languageSubscribers = new Set<(language: Language) => void>();
 
 export function getInitialLanguage(): Language {
-  if (typeof window === "undefined") return "en";
+  if (typeof window === "undefined") return "uz";
 
   const requested = new URLSearchParams(window.location.search).get("lang");
   if (requested === "ru" || requested === "uz" || requested === "en") {
@@ -26,7 +26,17 @@ export function getInitialLanguage(): Language {
     return requested;
   }
 
-  return "en";
+  try {
+    const stored = window.localStorage?.getItem(storageKey);
+    if (stored === "ru" || stored === "uz" || stored === "en") return stored;
+  } catch {
+    // Continue to browser language detection.
+  }
+
+  const browserLanguage = window.navigator.language.toLowerCase();
+  if (browserLanguage.startsWith("ru")) return "ru";
+  if (browserLanguage.startsWith("en")) return "en";
+  return "uz";
 }
 
 export function setStoredLanguage(language: Language) {

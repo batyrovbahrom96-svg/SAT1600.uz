@@ -47,6 +47,7 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(32), default="student")
     detected_language: Mapped[str | None] = mapped_column(String(16))
     chosen_language: Mapped[str | None] = mapped_column(String(16))
+    preferred_language: Mapped[str] = mapped_column(String(16), default="uz")
     language_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
     language_set_date: Mapped[datetime | None] = mapped_column(DateTime)
     daily_analyses: Mapped[int] = mapped_column(Integer, default=0)
