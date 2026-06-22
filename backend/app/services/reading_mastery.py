@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.services.reading_analyzer import _model_candidates, _parse_message_json, _send_anthropic_payload
 
 PASS_MISTAKE_LIMIT = 2
+CONTENT_SCHEMA_VERSION = "rw_mastery_multilingual_v3"
 
 
 TYPE_SPECS: dict[str, dict[str, Any]] = {
@@ -182,6 +183,8 @@ def generate_mastery_content(type_name: str, attempt: int = 1) -> dict:
 def content_has_multilingual_fields(content: dict | None) -> bool:
     if not isinstance(content, dict):
         return False
+    if content.get("schema_version") != CONTENT_SCHEMA_VERSION:
+        return False
     questions = content.get("questions")
     if not isinstance(questions, list) or not questions:
         return False
@@ -320,6 +323,7 @@ def _normalize_content(type_name: str, parsed: dict | None) -> dict | None:
     spec = TYPE_SPECS.get(type_name, TYPE_SPECS["Central Ideas & Details"])
     explanation_uz = str(parsed.get("explanation_uz") or _explanation(type_name, spec))
     return {
+        "schema_version": CONTENT_SCHEMA_VERSION,
         "explanation_en": str(parsed.get("explanation_en") or _explanation_en(type_name, spec)),
         "explanation_ru": str(parsed.get("explanation_ru") or _explanation_ru(type_name, spec)),
         "explanation_uz": explanation_uz,
@@ -349,20 +353,22 @@ def _strategy_list(value: Any, spec: dict, lang: str = "uz") -> list[str]:
     if isinstance(value, list) and len(value) >= 3:
         return [str(item) for item in value[:5]]
     if lang == "en":
+        trap = _localized_trap(spec, "en")
         return [
             "Identify exactly what the question type is asking before reading the choices.",
             "Find the sentence, detail, or structure that proves the answer.",
             "Eliminate choices that are too broad, too narrow, unsupported, or opposite.",
             "Choose the most precise answer, not the one that only sounds familiar.",
-            f"⚠️ Common trap: {spec['trap']}."
+            f"⚠️ Common trap: {trap}."
         ]
     if lang == "ru":
+        trap = _localized_trap(spec, "ru")
         return [
             "Сначала определите, что именно проверяет этот тип вопроса.",
             "Найдите предложение, деталь или структуру, которые доказывают ответ.",
             "Исключите варианты: слишком широкие, слишком узкие, без доказательства или противоположные.",
             "Выберите самый точный ответ, а не тот, который просто звучит знакомо.",
-            f"⚠️ Главная ловушка: {spec['trap']}."
+            f"⚠️ Главная ловушка: {trap}."
         ]
     return list(spec["strategies"])
 
@@ -373,6 +379,7 @@ def _fallback_content(type_name: str, attempt: int) -> dict:
     contexts = list(_fallback_contexts())
     rng.shuffle(contexts)
     return {
+        "schema_version": CONTENT_SCHEMA_VERSION,
         "explanation_en": _explanation_en(type_name, spec),
         "explanation_ru": _explanation_ru(type_name, spec),
         "explanation_uz": _explanation(type_name, spec),
@@ -392,19 +399,152 @@ def _explanation(type_name: str, spec: dict) -> str:
 
 
 def _explanation_en(type_name: str, spec: dict) -> str:
+    skill = _localized_skill(spec, "en")
+    frequency = _localized_frequency(spec, "en")
+    trap = _localized_trap(spec, "en")
     return (
-        f"{type_name} questions ask you to use a specific SAT skill: {spec['skill']}. "
-        f"This appears {spec['frequency']} on the SAT. "
-        f"The common mistake is choosing an answer based on {spec['trap']} instead of evidence."
+        f"{type_name} questions ask you to use a specific SAT skill: {skill}. "
+        f"This appears {frequency} on the SAT. "
+        f"The common mistake is {trap} instead of choosing from evidence."
     )
 
 
 def _explanation_ru(type_name: str, spec: dict) -> str:
+    skill = _localized_skill(spec, "ru")
+    frequency = _localized_frequency(spec, "ru")
+    trap = _localized_trap(spec, "ru")
     return (
-        f"Вопросы {type_name} проверяют конкретный навык SAT: {spec['skill']}. "
-        f"На SAT это встречается {spec['frequency']}. "
-        f"Типичная ошибка — выбирать ответ из-за ловушки: {spec['trap']}, а не по доказательству."
+        f"Вопросы {type_name} проверяют конкретный навык SAT: {skill}. "
+        f"На SAT это встречается {frequency}. "
+        f"Типичная ошибка — {trap}, вместо выбора по доказательству."
     )
+
+
+def _localized_skill(spec: dict, lang: str) -> str:
+    uz = str(spec.get("skill") or "")
+    skills = {
+        "butun matnning bosh fikrini va uni qo'llab-quvvatlovchi tafsilotlarni ajratish": {
+            "en": "identifying the central idea of the whole text and the details that support it",
+            "ru": "определять главную мысль всего текста и детали, которые её поддерживают",
+        },
+        "matnda bevosita aytilmagan, lekin dalil bilan isbotlanadigan xulosani topish": {
+            "en": "drawing a conclusion that is supported by evidence even when it is not stated directly",
+            "ru": "делать вывод, который подтверждается текстом, даже если он не сказан напрямую",
+        },
+        "berilgan da'voni eng aniq isbotlaydigan jumla yoki detalni tanlash": {
+            "en": "choosing the sentence or detail that most directly proves a claim",
+            "ru": "выбирать предложение или деталь, которые прямо доказывают утверждение",
+        },
+        "jadval, grafik yoki raqamli ma'lumotdan aniq dalil chiqarish": {
+            "en": "using tables, graphs, or numerical data as precise evidence",
+            "ru": "использовать таблицы, графики или числовые данные как точное доказательство",
+        },
+        "so'zning lug'atdagi birinchi ma'nosini emas, matndagi aniq vazifasini topish": {
+            "en": "finding the word's exact meaning in context, not just its first dictionary meaning",
+            "ru": "находить точное значение слова в контексте, а не первое словарное значение",
+        },
+        "muallif matnni qanday tashkil qilganini va nima uchun yozganini tushunish": {
+            "en": "understanding how the author organizes the text and why it is written that way",
+            "ru": "понимать, как автор организует текст и зачем он так построен",
+        },
+        "ikki qisqa matnning kelishadigan yoki farq qiladigan joyini topish": {
+            "en": "finding where two short texts agree, disagree, or build on each other",
+            "ru": "находить, где два коротких текста совпадают, расходятся или дополняют друг друга",
+        },
+        "berilgan eslatmalardan maqsadga mos bitta aniq jumla tuzish": {
+            "en": "using given notes to create one clear sentence that matches the stated goal",
+            "ru": "использовать заметки, чтобы составить одно точное предложение под заданную цель",
+        },
+        "ikki g'oya orasidagi mantiqiy munosabatga mos transition tanlash": {
+            "en": "choosing the transition that matches the logical relationship between two ideas",
+            "ru": "выбирать переходное слово, которое соответствует логической связи между идеями",
+        },
+        "mustaqil va bog'liq gaplarni to'g'ri tinish belgisi bilan ajratish": {
+            "en": "separating independent and dependent clauses with correct punctuation",
+            "ru": "разделять независимые и зависимые части предложения правильной пунктуацией",
+        },
+        "grammatik forma, subject-verb agreement, pronoun va parallel structure ni tekshirish": {
+            "en": "checking grammar form, subject-verb agreement, pronouns, and parallel structure",
+            "ru": "проверять грамматическую форму, согласование, местоимения и параллельную структуру",
+        },
+        "barcha Reading & Writing savol turlarini aralashtirib, haqiqiy test ritmida ishlash": {
+            "en": "working through a mixed set of Reading & Writing question types like a real test",
+            "ru": "решать смешанный набор вопросов Reading & Writing в ритме реального теста",
+        },
+    }
+    return skills.get(uz, {}).get(lang) or ("using the target SAT skill precisely" if lang == "en" else "точно применять нужный навык SAT")
+
+
+def _localized_frequency(spec: dict, lang: str) -> str:
+    uz = str(spec.get("frequency") or "")
+    values = {
+        "har testda bir necha marta": {"en": "several times per test", "ru": "несколько раз в каждом тесте"},
+        "deyarli har testda": {"en": "on almost every test", "ru": "почти в каждом тесте"},
+        "har testda uchraydi": {"en": "on every test", "ru": "в каждом тесте"},
+        "ko'pincha ma'lumotli matnlarda": {"en": "often in data-based texts", "ru": "часто в текстах с данными"},
+        "har testda 4-5 marta": {"en": "four to five times per test", "ru": "четыре-пять раз в каждом тесте"},
+        "ko'pincha paired text savollarida": {"en": "often in paired-text questions", "ru": "часто в вопросах с двумя текстами"},
+        "Writing qismida muntazam": {"en": "regularly in the Writing portion", "ru": "регулярно в части Writing"},
+        "har testda ko'p uchraydi": {"en": "many times per test", "ru": "много раз в каждом тесте"},
+        "Standard English qismida muntazam": {"en": "regularly in Standard English questions", "ru": "регулярно в вопросах Standard English"},
+        "yakuniy mustahkamlash uchun": {"en": "as a final review skill", "ru": "как финальное закрепление"},
+    }
+    return values.get(uz, {}).get(lang) or ("regularly" if lang == "en" else "регулярно")
+
+
+def _localized_trap(spec: dict, lang: str) -> str:
+    uz = str(spec.get("trap") or "")
+    traps = {
+        "bitta detalni butun matnning asosiy g'oyasi deb tanlash": {
+            "en": "treating one detail as the central idea of the entire text",
+            "ru": "принимать одну деталь за главную мысль всего текста",
+        },
+        "matndan tashqariga chiqib, shaxsiy taxmin qilish": {
+            "en": "making a personal guess that goes beyond the text",
+            "ru": "делать личное предположение, выходящее за рамки текста",
+        },
+        "mavzuga aloqador, lekin da'voni bevosita isbotlamaydigan dalilni tanlash": {
+            "en": "choosing evidence that is related but does not directly prove the claim",
+            "ru": "выбирать связанную деталь, которая не доказывает утверждение напрямую",
+        },
+        "o'q va birliklarni e'tiborsiz qoldirish": {
+            "en": "ignoring labels, axes, or units",
+            "ru": "игнорировать подписи, оси или единицы измерения",
+        },
+        "eng tanish ma'noni tanlash": {
+            "en": "choosing the most familiar dictionary meaning",
+            "ru": "выбирать самое знакомое словарное значение",
+        },
+        "matn nimani aytayotganini uning vazifasi bilan adashtirish": {
+            "en": "confusing what the text says with why that part is there",
+            "ru": "путать содержание текста с функцией этой части",
+        },
+        "faqat birinchi matnga qarab javob berish": {
+            "en": "answering from only the first text",
+            "ru": "отвечать только по первому тексту",
+        },
+        "maqsadni unutib, keraksiz ma'lumot qo'shish": {
+            "en": "forgetting the goal and adding unnecessary information",
+            "ru": "забывать цель и добавлять лишнюю информацию",
+        },
+        "silliq eshitilgani uchun noto'g'ri yo'nalishdagi so'zni tanlash": {
+            "en": "choosing a transition because it sounds smooth even though the logic is wrong",
+            "ru": "выбирать переход, который звучит плавно, но передаёт неверную логику",
+        },
+        "ikki mustaqil gap orasiga yolg'iz vergul qo'yish": {
+            "en": "placing a comma alone between two independent clauses",
+            "ru": "ставить одну запятую между двумя независимыми предложениями",
+        },
+        "fe'lni eng yaqin otga moslashtirish": {
+            "en": "matching the verb to the nearest noun instead of the true subject",
+            "ru": "согласовывать глагол с ближайшим существительным, а не с настоящим подлежащим",
+        },
+        "savol turini aniqlamasdan javob tanlash": {
+            "en": "choosing an answer before identifying the question type",
+            "ru": "выбирать ответ до определения типа вопроса",
+        },
+    }
+    return traps.get(uz, {}).get(lang) or ("choosing without evidence" if lang == "en" else "выбирать без доказательства")
 
 
 def _fallback_contexts() -> list[dict]:
