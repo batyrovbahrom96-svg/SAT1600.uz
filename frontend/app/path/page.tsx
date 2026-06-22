@@ -190,6 +190,67 @@ const copy = {
     start: { en: "Start", ru: "Начать", uz: "Boshlash" },
     open: { en: "Open", ru: "Открыть", uz: "Ochish" }
   },
+  mastery: {
+    eyebrow: { en: "SAT Reading & Writing Mastery", ru: "Мастерство SAT Reading & Writing", uz: "SAT Reading & Writing Mastery" },
+    title: { en: "12 official question types", ru: "12 официальных типов вопросов", uz: "12 ta rasmiy savol turi" },
+    body: {
+      en: "Each topic: explanation → strategy → 10 original questions → pass/fail gate. Pass with up to 2 mistakes; 3+ mistakes gives you a fresh question set.",
+      ru: "Каждая тема: объяснение → стратегия → 10 оригинальных вопросов → проходной результат. До 2 ошибок — проход; 3+ ошибки — новый набор вопросов.",
+      uz: "Har bir mavzu: tushuntirish → strategiya → 10 original savol → pass/fail gate. 2 tagacha xato bilan o'tasiz; 3+ xato bo'lsa yangi savollar bilan qayta urinasiz."
+    },
+    progress: { en: "Progress", ru: "Прогресс", uz: "Progress" },
+    free: { en: "FREE", ru: "БЕСПЛАТНО", uz: "BEPUL" },
+    pro: { en: "PRO", ru: "PRO", uz: "PRO" },
+    open: { en: "OPEN", ru: "ОТКРЫТЬ", uz: "OCHIQ" },
+    passed: { en: "Mastered", ru: "Освоено", uz: "O'zlashtirildi" },
+    proLocked: { en: "Unlocks with Pro after Type 1", ru: "Откроется с Pro после типа 1", uz: "Type 1 dan keyin Pro bilan ochiladi" },
+    previousLocked: { en: "Finish the previous topic first", ru: "Сначала завершите предыдущую тему", uz: "Avval oldingi mavzuni tugating" },
+    ready: { en: "Ready to start", ru: "Готово к старту", uz: "Boshlashga tayyor" },
+    loading: { en: "Loading mastery system...", ru: "Система mastery загружается...", uz: "Mastery tizimi yuklanmoqda..." },
+    milestone: { en: "Curriculum Milestone", ru: "Этап curriculum", uz: "Curriculum Milestone" },
+    mockTitle: { en: "SAT Reading & Writing Mock", ru: "SAT Reading & Writing Mock", uz: "SAT Reading & Writing Mock" },
+    mockBody: {
+      en: "After mastering all 12 question types, a timed Reading & Writing mock opens inside the curriculum. This is a progress check, not a public menu item.",
+      ru: "После освоения всех 12 типов вопросов откроется timed mock по Reading & Writing внутри curriculum. Это проверка прогресса, не публичный пункт меню.",
+      uz: "12 ta savol turini o'zlashtirgandan keyin Reading & Writing bo'yicha timed mock ochiladi. Bu curriculum ichidagi progress check, public menu emas."
+    },
+    masteryDone: { en: "mastery completed", ru: "mastery завершено", uz: "mastery tugadi" },
+    proActive: { en: "Pro active", ru: "Pro активен", uz: "Pro faol" },
+    proRequired: { en: "Pro required", ru: "Нужен Pro", uz: "Pro kerak" },
+    locked: { en: "Locked", ru: "Закрыто", uz: "Yopiq" },
+    startMock: { en: "Start R&W Mock →", ru: "Начать R&W Mock →", uz: "R&W Mock boshlash →" },
+    questionType: { en: "Question Type", ru: "Тип вопроса", uz: "Savol turi" },
+    newQuestions: { en: "Generate new 10 questions", ru: "Создать новые 10 вопросов", uz: "Yangi 10 savol yaratish" },
+    close: { en: "Close", ru: "Закрыть", uz: "Yopish" },
+    whatIsThis: { en: "What does this mean?", ru: "Что это значит?", uz: "Bu nima degani?" },
+    strategy: { en: "How to approach it?", ru: "Как подходить?", uz: "Qanday yondashish kerak?" },
+    seeStrategy: { en: "See strategy →", ru: "Посмотреть стратегию →", uz: "Strategiyani ko'rish →" },
+    startPractice: { en: "Start practice →", ru: "Начать практику →", uz: "Mashqni boshlash →" },
+    backToPath: { en: "Back to path", ru: "Вернуться к path", uz: "Pathga qaytish" },
+    question: { en: "Question", ru: "Вопрос", uz: "Savol" },
+    mistakes: { en: "Mistakes", ru: "Ошибки", uz: "Xatolar" },
+    correctFeedback: { en: "Correct", ru: "Правильно", uz: "To'g'ri" },
+    wrongFeedback: { en: "Not quite. Correct answer", ru: "Не совсем. Правильный ответ", uz: "Bu emas. To'g'ri javob" },
+    seeResult: { en: "See result →", ru: "Посмотреть результат →", uz: "Natijani ko'rish →" },
+    continue: { en: "Continue →", ru: "Продолжить →", uz: "Davom et →" },
+    retry: { en: "Try again →", ru: "Попробовать снова →", uz: "Qayta urinish →" },
+    retryTitle: { en: "Let’s try again", ru: "Попробуем ещё раз", uz: "Yana urinib ko'ramiz" },
+    fallbackRetry: {
+      en: "You made {mistakes} mistakes this time. The questions were refreshed, so try again with a new set.",
+      ru: "В этот раз ошибок: {mistakes}. Вопросы обновлены, попробуйте ещё раз с новым набором.",
+      uz: "Bu safar {mistakes} xato qildingiz. Savollar yangilandi — qaytadan urinib ko'ramiz."
+    },
+    mastered: { en: "{type} mastered!", ru: "{type} освоено!", uz: "{type} o'zlashtirildi!" },
+    correctCount: { en: "{correct}/10 correct", ru: "{correct}/10 правильно", uz: "{correct}/10 to'g'ri" },
+    unlockFullPath: { en: "Unlock the full SAT path with Pro:", ru: "Откройте полный SAT путь с Pro:", uz: "Pro bilan to'liq SAT yo'lini oching:" },
+    proListTypes: { en: "Remaining 11 question types", ru: "Оставшиеся 11 типов вопросов", uz: "Qolgan 11 ta savol turi" },
+    proListQuestions: { en: "Each with 10 original questions", ru: "В каждом по 10 оригинальных вопросов", uz: "Har biri 10 ta original savol bilan" },
+    proListTracking: { en: "Your results are saved and tracked", ru: "Ваши результаты сохраняются и отслеживаются", uz: "Natijalaringiz saqlanadi va kuzatiladi" },
+    proListTools: { en: "Mock tests, Reading Analyzer, and your personal path", ru: "Mock tests, Reading Analyzer и личный path", uz: "Mock testlar, Reading Analyzer va shaxsiy path" },
+    firstMastered: { en: "First topic mastered!", ru: "Первая тема освоена!", uz: "Birinchi mavzuni o'zlashtirdingiz!" },
+    remainingTypes: { en: "The remaining 11 question types are waiting, each with 10 original questions.", ru: "Оставшиеся 11 типов вопросов ждут вас, каждый с 10 оригинальными вопросами.", uz: "Qolgan 11 ta savol turi sizni kutmoqda, har biri 10 ta original savol bilan." },
+    remainingList: { en: "Remaining 11 question types", ru: "Оставшиеся 11 типов вопросов", uz: "Qolgan 11 ta savol turi" },
+  },
   onboarding: {
     title: { en: "Let’s build your SAT path.", ru: "Соберём ваш SAT путь.", uz: "SAT yo'lingizni tuzamiz." },
     goal: { en: "Target score", ru: "Целевой балл", uz: "Maqsad ball" },
@@ -256,6 +317,57 @@ const baseNodes: PathNode[] = [
     subtitle: { en: "Functions, quadratics, and structure.", ru: "Функции, квадраты и структура.", uz: "Funksiyalar, kvadratlar va struktura." }
   }
 ];
+
+const masteryTypeTranslations: Record<string, { title: Record<Language, string>; subtitle: Record<Language, string> }> = {
+  "Central Ideas & Details": {
+    title: { en: "Central Ideas & Details", ru: "Главные идеи и детали", uz: "Asosiy g'oyalar va tafsilotlar" },
+    subtitle: { en: "Find the main point and supporting details", ru: "Найдите главную мысль и детали", uz: "Asosiy g'oya va dalil tafsilotlarni topish" }
+  },
+  Inferences: {
+    title: { en: "Inferences", ru: "Выводы", uz: "Xulosa chiqarish" },
+    subtitle: { en: "Choose conclusions supported by the text", ru: "Выберите вывод, подтверждённый текстом", uz: "Matn daliliga tayangan xulosani tanlash" }
+  },
+  "Command of Evidence (Textual)": {
+    title: { en: "Command of Evidence (Textual)", ru: "Доказательство из текста", uz: "Matndan dalil topish" },
+    subtitle: { en: "Pick the quote that directly proves the claim", ru: "Выберите цитату, которая прямо доказывает мысль", uz: "Da'voni bevosita isbotlaydigan dalilni tanlash" }
+  },
+  "Command of Evidence (Quantitative)": {
+    title: { en: "Command of Evidence (Quantitative)", ru: "Доказательство по данным", uz: "Jadval va grafikdan dalil topish" },
+    subtitle: { en: "Use tables, charts, and numbers accurately", ru: "Точно используйте таблицы, графики и числа", uz: "Jadval, grafik va raqamlarni aniq ishlatish" }
+  },
+  "Words in Context": {
+    title: { en: "Words in Context", ru: "Слова в контексте", uz: "Kontekstdagi so'zlar" },
+    subtitle: { en: "Use the meaning inside this sentence", ru: "Найдите значение слова в этом контексте", uz: "So'zning matndagi aniq ma'nosini topish" }
+  },
+  "Text Structure & Purpose": {
+    title: { en: "Text Structure & Purpose", ru: "Структура и цель текста", uz: "Matn tuzilishi va maqsadi" },
+    subtitle: { en: "Identify how and why the text is built", ru: "Определите, как и зачем построен текст", uz: "Matn qanday va nima uchun qurilganini topish" }
+  },
+  "Cross-Text Connections": {
+    title: { en: "Cross-Text Connections", ru: "Связь двух текстов", uz: "Ikki matn orasidagi bog'lanish" },
+    subtitle: { en: "Compare how two texts relate", ru: "Сравните связь между двумя текстами", uz: "Ikki matn munosabatini solishtirish" }
+  },
+  "Rhetorical Synthesis": {
+    title: { en: "Rhetorical Synthesis", ru: "Риторический синтез", uz: "Ritorik sintez" },
+    subtitle: { en: "Combine notes for the stated goal", ru: "Объедините заметки под заданную цель", uz: "Eslatmalarni maqsadga mos birlashtirish" }
+  },
+  Transitions: {
+    title: { en: "Transitions", ru: "Переходные слова", uz: "O'tish so'zlari" },
+    subtitle: { en: "Match the logical relationship between ideas", ru: "Подберите логическую связь между идеями", uz: "G'oyalar orasidagi mantiqiy bog'lanishni topish" }
+  },
+  "Boundaries (Punctuation)": {
+    title: { en: "Boundaries (Punctuation)", ru: "Границы предложений (пунктуация)", uz: "Tinish belgilari chegaralari" },
+    subtitle: { en: "Fix punctuation and sentence boundaries", ru: "Исправьте пунктуацию и границы предложений", uz: "Punctuation va gap chegaralarini to'g'rilash" }
+  },
+  "Form, Structure, and Sense": {
+    title: { en: "Form, Structure, and Sense", ru: "Форма, структура и смысл", uz: "Forma, tuzilish va ma'no" },
+    subtitle: { en: "Control grammar, agreement, and clarity", ru: "Проверьте грамматику, согласование и смысл", uz: "Grammatika, moslik va ma'noni tekshirish" }
+  },
+  "Reserved/Combined Review Unit": {
+    title: { en: "Combined Review Unit", ru: "Смешанное повторение", uz: "Umumiy takrorlash bo'limi" },
+    subtitle: { en: "Mix all question types like the real test", ru: "Смешайте все типы вопросов как на реальном тесте", uz: "Barcha savol turlarini haqiqiy testdek aralashtirish" }
+  }
+};
 
 const weakAreaNodes: Record<string, PathNode[]> = {
   "Advanced Math": [
@@ -713,6 +825,36 @@ function difficultyFor(index: number) {
   return "Hard";
 }
 
+function masteryTypeDisplay(type: MasteryType | null, language: Language) {
+  if (!type) {
+    return {
+      title: "",
+      subtitle: ""
+    };
+  }
+  const translated = masteryTypeTranslations[type.type_name];
+  return {
+    title: translated ? pick(translated.title, language) : language === "uz" ? type.type_name_uz : type.type_name,
+    subtitle: translated ? pick(translated.subtitle, language) : type.type_name_uz
+  };
+}
+
+function masteryStatusText(type: MasteryType, language: Language) {
+  const proLocked = type.locked_reason === "pro_required";
+  if (type.status === "passed") return pick(copy.mastery.passed, language);
+  if (proLocked) return pick(copy.mastery.proLocked, language);
+  if (type.status === "locked") return pick(copy.mastery.previousLocked, language);
+  return pick(copy.mastery.ready, language);
+}
+
+function masteryBadgeText(type: MasteryType, language: Language) {
+  const proLocked = type.locked_reason === "pro_required";
+  if (type.status === "passed") return `${type.best_score}/10`;
+  if (type.is_free) return pick(copy.mastery.free, language);
+  if (proLocked) return pick(copy.mastery.pro, language);
+  return pick(copy.mastery.open, language);
+}
+
 export default function PathPage() {
   const router = useRouter();
   const { language } = useLanguage();
@@ -800,6 +942,7 @@ export default function PathPage() {
   const masteryPassedCount = masteryCatalog?.types.filter((item) => item.status === "passed").length ?? 0;
   const masteryTotal = masteryCatalog?.total ?? 12;
   const readingWritingMockUnlocked = Boolean(masteryCatalog && masteryPassedCount >= masteryTotal && isProActive);
+  const activeMasteryDisplay = useMemo(() => masteryTypeDisplay(activeMasteryType, language), [activeMasteryType, language]);
 
   useEffect(() => {
     if (progress.streak > previousStreakRef.current) {
@@ -1157,14 +1300,14 @@ export default function PathPage() {
           <section className="mt-8 rounded-3xl border border-[#FFD700]/20 bg-[#151515] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">SAT Reading & Writing Mastery</p>
-                <h2 className="mt-2 text-2xl font-black text-white md:text-4xl">12 ta rasmiy savol turi</h2>
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">{pick(copy.mastery.eyebrow, language)}</p>
+                <h2 className="mt-2 text-2xl font-black text-white md:text-4xl">{pick(copy.mastery.title, language)}</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-                  Har bir mavzu: tushuntirish → strategiya → 10 original savol → pass/fail gate. 2 tagacha xato bilan o'tasiz; 3+ xato bo'lsa yangi savollar bilan qayta urinasiz.
+                  {pick(copy.mastery.body, language)}
                 </p>
               </div>
               <div className="rounded-2xl border border-[#FFD700]/25 bg-black/35 px-4 py-3 text-right">
-                <p className="text-xs font-bold text-white/45">Progress</p>
+                <p className="text-xs font-bold text-white/45">{pick(copy.mastery.progress, language)}</p>
                 <p className="text-2xl font-black text-[#FFD700]">{masteryCatalog ? `${masteryCatalog.passed_count}/${masteryCatalog.total}` : "..."}</p>
               </div>
             </div>
@@ -1176,6 +1319,7 @@ export default function PathPage() {
                 const locked = type.status === "locked";
                 const passed = type.status === "passed";
                 const proLocked = type.locked_reason === "pro_required";
+                const display = masteryTypeDisplay(type, language);
                 return (
                   <button
                     className={[
@@ -1192,13 +1336,13 @@ export default function PathPage() {
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#FFD700] text-sm font-black text-black">{type.order_index}</span>
                       <span className={["inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-black", passed ? "bg-emerald-400/15 text-emerald-200" : proLocked ? "bg-[#FFD700]/15 text-[#FFD700]" : locked ? "bg-white/10 text-white/40" : "bg-[#FFD700]/15 text-[#FFD700]"].join(" ")}>
                         {passed ? <Check size={14} /> : locked ? <Lock size={14} /> : <Play size={14} />}
-                        {passed ? `${type.best_score}/10` : type.is_free ? "FREE" : proLocked ? "PRO" : "OPEN"}
+                        {masteryBadgeText(type, language)}
                       </span>
                     </div>
-                    <h3 className="mt-4 text-lg font-black text-white">{type.type_name}</h3>
-                    <p className="mt-1 text-sm font-semibold text-white/50">{type.type_name_uz}</p>
+                    <h3 className="mt-4 text-lg font-black text-white">{display.title}</h3>
+                    <p className="mt-1 text-sm font-semibold text-white/50">{display.subtitle}</p>
                     <p className="mt-3 text-xs font-bold text-white/35">
-                      {passed ? "O'zlashtirildi" : proLocked ? "Type 1 dan keyin Pro bilan ochiladi" : locked ? "Avval oldingi mavzuni tugating" : "Boshlashga tayyor"}
+                      {masteryStatusText(type, language)}
                     </p>
                   </button>
                 );
@@ -1215,15 +1359,15 @@ export default function PathPage() {
                     {readingWritingMockUnlocked ? "🏆" : <Lock size={26} />}
                   </span>
                   <div>
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[#FFD700]">Curriculum Milestone</p>
-                    <h3 className="mt-1 text-2xl font-black text-white">SAT Reading & Writing Mock</h3>
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[#FFD700]">{pick(copy.mastery.milestone, language)}</p>
+                    <h3 className="mt-1 text-2xl font-black text-white">{pick(copy.mastery.mockTitle, language)}</h3>
                     <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-white/55">
-                      12 ta savol turini o'zlashtirgandan keyin Reading & Writing bo'yicha timed mock ochiladi. Bu curriculum ichidagi progress check, public menu emas.
+                      {pick(copy.mastery.mockBody, language)}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/50">{masteryPassedCount}/{masteryTotal} mastery tugadi</span>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/50">{masteryPassedCount}/{masteryTotal} {pick(copy.mastery.masteryDone, language)}</span>
                       <span className={["rounded-full border px-3 py-1", isProActive ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100" : "border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700]"].join(" ")}>
-                        {isProActive ? "Pro active" : "Pro required"}
+                        {isProActive ? pick(copy.mastery.proActive, language) : pick(copy.mastery.proRequired, language)}
                       </span>
                     </div>
                   </div>
@@ -1236,12 +1380,12 @@ export default function PathPage() {
                   onClick={openReadingWritingMock}
                   type="button"
                 >
-                  {readingWritingMockUnlocked ? "R&W Mock boshlash →" : "Locked"}
+                  {readingWritingMockUnlocked ? pick(copy.mastery.startMock, language) : pick(copy.mastery.locked, language)}
                 </button>
               </div>
             </div>
 
-            {!masteryCatalog && !masteryError ? <p className="mt-4 text-sm font-semibold text-white/45">Mastery tizimi yuklanmoqda...</p> : null}
+            {!masteryCatalog && !masteryError ? <p className="mt-4 text-sm font-semibold text-white/45">{pick(copy.mastery.loading, language)}</p> : null}
           </section>
 
           <section className="path-stage relative mx-auto mt-8 max-w-3xl py-10">
@@ -1336,7 +1480,9 @@ export default function PathPage() {
               <div className="mt-4 h-3 rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-[#FFD700]" style={{ width: `${Math.min(100, (progress.todayLessons / Math.max(1, progress.dailyGoal)) * 100)}%` }} />
               </div>
-              <p className="mt-2 text-sm font-semibold text-white/55">{progress.todayLessons}/{progress.dailyGoal} lessons</p>
+              <p className="mt-2 text-sm font-semibold text-white/55">
+                {progress.todayLessons}/{progress.dailyGoal} {pick(copy.onboarding.daily, language).toLowerCase()}
+              </p>
             </div>
             {subscriptionChecked && !isProActive ? (
               <div className="path-sidebar-card rounded-xl border border-[#FFD700]/30 bg-[#FFD700]/10 p-5" style={{ animationDelay: "160ms" }}>
@@ -1362,7 +1508,7 @@ export default function PathPage() {
             <div className="path-sidebar-card rounded-xl border border-white/10 bg-[#151515] p-5" id="leaderboard" style={{ animationDelay: "320ms" }}>
               <div className="flex items-center gap-2">
                 <Medal className="text-[#FFD700]" size={20} />
-                <p className="font-black">Weekly XP</p>
+                <p className="font-black">{language === "ru" ? "XP за неделю" : language === "uz" ? "Haftalik XP" : "Weekly XP"}</p>
               </div>
               <ol className="mt-4 grid gap-3 text-sm">
                 {["Muslima", "Jasur", studentName.split(" ")[0] || "You", "Nodira"].map((name, index) => (
@@ -1399,7 +1545,7 @@ export default function PathPage() {
                     <h2 className="mt-2 text-3xl font-black">{pick(activeNode.title, language)}</h2>
                   </div>
                   <button className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-white/60 hover:border-white/30 hover:text-white" onClick={() => setActiveNode(null)} type="button">
-                    Close
+                    {pick(copy.mastery.close, language)}
                   </button>
                 </div>
 
@@ -1469,18 +1615,20 @@ export default function PathPage() {
           <div className="mx-auto my-8 max-w-4xl rounded-3xl border border-[#FFD700]/25 bg-[#101010] p-5 shadow-[0_24px_100px_rgba(0,0,0,0.55)]">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">Question Type {activeMasteryType.order_index}</p>
-                <h2 className="mt-2 text-2xl font-black md:text-4xl">{activeMasteryType.type_name}</h2>
-                <p className="mt-1 text-sm font-semibold text-white/50">{activeMasteryType.type_name_uz}</p>
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">
+                  {pick(copy.mastery.questionType, language)} {activeMasteryType.order_index}
+                </p>
+                <h2 className="mt-2 text-2xl font-black md:text-4xl">{activeMasteryDisplay.title}</h2>
+                <p className="mt-1 text-sm font-semibold text-white/50">{activeMasteryDisplay.subtitle}</p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
                 {masteryContent && masteryScreen !== "paywall" ? (
                   <button className="rounded-xl border border-[#FFD700]/30 px-4 py-2 text-sm font-black text-[#FFD700] hover:bg-[#FFD700] hover:text-black disabled:opacity-45" disabled={masteryLoading} onClick={regenerateMasterySet} type="button">
-                    Yangi 10 savol yaratish
+                    {pick(copy.mastery.newQuestions, language)}
                   </button>
                 ) : null}
                 <button className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-white/60 hover:border-white/30 hover:text-white" onClick={closeMasteryModal} type="button">
-                  Close
+                  {pick(copy.mastery.close, language)}
                 </button>
               </div>
             </div>
@@ -1488,17 +1636,17 @@ export default function PathPage() {
             {masteryScreen === "paywall" ? (
               <div className="mt-8 rounded-3xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-6 text-center">
                 <Image className="mx-auto h-20 w-20 rounded-full border border-[#FFD700]/40 object-cover" src={lionLogo} alt="SATTEST lion crest" width={120} height={120} />
-                <h3 className="mt-5 text-3xl font-black">🦁 Birinchi mavzuni o'zlashtirdingiz!</h3>
+                <h3 className="mt-5 text-3xl font-black">🦁 {pick(copy.mastery.firstMastered, language)}</h3>
                 <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-white/68">
-                  Qolgan 11 ta savol turi sizni kutmoqda, har biri 10 ta original savol bilan.
+                  {pick(copy.mastery.remainingTypes, language)}
                 </p>
                 <div className="mx-auto mt-5 max-w-xl rounded-2xl border border-white/10 bg-black/35 p-5 text-left">
                   <p className="text-2xl font-black text-[#FFD700]">300,000 UZS/oy</p>
                   <ul className="mt-4 grid gap-2 text-sm font-semibold text-white/70">
-                    <li>✅ Qolgan 11 ta savol turi</li>
-                    <li>✅ Har biri 10 ta original savol bilan</li>
-                    <li>✅ Natijalaringiz saqlanadi va kuzatiladi</li>
-                    <li>✅ Mock testlar, Reading Analyzer va shaxsiy path</li>
+                    <li>✅ {pick(copy.mastery.proListTypes, language)}</li>
+                    <li>✅ {pick(copy.mastery.proListQuestions, language)}</li>
+                    <li>✅ {pick(copy.mastery.proListTracking, language)}</li>
+                    <li>✅ {pick(copy.mastery.proListTools, language)}</li>
                   </ul>
                   <PaymentQrHandoff source="path_type_lock" className="mt-5" />
                 </div>
@@ -1508,18 +1656,18 @@ export default function PathPage() {
 
             {masteryContent && masteryScreen === "explanation" ? (
               <div className="mt-8 grid gap-5">
-                <MasteryPanel title="Bu nima degani?">
+                <MasteryPanel title={pick(copy.mastery.whatIsThis, language)}>
                   <p className="text-xl font-bold leading-9 text-white/82">{masteryContent.explanation_uz}</p>
                 </MasteryPanel>
                 <button className="min-h-12 rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black transition hover:bg-white" onClick={() => setMasteryScreen("strategy")} type="button">
-                  Strategiyani ko'rish →
+                  {pick(copy.mastery.seeStrategy, language)}
                 </button>
               </div>
             ) : null}
 
             {masteryContent && masteryScreen === "strategy" ? (
               <div className="mt-8 grid gap-5">
-                <MasteryPanel title="Qanday yondashish kerak?">
+                <MasteryPanel title={pick(copy.mastery.strategy, language)}>
                   <ul className="grid gap-3 text-lg font-semibold leading-8 text-white/78">
                     {masteryContent.strategy_uz.map((item) => (
                       <li className="rounded-2xl border border-white/10 bg-black/25 p-4" key={item}>{item}</li>
@@ -1527,7 +1675,7 @@ export default function PathPage() {
                   </ul>
                 </MasteryPanel>
                 <button className="min-h-12 rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black transition hover:bg-white" onClick={() => setMasteryScreen("practice")} type="button">
-                  10 ta savolni boshlash →
+                  {pick(copy.mastery.startPractice, language)}
                 </button>
               </div>
             ) : null}
@@ -1540,9 +1688,11 @@ export default function PathPage() {
                   return (
                     <div className="grid gap-5">
                       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">Savol {masteryQuestionIndex + 1}/10</p>
+                        <p className="text-sm font-black uppercase tracking-[0.18em] text-[#FFD700]">
+                          {pick(copy.mastery.question, language)} {masteryQuestionIndex + 1}/10
+                        </p>
                         <p className={["rounded-full border px-3 py-1 text-sm font-black", mistakes > 2 ? "border-red-400/50 bg-red-500/10 text-red-100" : "border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700]"].join(" ")}>
-                          Xatolar: {mistakes}/2
+                          {pick(copy.mastery.mistakes, language)}: {mistakes}/2
                         </p>
                       </div>
                       <div className="h-2 rounded-full bg-white/10">
@@ -1576,12 +1726,16 @@ export default function PathPage() {
                       </div>
                       {masteryFeedback ? (
                         <div className={["rounded-2xl border p-4", masteryFeedback.isCorrect ? "border-emerald-400/45 bg-emerald-500/10" : "border-red-400/45 bg-red-500/10"].join(" ")}>
-                          <p className="text-lg font-black">{masteryFeedback.isCorrect ? "✅ To'g'ri" : `❌ Bu emas. To'g'ri javob: ${masteryFeedback.correct}`}</p>
+                          <p className="text-lg font-black">
+                            {masteryFeedback.isCorrect
+                              ? `✅ ${pick(copy.mastery.correctFeedback, language)}`
+                              : `❌ ${pick(copy.mastery.wrongFeedback, language)}: ${masteryFeedback.correct}`}
+                          </p>
                           <p className="mt-2 text-sm font-semibold leading-6 text-white/70">
                             {masteryFeedback.isCorrect ? question.explanation_uz : question.why_wrong_uz[masteryFeedback.selected as "A" | "B" | "C" | "D"] || question.explanation_uz}
                           </p>
                           <button className="mt-4 min-h-11 rounded-xl bg-[#FFD700] px-5 py-3 text-sm font-black text-black hover:bg-white" disabled={masteryLoading} onClick={continueMasteryPractice} type="button">
-                            {masteryQuestionIndex === masteryContent.questions.length - 1 ? "Natijani ko'rish →" : "Davom et →"}
+                            {masteryQuestionIndex === masteryContent.questions.length - 1 ? pick(copy.mastery.seeResult, language) : pick(copy.mastery.continue, language)}
                           </button>
                         </div>
                       ) : null}
@@ -1595,38 +1749,46 @@ export default function PathPage() {
               <div className="mt-8 rounded-3xl border border-white/10 bg-black/35 p-6 text-center">
                 {masteryResult.passed ? (
                   <>
-                    <h3 className="text-3xl font-black text-emerald-100">✅ {activeMasteryType.type_name} o'zlashtirildi!</h3>
-                    <p className="mt-3 text-2xl font-black text-[#FFD700]">{masteryResult.correct}/10 to'g'ri</p>
+                    <h3 className="text-3xl font-black text-emerald-100">
+                      ✅ {pick(copy.mastery.mastered, language).replace("{type}", activeMasteryDisplay.title)}
+                    </h3>
+                    <p className="mt-3 text-2xl font-black text-[#FFD700]">
+                      {pick(copy.mastery.correctCount, language).replace("{correct}", String(masteryResult.correct))}
+                    </p>
                     {masteryResult.paywall_required ? (
                       <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-[#FFD700]/35 bg-[#FFD700]/10 p-5">
-                        <p className="text-xl font-black">🦁 {activeMasteryType.type_name} mavzusini o'zlashtirdingiz — {masteryResult.correct}/10!</p>
-                        <p className="mt-3 text-sm font-semibold leading-6 text-white/72">
-                          Qolgan 11 ta savol turi sizni kutmoqda, har biri 10 ta original savol bilan.
+                        <p className="text-xl font-black">
+                          🦁 {pick(copy.mastery.mastered, language).replace("{type}", activeMasteryDisplay.title)} — {masteryResult.correct}/10
                         </p>
-                        <p className="mt-3 text-sm font-black text-[#FFD700]">Pro bilan to'liq SAT yo'lini oching:</p>
+                        <p className="mt-3 text-sm font-semibold leading-6 text-white/72">
+                          {pick(copy.mastery.remainingTypes, language)}
+                        </p>
+                        <p className="mt-3 text-sm font-black text-[#FFD700]">{pick(copy.mastery.unlockFullPath, language)}</p>
                         <PaymentQrHandoff source="path_type_lock" className="mt-4" />
                         <p className="mt-2 text-xs font-bold text-white/45">@{telegramBotUsername}</p>
                       </div>
                     ) : null}
                     <button className="mt-6 min-h-11 rounded-xl border border-white/10 px-5 py-3 font-black text-white/70 hover:border-[#FFD700] hover:text-[#FFD700]" onClick={closeMasteryModal} type="button">
-                      Pathga qaytish
+                      {pick(copy.mastery.backToPath, language)}
                     </button>
                   </>
                 ) : (
                   <>
-                    <h3 className="text-3xl font-black text-red-100">Yana urinib ko'ramiz</h3>
+                    <h3 className="text-3xl font-black text-red-100">{pick(copy.mastery.retryTitle, language)}</h3>
                     <p className="mx-auto mt-3 max-w-2xl text-lg font-semibold leading-8 text-white/68">
-                      {masteryResult.message_uz || `Bu safar ${masteryResult.mistakes} xato qildingiz. Savollar yangilandi — qaytadan urinib ko'ramiz.`}
+                      {language === "uz" && masteryResult.message_uz
+                        ? masteryResult.message_uz
+                        : pick(copy.mastery.fallbackRetry, language).replace("{mistakes}", String(masteryResult.mistakes))}
                     </p>
                     <button className="mt-6 min-h-12 rounded-xl bg-[#FFD700] px-6 py-3 font-black text-black hover:bg-white" onClick={retryMasterySet} type="button">
-                      Qayta urinish →
+                      {pick(copy.mastery.retry, language)}
                     </button>
                   </>
                 )}
               </div>
             ) : null}
 
-            {masteryLoading ? <p className="mt-5 text-center text-sm font-black text-[#FFD700]">Yuklanmoqda...</p> : null}
+            {masteryLoading ? <p className="mt-5 text-center text-sm font-black text-[#FFD700]">{pick(copy.mastery.loading, language)}</p> : null}
           </div>
         </div>
       ) : null}
