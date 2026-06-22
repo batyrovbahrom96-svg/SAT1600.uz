@@ -71,15 +71,32 @@ type LessonQuestion = {
 
 type MasteryQuestion = {
   passage_or_sentence: string;
+  passage_or_sentence_en?: string;
+  passage_or_sentence_ru?: string;
+  passage_or_sentence_uz?: string;
   question_text: string;
+  question_text_en?: string;
+  question_text_ru?: string;
+  question_text_uz?: string;
   options: Record<"A" | "B" | "C" | "D", string>;
+  options_en?: Record<"A" | "B" | "C" | "D", string>;
+  options_ru?: Record<"A" | "B" | "C" | "D", string>;
+  options_uz?: Record<"A" | "B" | "C" | "D", string>;
   correct_answer: "A" | "B" | "C" | "D";
+  explanation_en?: string;
+  explanation_ru?: string;
   explanation_uz: string;
+  why_wrong_en?: Partial<Record<"A" | "B" | "C" | "D", string>>;
+  why_wrong_ru?: Partial<Record<"A" | "B" | "C" | "D", string>>;
   why_wrong_uz: Partial<Record<"A" | "B" | "C" | "D", string>>;
 };
 
 type MasteryContent = {
+  explanation_en?: string;
+  explanation_ru?: string;
   explanation_uz: string;
+  strategy_en?: string[];
+  strategy_ru?: string[];
   strategy_uz: string[];
   questions: MasteryQuestion[];
 };
@@ -853,6 +870,31 @@ function masteryBadgeText(type: MasteryType, language: Language) {
   if (type.is_free) return pick(copy.mastery.free, language);
   if (proLocked) return pick(copy.mastery.pro, language);
   return pick(copy.mastery.open, language);
+}
+
+function localizedMasteryExplanation(content: MasteryContent, language: Language) {
+  return content[`explanation_${language}` as keyof MasteryContent] as string || content.explanation_uz;
+}
+
+function localizedMasteryStrategy(content: MasteryContent, language: Language) {
+  return (content[`strategy_${language}` as keyof MasteryContent] as string[] | undefined) || content.strategy_uz;
+}
+
+function localizedQuestionText(question: MasteryQuestion, language: Language, key: "passage_or_sentence" | "question_text") {
+  return question[`${key}_${language}` as keyof MasteryQuestion] as string || question[key];
+}
+
+function localizedQuestionOptions(question: MasteryQuestion, language: Language) {
+  return question[`options_${language}` as keyof MasteryQuestion] as Record<"A" | "B" | "C" | "D", string> | undefined || question.options;
+}
+
+function localizedQuestionExplanation(question: MasteryQuestion, language: Language) {
+  return question[`explanation_${language}` as keyof MasteryQuestion] as string || question.explanation_uz;
+}
+
+function localizedWrongAnswer(question: MasteryQuestion, language: Language, letter: "A" | "B" | "C" | "D") {
+  const wrong = question[`why_wrong_${language}` as keyof MasteryQuestion] as Partial<Record<"A" | "B" | "C" | "D", string>> | undefined;
+  return wrong?.[letter] || question.why_wrong_uz[letter] || localizedQuestionExplanation(question, language);
 }
 
 export default function PathPage() {
@@ -1657,7 +1699,7 @@ export default function PathPage() {
             {masteryContent && masteryScreen === "explanation" ? (
               <div className="mt-8 grid gap-5">
                 <MasteryPanel title={pick(copy.mastery.whatIsThis, language)}>
-                  <p className="text-xl font-bold leading-9 text-white/82">{masteryContent.explanation_uz}</p>
+                  <p className="text-xl font-bold leading-9 text-white/82">{localizedMasteryExplanation(masteryContent, language)}</p>
                 </MasteryPanel>
                 <button className="min-h-12 rounded-xl bg-[#FFD700] px-5 py-3 font-black text-black transition hover:bg-white" onClick={() => setMasteryScreen("strategy")} type="button">
                   {pick(copy.mastery.seeStrategy, language)}
@@ -1669,7 +1711,7 @@ export default function PathPage() {
               <div className="mt-8 grid gap-5">
                 <MasteryPanel title={pick(copy.mastery.strategy, language)}>
                   <ul className="grid gap-3 text-lg font-semibold leading-8 text-white/78">
-                    {masteryContent.strategy_uz.map((item) => (
+                    {localizedMasteryStrategy(masteryContent, language).map((item) => (
                       <li className="rounded-2xl border border-white/10 bg-black/25 p-4" key={item}>{item}</li>
                     ))}
                   </ul>
@@ -1684,6 +1726,7 @@ export default function PathPage() {
               <div className="mt-8">
                 {(() => {
                   const question = masteryContent.questions[masteryQuestionIndex];
+                  const questionOptions = localizedQuestionOptions(question, language);
                   const mistakes = Object.entries(masteryAnswers).filter(([index, answer]) => masteryContent.questions[Number(index)]?.correct_answer !== answer).length;
                   return (
                     <div className="grid gap-5">
@@ -1698,8 +1741,8 @@ export default function PathPage() {
                       <div className="h-2 rounded-full bg-white/10">
                         <div className="h-full rounded-full bg-[#FFD700]" style={{ width: `${((masteryQuestionIndex + 1) / 10) * 100}%` }} />
                       </div>
-                      <div className="rounded-2xl border border-white/10 bg-black/35 p-5 text-lg leading-8 text-white/78">{question.passage_or_sentence}</div>
-                      <h3 className="text-2xl font-black leading-tight">{question.question_text}</h3>
+                      <div className="rounded-2xl border border-white/10 bg-black/35 p-5 text-lg leading-8 text-white/78">{localizedQuestionText(question, language, "passage_or_sentence")}</div>
+                      <h3 className="text-2xl font-black leading-tight">{localizedQuestionText(question, language, "question_text")}</h3>
                       <div className="grid gap-3">
                         {(["A", "B", "C", "D"] as const).map((letter) => {
                           const selected = masteryFeedback?.selected === letter;
@@ -1719,7 +1762,7 @@ export default function PathPage() {
                               type="button"
                             >
                               <span className="mr-2 text-[#FFD700]">{letter}.</span>
-                              {question.options[letter]}
+                              {questionOptions[letter]}
                             </button>
                           );
                         })}
@@ -1732,7 +1775,9 @@ export default function PathPage() {
                               : `❌ ${pick(copy.mastery.wrongFeedback, language)}: ${masteryFeedback.correct}`}
                           </p>
                           <p className="mt-2 text-sm font-semibold leading-6 text-white/70">
-                            {masteryFeedback.isCorrect ? question.explanation_uz : question.why_wrong_uz[masteryFeedback.selected as "A" | "B" | "C" | "D"] || question.explanation_uz}
+                            {masteryFeedback.isCorrect
+                              ? localizedQuestionExplanation(question, language)
+                              : localizedWrongAnswer(question, language, masteryFeedback.selected as "A" | "B" | "C" | "D")}
                           </p>
                           <button className="mt-4 min-h-11 rounded-xl bg-[#FFD700] px-5 py-3 text-sm font-black text-black hover:bg-white" disabled={masteryLoading} onClick={continueMasteryPractice} type="button">
                             {masteryQuestionIndex === masteryContent.questions.length - 1 ? pick(copy.mastery.seeResult, language) : pick(copy.mastery.continue, language)}

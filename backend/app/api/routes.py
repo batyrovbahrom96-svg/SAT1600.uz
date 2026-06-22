@@ -33,7 +33,7 @@ from app.services.sat_engine import (
     start_attempt,
 )
 from app.services.reading_analyzer import attach_reading_analyzer_limit_signup, mark_analyzer_limit_followup_sent, user_has_active_pro
-from app.services.reading_mastery import PASS_MISTAKE_LIMIT, generate_mastery_content, grade_mastery_answers
+from app.services.reading_mastery import PASS_MISTAKE_LIMIT, content_has_multilingual_fields, generate_mastery_content, grade_mastery_answers
 from app.services.roadmap import generate_roadmap_for_attempt
 from app.services.telegram_payments import (
     handle_telegram_update,
@@ -438,7 +438,7 @@ def start_reading_mastery_type(payload: ReadingMasteryStartPayload, db: Session 
 
     stored = progress.last_attempt_questions if isinstance(progress.last_attempt_questions, dict) else {}
     content = stored.get("content")
-    if payload.force_new or not isinstance(content, dict) or len(content.get("questions") or []) != 10:
+    if payload.force_new or not isinstance(content, dict) or len(content.get("questions") or []) != 10 or not content_has_multilingual_fields(content):
         content = generate_mastery_content(question_type.type_name, progress.attempts + 1)
         progress.last_attempt_questions = {"content": content, "answers": {}, "graded": [], "attempt_number": progress.attempts + 1}
         progress.status = "in_progress"

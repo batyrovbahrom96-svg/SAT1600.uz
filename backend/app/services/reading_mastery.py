@@ -179,6 +179,38 @@ def generate_mastery_content(type_name: str, attempt: int = 1) -> dict:
     return _fallback_content(type_name, attempt)
 
 
+def content_has_multilingual_fields(content: dict | None) -> bool:
+    if not isinstance(content, dict):
+        return False
+    questions = content.get("questions")
+    if not isinstance(questions, list) or not questions:
+        return False
+    required_top_level = ("explanation_en", "explanation_ru", "explanation_uz", "strategy_en", "strategy_ru", "strategy_uz")
+    if any(not content.get(key) for key in required_top_level):
+        return False
+    sample = questions[0]
+    if not isinstance(sample, dict):
+        return False
+    required_question = (
+        "passage_or_sentence_en",
+        "passage_or_sentence_ru",
+        "passage_or_sentence_uz",
+        "question_text_en",
+        "question_text_ru",
+        "question_text_uz",
+        "options_en",
+        "options_ru",
+        "options_uz",
+        "explanation_en",
+        "explanation_ru",
+        "explanation_uz",
+        "why_wrong_en",
+        "why_wrong_ru",
+        "why_wrong_uz",
+    )
+    return all(sample.get(key) for key in required_question)
+
+
 def grade_mastery_answers(questions: list[dict], answers: dict[str, str]) -> dict:
     correct = 0
     graded = []
@@ -219,20 +251,21 @@ Generate original content for the question type: {type_name}.
 This is attempt #{attempt}; make this question set fresh and different from prior attempts.
 
 Return JSON with:
-1. explanation_uz: 2-3 sentences in Uzbek explaining what this question type tests, written in a direct expert-tutor voice.
-2. strategy_uz: 4-5 specific, actionable strategy bullet points in Uzbek, including at least one common-trap warning.
+1. explanation_en, explanation_ru, explanation_uz: 2-3 sentences explaining what this question type tests, written in a direct expert-tutor voice.
+2. strategy_en, strategy_ru, strategy_uz: 4-5 specific, actionable strategy bullet points, including at least one common-trap warning.
 3. questions: array of exactly 10 ORIGINAL SAT-style practice questions for this type, matching real SAT difficulty and format, each with:
-   - passage_or_sentence
-   - question_text
-   - options object with A, B, C, D
+   - passage_or_sentence_en, passage_or_sentence_ru, passage_or_sentence_uz
+   - question_text_en, question_text_ru, question_text_uz
+   - options_en, options_ru, options_uz objects with A, B, C, D
    - correct_answer
-   - explanation_uz explaining why correct and citing evidence from the passage
-   - why_wrong_uz object with brief reason for each incorrect option
+   - explanation_en, explanation_ru, explanation_uz explaining why correct and citing evidence from the passage
+   - why_wrong_en, why_wrong_ru, why_wrong_uz objects with brief reason for each incorrect option
 
 CRITICAL:
 - Never reproduce or closely paraphrase any existing published SAT preparation material, textbook, or test-prep website content.
 - All passages, questions, and examples must be entirely original creations.
 - Questions must specifically test {type_name}, not a random SAT skill.
+- Every visible field must be fully localized. Do not mix Uzbek into Russian or English fields. Do not leave English in Uzbek/Russian fields unless it is an official SAT term.
 - Return only valid JSON.
 """
 
@@ -253,28 +286,84 @@ def _normalize_content(type_name: str, parsed: dict | None) -> dict | None:
         correct = str(question.get("correct_answer") or "").strip().upper()
         if correct not in {"A", "B", "C", "D"}:
             return None
-        wrong = question.get("why_wrong_uz") if isinstance(question.get("why_wrong_uz"), dict) else {}
+        options_en = _options_for_language(question, "en", options)
+        options_ru = _options_for_language(question, "ru", options_en)
+        options_uz = _options_for_language(question, "uz", options_en)
+        wrong_en = _wrong_for_language(question, "en")
+        wrong_ru = _wrong_for_language(question, "ru")
+        wrong_uz = _wrong_for_language(question, "uz")
+        passage_en = str(question.get("passage_or_sentence_en") or question.get("passage_or_sentence") or "")
+        question_en = str(question.get("question_text_en") or question.get("question_text") or f"{type_name} question #{index + 1}")
         normalized_questions.append(
             {
-                "passage_or_sentence": str(question.get("passage_or_sentence") or ""),
-                "question_text": str(question.get("question_text") or f"{type_name} savoli #{index + 1}"),
-                "options": {key: str(options.get(key) or "") for key in ("A", "B", "C", "D")},
+                "passage_or_sentence": passage_en,
+                "passage_or_sentence_en": passage_en,
+                "passage_or_sentence_ru": str(question.get("passage_or_sentence_ru") or passage_en),
+                "passage_or_sentence_uz": str(question.get("passage_or_sentence_uz") or passage_en),
+                "question_text": question_en,
+                "question_text_en": question_en,
+                "question_text_ru": str(question.get("question_text_ru") or question_en),
+                "question_text_uz": str(question.get("question_text_uz") or question.get("question_text") or f"{type_name} savoli #{index + 1}"),
+                "options": options_en,
+                "options_en": options_en,
+                "options_ru": options_ru,
+                "options_uz": options_uz,
                 "correct_answer": correct,
+                "explanation_en": str(question.get("explanation_en") or question.get("explanation_uz") or ""),
+                "explanation_ru": str(question.get("explanation_ru") or question.get("explanation_uz") or ""),
                 "explanation_uz": str(question.get("explanation_uz") or ""),
-                "why_wrong_uz": {key: str(wrong.get(key) or "Bu variant matndagi dalilga mos kelmaydi.") for key in ("A", "B", "C", "D") if key != correct},
+                "why_wrong_en": {key: str(wrong_en.get(key) or "This option is not directly supported by the passage evidence.") for key in ("A", "B", "C", "D") if key != correct},
+                "why_wrong_ru": {key: str(wrong_ru.get(key) or "Этот вариант не подтверждается доказательством из текста.") for key in ("A", "B", "C", "D") if key != correct},
+                "why_wrong_uz": {key: str(wrong_uz.get(key) or "Bu variant matndagi dalilga mos kelmaydi.") for key in ("A", "B", "C", "D") if key != correct},
             }
         )
     spec = TYPE_SPECS.get(type_name, TYPE_SPECS["Central Ideas & Details"])
+    explanation_uz = str(parsed.get("explanation_uz") or _explanation(type_name, spec))
     return {
-        "explanation_uz": str(parsed.get("explanation_uz") or _explanation(type_name, spec)),
+        "explanation_en": str(parsed.get("explanation_en") or _explanation_en(type_name, spec)),
+        "explanation_ru": str(parsed.get("explanation_ru") or _explanation_ru(type_name, spec)),
+        "explanation_uz": explanation_uz,
+        "strategy_en": _strategy_list(parsed.get("strategy_en"), spec, "en"),
+        "strategy_ru": _strategy_list(parsed.get("strategy_ru"), spec, "ru"),
         "strategy_uz": _strategy_list(parsed.get("strategy_uz"), spec),
         "questions": normalized_questions,
     }
 
 
-def _strategy_list(value: Any, spec: dict) -> list[str]:
+def _options_for_language(question: dict, lang: str, fallback: dict) -> dict:
+    value = question.get(f"options_{lang}")
+    if not isinstance(value, dict):
+        value = fallback
+    return {key: str(value.get(key) or fallback.get(key) or "") for key in ("A", "B", "C", "D")}
+
+
+def _wrong_for_language(question: dict, lang: str) -> dict:
+    value = question.get(f"why_wrong_{lang}")
+    if isinstance(value, dict):
+        return value
+    legacy = question.get("why_wrong_uz")
+    return legacy if isinstance(legacy, dict) else {}
+
+
+def _strategy_list(value: Any, spec: dict, lang: str = "uz") -> list[str]:
     if isinstance(value, list) and len(value) >= 3:
         return [str(item) for item in value[:5]]
+    if lang == "en":
+        return [
+            "Identify exactly what the question type is asking before reading the choices.",
+            "Find the sentence, detail, or structure that proves the answer.",
+            "Eliminate choices that are too broad, too narrow, unsupported, or opposite.",
+            "Choose the most precise answer, not the one that only sounds familiar.",
+            f"⚠️ Common trap: {spec['trap']}."
+        ]
+    if lang == "ru":
+        return [
+            "Сначала определите, что именно проверяет этот тип вопроса.",
+            "Найдите предложение, деталь или структуру, которые доказывают ответ.",
+            "Исключите варианты: слишком широкие, слишком узкие, без доказательства или противоположные.",
+            "Выберите самый точный ответ, а не тот, который просто звучит знакомо.",
+            f"⚠️ Главная ловушка: {spec['trap']}."
+        ]
     return list(spec["strategies"])
 
 
@@ -284,7 +373,11 @@ def _fallback_content(type_name: str, attempt: int) -> dict:
     contexts = list(_fallback_contexts())
     rng.shuffle(contexts)
     return {
+        "explanation_en": _explanation_en(type_name, spec),
+        "explanation_ru": _explanation_ru(type_name, spec),
         "explanation_uz": _explanation(type_name, spec),
+        "strategy_en": _strategy_list(None, spec, "en"),
+        "strategy_ru": _strategy_list(None, spec, "ru"),
         "strategy_uz": list(spec["strategies"]),
         "questions": [_fallback_question(type_name, contexts[index], index, rng) for index in range(10)],
     }
@@ -295,6 +388,22 @@ def _explanation(type_name: str, spec: dict) -> str:
         f"{type_name} savollari sizdan {spec['skill']} talab qiladi. "
         f"Bu SAT'da {spec['frequency']} uchraydi. "
         f"Ko'pchilik bu turda {spec['trap']} xatosini qiladi."
+    )
+
+
+def _explanation_en(type_name: str, spec: dict) -> str:
+    return (
+        f"{type_name} questions ask you to use a specific SAT skill: {spec['skill']}. "
+        f"This appears {spec['frequency']} on the SAT. "
+        f"The common mistake is choosing an answer based on {spec['trap']} instead of evidence."
+    )
+
+
+def _explanation_ru(type_name: str, spec: dict) -> str:
+    return (
+        f"Вопросы {type_name} проверяют конкретный навык SAT: {spec['skill']}. "
+        f"На SAT это встречается {spec['frequency']}. "
+        f"Типичная ошибка — выбирать ответ из-за ловушки: {spec['trap']}, а не по доказательству."
     )
 
 
@@ -589,12 +698,27 @@ def _fallback_question(type_name: str, context: dict, index: int, rng: random.Ra
 
 
 def _question_payload(context: dict, question_text: str, options: dict, correct: str, explanation: str, why_wrong: dict) -> dict:
+    explanation_en = explanation.replace("to'g'ri, chunki", "is correct because").replace("chunki", "because")
+    explanation_ru = explanation.replace("to'g'ri, chunki", "верно, потому что").replace("chunki", "потому что")
     return {
         "passage_or_sentence": context["passage"],
+        "passage_or_sentence_en": context["passage"],
+        "passage_or_sentence_ru": context["passage"],
+        "passage_or_sentence_uz": context["passage"],
         "question_text": question_text,
+        "question_text_en": question_text,
+        "question_text_ru": question_text,
+        "question_text_uz": question_text,
         "options": options,
+        "options_en": options,
+        "options_ru": options,
+        "options_uz": options,
         "correct_answer": correct,
+        "explanation_en": explanation_en,
+        "explanation_ru": explanation_ru,
         "explanation_uz": explanation,
+        "why_wrong_en": {key: str(value) for key, value in why_wrong.items()},
+        "why_wrong_ru": {key: str(value) for key, value in why_wrong.items()},
         "why_wrong_uz": why_wrong,
     }
 
