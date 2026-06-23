@@ -123,6 +123,8 @@ async def post_init(application: Application) -> None:
                 BotCommand("analyzer_stats", "Reading Analyzer funnel"),
                 BotCommand("funnel_stats", "Platform funnel"),
                 BotCommand("conversion_stats", "Pro conversion sources"),
+                BotCommand("confirm", "Founder: confirm payment"),
+                BotCommand("reject", "Founder: reject payment"),
             ]
         )
         await application.bot.set_my_name("SATTEST Welcome Bot")

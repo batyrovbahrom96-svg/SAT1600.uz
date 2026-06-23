@@ -186,6 +186,12 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     if text.startswith(("/pro_report", "/report")):
         return _handle_admin_report_command(chat_id, db)
 
+    if text.startswith("/confirm"):
+        return _handle_confirm_command(chat_id, text, db)
+
+    if text.startswith("/reject"):
+        return _handle_reject_command(chat_id, text, db)
+
     if text.startswith("/activate"):
         return _handle_activate_command(chat_id, text, db)
 
@@ -779,7 +785,11 @@ def _handle_payment_order_screenshot(order: PaymentOrder, message: dict, db: Ses
 
     _send_message(
         str(message.get("chat", {}).get("id", "")),
-        f"Chek qabul qilindi ✅\nBuyurtma raqami: {order.reference}\n5 daqiqa ichida tekshiramiz.",
+        "✅ Skrinshot qabul qilindi!\n\n"
+        "Odatda 2-5 daqiqa ichida\n"
+        "tasdiqlanadi.\n\n"
+        "Tasdiqlangach sizga avtomatik\n"
+        "xabar keladi — kuting! ⏰",
     )
     _notify_admin_for_payment_order(order, message, db)
     return {"ok": True, "reference": order.reference, "status": order.status}
@@ -802,23 +812,30 @@ def _notify_admin_for_payment_order(order: PaymentOrder, message: dict, db: Sess
     from_user = message.get("from", {})
     username = from_user.get("username")
     sender_name = " ".join(part for part in [from_user.get("first_name"), from_user.get("last_name")] if part) or "Unknown"
-    sender_line = f"{sender_name}" + (f" (@{username})" if username else "")
     phone = order.telegram_phone or "Not available"
     weak_areas = ", ".join(order.weak_areas or []) or "Not provided"
     amount = f"{int(order.amount or 0):,}".replace(",", " ")
 
-    text = (
-        "SATTEST.UZ payment waiting for approval.\n\n"
+    timestamp = datetime.now(TASHKENT_TZ).strftime("%Y-%m-%d %H:%M UZT")
+    user_id = str(user.id) if user else str(order.user_id)
+    user_label = f"@{username}" if username else sender_name
+    text = "🔴 YANGI TO'LOV — TASDIQLASH KERAK!\n\n" f"Foydalanuvchi: {user_label}"
+    text += (
+        f"\nUser ID: {user_id}\n"
         f"Order: {order.reference}\n"
-        f"Student: {user.full_name if user else 'Unknown'}\n"
         f"Email: {user.email if user else 'Unknown'}\n"
-        f"Telegram: {sender_line}\n"
+        f"Vaqt: {timestamp}\n"
         f"Phone: {phone}\n"
         f"Plan: {_order_plan_label(order.subscription_type)}\n"
         f"Amount: {amount} {order.currency}\n"
         f"Estimated score: {order.estimated_score or 'n/a'}\n"
         f"Weak areas: {weak_areas}\n\n"
-        "Tekshirib, tasdiqlang yoki rad eting."
+        "Tasdiqlash uchun:\n"
+        f"/confirm {user_id}\n\n"
+        "Yoki qisqa order bilan:\n"
+        f"/confirm {order.reference}\n\n"
+        "Rad etish uchun:\n"
+        f"/reject {user_id}"
     )
     keyboard = {
         "inline_keyboard": [
@@ -850,19 +867,120 @@ def _handle_payment_order_callback(callback_query: dict, action: str, reference:
         return {"ok": True, "user_found": False}
 
     if action == "paydeny":
-        order.status = "rejected"
-        order.rejection_reason = "Admin rejected payment screenshot"
-        db.commit()
+        _reject_payment_order(order, user, db)
         _answer_callback(callback_id, "Payment rejected.")
-        if order.telegram_chat_id:
-            _send_message(
-                order.telegram_chat_id,
-                "Uzr, to'lovni tasdiqlay olmadik.\n"
-                "Iltimos qayta urinib ko'ring yoki @FounderSATTESTUZ ga murojaat qiling",
-            )
         _edit_admin_message(callback_query, f"REJECTED\n\nOrder: {order.reference}\nStudent: {user.full_name}\nEmail: {user.email}")
         return {"ok": True, "status": "rejected"}
 
+    subscription = _approve_payment_order(order, user, db)
+
+    _answer_callback(callback_id, "Pro activated.")
+    _edit_admin_message(
+        callback_query,
+        f"APPROVED\n\nOrder: {order.reference}\nStudent: {user.full_name}\nEmail: {user.email}\nExpires: {_format_subscription_date(subscription.current_period_end)}",
+    )
+    return {"ok": True, "status": "approved"}
+
+
+def _handle_confirm_command(chat_id: str, text: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can confirm SATTEST.UZ payments.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so confirmation is unavailable.")
+        return {"ok": True, "database": False}
+
+    token = _admin_command_token(text)
+    if not token:
+        _send_message(chat_id, "Use /confirm [user_id_or_order_reference].")
+        return {"ok": True, "confirmed": False}
+
+    order = _find_payment_order_for_admin_token(db, token)
+    if not order:
+        _send_message(chat_id, f"Order not found for: {token}")
+        return {"ok": True, "confirmed": False, "order_found": False}
+
+    user = db.get(User, order.user_id)
+    if not user:
+        _send_message(chat_id, f"User not found for order {order.reference}.")
+        return {"ok": True, "confirmed": False, "user_found": False}
+
+    if order.status == "approved":
+        _send_message(chat_id, f"✅ {user.full_name or user.email} uchun Pro allaqachon faollashtirilgan.")
+        return {"ok": True, "confirmed": True, "already_approved": True}
+
+    subscription = _approve_payment_order(order, user, db)
+    _send_message(
+        chat_id,
+        f"✅ {user.full_name or user.email} uchun Pro faollashtirildi!\n"
+        f"Order: {order.reference}\n"
+        f"Tugash kuni: {_format_subscription_date(subscription.current_period_end)}",
+    )
+    return {"ok": True, "confirmed": True, "order": order.reference}
+
+
+def _handle_reject_command(chat_id: str, text: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can reject SATTEST.UZ payments.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so rejection is unavailable.")
+        return {"ok": True, "database": False}
+
+    token = _admin_command_token(text)
+    if not token:
+        _send_message(chat_id, "Use /reject [user_id_or_order_reference].")
+        return {"ok": True, "rejected": False}
+
+    order = _find_payment_order_for_admin_token(db, token)
+    if not order:
+        _send_message(chat_id, f"Order not found for: {token}")
+        return {"ok": True, "rejected": False, "order_found": False}
+
+    user = db.get(User, order.user_id)
+    if not user:
+        _send_message(chat_id, f"User not found for order {order.reference}.")
+        return {"ok": True, "rejected": False, "user_found": False}
+
+    _reject_payment_order(order, user, db)
+    _send_message(chat_id, f"❌ {user.full_name or user.email} to'lovi rad etildi.\nOrder: {order.reference}")
+    return {"ok": True, "rejected": True, "order": order.reference}
+
+
+def _admin_command_token(text: str) -> str:
+    return text.split(maxsplit=1)[1].strip() if len(text.split(maxsplit=1)) > 1 else ""
+
+
+def _find_payment_order_for_admin_token(db: Session, token: str) -> PaymentOrder | None:
+    clean = token.strip()
+    if not clean:
+        return None
+    upper = clean.upper()
+    if upper.startswith("SAT-"):
+        return db.execute(select(PaymentOrder).where(PaymentOrder.reference == upper)).scalar_one_or_none()
+
+    clauses = [PaymentOrder.telegram_chat_id == clean]
+    try:
+        user_uuid = UUID(clean)
+        clauses.append(PaymentOrder.user_id == user_uuid)
+    except ValueError:
+        pass
+
+    return (
+        db.execute(
+            select(PaymentOrder)
+            .where(or_(*clauses))
+            .where(PaymentOrder.status.in_(["pending", "telegram_opened", "screenshot_received", "approved"]))
+            .order_by(PaymentOrder.created_at.desc())
+        )
+        .scalars()
+        .first()
+    )
+
+
+def _approve_payment_order(order: PaymentOrder, user: User, db: Session) -> Subscription:
     now = datetime.utcnow()
     days = ORDER_PLAN_DAYS.get(order.subscription_type, 30)
     expiry = now + timedelta(days=days)
@@ -886,16 +1004,24 @@ def _handle_payment_order_callback(callback_query: dict, action: str, reference:
     user.upgraded_to_pro = True
     user.upgraded_to_pro_at = user.upgraded_to_pro_at or now
     db.commit()
+    db.refresh(subscription)
 
-    _answer_callback(callback_id, "Pro activated.")
     if order.telegram_chat_id:
         _send_payment_confirmed_message(order.telegram_chat_id, db)
         _send_message(order.telegram_chat_id, _receipt_active_message(subscription, user), reply_markup=_receipt_active_keyboard(user))
-    _edit_admin_message(
-        callback_query,
-        f"APPROVED\n\nOrder: {order.reference}\nStudent: {user.full_name}\nEmail: {user.email}\nExpires: {_format_subscription_date(expiry)}",
-    )
-    return {"ok": True, "status": "approved"}
+    return subscription
+
+
+def _reject_payment_order(order: PaymentOrder, user: User, db: Session) -> None:
+    order.status = "rejected"
+    order.rejection_reason = "Admin rejected payment screenshot"
+    db.commit()
+    if order.telegram_chat_id:
+        _send_message(
+            order.telegram_chat_id,
+            "Uzr, to'lovni tasdiqlay olmadik.\n"
+            "Iltimos qayta urinib ko'ring yoki @FounderSATTESTUZ ga murojaat qiling",
+        )
 
 
 def _order_plan_label(subscription_type: str) -> str:
