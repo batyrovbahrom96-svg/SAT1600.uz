@@ -78,6 +78,9 @@ class User(Base):
     first_mock_completed_at: Mapped[datetime | None] = mapped_column(DateTime)
     upgraded_to_pro: Mapped[bool] = mapped_column(Boolean, default=False)
     upgraded_to_pro_at: Mapped[datetime | None] = mapped_column(DateTime)
+    pro_activated_at: Mapped[datetime | None] = mapped_column(DateTime)
+    pro_expires_at: Mapped[datetime | None] = mapped_column(DateTime)
+    pro_status: Mapped[str] = mapped_column(String(24), default="none")
     pro_conversion_source: Mapped[str | None] = mapped_column(String(80))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

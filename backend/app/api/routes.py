@@ -115,9 +115,12 @@ def health() -> dict:
 @router.get("/ready")
 def ready() -> dict:
     try:
-        with get_engine().connect() as connection:
+        with get_engine().begin() as connection:
             connection.execute(text("SELECT 1"))
             connection.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(16) DEFAULT 'uz'"))
+            connection.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS pro_activated_at TIMESTAMP"))
+            connection.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS pro_expires_at TIMESTAMP"))
+            connection.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS pro_status VARCHAR(24) DEFAULT 'none'"))
             missing_tables = [
                 table
                 for table in ("users", "tests", "questions", "test_attempts", "question_results")
@@ -163,6 +166,9 @@ def ready() -> dict:
                 "first_mock_completed_at",
                 "upgraded_to_pro",
                 "upgraded_to_pro_at",
+                "pro_activated_at",
+                "pro_expires_at",
+                "pro_status",
                 "pro_conversion_source",
                 "created_at",
             )

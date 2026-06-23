@@ -125,6 +125,7 @@ async def post_init(application: Application) -> None:
                 BotCommand("conversion_stats", "Pro conversion sources"),
                 BotCommand("confirm", "Founder: confirm payment"),
                 BotCommand("reject", "Founder: reject payment"),
+                BotCommand("pro_status", "Founder: Pro expiry status"),
             ]
         )
         await application.bot.set_my_name("SATTEST Welcome Bot")

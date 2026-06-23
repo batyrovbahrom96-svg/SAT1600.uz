@@ -171,6 +171,9 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     if text.startswith("/conversion_stats"):
         return _handle_conversion_stats_command(chat_id, db)
 
+    if text.startswith("/pro_status"):
+        return _handle_pro_status_command(chat_id, db)
+
     if text.startswith("/sendtip"):
         return _handle_sendtip_command(chat_id, text, db)
 
@@ -275,6 +278,9 @@ def _handle_message(message: dict, db: Session | None) -> dict:
     db.add(subscription)
     user.upgraded_to_pro = True
     user.upgraded_to_pro_at = user.upgraded_to_pro_at or period_start
+    user.pro_activated_at = period_start
+    user.pro_expires_at = period_end
+    user.pro_status = "active"
     db.commit()
     db.refresh(subscription)
 
@@ -340,10 +346,16 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
         subscription.renewal_reminders_sent = 0
         subscription.last_renewal_reminder_at = None
         subscription.canceled_at = None
+        if user:
+            user.upgraded_to_pro = True
+            user.upgraded_to_pro_at = user.upgraded_to_pro_at or now
+            user.pro_activated_at = now
+            user.pro_expires_at = subscription.current_period_end
+            user.pro_status = "active"
         db.commit()
         _answer_callback(callback_id, "Access activated.")
         if student_chat_id:
-            _send_payment_confirmed_message(student_chat_id, db)
+            _send_payment_confirmed_message(student_chat_id, db, user, subscription.current_period_end)
             _send_message(student_chat_id, _receipt_active_message(subscription, user), reply_markup=_receipt_active_keyboard(user))
         _edit_admin_message(callback_query, f"APPROVED\n\n{_subscription_summary(subscription, user)}")
         return {"ok": True, "status": "active"}
@@ -353,6 +365,10 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
         subscription.status = "revoked"
         subscription.current_period_end = now
         subscription.canceled_at = now
+        if user:
+            user.upgraded_to_pro = False
+            user.pro_expires_at = now
+            user.pro_status = "expired"
         db.commit()
         _answer_callback(callback_id, "Pro access revoked.")
         if student_chat_id:
@@ -366,6 +382,9 @@ def _handle_callback(callback_query: dict, db: Session | None) -> dict:
 
     subscription.status = "denied"
     subscription.canceled_at = datetime.utcnow()
+    if user:
+        user.upgraded_to_pro = False
+        user.pro_status = "none"
     db.commit()
     _answer_callback(callback_id, "Receipt denied.")
     if student_chat_id:
@@ -713,7 +732,46 @@ def _notify_admin_unknown_message(message: dict, lead: TelegramAudience | None, 
     _send_message(settings.telegram_admin_chat_id, admin_text)
 
 
-def _send_payment_confirmed_message(chat_id: str, db: Session | None) -> None:
+def _pro_activated_with_expiry_message(user: User | None, expires_at: datetime | None) -> str:
+    language = _user_language(user)
+    first_name = clean_first_name((user.full_name if user else None) or "") or "student"
+    expiry = _as_tashkent(expires_at).strftime("%d.%m.%Y") if expires_at else "30 kun"
+    messages = {
+        "uz": (
+            f"🎉 Tabriklaymiz {first_name}!\n\n"
+            "Pro obunangiz faollashtirildi! ✅\n\n"
+            f"Amal qilish muddati:\n{expiry} gacha\n\n"
+            "Bu sanagacha barcha Pro funksiyalardan to'liq foydalanasiz! 💪\n\n"
+            "sattest.uz/path"
+        ),
+        "ru": (
+            f"🎉 Поздравляем, {first_name}!\n\n"
+            "Ваша подписка Pro активирована! ✅\n\n"
+            f"Действует до:\n{expiry}\n\n"
+            "До этой даты все Pro-функции доступны полностью! 💪\n\n"
+            "sattest.uz/path"
+        ),
+        "en": (
+            f"🎉 Congratulations, {first_name}!\n\n"
+            "Your Pro subscription is active! ✅\n\n"
+            f"Valid until:\n{expiry}\n\n"
+            "You have full access to all Pro features until this date! 💪\n\n"
+            "sattest.uz/path"
+        ),
+    }
+    return messages.get(language, messages["uz"])
+
+
+def _send_payment_confirmed_message(
+    chat_id: str,
+    db: Session | None,
+    user: User | None = None,
+    expires_at: datetime | None = None,
+) -> None:
+    if user is not None and expires_at is not None:
+        _send_message(str(chat_id), _pro_activated_with_expiry_message(user, expires_at))
+        return
+
     language = "uz"
     if db is not None:
         lead = (
@@ -949,6 +1007,55 @@ def _handle_reject_command(chat_id: str, text: str, db: Session | None) -> dict:
     return {"ok": True, "rejected": True, "order": order.reference}
 
 
+def _handle_pro_status_command(chat_id: str, db: Session | None) -> dict:
+    settings = get_settings()
+    if settings.telegram_admin_chat_id and chat_id != str(settings.telegram_admin_chat_id):
+        _send_message(chat_id, "Only Founder can view SATTEST.UZ Pro status.")
+        return {"ok": True, "ignored": True}
+    if db is None:
+        _send_message(chat_id, "Database is not connected, so Pro status is unavailable.")
+        return {"ok": True, "database": False}
+
+    now = datetime.utcnow()
+    today_end = now + timedelta(days=1)
+    three_days = now + timedelta(days=3)
+    month_start = datetime(now.year, now.month, 1)
+
+    active = db.execute(
+        select(func.count()).select_from(User).where(User.pro_status == "active").where(User.pro_expires_at > now)
+    ).scalar_one()
+    ending_today = db.execute(
+        select(func.count())
+        .select_from(User)
+        .where(User.pro_status == "active")
+        .where(User.pro_expires_at > now)
+        .where(User.pro_expires_at <= today_end)
+    ).scalar_one()
+    ending_three_days = db.execute(
+        select(func.count())
+        .select_from(User)
+        .where(User.pro_status == "active")
+        .where(User.pro_expires_at > now)
+        .where(User.pro_expires_at <= three_days)
+    ).scalar_one()
+    expired_this_month = db.execute(
+        select(func.count())
+        .select_from(User)
+        .where(User.pro_status == "expired")
+        .where(User.pro_expires_at >= month_start)
+    ).scalar_one()
+
+    _send_message(
+        chat_id,
+        "📊 PRO OBUNALAR HOLATI\n\n"
+        f"✅ Faol: {active}\n"
+        f"⏰ Bugun tugaydi: {ending_today}\n"
+        f"⏰ 3 kun ichida tugaydi: {ending_three_days}\n"
+        f"❌ Tugagan (bu oy): {expired_this_month}",
+    )
+    return {"ok": True, "pro_status": True}
+
+
 def _admin_command_token(text: str) -> str:
     return text.split(maxsplit=1)[1].strip() if len(text.split(maxsplit=1)) > 1 else ""
 
@@ -982,8 +1089,7 @@ def _find_payment_order_for_admin_token(db: Session, token: str) -> PaymentOrder
 
 def _approve_payment_order(order: PaymentOrder, user: User, db: Session) -> Subscription:
     now = datetime.utcnow()
-    days = ORDER_PLAN_DAYS.get(order.subscription_type, 30)
-    expiry = now + timedelta(days=days)
+    expiry = now + timedelta(days=30)
     subscription = Subscription(
         user_id=user.id,
         plan="pro",
@@ -1003,11 +1109,14 @@ def _approve_payment_order(order: PaymentOrder, user: User, db: Session) -> Subs
     db.add(subscription)
     user.upgraded_to_pro = True
     user.upgraded_to_pro_at = user.upgraded_to_pro_at or now
+    user.pro_activated_at = now
+    user.pro_expires_at = expiry
+    user.pro_status = "active"
     db.commit()
     db.refresh(subscription)
 
     if order.telegram_chat_id:
-        _send_payment_confirmed_message(order.telegram_chat_id, db)
+        _send_payment_confirmed_message(order.telegram_chat_id, db, user, subscription.current_period_end)
         _send_message(order.telegram_chat_id, _receipt_active_message(subscription, user), reply_markup=_receipt_active_keyboard(user))
     return subscription
 
@@ -1469,6 +1578,76 @@ def _subscription_summary(subscription: Subscription, user: User | None) -> str:
     )
 
 
+def _user_language(user: User | None) -> str:
+    if not user:
+        return "uz"
+    language = (user.preferred_language or user.chosen_language or user.detected_language or "uz").lower()
+    return language if language in SUPPORTED_LANGUAGES else "uz"
+
+
+def _pro_expired_message(user: User | None) -> str:
+    language = _user_language(user)
+    messages = {
+        "uz": (
+            "⏰ Pro obunangiz tugadi\n\n"
+            "Sizning 30 kunlik Pro obunangiz yakunlandi.\n\n"
+            "Yana davom ettirish uchun:\n"
+            "👉 sattest.uz/pro\n\n"
+            "Sizning progress va natijalaringiz saqlanib qoladi — qayta faollashtirganingizda davom etasiz! 💪\n\n"
+            "Savol bo'lsa: @FounderSATTESTUZ"
+        ),
+        "ru": (
+            "⏰ Ваша подписка Pro истекла\n\n"
+            "Ваша 30-дневная подписка Pro завершилась.\n\n"
+            "Чтобы продолжить:\n"
+            "👉 sattest.uz/pro\n\n"
+            "Ваш прогресс и результаты сохранятся — при повторной активации вы продолжите с того же места! 💪\n\n"
+            "Вопросы: @FounderSATTESTUZ"
+        ),
+        "en": (
+            "⏰ Your Pro subscription has expired\n\n"
+            "Your 30-day Pro subscription has ended.\n\n"
+            "To continue:\n"
+            "👉 sattest.uz/pro\n\n"
+            "Your progress and results are saved — when you reactivate, you'll pick up right where you left off! 💪\n\n"
+            "Questions: @FounderSATTESTUZ"
+        ),
+    }
+    return messages.get(language, messages["uz"])
+
+
+def _latest_user_payment_chat_id(db: Session, user_id) -> str | None:
+    subscription_chat_id = (
+        db.execute(
+            select(Subscription.provider_customer_id)
+            .where(Subscription.user_id == user_id)
+            .where(Subscription.provider_customer_id.is_not(None))
+            .order_by(Subscription.created_at.desc())
+        )
+        .scalars()
+        .first()
+    )
+    if subscription_chat_id:
+        return str(subscription_chat_id)
+
+    order_chat_id = (
+        db.execute(
+            select(PaymentOrder.telegram_chat_id)
+            .where(PaymentOrder.user_id == user_id)
+            .where(PaymentOrder.telegram_chat_id.is_not(None))
+            .order_by(PaymentOrder.updated_at.desc())
+        )
+        .scalars()
+        .first()
+    )
+    return str(order_chat_id) if order_chat_id else None
+
+
+def _admin_user_label(user: User) -> str:
+    name = user.full_name or user.email
+    return f"{name} ({user.email})" if name != user.email else user.email
+
+
 def process_subscription_maintenance(db: Session, *, send_daily_report: bool = False) -> dict:
     now = datetime.utcnow()
     today_tashkent = _as_tashkent(now).date()
@@ -1478,12 +1657,12 @@ def process_subscription_maintenance(db: Session, *, send_daily_report: bool = F
             .join(User, Subscription.user_id == User.id)
             .where(Subscription.status == "active")
             .where(Subscription.current_period_end.is_not(None))
-            .where(Subscription.provider_customer_id.is_not(None))
         )
         .all()
     )
     reminders_sent = 0
     expired_count = 0
+    expired_users: list[User] = []
 
     for subscription, user in active_subscriptions:
         if not subscription.current_period_end:
@@ -1492,11 +1671,6 @@ def process_subscription_maintenance(db: Session, *, send_daily_report: bool = F
         if subscription.current_period_end <= now:
             subscription.status = "expired"
             subscription.canceled_at = now
-            expired_count += 1
-            _send_message(
-                subscription.provider_customer_id,
-                EXPIRED_MESSAGE.format(end_date=_format_subscription_date(subscription.current_period_end)),
-            )
             continue
 
         seconds_left = (subscription.current_period_end - now).total_seconds()
@@ -1510,18 +1684,65 @@ def process_subscription_maintenance(db: Session, *, send_daily_report: bool = F
             subscription.renewal_reminders_sent += 1
             subscription.last_renewal_reminder_at = now
             reminders_sent += 1
-            _send_message(
-                subscription.provider_customer_id,
-                RENEWAL_REMINDER_MESSAGE.format(
-                    count=subscription.renewal_reminders_sent,
-                    end_date=_format_subscription_date(subscription.current_period_end),
-                ),
+            if subscription.provider_customer_id:
+                _send_message(
+                    subscription.provider_customer_id,
+                    RENEWAL_REMINDER_MESSAGE.format(
+                        count=subscription.renewal_reminders_sent,
+                        end_date=_format_subscription_date(subscription.current_period_end),
+                    ),
+                )
+
+    users_to_expire = (
+        db.execute(
+            select(User)
+            .where(or_(User.pro_status == "active", User.upgraded_to_pro.is_(True)))
+            .where(User.pro_expires_at.is_not(None))
+            .where(User.pro_expires_at <= now)
+        )
+        .scalars()
+        .all()
+    )
+    for user in users_to_expire:
+        user.upgraded_to_pro = False
+        user.pro_status = "expired"
+        expired_count += 1
+        expired_users.append(user)
+
+        active_user_subscriptions = (
+            db.execute(
+                select(Subscription)
+                .where(Subscription.user_id == user.id)
+                .where(Subscription.status == "active")
+                .where(Subscription.current_period_end.is_not(None))
+                .where(Subscription.current_period_end <= now)
             )
+            .scalars()
+            .all()
+        )
+        for subscription in active_user_subscriptions:
+            subscription.status = "expired"
+            subscription.canceled_at = now
+
+        chat_id = _latest_user_payment_chat_id(db, user.id)
+        if chat_id:
+            _send_message(chat_id, _pro_expired_message(user))
 
     db.commit()
 
+    settings = get_settings()
+    if expired_users and settings.telegram_admin_chat_id:
+        user_lines = "\n".join(f"- {_admin_user_label(user)}" for user in expired_users[:30])
+        extra = "" if len(expired_users) <= 30 else f"\n... yana {len(expired_users) - 30} ta"
+        _send_message(
+            settings.telegram_admin_chat_id,
+            "📊 BUGUN TUGAGAN OBUNALAR\n\n"
+            f"{len(expired_users)} ta foydalanuvchi Pro muddati tugadi:\n"
+            f"{user_lines}{extra}\n\n"
+            "Qayta sotish imkoniyati! 💰",
+        )
+
     if send_daily_report:
-        settings = get_settings()
         if settings.telegram_admin_chat_id:
             _send_message(settings.telegram_admin_chat_id, build_daily_pro_report(db))
 

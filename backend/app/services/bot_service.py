@@ -22,7 +22,26 @@ def ensure_welcome_bot_schema() -> None:
     Base.metadata.create_all(bind=engine)
 
     inspector = inspect(engine)
-    if "telegram_audience" not in inspector.get_table_names():
+    table_names = inspector.get_table_names()
+    dialect = engine.dialect.name
+
+    if "users" in table_names:
+        existing_user_columns = {column["name"] for column in inspector.get_columns("users")}
+        wanted_user_columns = {
+            "pro_activated_at": "TIMESTAMP",
+            "pro_expires_at": "TIMESTAMP",
+            "pro_status": "VARCHAR(24) DEFAULT 'none'",
+        }
+        missing_user_columns = [(name, ddl) for name, ddl in wanted_user_columns.items() if name not in existing_user_columns]
+        if missing_user_columns:
+            with engine.begin() as connection:
+                for name, ddl in missing_user_columns:
+                    if dialect == "sqlite":
+                        connection.execute(text(f"ALTER TABLE users ADD COLUMN {name} {ddl}"))
+                    else:
+                        connection.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {name} {ddl}"))
+
+    if "telegram_audience" not in table_names:
         Base.metadata.create_all(bind=engine)
         return
 
@@ -45,7 +64,6 @@ def ensure_welcome_bot_schema() -> None:
     if not missing:
         return
 
-    dialect = engine.dialect.name
     with engine.begin() as connection:
         for name, ddl in missing:
             if dialect == "sqlite":
